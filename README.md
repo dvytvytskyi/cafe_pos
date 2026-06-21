@@ -47,3 +47,4 @@ Welcome to the Corgi POS System repository! This is a modular, scalable POS appl
 ---
 
 *This repository relies on structured documentation in `docs/` and Antigravity Knowledge Items to maintain cross-session context.*
+
