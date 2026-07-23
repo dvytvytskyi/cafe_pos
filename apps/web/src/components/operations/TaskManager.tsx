@@ -1,0 +1,762 @@
+'use client';
+
+import React, { useState } from 'react';
+import { Clock, CheckSquare, Paperclip, Plus, MoreVertical, Search, ChevronLeft, ChevronRight, Calendar, Users, MapPin, Filter, ChevronDown, ArrowLeft, Settings } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import DatePicker from '../ui/DatePicker';
+import NewTaskModal, { MOCK_USERS } from './NewTaskModal';
+import BoardSettingsModal, { Stage } from './BoardSettingsModal';
+
+const INITIAL_STAGES: Stage[] = [
+  { id: 'todo', label: 'To Do', color: 'bg-blue-500' },
+  { id: 'in_progress', label: 'In Progress', color: 'bg-orange-500' },
+  { id: 'in_review', label: 'In Review', color: 'bg-purple-500' },
+  { id: 'blocked', label: 'Blocked', color: 'bg-red-500' },
+  { id: 'completed', label: 'Completed', color: 'bg-green-500' },
+  { id: 'archived', label: 'Archived', color: 'bg-gray-400' },
+];
+
+export type Task = {
+  id: string;
+  title: string;
+  branch: string;
+  tags: { label: string; bg: string; text: string }[];
+  comments: number;
+  attachments: number;
+  progress: number;
+  deadline: string;
+  assignees: string[];
+  status: string;
+};
+
+const INITIAL_TASKS: Task[] = [
+  {
+    id: 'T-1001',
+    title: 'Deep clean espresso machine & grinders',
+    branch: 'Gothic',
+    tags: [{ label: 'Bar', bg: 'bg-blue-50', text: 'text-blue-600' }, { label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
+    comments: 4,
+    attachments: 2,
+    progress: 50,
+    deadline: '2d',
+    assignees: ['1', '2'],
+    status: 'todo',
+  },
+  {
+    id: 'T-1002',
+    title: 'Redesign seasonal menu',
+    branch: 'All Branches',
+    tags: [{ label: 'Marketing', bg: 'bg-purple-50', text: 'text-purple-600' }],
+    comments: 12,
+    attachments: 5,
+    progress: 0,
+    deadline: '4d',
+    assignees: ['3'],
+    status: 'in_progress',
+  },
+  {
+    id: 'T-1003',
+    title: 'Inventory count (Merch only)',
+    branch: 'Sagrada',
+    tags: [{ label: 'Inventory', bg: 'bg-green-50', text: 'text-green-600' }],
+    comments: 0,
+    attachments: 0,
+    progress: 100,
+    deadline: '1d',
+    assignees: ['4'],
+    status: 'in_review',
+  },
+  {
+    id: 'T-1004',
+    title: 'Update WiFi passwords',
+    branch: 'Gracia',
+    tags: [{ label: 'IT', bg: 'bg-gray-100', text: 'text-gray-600' }],
+    comments: 1,
+    attachments: 0,
+    progress: 0,
+    deadline: '5d',
+    assignees: ['5'],
+    status: 'todo',
+  },
+  {
+    id: 'T-1005',
+    title: 'Interview new barista candidates',
+    branch: 'Arc de Triumph',
+    tags: [{ label: 'HR', bg: 'bg-pink-50', text: 'text-pink-600' }],
+    comments: 8,
+    attachments: 3,
+    progress: 80,
+    deadline: '0d',
+    assignees: ['1'],
+    status: 'in_progress',
+  },
+  {
+    id: 'T-1006',
+    title: 'Fix AC unit in main hall',
+    branch: 'Eixample',
+    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
+    comments: 2,
+    attachments: 1,
+    progress: 10,
+    deadline: 'Overdue',
+    assignees: ['6'],
+    status: 'blocked',
+  },
+  {
+    id: 'T-1007',
+    title: 'Send monthly tax reports',
+    branch: 'HQ',
+    tags: [{ label: 'Finance', bg: 'bg-emerald-50', text: 'text-emerald-600' }],
+    comments: 0,
+    attachments: 4,
+    progress: 100,
+    deadline: 'Done',
+    assignees: ['2'],
+    status: 'completed',
+  },
+  {
+    id: 'T-1008',
+    title: 'Update barista training manual',
+    branch: 'HQ',
+    tags: [{ label: 'HR', bg: 'bg-pink-50', text: 'text-pink-600' }],
+    comments: 3,
+    attachments: 1,
+    progress: 0,
+    deadline: '7d',
+    assignees: ['1'],
+    status: 'todo',
+  },
+  {
+    id: 'T-1009',
+    title: 'Order new syrups for Fall',
+    branch: 'All Branches',
+    tags: [{ label: 'Inventory', bg: 'bg-green-50', text: 'text-green-600' }],
+    comments: 5,
+    attachments: 0,
+    progress: 30,
+    deadline: '2d',
+    assignees: ['4'],
+    status: 'in_progress',
+  },
+  {
+    id: 'T-1010',
+    title: 'Fix broken chair in patio',
+    branch: 'Sagrada',
+    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
+    comments: 0,
+    attachments: 1,
+    progress: 0,
+    deadline: '3d',
+    assignees: ['6'],
+    status: 'todo',
+  },
+  {
+    id: 'T-1011',
+    title: 'Approve new pastry supplier',
+    branch: 'HQ',
+    tags: [{ label: 'Management', bg: 'bg-purple-50', text: 'text-purple-600' }],
+    comments: 14,
+    attachments: 3,
+    progress: 90,
+    deadline: '1d',
+    assignees: ['2', '3'],
+    status: 'in_review',
+  },
+  {
+    id: 'T-1012',
+    title: 'Health inspection prep',
+    branch: 'Gothic',
+    tags: [{ label: 'Compliance', bg: 'bg-red-50', text: 'text-red-600' }],
+    comments: 7,
+    attachments: 0,
+    progress: 65,
+    deadline: '5d',
+    assignees: ['1', '5'],
+    status: 'in_progress',
+  },
+  {
+    id: 'T-1013',
+    title: 'Draft holiday promotions',
+    branch: 'HQ',
+    tags: [{ label: 'Marketing', bg: 'bg-purple-50', text: 'text-purple-600' }],
+    comments: 2,
+    attachments: 1,
+    progress: 0,
+    deadline: '14d',
+    assignees: ['3'],
+    status: 'todo',
+  },
+  {
+    id: 'T-1014',
+    title: 'Check plumbing issue',
+    branch: 'Arc de Triumph',
+    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
+    comments: 6,
+    attachments: 2,
+    progress: 20,
+    deadline: 'Overdue',
+    assignees: ['6'],
+    status: 'blocked',
+  },
+  {
+    id: 'T-1015',
+    title: 'Onboard new cashier',
+    branch: 'Gracia',
+    tags: [{ label: 'HR', bg: 'bg-pink-50', text: 'text-pink-600' }],
+    comments: 0,
+    attachments: 2,
+    progress: 100,
+    deadline: 'Done',
+    assignees: ['1'],
+    status: 'completed',
+  },
+  {
+    id: 'T-1016',
+    title: 'Update POS system software',
+    branch: 'All Branches',
+    tags: [{ label: 'IT', bg: 'bg-gray-100', text: 'text-gray-600' }],
+    comments: 1,
+    attachments: 0,
+    progress: 100,
+    deadline: 'Done',
+    assignees: ['5'],
+    status: 'archived',
+  },
+  {
+    id: 'T-1017',
+    title: 'Negotiate rent for Eixample',
+    branch: 'Eixample',
+    tags: [{ label: 'Finance', bg: 'bg-emerald-50', text: 'text-emerald-600' }],
+    comments: 22,
+    attachments: 8,
+    progress: 40,
+    deadline: '30d',
+    assignees: ['2', '4'],
+    status: 'in_progress',
+  },
+  {
+    id: 'T-1018',
+    title: 'Design new loyalty cards',
+    branch: 'All Branches',
+    tags: [{ label: 'Marketing', bg: 'bg-purple-50', text: 'text-purple-600' }],
+    comments: 11,
+    attachments: 4,
+    progress: 95,
+    deadline: '0d',
+    assignees: ['3', '1'],
+    status: 'in_review',
+  },
+  {
+    id: 'T-1019',
+    title: 'Review weekend sales metrics',
+    branch: 'HQ',
+    tags: [{ label: 'Finance', bg: 'bg-emerald-50', text: 'text-emerald-600' }],
+    comments: 4,
+    attachments: 1,
+    progress: 100,
+    deadline: 'Done',
+    assignees: ['2'],
+    status: 'completed',
+  },
+  {
+    id: 'T-1020',
+    title: 'Clean out storage room',
+    branch: 'Gothic',
+    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
+    comments: 0,
+    attachments: 0,
+    progress: 0,
+    deadline: '10d',
+    assignees: ['4'],
+    status: 'todo',
+  },
+  {
+    id: 'T-1021',
+    title: 'Fix lighting above counter',
+    branch: 'Sagrada',
+    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
+    comments: 9,
+    attachments: 1,
+    progress: 15,
+    deadline: 'Overdue',
+    assignees: ['6'],
+    status: 'blocked',
+  }
+];
+
+export default function TaskManager({ onBack }: { onBack?: () => void }) {
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [stages, setStages] = useState<Stage[]>(INITIAL_STAGES);
+  const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [assigneeFilter, setAssigneeFilter] = useState('All');
+  const [isAssigneeFilterOpen, setIsAssigneeFilterOpen] = useState(false);
+  const [locationFilter, setLocationFilter] = useState('All');
+  const [isLocationFilterOpen, setIsLocationFilterOpen] = useState(false);
+  const [tagFilter, setTagFilter] = useState('All');
+  const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
+
+  const openNewTaskModal = (status = 'todo') => {
+    const draftId = `T-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const draftTask = {
+      id: draftId,
+      title: 'Untitled Task',
+      branch: 'All Branches',
+      tags: [{ label: 'Management', bg: 'bg-purple-50', text: 'text-purple-600' }],
+      comments: 0,
+      attachments: 0,
+      progress: 0,
+      deadline: 'No deadline',
+      assignees: [uniqueAssignees[0] || ''],
+      status: status,
+    };
+    
+    setTasks(prev => [draftTask, ...prev]);
+    setEditingTask(draftTask);
+    setIsNewTaskModalOpen(true);
+  };
+
+  const editTask = (task: any) => {
+    setEditingTask(task);
+    setIsNewTaskModalOpen(true);
+  };
+
+  const handleUpdateTask = (updatedTask: any) => {
+    setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
+    setIsNewTaskModalOpen(false);
+    setEditingTask(null);
+  };
+
+  const filteredTasks = tasks.filter(t => {
+    const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesAssignee = assigneeFilter === 'All' || (t.assignees && t.assignees.some(a => a === assigneeFilter));
+    const matchesLocation = locationFilter === 'All' || t.branch === locationFilter;
+    const matchesTag = tagFilter === 'All' || (t.tags && t.tags.some(tag => tag.label === tagFilter));
+    return matchesSearch && matchesAssignee && matchesLocation && matchesTag;
+  });
+
+  const uniqueAssignees = Array.from(new Set(tasks.flatMap(t => t.assignees || [])));
+  const uniqueLocations = Array.from(new Set(tasks.map(t => t.branch).filter(Boolean)));
+  
+  const tagCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    tasks.forEach(t => {
+      t.tags?.forEach(tag => {
+        counts[tag.label] = (counts[tag.label] || 0) + 1;
+      });
+    });
+    
+    return Array.from(new Set(tasks.flatMap(t => t.tags?.map(tag => tag.label) || []))).map(label => {
+      const taskTag = tasks.find(t => t.tags?.find(x => x.label === label))?.tags?.find(x => x.label === label);
+      return {
+        label,
+        bg: taskTag?.bg || 'bg-gray-100',
+        text: taskTag?.text || 'text-gray-700',
+        count: counts[label]
+      };
+    }).sort((a, b) => b.count - a.count);
+  }, [tasks]);
+
+  const tasksWithStatus = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    tasks.forEach(t => {
+      counts[t.status] = (counts[t.status] || 0) + 1;
+    });
+    return counts;
+  }, [tasks]);
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 bg-white rounded-2xl border border-gray-100">
+
+      {/* Filter Bar */}
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0 gap-4 flex-wrap">
+        <div className="flex items-center gap-3 shrink-0">
+          
+          {/* Back Button */}
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="w-[30px] h-[30px] flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 rounded-xl border border-gray-200 transition-colors cursor-pointer shrink-0"
+              title="Back"
+            >
+              <ArrowLeft size={16} />
+            </button>
+          )}
+
+          {/* Search */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input 
+              type="text" 
+              placeholder="Search tasks..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-corgi/20 focus:border-corgi/30 w-[225px] transition-all placeholder:text-gray-400"
+            />
+          </div>
+
+          <div className="w-px h-6 bg-gray-200 mx-1" />
+
+          {/* Date Selector */}
+          <DatePicker 
+            selectedDate={selectedDate}
+            onChange={setSelectedDate}
+          />
+
+          <div className="w-px h-6 bg-gray-200 mx-1" />
+
+          {/* User Filter */}
+          <div className="relative">
+            <button 
+              onClick={() => setIsAssigneeFilterOpen(!isAssigneeFilterOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[13px] font-bold transition-colors cursor-pointer ${
+                assigneeFilter !== 'All' ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Users size={14} />
+              {assigneeFilter === 'All' ? 'All Assignees' : MOCK_USERS.find(u => u.id === assigneeFilter)?.name || 'Unknown'}
+              {assigneeFilter !== 'All' ? (
+                 <div onClick={(e) => { e.stopPropagation(); setAssigneeFilter('All'); }} className="ml-1 hover:text-red-400 p-0.5 rounded-full"><Plus size={14} className="rotate-45" /></div>
+              ) : (
+                 <ChevronDown size={14} className="text-gray-400" />
+              )}
+            </button>
+            <AnimatePresence>
+              {isAssigneeFilterOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsAssigneeFilterOpen(false)} />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-[240px] py-1 max-h-[300px] overflow-y-auto custom-scrollbar"
+                  >
+                    <button 
+                      onClick={() => { setAssigneeFilter('All'); setIsAssigneeFilterOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between cursor-pointer"
+                    >
+                      All Assignees
+                      {assigneeFilter === 'All' && <CheckSquare size={14} className="text-corgi" />}
+                    </button>
+                    {uniqueAssignees.map(a => {
+                      const user = MOCK_USERS.find(u => u.id === a);
+                      if (!user) return null;
+                      return (
+                        <button 
+                          key={a}
+                          onClick={() => { setAssigneeFilter(a); setIsAssigneeFilterOpen(false); }}
+                          className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between group cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`w-5 h-5 rounded-full text-white text-[9px] font-bold flex items-center justify-center shrink-0 ${user.bg}`}>
+                              {user.initials}
+                            </div>
+                            <span className="truncate max-w-[130px]">{user.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {assigneeFilter === a && <CheckSquare size={14} className="text-corgi" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Branch Filter */}
+          <div className="relative">
+            <button 
+              onClick={() => setIsLocationFilterOpen(!isLocationFilterOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[13px] font-bold transition-colors cursor-pointer ${
+                locationFilter !== 'All' ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <MapPin size={14} />
+              {locationFilter === 'All' ? 'All Locations' : locationFilter}
+              {locationFilter !== 'All' ? (
+                 <div onClick={(e) => { e.stopPropagation(); setLocationFilter('All'); }} className="ml-1 hover:text-red-400 p-0.5 rounded-full"><Plus size={14} className="rotate-45" /></div>
+              ) : (
+                 <ChevronDown size={14} className="text-gray-400" />
+              )}
+            </button>
+            <AnimatePresence>
+              {isLocationFilterOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsLocationFilterOpen(false)} />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-[200px] py-1"
+                  >
+                    <button 
+                      onClick={() => { setLocationFilter('All'); setIsLocationFilterOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between cursor-pointer"
+                    >
+                      All Locations
+                      {locationFilter === 'All' && <CheckSquare size={14} className="text-corgi" />}
+                    </button>
+                    {uniqueLocations.map(l => (
+                      <button 
+                        key={l}
+                        onClick={() => { setLocationFilter(l); setIsLocationFilterOpen(false); }}
+                        className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between group cursor-pointer"
+                      >
+                        {l}
+                        {locationFilter === l && <CheckSquare size={14} className="text-corgi" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Tags Filter */}
+          <div className="relative">
+            <button 
+              onClick={() => setIsTagFilterOpen(!isTagFilterOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[13px] font-bold transition-colors cursor-pointer ${
+                tagFilter !== 'All' ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Filter size={14} />
+              {tagFilter === 'All' ? 'Tags' : tagFilter}
+              {tagFilter !== 'All' ? (
+                 <div onClick={(e) => { e.stopPropagation(); setTagFilter('All'); }} className="ml-1 hover:text-red-400 p-0.5 rounded-full"><Plus size={14} className="rotate-45" /></div>
+              ) : (
+                 <ChevronDown size={14} className="text-gray-400" />
+              )}
+            </button>
+            <AnimatePresence>
+              {isTagFilterOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsTagFilterOpen(false)} />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-[240px] py-1"
+                  >
+                    <button 
+                      onClick={() => { setTagFilter('All'); setIsTagFilterOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between cursor-pointer"
+                    >
+                      All Tags
+                      {tagFilter === 'All' && <CheckSquare size={14} className="text-corgi" />}
+                    </button>
+                    {tagCounts.map(tag => (
+                      <button 
+                        key={tag.label}
+                        onClick={() => { setTagFilter(tag.label); setIsTagFilterOpen(false); }}
+                        className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between group cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          {tag.label}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400 text-[11px] group-hover:text-gray-600 transition-colors">{tag.count}</span>
+                          {tagFilter === tag.label && <CheckSquare size={14} className="text-corgi" />}
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="w-px h-6 bg-gray-200 mx-1" />
+
+          {/* Settings Button */}
+          <button 
+             onClick={() => setIsSettingsModalOpen(true)}
+             className="w-[32px] h-[32px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-900 rounded-xl border border-gray-200 transition-colors cursor-pointer"
+          >
+             <Settings size={16} />
+          </button>
+        </div>
+
+        {/* Create New */}
+        <button 
+          onClick={() => openNewTaskModal('todo')}
+          className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors cursor-pointer shrink-0"
+        >
+          <Plus size={16} />
+          <span className="text-[13px] font-bold">New Task</span>
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar relative bg-[#f9fafc]">
+        <div className="flex gap-0.5 h-full p-4 pt-3 items-start w-max">
+        {stages.map(stage => (
+          <div key={stage.id} className="flex-shrink-0 w-[264px] flex flex-col h-full bg-[#f9fafc] rounded-[16px] p-1.5 border border-gray-100/50">
+            {/* Column Header (Sticky) */}
+            <div className="flex items-center justify-between mb-4 shrink-0 px-1">
+              <div className="flex items-center gap-2">
+                <div className={`w-1 h-4 rounded-full ${stage.color}`} />
+                <h3 className="text-[14px] font-bold text-gray-900">{stage.label}</h3>
+                <span className="bg-gray-200 text-gray-600 font-bold text-[11px] px-2 py-0.5 rounded-full">
+                  {filteredTasks.filter(t => t.status === stage.id).length}
+                </span>
+              </div>
+              <div className="flex gap-1 text-gray-400">
+                <button 
+                  onClick={() => openNewTaskModal(stage.id)}
+                  className="p-1 hover:bg-gray-200 hover:text-gray-700 rounded transition-colors cursor-pointer"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            </div>
+            
+            {/* Column Tasks (Scrollable) */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pb-1 px-0.5">
+              <AnimatePresence>
+                {filteredTasks.filter(t => t.status === stage.id).map(task => (
+                  <motion.div
+                    key={task.id}
+                    initial={{ opacity: 0, y: -15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    <TaskCard task={task} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              <button 
+                onClick={() => openNewTaskModal(stage.id)}
+                className="flex items-center gap-2 w-full p-3 rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700 hover:bg-white transition-all text-[13px] font-semibold justify-center cursor-pointer"
+              >
+                <Plus size={16} /> Add new
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      </div>
+      
+      <NewTaskModal 
+        isOpen={isNewTaskModalOpen} 
+        onClose={() => {
+          setIsNewTaskModalOpen(false);
+          setEditingTask(null);
+        }} 
+        onSave={handleUpdateTask} 
+        uniqueLocations={uniqueLocations} 
+        uniqueAssignees={uniqueAssignees} 
+        uniqueTags={tagCounts}
+        editingTask={editingTask}
+        onDelete={(taskId) => {
+          setTasks(prev => prev.filter(t => t.id !== taskId));
+          setIsNewTaskModalOpen(false);
+          setEditingTask(null);
+        }}
+      />
+
+      <BoardSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        stages={stages}
+        tasksWithStatus={tasksWithStatus}
+        onSave={(newStages, taskMigrations) => {
+          setStages(newStages);
+          if (taskMigrations.length > 0) {
+            setTasks(prev => prev.map(t => {
+              const migration = taskMigrations.find(m => m.from === t.status);
+              if (migration) {
+                return { ...t, status: migration.to };
+              }
+              return t;
+            }));
+          }
+          setIsSettingsModalOpen(false);
+        }}
+      />
+    </div>
+  );
+
+  function TaskCard({ task }: { task: Task }) {
+    const getDeadlineColor = () => {
+      if (task.deadline === 'Overdue') return 'text-red-500';
+      if (task.deadline === 'No deadline') return 'text-gray-400';
+      
+      const deadlineDate = new Date(task.deadline.replace(' at ', ' '));
+      if (isNaN(deadlineDate.getTime())) return 'text-gray-400';
+      
+      const timeDiff = deadlineDate.getTime() - new Date().getTime();
+      
+      if (timeDiff < 0) return 'text-red-500';
+      if (timeDiff < 2 * 60 * 60 * 1000) return 'text-corgi';
+      
+      return 'text-gray-400';
+    };
+
+    return (
+      <div 
+        onClick={() => editTask(task)}
+        className="bg-white rounded-[12px] p-2 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all cursor-pointer group"
+      >
+        <h4 className="text-[14px] font-bold text-gray-900 leading-snug mb-4 mt-1">{task.title}</h4>
+        
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center -space-x-2">
+            {task.assignees?.map((userId, i) => {
+              const u = MOCK_USERS.find(user => user.id === userId);
+              if (!u) return null;
+              return (
+                <div key={i} className={`w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 border-2 border-white ${u.bg}`}>
+                  {u.initials}
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {task.tags?.map((tag, i) => (
+              <span key={i} className={`${tag.bg} ${tag.text} px-2 py-0.5 rounded-full text-[10px] font-bold`}>
+                {tag.label}
+              </span>
+            ))}
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between text-[11px] font-semibold text-gray-400 pt-1">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 hover:text-gray-600 transition-colors cursor-pointer group/loc relative">
+              <MapPin size={14} /> 
+              <span className="truncate max-w-[80px]">
+                 {(() => {
+                   if (!task.branch || task.branch === 'All Branches') return 'All Branches';
+                   const locs = task.branch.split(', ');
+                   return locs.length > 1 ? `${locs[0]} +${locs.length - 1}` : task.branch;
+                 })()}
+              </span>
+              {task.branch && task.branch.split(', ').length > 1 && task.branch !== 'All Branches' && (
+                <div className="absolute bottom-full left-0 mb-1 hidden group-hover/loc:block bg-gray-900 text-white text-[10px] py-1 px-2 rounded-lg whitespace-nowrap z-10 shadow-lg font-medium">
+                  {task.branch}
+                </div>
+              )}
+            </div>
+            {task.attachments > 0 && (
+              <div className="flex items-center gap-1 hover:text-gray-600 transition-colors cursor-pointer">
+                <Paperclip size={14} /> {task.attachments}
+              </div>
+            )}
+          </div>
+          <div className={`flex items-center gap-1 ${getDeadlineColor()}`}>
+            <Clock size={14} /> {task.deadline}
+          </div>
+        </div>
+      </div>
+    );
+  }
+}

@@ -1,0 +1,215 @@
+'use client';
+
+import React, { useState } from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import GlobalFilters from '@/components/dashboard/GlobalFilters';
+import { RevenueLineChart } from '@/components/dashboard/SalesCharts';
+import { RevenueTable } from '@/components/reports/RevenueTable';
+import { StaffPerformanceTables } from '@/components/reports/StaffPerformanceTables';
+import { DishPerformanceTables } from '@/components/reports/DishPerformanceTables';
+import { FinancialSummaries } from '@/components/reports/FinancialSummaries';
+import { Download, Check, ChevronDown } from 'lucide-react';
+
+export default function ReportsPage() {
+  const [compare, setCompare] = useState(false);
+  const [revenueView, setRevenueView] = useState<'chart'|'table'>('chart');
+  const [revenueViewMode, setRevenueViewMode] = useState<'total' | 'locations'>('total');
+  
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('All Branches');
+  
+  const locations = [
+    'All Branches',
+    'Eixample',
+    'Gótico',
+    'Arc de Triomf',
+    'Sagrada Família',
+    'Gràcia'
+  ];
+
+  const handleExportCSV = () => {
+    // Generate a comprehensive mock CSV
+    const headers = "Report Type,Location,Metric,Value,Date\n";
+    const rows = [
+      "Revenue,All Branches,Gross Sales,33244.00,2026-05-26",
+      "Revenue,All Branches,Net Sales,29540.00,2026-05-26",
+      "Revenue,All Branches,IVA Collection,3704.00,2026-05-26",
+      "Revenue,Eixample,Gross Sales,12450.00,2026-05-26",
+      "Revenue,Gótico,Gross Sales,9800.00,2026-05-26",
+      "Dishes,Eixample,Corgi Signature Latte (Sales),4200.00,2026-05-26",
+      "Dishes,Eixample,Avocado Toast (Sales),3000.00,2026-05-26",
+      "Staff,Eixample,Emma W. (Sales),4250.00,2026-05-26",
+      "Staff,Sagrada Família,Liam P. (Sales),4100.00,2026-05-26",
+      "Financial,All Branches,Total Receipts,1248,2026-05-26",
+      "Financial,All Branches,Void Transactions,14,2026-05-26",
+      "Financial,All Branches,Base Imponible,29540.00,2026-05-26",
+      "Financial,All Branches,IVA 10% (F&B),2850.00,2026-05-26",
+      "Ledger,Eixample,TKT-2605-0042 (Receipt),42.50,2026-05-26",
+      "Ledger,Arc de Triomf,TKT-2605-0044 (Void),-28.00,2026-05-26"
+    ].join("\n");
+    
+    const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `corgi_cafe_reports_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="bg-white rounded-3xl p-5 md:p-8 shadow-sm flex-1 overflow-y-auto pb-10 flex flex-col gap-6">
+        
+        {/* Header Controls */}
+        <div className="flex flex-col xl:flex-row gap-3 items-center justify-between z-20 relative w-full">
+          <GlobalFilters compare={compare} onCompareChange={setCompare} variant="reports" />
+          
+          <div className="flex items-center gap-3">
+            {/* Export CSV Button */}
+            <button 
+              onClick={handleExportCSV}
+              className="flex items-center justify-center gap-2 bg-white border border-gray-100 hover:border-gray-200 text-gray-700 font-bold text-[13px] rounded-xl px-4 py-2 h-[40px] transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <Download className="w-4 h-4 text-gray-400" />
+              <span className="hidden sm:inline">Export CSV</span>
+            </button>
+
+            {/* Location Selector (Custom Dark Modal) */}
+            <div className="relative">
+              <button 
+                onClick={() => setLocationOpen(!locationOpen)}
+                className="flex items-center gap-2 bg-white border border-gray-100 hover:border-gray-200 text-gray-700 font-bold text-[13px] rounded-xl pl-4 pr-3 py-2 h-[40px] transition-colors cursor-pointer"
+              >
+                <span>{selectedLocation}</span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </button>
+
+            {locationOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setLocationOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 w-48 bg-[#525252] rounded-xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {locations.map((loc) => (
+                    <button
+                      key={loc}
+                      onClick={() => {
+                        setSelectedLocation(loc);
+                        setLocationOpen(false);
+                      }}
+                      className="w-full flex items-center px-4 py-2 hover:bg-white/10 transition-colors text-left text-[14px] text-white font-medium group"
+                    >
+                      <div className="w-5 flex justify-center mr-1">
+                        {selectedLocation === loc && (
+                          <Check className="w-4 h-4 text-white" />
+                        )}
+                      </div>
+                      {loc}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+        {/* Revenue Comparison Widget */}
+        <div className="border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <div>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight">Revenue Comparison</h3>
+              <p className="text-sm font-medium text-gray-500 mt-1">Analyze sales across periods and locations.</p>
+            </div>
+            <button 
+              onClick={() => setRevenueView(revenueView === 'chart' ? 'table' : 'chart')}
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 text-gray-700 rounded-xl font-bold text-[13px] transition-colors cursor-pointer"
+            >
+              {revenueView === 'chart' ? (
+                <>
+                  <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                  <span>Open in Table</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span>Show Chart</span>
+                </>
+              )}
+            </button>
+          </div>
+          
+          {/* Chart Summary Stats */}
+          {revenueView === 'chart' && (
+            <div className="flex flex-wrap items-center gap-8 mb-6 animate-in fade-in duration-300">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-3 h-3 rounded-sm bg-corgi"></div>
+                  <span className="text-sm font-bold text-gray-500">Gross Volume</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black text-gray-900 tracking-tight">€48,580</span>
+                  <span className="text-sm font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-md">↑ 3.12%</span>
+                </div>
+              </div>
+              
+              {compare && (
+                <>
+                  <div className="w-px h-12 bg-gray-100 hidden sm:block"></div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-3 h-3 rounded-sm" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #f59e0b, #f59e0b 2px, #fef3c7 2px, #fef3c7 4px)' }}></div>
+                      <span className="text-sm font-bold text-gray-500">Gross (Prev Period)</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-gray-400 tracking-tight">€46,800</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="flex-1 min-h-[300px] transition-all duration-500 ease-in-out">
+            {revenueView === 'chart' ? (
+              <div className="h-full animate-in fade-in zoom-in-95 duration-300">
+                <RevenueLineChart compare={compare} viewMode="locations" grossOnly={true} />
+              </div>
+            ) : (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <RevenueTable compare={compare} />
+              </div>
+            )}
+          </div>
+        </div>
+
+
+
+        {/* Dish Performance (Full Width Grouped Tables) */}
+        <div className="w-full">
+          <DishPerformanceTables />
+        </div>
+
+        {/* Staff Performance (Full Width Grouped Tables) */}
+        <div className="w-full">
+          <StaffPerformanceTables />
+        </div>
+
+        {/* Financial Summaries & VERI*FACTU Ledger */}
+        <div className="w-full">
+          <FinancialSummaries />
+        </div>
+
+      </div>
+    </DashboardLayout>
+  );
+}
+
+
