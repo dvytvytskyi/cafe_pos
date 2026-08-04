@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, AlertTriangle, AlertCircle, CheckCircle2, ArrowUpDown, ArrowUp, ArrowDown, Download, Loader2, Check, MapPin, ChevronDown } from 'lucide-react';
+import { PackageSearch, Download, Search, MapPin, ChevronDown, Check, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AddItemModal, { StockItemData } from './AddItemModal';
 
@@ -50,7 +50,7 @@ const MOCK_INVENTORY: StockItem[] = [
   { id: '25', sku: 'K-CHZ-01', name: 'Cheddar Cheese Block', category: 'kitchen', totalStock: 25, minThreshold: 10, status: 'healthy', locations: { main: 15, gothic: 3, eixample: 4, sagrada: 3 } },
 ];
 
-export default function StockTable() {
+export default function StockTable({ onAdd }: { onAdd?: () => void }) {
   const [filter, setFilter] = useState<Category | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
@@ -172,42 +172,68 @@ export default function StockTable() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative group shrink-0 w-full sm:w-auto">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <input 
-              type="text" 
-              placeholder="Search SKU or item name..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-[270px] bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all placeholder:font-medium placeholder:text-gray-400"
-            />
+      <div className="flex flex-col gap-4 mb-6">
+        {/* Row 1: Search, Locations, Add Item */}
+        <div className="flex flex-wrap sm:flex-nowrap justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative group shrink-0 w-full sm:w-auto">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input 
+                type="text" 
+                placeholder="Search SKU or item name..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full sm:w-[270px] bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all placeholder:font-medium placeholder:text-gray-400"
+              />
+            </div>
+            
+            <div className="relative shrink-0 hidden sm:block">
+              <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <select 
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
+                className="appearance-none bg-white border border-gray-200 rounded-xl pl-9 pr-8 py-2 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all cursor-pointer"
+              >
+                <option value="all">All Locations</option>
+                <option value="gotico">Gothic</option>
+                <option value="sagrada">Sagrada</option>
+                <option value="arc">Arc de Triumph</option>
+                <option value="eixample">Eixample</option>
+                <option value="gracia">Gracia</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
           </div>
           
-          <div className="relative shrink-0 hidden sm:block">
-            <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <select 
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-              className="appearance-none bg-white border border-gray-200 rounded-xl pl-9 pr-8 py-2 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all cursor-pointer"
+          {onAdd && (
+            <button 
+              onClick={onAdd}
+              className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl shadow-sm transition-all cursor-pointer hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 shrink-0"
             >
-              <option value="all">All Locations</option>
-              <option value="gotico">Gothic</option>
-              <option value="sagrada">Sagrada</option>
-              <option value="arc">Arc de Triumph</option>
-              <option value="eixample">Eixample</option>
-              <option value="gracia">Gracia</option>
-            </select>
-            <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
+              <Plus size={16} strokeWidth={2.5} />
+              Add Item
+            </button>
+          )}
         </div>
         
-        <div className="flex items-center gap-3">
+        {/* Row 2: Tabs, Export */}
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <div className="flex items-center gap-0.5 h-9 bg-gray-50/80 p-1 rounded-xl border border-gray-200/60 shrink-0">
+            {(['all', 'merch', 'bar', 'kitchen'] as const).map(cat => (
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                className={`cursor-pointer whitespace-nowrap h-7 flex items-center justify-center px-4 text-[13px] font-semibold capitalize rounded-lg transition-all duration-200 ${filter === cat ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
           <button 
             onClick={handleExportCSV}
             disabled={exportState !== 'idle'}
-            className="relative overflow-hidden flex items-center justify-center px-4 h-9 min-w-[130px] bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-90 disabled:cursor-default"
+            title="Export to CSV"
+            className="relative overflow-hidden flex items-center justify-center px-4 w-auto h-9 min-w-[130px] bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-90 disabled:cursor-default shrink-0"
           >
             <AnimatePresence mode="wait">
               {exportState === 'idle' && (
@@ -220,7 +246,7 @@ export default function StockTable() {
                   className="flex items-center gap-2"
                 >
                   <Download size={14} />
-                  Export to CSV
+                  <span>Export to CSV</span>
                 </motion.div>
               )}
               {exportState === 'exporting' && (
@@ -233,7 +259,7 @@ export default function StockTable() {
                   className="flex items-center gap-2 text-corgi"
                 >
                   <Loader2 size={14} className="animate-spin" />
-                  Exporting...
+                  <span>Exporting...</span>
                 </motion.div>
               )}
               {exportState === 'done' && (
@@ -246,22 +272,11 @@ export default function StockTable() {
                   className="flex items-center gap-2 text-green-600"
                 >
                   <Check size={14} strokeWidth={3} />
-                  Done
+                  <span>Done</span>
                 </motion.div>
               )}
             </AnimatePresence>
           </button>
-          <div className="flex items-center gap-0.5 h-9 bg-gray-50/80 p-1 rounded-xl border border-gray-200/60 shrink-0">
-            {(['all', 'merch', 'bar', 'kitchen'] as const).map(cat => (
-              <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`cursor-pointer whitespace-nowrap h-7 flex items-center justify-center px-4 text-[13px] font-semibold capitalize rounded-lg transition-all duration-200 ${filter === cat ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'}`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 

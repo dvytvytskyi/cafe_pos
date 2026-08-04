@@ -5,9 +5,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MousePointer2, Square, Plus, Map, Move, Trash2, Maximize2, SplitSquareHorizontal, ZoomIn, ZoomOut, Focus, Hexagon, QrCode, Download, RefreshCw, Layers, Copy, Play, Settings2, Check, ChevronRight } from 'lucide-react';
 import OrderTerminalModal from '@/components/pos/OrderTerminalModal';
 import OrderDetailsModal from '@/components/operations/OrderDetailsModal';
-import { getOrders, saveOrders, Order, OrderItem } from '@/lib/orders';
-import { getGuests, getTierCashbackRate, updateGuestPointsAndLTV } from '@/lib/crm';
-import { getRooms, saveRooms, DEFAULT_ROOMS, Room, Table, Zone, Obstacle, Point } from '@/lib/tables';
+import { getOrdersAsync, createOrderAsync, updateOrderAsync, updateOrderStatusAsync, Order } from '@/lib/orders';
+import { getGuestsAsync, Guest } from '@/lib/crm';
+import {
+  DEFAULT_ROOMS,
+  Room,
+  Table,
+  Zone,
+  Obstacle,
+  Point,
+  getRoomsAsync,
+  saveRoomsAsync,
+  seedDefaultLayoutAsync,
+  updateTableStatusAsync,
+} from '@/lib/tables';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 import { logAuditEvent } from '@/lib/audit';
 
 const GRID_SIZE = 40; // 40px = 1m
@@ -28,8 +40,10 @@ export default function TablesView({
 }) {
 
   const [mode, setMode] = useState<Mode>('select');
-  const [rooms, setRooms] = useState<Room[]>(() => getRooms());
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [activeRoomId, setActiveRoomId] = useState<string>('room-1');
+  const [isLoadingLayout, setIsLoadingLayout] = useState(true);
+  const [layoutError, setLayoutError] = useState<string | null>(null);
   const [isLiveView, setIsLiveView] = useState(readonly);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
@@ -42,6 +56,59 @@ export default function TablesView({
   const [isControlsExpanded, setIsControlsExpanded] = useState(false);
 
   const [isSavedFeedback, setIsSavedFeedback] = useState(false);
+
+  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
+  const [initialRooms, setInitialRooms] = useState<Room[]>([]);
+  const [crmGuests, setCrmGuests] = useState<Guest[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const fetchActiveOrders = async () => {
+    try {
+      const dbOrders = await getOrdersAsync(DEFAULT_LOCATION_ID);
+      setActiveOrders(dbOrders);
+    } catch (error) {
+      console.error('Failed to fetch active orders from DB:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    async function loadLayout() {
+      setIsLoadingLayout(true);
+      setLayoutError(null);
+      try {
+        let dbRooms = await getRoomsAsync(DEFAULT_LOCATION_ID);
+        if (!dbRooms || dbRooms.length === 0) {
+          dbRooms = await seedDefaultLayoutAsync(DEFAULT_LOCATION_ID);
+        }
+        setRooms(dbRooms);
+        setInitialRooms(dbRooms);
+        setActiveRoomId(prev => dbRooms.some(r => r.id === prev) ? prev : dbRooms[0].id);
+      } catch (error) {
+        console.error('Failed to load layout from DB:', error);
+        setLayoutError('Could not load floor plan from server. Please retry.');
+      } finally {
+        setIsLoadingLayout(false);
+      }
+    }
+    loadLayout();
+    fetchActiveOrders();
+    getGuestsAsync()
+      .then(setCrmGuests)
+      .catch((err) => console.error('Failed to load CRM guests:', err));
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted || !isLiveView) return;
+    fetchActiveOrders();
+    const intervalId = window.setInterval(fetchActiveOrders, 30000);
+    return () => window.clearInterval(intervalId);
+  }, [isLiveView, mounted]);
 
   const saveDefaultView = () => {
     const currentZoom = zoom;
@@ -56,7 +123,10 @@ export default function TablesView({
     } : r);
 
     setRooms(updatedRooms);
-    saveRooms(updatedRooms);
+    saveRoomsAsync(DEFAULT_LOCATION_ID, updatedRooms).catch(err => {
+      console.error('Failed to save default view:', err);
+      setLayoutError('Failed to save default view');
+    });
     
     setIsSavedFeedback(true);
     setTimeout(() => {
@@ -67,9 +137,9 @@ export default function TablesView({
   };
 
   const activeRoom = rooms.find(r => r.id === activeRoomId) || rooms[0];
-  const tables = activeRoom.tables;
-  const zones = activeRoom.zones;
-  const obstacles = activeRoom.obstacles;
+  const tables = activeRoom?.tables ?? [];
+  const zones = activeRoom?.zones ?? [];
+  const obstacles = activeRoom?.obstacles ?? [];
 
   const setTables = (newTables: Table[] | ((prev: Table[]) => Table[])) => {
     setRooms(rooms.map(r => r.id === activeRoomId ? { 
@@ -102,7 +172,6 @@ export default function TablesView({
   const svgRef = useRef<SVGSVGElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const [initialRooms, setInitialRooms] = useState<Room[]>(() => getRooms());
   const [isDirty, setIsDirty] = useState(false);
   const [activeOrderTableId, setActiveOrderTableId] = useState<string | null>(null);
   const [selectedOrderForSidebar, setSelectedOrderForSidebar] = useState<Order | null>(null);
@@ -300,19 +369,28 @@ export default function TablesView({
   };
 
   const updateTable = (id: string, updates: Partial<Table>) => {
-    setTables(tables.map(t => {
+    const isStatusOnly = Object.keys(updates).length === 1 && updates.status !== undefined;
+
+    const updatedTables = tables.map(t => {
       if (t.id !== id) return t;
-      // Check for uniqueness when updating name
       if (updates.name !== undefined) {
-        let val = updates.name;
+        const val = updates.name;
         const isDuplicate = tables.some(other => other.id !== id && other.name === val);
         if (isDuplicate) {
-          return { ...t, ...updates, name: val + ' (1)' }; // temporary fallback if collision
+          return { ...t, ...updates, name: val + ' (1)' };
         }
         return { ...t, ...updates, name: val };
       }
       return { ...t, ...updates };
-    }));
+    });
+    setTables(updatedTables);
+
+    if (isStatusOnly && updates.status) {
+      updateTableStatusAsync(id, updates.status).catch(err => {
+        console.error('Failed to update table status in DB:', err);
+        setLayoutError('Failed to save table status');
+      });
+    }
   };
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
@@ -441,8 +519,35 @@ export default function TablesView({
     setIsEditorOpen(false);
   };
 
+  if (!mounted) {
+    return (
+      <div className="flex flex-col h-full bg-gray-50 rounded-2xl overflow-hidden shadow-inner relative">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="text-sm font-semibold text-gray-600">Loading floor plan…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-gray-50 rounded-2xl overflow-hidden shadow-inner relative">
+      {isLoadingLayout && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-50/90">
+          <p className="text-sm font-semibold text-gray-600">Loading floor plan…</p>
+        </div>
+      )}
+      {layoutError && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm font-semibold shadow-md flex items-center gap-3">
+          <span>{layoutError}</span>
+          <button
+            type="button"
+            onClick={() => setLayoutError(null)}
+            className="text-red-500 hover:text-red-700 font-bold"
+          >
+            ×
+          </button>
+        </div>
+      )}
       {/* Save Banner */}
       {!readonly && (isDirty || saveStatus !== 'idle') && (
         <div 
@@ -452,20 +557,25 @@ export default function TablesView({
             {saveStatus === 'saved' ? 'All changes saved!' : 'You have unsaved changes'}
           </span>
           <button
-            onClick={() => {
+            onClick={async () => {
               if (saveStatus !== 'idle') return;
-              saveRooms(rooms);
-              setSaveStatus('saved');
-              setTimeout(() => {
-                setIsExiting(true);
+              try {
+                await saveRoomsAsync(DEFAULT_LOCATION_ID, rooms);
+                setSaveStatus('saved');
                 setTimeout(() => {
-                  setInitialRooms(rooms);
-                  setIsDirty(false);
-                  onDirtyChange?.(false);
-                  setSaveStatus('idle');
-                  setIsExiting(false);
-                }, 500);
-              }, 1500);
+                  setIsExiting(true);
+                  setTimeout(() => {
+                    setInitialRooms(rooms);
+                    setIsDirty(false);
+                    onDirtyChange?.(false);
+                    setSaveStatus('idle');
+                    setIsExiting(false);
+                  }, 500);
+                }, 1500);
+              } catch (e) {
+                console.error('Failed to save layout:', e);
+                setLayoutError('Failed to save layout changes');
+              }
             }}
             className={`${saveStatus === 'saved' ? 'bg-green-500 hover:bg-green-600' : 'bg-corgi hover:bg-orange-600'} text-white px-5 py-2 rounded-full text-sm font-bold transition-colors shadow-sm cursor-pointer flex items-center gap-2`}
           >
@@ -1443,7 +1553,7 @@ export default function TablesView({
           const table = tables.find(t => t.id === activeOrderTableId);
           if (!table) return null;
           
-          const activeOrder = getOrders().find(o => o.tableId === activeOrderTableId && !o.paid);
+          const activeOrder = activeOrders.find(o => o.tableId === activeOrderTableId && !o.paid);
           
           return (
             <OrderTerminalModal
@@ -1451,77 +1561,74 @@ export default function TablesView({
               tableName={table.name}
               currentStatus={table.status || 'available'}
               initialOrder={activeOrder}
+              guests={crmGuests}
+              locationId={DEFAULT_LOCATION_ID}
               onClose={() => setActiveOrderTableId(null)}
-              onAction={(action, items, discountPercent, customerId, keepOpen) => {
+              onAction={async (action, items, discountPercent, customerId, keepOpen) => {
                 let newStatus = table.status;
                 if (action === 'send_to_kitchen') newStatus = 'occupied';
                 else if (action === 'print_check') newStatus = 'billed';
-                else if (action === 'pay') newStatus = 'occupied'; // Keep occupied, payment will complete in sidebar
+                else if (action === 'pay') newStatus = 'occupied';
                 else if (action === 'clean') newStatus = 'available';
 
                 let orderToOpen: Order | null = null;
 
-                // Manage linked orders
                 if (action !== 'clean') {
                   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
                   const discountAmount = subtotal * discountPercent;
                   const finalTotal = parseFloat(Math.max(0, subtotal - discountAmount).toFixed(2));
-                  const formattedItems = items.map(i => ({
+                  const formattedItems = items.map((i) => ({
                     name: i.name,
                     price: i.price,
                     quantity: i.quantity,
-                    comments: i.comments
+                    comments: i.comments,
                   }));
 
-                  const allOrders = getOrders();
-                  
-                  if (activeOrder) {
-                    // Update existing order
-                    const updatedOrders = allOrders.map(o => {
-                      if (o.id === activeOrder.id) {
-                        const finalCustomerId = customerId || o.customerId;
-                        const guestName = finalCustomerId ? (getGuests().find(g => g.id === finalCustomerId)?.name || o.customerName) : o.customerName;
-                        const updated: Order = {
-                          ...o,
-                          items: formattedItems,
-                          total: finalTotal,
-                          customerId: finalCustomerId,
-                          customerName: guestName,
-                          discount: discountPercent > 0 ? {
-                            name: `${discountPercent * 100}% Discount`,
-                            value: discountPercent * 100,
-                            amountDeducted: parseFloat(discountAmount.toFixed(2))
-                          } : undefined,
-                        };
-                        orderToOpen = updated;
-                        return updated;
-                      }
-                      return o;
-                    });
-                    saveOrders(updatedOrders);
-                  } else {
-                    // Create new order
-                    const guestName = customerId ? (getGuests().find(g => g.id === customerId)?.name || `Table ${table.name}`) : `Table ${table.name}`;
-                    const newOrder: Order = {
-                      id: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
-                      source: 'dine_in',
-                      customerId: customerId,
-                      customerName: guestName,
-                      tableId: table.id,
-                      items: formattedItems,
-                      total: finalTotal,
-                      discount: discountPercent > 0 ? {
-                        name: `${discountPercent * 100}% Discount`,
-                        value: discountPercent * 100,
-                        amountDeducted: parseFloat(discountAmount.toFixed(2))
-                      } : undefined,
-                      status: 'preparing',
-                      time: new Date(),
-                      paid: false,
-                      orderedBy: 'waiter',
-                    };
-                    orderToOpen = newOrder;
-                    saveOrders([...allOrders, newOrder]);
+                  const finalCustomerId = customerId || activeOrder?.customerId;
+                  const guestName = finalCustomerId
+                    ? crmGuests.find((g) => g.id === finalCustomerId)?.name || activeOrder?.customerName || `Table ${table.name}`
+                    : `Table ${table.name}`;
+
+                  const discount =
+                    discountPercent > 0
+                      ? {
+                          name: `${Math.round(discountPercent * 100)}% Discount`,
+                          value: discountPercent * 100,
+                          amountDeducted: discountAmount,
+                        }
+                      : undefined;
+
+                  try {
+                    if (activeOrder) {
+                      orderToOpen = await updateOrderAsync(activeOrder.id, {
+                        items: formattedItems,
+                        total: finalTotal,
+                        customerId: finalCustomerId,
+                        customerName: guestName,
+                        tableId: table.id,
+                        discount,
+                        status: 'preparing',
+                      });
+                    } else {
+                      orderToOpen = await createOrderAsync({
+                        source: 'dine_in',
+                        status: 'preparing',
+                        tableId: table.id,
+                        locationId: DEFAULT_LOCATION_ID,
+                        items: formattedItems,
+                        total: finalTotal,
+                        customerId: finalCustomerId,
+                        customerName: guestName,
+                        paid: false,
+                        orderedBy: 'waiter',
+                        discount,
+                      });
+                    }
+                    await fetchActiveOrders();
+                  } catch (err) {
+                    console.error('Failed to save order:', err);
+                    setLayoutError('Failed to save order');
+                    return;
                   }
                 }
 
@@ -1530,7 +1637,6 @@ export default function TablesView({
                   setActiveOrderTableId(null);
                 }
 
-                // If action is pay, immediately trigger the existing payment sidebar modal
                 if (action === 'pay' && orderToOpen) {
                   setSelectedOrderForSidebar(orderToOpen);
                 }
@@ -1545,17 +1651,14 @@ export default function TablesView({
         order={selectedOrderForSidebar}
         isOpen={!!selectedOrderForSidebar}
         onClose={() => setSelectedOrderForSidebar(null)}
-        onUpdateStatus={(orderId, status) => {
-          const allOrders = getOrders();
-          const order = allOrders.find(o => o.id === orderId);
-          if (order) {
-            const updated = { ...order, status };
-            const updatedOrders = allOrders.map(o => o.id === orderId ? updated : o);
-            saveOrders(updatedOrders);
+        onUpdateStatus={async (orderId, status) => {
+          try {
+            const updated = await updateOrderStatusAsync(orderId, status);
             setSelectedOrderForSidebar(updated);
+            await fetchActiveOrders();
 
             // Update table status if needed
-            const table = tables.find(t => t.id === order.tableId);
+            const table = tables.find(t => t.id === updated.tableId);
             if (table) {
               let newStatus = table.status;
               if (status === 'completed') newStatus = 'dirty';
@@ -1564,25 +1667,37 @@ export default function TablesView({
                 updateTable(table.id, { status: newStatus });
               }
             }
+          } catch (err) {
+            console.error('Failed to update order status:', err);
           }
         }}
-        onUpdateOrder={(updatedOrder) => {
-          const allOrders = getOrders();
-          const updatedOrders = allOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o);
-          saveOrders(updatedOrders);
-          setSelectedOrderForSidebar(updatedOrder);
+        onUpdateOrder={async (updatedOrder) => {
+          try {
+            const res = await fetch(`/api/orders/${updatedOrder.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updatedOrder),
+            });
+            if (res.ok) {
+              const updated = await res.json();
+              setSelectedOrderForSidebar(updated);
+              await fetchActiveOrders();
 
-          // Update table status based on payment or completion
-          const table = tables.find(t => t.id === updatedOrder.tableId);
-          if (table) {
-            let newStatus = table.status;
-            if (updatedOrder.paid) newStatus = 'dirty';
-            else if (updatedOrder.status === 'completed') newStatus = 'dirty';
-            else if (updatedOrder.status === 'cancelled') newStatus = 'available';
-            
-            if (newStatus !== table.status) {
-              updateTable(table.id, { status: newStatus });
+              // Update table status based on payment or completion
+              const table = tables.find(t => t.id === updated.tableId);
+              if (table) {
+                let newStatus = table.status;
+                if (updated.paid) newStatus = 'dirty';
+                else if (updated.status === 'completed') newStatus = 'dirty';
+                else if (updated.status === 'cancelled') newStatus = 'available';
+                
+                if (newStatus !== table.status) {
+                  updateTable(table.id, { status: newStatus });
+                }
+              }
             }
+          } catch (err) {
+            console.error('Failed to update order:', err);
           }
         }}
       />

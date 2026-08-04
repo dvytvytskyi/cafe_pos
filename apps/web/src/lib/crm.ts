@@ -277,3 +277,107 @@ export const updateGuestPointsAndLTV = (
   });
   saveGuests(updatedGuests);
 };
+
+// --- Database Connected Async Operations ---
+
+export async function getGuestsAsync(): Promise<Guest[]> {
+  const res = await fetch('/api/crm/customers');
+  if (!res.ok) {
+    throw new Error('Failed to fetch customers list from PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function saveGuestAsync(data: {
+  name: string;
+  phone: string;
+  email: string;
+  birthday?: string;
+  allergyNotes?: string;
+  notes?: string;
+}): Promise<Guest> {
+  const res = await fetch('/api/crm/customers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to create customer profile in PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function updateGuestAsync(
+  id: string,
+  data: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    birthday?: string;
+    allergyNotes?: string;
+    notes?: string;
+    favoriteDishes?: string[];
+    points?: number;
+    tier?: string;
+  }
+): Promise<Guest> {
+  const res = await fetch(`/api/crm/customers/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to update customer profile [${id}] in PostgreSQL`);
+  }
+  return res.json();
+}
+
+export async function getLoyaltyConfigAsync(): Promise<LoyaltyConfig> {
+  const res = await fetch('/api/crm/loyalty');
+  if (!res.ok) {
+    throw new Error('Failed to fetch loyalty config from PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function saveLoyaltyConfigAsync(config: Partial<LoyaltyConfig>): Promise<LoyaltyConfig> {
+  const res = await fetch('/api/crm/loyalty', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to save loyalty configuration in PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function applyLoyaltyTransactionAsync(
+  customerId: string,
+  amountPaid: number,
+  pointsSpent: number,
+  orderId?: string
+): Promise<Guest> {
+  const res = await fetch('/api/crm/loyalty/transaction', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customerId, amountPaid, pointsSpent, orderId }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to process loyalty points transaction for customer [${customerId}] in PostgreSQL`);
+  }
+  return res.json();
+}
+
+export async function deleteGuestAsync(id: string): Promise<boolean> {
+  const res = await fetch(`/api/crm/customers/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete customer profile [${id}] in PostgreSQL`);
+  }
+  const result = await res.json();
+  return result.success;
+}
+
+

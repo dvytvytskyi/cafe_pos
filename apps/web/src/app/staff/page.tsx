@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Plus, Calendar, Download, Building2, MoreHorizontal, User, Briefcase } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Employee, getEmployees, saveEmployees } from '@/lib/staff';
+import { Employee, getEmployees, saveEmployees, getEmployeesAsync, createEmployeeAsync, updateEmployeeAsync } from '@/lib/staff';
 import EmployeeModal from '@/components/operations/EmployeeModal';
 import Link from 'next/link';
 
@@ -15,19 +15,37 @@ export default function StaffAdminPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   useEffect(() => {
-    setEmployees(getEmployees());
+    getEmployeesAsync().then(setEmployees).catch(console.error);
   }, []);
 
-  const handleSaveEmployee = (emp: Employee) => {
-    const exists = employees.find(e => e.id === emp.id);
-    let updated;
-    if (exists) {
-      updated = employees.map(e => e.id === emp.id ? emp : e);
-    } else {
-      updated = [...employees, emp];
+  const handleSaveEmployee = async (emp: Employee) => {
+    try {
+      const exists = employees.find(e => e.id === emp.id);
+      if (exists) {
+        const updated = await updateEmployeeAsync(emp.id, emp);
+        setEmployees(employees.map(e => e.id === emp.id ? updated : e));
+      } else {
+        const created = await createEmployeeAsync({
+          name: emp.name,
+          pin: '1234', // default PIN
+          roleId: 'role-waiter-id', // default role ID
+          position: emp.position,
+          section: emp.section,
+          nie: emp.nie,
+          phone: emp.phone,
+          email: emp.email,
+          contractStart: emp.contractStart,
+          scheduleStart: emp.scheduleStart,
+          scheduleEnd: emp.scheduleEnd,
+          daysPerWeek: emp.daysPerWeek,
+          avatarInitials: emp.avatarInitials,
+          status: emp.status,
+        });
+        setEmployees([...employees, created]);
+      }
+    } catch (e) {
+      console.error('Failed to save employee:', e);
     }
-    setEmployees(updated);
-    saveEmployees(updated);
   };
 
   const filteredEmployees = employees.filter(e => {
@@ -45,26 +63,28 @@ export default function StaffAdminPage() {
       <div className="flex-1 w-full h-[calc(100vh-2rem)] bg-white rounded-[2rem] border border-gray-100 shadow-sm flex flex-col overflow-hidden relative">
         
         {/* Header */}
-        <div className="p-6 md:p-8 shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white z-10">
-          <div>
+        <div className="p-6 md:p-8 shrink-0 flex flex-wrap items-center justify-between gap-y-4 gap-x-4 bg-white z-10">
+          <div className="order-1 flex-1 min-w-[200px]">
             <h1 className="text-2xl font-bold text-gray-900">Staff & HR</h1>
             <p className="text-sm font-medium text-gray-500 mt-1">Manage staff, schedules, and HR tasks</p>
           </div>
-            <div className="flex gap-3">
-              <Link href="/staff/time-tracking" className="px-5 py-2.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-2xl transition-colors shrink-0">
-                <span className="text-sm font-bold">Time Tracking</span>
-              </Link>
-              <Link href="/staff/schedule" className="px-5 py-2.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-2xl transition-colors shrink-0">
-                <span className="text-sm font-bold">View schedules</span>
-              </Link>
-              <button 
-                onClick={() => { setSelectedEmployee(null); setIsModalOpen(true); }}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl transition-colors cursor-pointer shrink-0"
-              >
-                <Plus size={16} />
-                <span className="text-sm font-bold">New employee</span>
-              </button>
-            </div>
+
+          <div className="order-3 lg:order-2 flex justify-end gap-3 w-full lg:w-auto">
+            <Link href="/staff/time-tracking" className="flex items-center justify-center px-4 h-9 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl transition-colors shrink-0">
+              <span className="text-[13px] font-bold">Time Tracking</span>
+            </Link>
+            <Link href="/staff/schedule" className="flex items-center justify-center px-4 h-9 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl transition-colors shrink-0">
+              <span className="text-[13px] font-bold">View schedules</span>
+            </Link>
+          </div>
+
+          <button 
+            onClick={() => { setSelectedEmployee(null); setIsModalOpen(true); }}
+            className="order-2 lg:order-3 flex items-center justify-center gap-2 px-4 h-9 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors cursor-pointer shrink-0"
+          >
+            <Plus size={16} />
+            <span className="text-[13px] font-bold">New employee</span>
+          </button>
         </div>
 
         {/* Content */}

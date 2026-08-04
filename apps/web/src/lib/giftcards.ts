@@ -112,3 +112,51 @@ export function redeemGiftCard(code: string, amount: number): { success: boolean
   saveGiftCards(cards);
   return { success: true, remainingBalance: card.balance };
 }
+
+// --- Database Connected Async Operations ---
+
+export async function getGiftCardsAsync(): Promise<GiftCard[]> {
+  const res = await fetch('/api/giftcards');
+  if (!res.ok) {
+    throw new Error('Failed to fetch gift cards from PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function findCardByCodeAsync(code: string): Promise<GiftCard> {
+  const res = await fetch(`/api/giftcards?code=${encodeURIComponent(code)}`);
+  if (!res.ok) {
+    throw new Error(`Failed to find gift card by code [${code}] in PostgreSQL`);
+  }
+  return res.json();
+}
+
+export async function createGiftCardAsync(initialBalance: number, customerId?: string): Promise<GiftCard> {
+  const res = await fetch('/api/giftcards', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initialBalance, customerId }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to create gift card in PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function redeemGiftCardAsync(
+  code: string,
+  amount: number
+): Promise<{ success: boolean; error?: string; remainingBalance?: number }> {
+  try {
+    const res = await fetch('/api/giftcards/redeem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, amount }),
+    });
+
+    return res.json();
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+

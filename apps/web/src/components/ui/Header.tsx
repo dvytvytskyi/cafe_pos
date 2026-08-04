@@ -31,7 +31,7 @@ function NavItems() {
   };
 
   return (
-    <div className="bg-white rounded-full h-14 p-2 shadow-sm hidden md:flex items-center gap-1 overflow-x-auto shrink-0 mr-auto">
+    <div className="bg-white rounded-full h-14 p-2 shadow-sm hidden md:flex items-center gap-1 overflow-x-auto shrink min-w-0 mx-2 scrollbar-hide">
       {navItems.map((item) => (
         <button
           key={item}
@@ -141,7 +141,7 @@ export default function Header() {
             <span className="text-sm font-bold text-black leading-tight">Sajib Rahman</span>
             <span className="text-xs text-gray-500 leading-tight">sajib.rahman@gm...</span>
           </div>
-          <ChevronDown size={18} className="text-gray-400 ml-1" />
+          <ChevronDown size={18} className="text-gray-400 ml-1 hidden xl:block" />
         </div>
       </div>
 

@@ -229,3 +229,58 @@ export const recordCashAdjustment = (shiftId: string, type: 'in' | 'out', amount
   logAuditEvent('cash_adjustment', { shiftId, type, amount, reason });
   return updated.find(s => s.id === shiftId)!;
 };
+
+// --- Database Connected Async Operations ---
+
+export async function getShiftsAsync(locationId: string): Promise<any[]> {
+  const res = await fetch(`/api/shifts?locationId=${locationId}`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch cash shifts from PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function getCurrentShiftAsync(locationId: string): Promise<any | null> {
+  const res = await fetch(`/api/shifts?locationId=${locationId}&active=true`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch active cash shift from PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function openShiftAsync(locationId: string, userId: string, floatAmount: number): Promise<any> {
+  const res = await fetch('/api/shifts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ locationId, userId, floatStart: floatAmount }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to open cash shift in PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function closeShiftAsync(shiftId: string, actualCash: number): Promise<any> {
+  const res = await fetch(`/api/shifts/${shiftId}/close`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ actualCash }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to close cash shift [${shiftId}] in PostgreSQL`);
+  }
+  return res.json();
+}
+
+export async function recordCashAdjustmentAsync(shiftId: string, type: 'in' | 'out', amount: number, reason: string): Promise<any> {
+  const res = await fetch(`/api/shifts/${shiftId}/adjust`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type, amount, reason }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to record cash adjustment for shift [${shiftId}] in PostgreSQL`);
+  }
+  return res.json();
+}
+

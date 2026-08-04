@@ -1,0 +1,305 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  permissions Json     // Матриця прав доступу
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id             String      @id @default(uuid())
+  name           String
+  pinHash        String      // Захешований PIN-код для входу на терміналі
+  roleId         String
+  role           Role        @relation(fields: [roleId], references: [id])
+  locations      Location[]  @relation("UserLocations")
+  shifts         CashShift[]
+  
+  // Employee details
+  position       String?
+  section        String?     // "Floor" | "Kitchen"
+  nie            String?
+  phone          String?
+  email          String?
+  contractStart  String?
+  contractEnd    String?
+  scheduleStart  String?
+  scheduleEnd    String?
+  daysPerWeek    Int?        @default(5)
+  avatarInitials String?
+  status         String?     @default("active") // "active" | "inactive"
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Location {
+  id             String      @id @default(uuid())
+  name           String
+  address        String?
+  users          User[]      @relation("UserLocations")
+  tables         Table[]
+  orders         Order[]
+  shifts         CashShift[]
+  layoutMetadata Json?       // Room zones and obstacles details
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Table {
+  id         String   @id @default(uuid())
+  number     String
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+  x          Float    // SVG X
+  y          Float    // SVG Y
+  width      Float    // SVG Width
+  height     Float    // SVG Height
+  shape      String   // "round" | "square" | "custom"
+  status     String   // "available" | "occupied" | "billed" | "dirty"
+  qrCodeUrl  String?
+  
+  // Room association & details
+  roomId     String?
+  roomName   String?
+  seats      Int?     @default(4)
+
+  orders     Order[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model MenuCategory {
+  id         String     @id @default(uuid())
+  name       String
+  isArchived Boolean    @default(false)
+  items      MenuItem[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model MenuItem {
+  id           String       @id @default(uuid())
+  name         String
+  description  String?
+  price        Float
+  categoryId   String
+  category     MenuCategory @relation(fields: [categoryId], references: [id])
+  allergens    String[]     // Масив алергенів: ["nuts", "dairy"]
+  isArchived   Boolean      @default(false)
+  priceHistory Json?        // Історія цін
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Order {
+  id            String         @id @default(uuid())
+  orderNumber   String         @unique // Наприклад, ORD-001, GLV-12948
+  source        String         // "dine_in" | "takeaway" | "glovo" | "ubereats"
+  customerName  String?
+  customerId    String?
+  tableId       String?
+  table         Table?         @relation(fields: [tableId], references: [id])
+  locationId    String
+  location      Location       @relation(fields: [locationId], references: [id])
+  status        String         // "incoming" | "preparing" | "ready" | "served" | "completed" | "cancelled"
+  total         Float
+  discountName  String?
+  discountValue Float          @default(0)
+  tipType       String?        // "percent" | "fixed"
+  tipValue      Float          @default(0)
+  paid          Boolean        @default(false)
+  amountPaid    Float          @default(0)
+  items         OrderItem[]
+  transactions  Transaction[]
+  fiscalRecord  FiscalRecord?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  name      String
+  price     Float
+  quantity  Int
+  paid      Boolean  @default(false)
+  comments  String?  // Коментарі для кухні
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  method    String   // "card" | "cash" | "points" | "giftcard"
+  amount    Float
+  code      String?  // Код сертифіката чи транзакції терміналу
+  createdAt DateTime @default(now())
+}
+
+model FiscalRecord {
+  id            String   @id @default(uuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id])
+  invoiceNumber String   @unique // T-2026-0001 або F-2026-0001
+  invoiceType   String   // "simplificada" | "completa"
+  clientNif     String?
+  clientName    String?
+  clientAddress String?
+  taxBase       Float
+  taxRate       Float    @default(0.10) // Дефолтний ПДВ (IVA) в ресторанах Іспанії 10%
+  taxAmount     Float
+  total         Float
+  prevHash      String   // Хеш попереднього чека в ланцюжку
+  hash          String   // Поточний SHA-256 хеш (Huella Hash)
+  signature     String?  // Цифровий підпис
+  qrCodeUrl     String?  // URL для перевірки чека на сайті AEAT
+  isSyncAEAT    Boolean  @default(false)
+  syncError     String?  // Помилка синхронізації якщо була
+  createdAt     DateTime @default(now())
+}
+
+model CashShift {
+  id          String    @id @default(uuid())
+  locationId  String
+  location    Location  @relation(fields: [locationId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  floatStart  Float     // Початковий залишок розмінної монети
+  cashSales   Float     @default(0)
+  cardSales   Float     @default(0)
+  pointsSales Float     @default(0)
+  cashIn      Float     @default(0)
+  cashOut     Float     @default(0)
+  expected    Float     // Очікувана сума в касі
+  actual      Float?    // Введена сума при закритті
+  difference  Float?    // Недостача/надлишок (Shortage/Overage)
+  adjustments Json?     // Detailed adjustments log [{ type, amount, reason, time }]
+  status      String    // "open" | "closed"
+  openedAt    DateTime  @default(now())
+  closedAt    DateTime?
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String   // e.g. "shift_open", "shift_close", "cash_adjustment", etc.
+  details   Json?
+  prevHash  String
+  hash      String
+  createdAt DateTime @default(now())
+}
+
+model MerchInventory {
+  id        String              @id @default(uuid())
+  sku       String              @unique
+  name      String
+  price     Float
+  quantity  Int                 @default(0)
+  transfers InventoryTransfer[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+}
+
+model InventoryTransfer {
+  id        String         @id @default(uuid())
+  itemId    String
+  item      MerchInventory @relation(fields: [itemId], references: [id])
+  type      String         // "check_in" (restock) | "check_out" (write-off/transfer) | "sale"
+  quantity  Int            // Absolute quantity adjusted
+  reason    String?
+  createdAt DateTime       @default(now())
+}
+
+model Customer {
+  id             String               @id @default(uuid())
+  name           String
+  phone          String
+  email          String
+  birthday       String?
+  tier           String               @default("Bronze") // "Bronze" | "Silver" | "Gold" | "VIP"
+  points         Float                @default(0.0)
+  ltv            Float                @default(0.0)      // Lifetime value
+  visitCount     Int                  @default(0)
+  lastVisitDate  String?
+  favoriteDishes String[]             // Array of favorites
+  allergyNotes   String?
+  notes          String?
+  joinedDate     String?
+  transactions   LoyaltyTransaction[]
+  giftCards      GiftCard[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model LoyaltyConfig {
+  id              String   @id @default("default")
+  bronzeRate      Float    @default(0.05)
+  silverRate      Float    @default(0.08)
+  goldRate        Float    @default(0.10)
+  vipRate         Float    @default(0.15)
+  silverThreshold Float    @default(75.0)
+  goldThreshold   Float    @default(150.0)
+  vipThreshold    Float    @default(300.0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model LoyaltyTransaction {
+  id         String   @id @default(uuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  type       String   // "earn" | "spend"
+  points     Float
+  orderId    String?
+  createdAt  DateTime @default(now())
+}
+
+model DiscountPreset {
+  id        String   @id @default(uuid())
+  name      String
+  value     Float    // percentage (e.g., 50 for Staff Meal)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Promotion {
+  id              String   @id @default(uuid())
+  name            String
+  discountPercent Float
+  activeDays      Int[]    // e.g. [5] for Friday, [0] for Sunday
+  startHour       Int      // 24h format
+  endHour         Int      // 24h format
+  targetItems     String[] // Array of item names affected
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model GiftCard {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  initialBalance Float
+  balance        Float
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  status         String    @default("active") // "active" | "redeemed" | "expired" | "disabled"
+  expiryDate     DateTime
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+
+
+
+

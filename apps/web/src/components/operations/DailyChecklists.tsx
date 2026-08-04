@@ -272,7 +272,8 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
     
     return (
       <div className="border border-gray-100 rounded-2xl bg-white overflow-hidden shadow-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-gray-50/50 border-b border-gray-100">
               <th className="px-6 py-4 text-[13px] font-bold text-gray-500 w-1/3">
@@ -381,6 +382,7 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
             )}
           </Reorder.Group>
         </table>
+        </div>
       </div>
     );
   };
@@ -433,14 +435,14 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
 
         <button 
           onClick={() => setIsSetupMode(!isSetupMode)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+          className={`flex items-center justify-center gap-2 w-9 xl:w-auto xl:px-4 h-9 rounded-xl text-[13px] font-bold transition-all cursor-pointer shrink-0 ${
             isSetupMode 
               ? 'bg-purple-100 text-purple-700 hover:bg-purple-200 shadow-sm' 
               : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
           }`}
         >
           <Settings size={16} />
-          {isSetupMode ? 'Exit Setup Mode' : 'Edit SOPs'}
+          <span className="hidden xl:inline">{isSetupMode ? 'Exit Setup Mode' : 'Edit SOPs'}</span>
         </button>
       </div>
 

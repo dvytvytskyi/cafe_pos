@@ -2,7 +2,6 @@ import React from 'react';
 import Sidebar from '@/components/ui/Sidebar';
 import Header from '@/components/ui/Header';
 
-export const dynamic = 'force-dynamic';
 
 export default function DevComponentsPage() {
   return (

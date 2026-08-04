@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, User } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Employee, TimeEntry, getEmployees, getTimeEntries, saveTimeEntries } from '@/lib/staff';
+import { Employee, TimeEntry, getEmployees, getTimeEntries, saveTimeEntries, getEmployeesAsync } from '@/lib/staff';
 import Link from 'next/link';
 
 export default function TimeTrackingPage() {
@@ -12,7 +12,7 @@ export default function TimeTrackingPage() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    setEmployees(getEmployees());
+    getEmployeesAsync().then(setEmployees).catch(console.error);
     setTimeEntries(getTimeEntries(todayStr));
   }, [todayStr]);
 

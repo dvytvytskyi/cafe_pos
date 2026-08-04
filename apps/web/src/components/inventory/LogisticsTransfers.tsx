@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, Truck, CheckCircle2, Clock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowRight, Truck, CheckCircle2, Clock, ArrowUpDown, ArrowUp, ArrowDown, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TransferDetailsModal, { TransferData } from './TransferDetailsModal';
 
@@ -33,7 +33,7 @@ const MOCK_TRANSFERS: Transfer[] = [
   { id: 'TRF-1065', date: 'Jul 4, 09:50', item: 'Cheddar Cheese Block', sku: 'K-CHZ-01', quantity: 5, from: 'Main WH', to: 'Eixample', status: 'pending', user: 'Oliver T.' },
 ];
 
-export default function LogisticsTransfers() {
+export default function LogisticsTransfers({ onAdd }: { onAdd?: () => void }) {
   const [transfers, setTransfers] = useState<Transfer[]>(MOCK_TRANSFERS);
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Transfer | null, direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
@@ -74,6 +74,17 @@ export default function LogisticsTransfers() {
 
   return (
     <div className="flex flex-col h-full">
+      {onAdd && (
+        <div className="flex justify-end mb-6">
+          <button 
+            onClick={onAdd}
+            className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl shadow-sm transition-all cursor-pointer hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 shrink-0"
+          >
+            <Plus size={16} strokeWidth={2.5} />
+            New Transfer
+          </button>
+        </div>
+      )}
       <div className="flex-1 overflow-auto rounded-xl bg-white border border-gray-100">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>

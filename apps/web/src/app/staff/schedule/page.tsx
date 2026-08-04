@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronDown, ChevronRight } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Employee, getEmployees } from '@/lib/staff';
+import { Employee, getEmployees, getEmployeesAsync } from '@/lib/staff';
 import Link from 'next/link';
 
 export default function StaffSchedulePage() {
@@ -11,7 +11,7 @@ export default function StaffSchedulePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    setEmployees(getEmployees());
+    getEmployeesAsync().then(setEmployees).catch(console.error);
   }, []);
 
   const toggleExpand = (id: string) => {

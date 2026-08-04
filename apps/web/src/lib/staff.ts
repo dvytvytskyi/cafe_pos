@@ -181,3 +181,96 @@ export const saveTimeEntries = (date: string, entries: TimeEntry[]) => {
     localStorage.setItem(`corgi_time_entries_v2_${date}`, JSON.stringify(entries));
   }
 };
+
+// --- Database Connected Async Operations ---
+
+export async function getEmployeesAsync(): Promise<Employee[]> {
+  const res = await fetch('/api/staff');
+  if (!res.ok) {
+    throw new Error('Failed to fetch staff list from PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function createEmployeeAsync(data: {
+  name: string;
+  pin: string;
+  roleId: string;
+  locationIds?: string[];
+  position?: string;
+  section?: 'Floor' | 'Kitchen';
+  nie?: string;
+  phone?: string;
+  email?: string;
+  contractStart?: string;
+  contractEnd?: string;
+  scheduleStart?: string;
+  scheduleEnd?: string;
+  daysPerWeek?: number;
+  avatarInitials?: string;
+  status?: 'active' | 'inactive';
+}): Promise<Employee> {
+  const res = await fetch('/api/staff', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to create staff member in PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function updateEmployeeAsync(id: string, data: {
+  name?: string;
+  pin?: string;
+  roleId?: string;
+  locationIds?: string[];
+  position?: string;
+  section?: 'Floor' | 'Kitchen';
+  nie?: string;
+  phone?: string;
+  email?: string;
+  contractStart?: string;
+  contractEnd?: string;
+  scheduleStart?: string;
+  scheduleEnd?: string;
+  daysPerWeek?: number;
+  avatarInitials?: string;
+  status?: 'active' | 'inactive';
+}): Promise<Employee> {
+  const res = await fetch(`/api/staff/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to update staff member [${id}] in PostgreSQL`);
+  }
+  return res.json();
+}
+
+export async function deleteEmployeeAsync(id: string): Promise<boolean> {
+  const res = await fetch(`/api/staff/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete staff member [${id}] from PostgreSQL`);
+  }
+  const result = await res.json();
+  return result.success;
+}
+
+export async function loginWithPinAsync(pin: string): Promise<{ success: boolean; user: any }> {
+  const res = await fetch('/api/auth/login-pin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pin }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    return { success: false, user: null };
+  }
+  return res.json();
+}
+

@@ -65,3 +65,37 @@ export const logAuditEvent = (
   
   return newEntry;
 };
+
+// --- Database Connected Async Operations ---
+
+export async function getAuditLogsAsync(): Promise<AuditEntry[]> {
+  const res = await fetch('/api/audit');
+  if (!res.ok) {
+    throw new Error('Failed to fetch audit trail logs from PostgreSQL');
+  }
+  const data = await res.json();
+  return data.map((log: any) => ({
+    ...log,
+    timestamp: new Date(log.timestamp),
+  }));
+}
+
+export async function logAuditEventAsync(
+  action: AuditEntry['action'],
+  details: any
+): Promise<AuditEntry> {
+  const res = await fetch('/api/audit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, details }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to create audit log entry in PostgreSQL');
+  }
+  const log = await res.json();
+  return {
+    ...log,
+    timestamp: new Date(log.timestamp),
+  };
+}
+

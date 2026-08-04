@@ -20,14 +20,14 @@ export default function OperationsDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-0.5 h-9 bg-gray-50/80 p-1 rounded-xl border border-gray-200/60 shrink-0">
-              <button 
+              <button
                 onClick={() => setActiveTab('checklists')}
                 className={`cursor-pointer whitespace-nowrap h-7 flex items-center justify-center px-4 text-[13px] font-semibold rounded-lg transition-all duration-200 gap-1.5 ${activeTab === 'checklists' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'}`}
               >
                 <CheckSquare size={16} />
                 Daily SOP's
               </button>
-              <button 
+              <button
                 onClick={() => setActiveTab('tasks')}
                 className={`cursor-pointer whitespace-nowrap h-7 flex items-center justify-center px-4 text-[13px] font-semibold rounded-lg transition-all duration-200 gap-1.5 ${activeTab === 'tasks' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'}`}
               >

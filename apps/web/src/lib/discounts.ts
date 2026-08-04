@@ -46,3 +46,26 @@ export const saveDiscountPresets = (presets: DiscountPreset[]) => {
     localStorage.setItem('corgi_discounts_v2', JSON.stringify(presets));
   }
 };
+
+// --- Database Connected Async Operations ---
+
+export async function getDiscountPresetsAsync(): Promise<DiscountPreset[]> {
+  const res = await fetch('/api/discounts');
+  if (!res.ok) {
+    throw new Error('Failed to fetch discount presets from PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function createDiscountPresetAsync(name: string, value: number): Promise<DiscountPreset> {
+  const res = await fetch('/api/discounts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, value }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to create discount preset in PostgreSQL');
+  }
+  return res.json();
+}
+

@@ -1,3 +1,6 @@
+import { mapApiOrderToUi, mapUiOrderToApi } from './mappers/order.mapper';
+import { DEFAULT_LOCATION_ID } from './constants';
+
 export type OrderSource = 'glovo' | 'ubereats' | 'dine_in' | 'takeaway';
 
 export interface OrderItem {
@@ -16,7 +19,7 @@ export interface Order {
   total: number; // Final total including discounts and tips
   discount?: { name: string; value: number; amountDeducted: number };
   tip?: { type: 'percent' | 'fixed'; value: number; amountAdded: number };
-  status: 'incoming' | 'new' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled';
+  status: 'incoming' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled';
   time: Date;
   deliveryId?: string;
   paid: boolean;
@@ -34,7 +37,7 @@ export interface Order {
 
 export const getOrders = (): Order[] => {
   if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem('corgi_orders');
+  const stored = localStorage.getItem('corgi_orders_v2');
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
@@ -64,60 +67,163 @@ export const getOrders = (): Order[] => {
       orderedBy: 'waiter'
     },
     {
+      id: 'GLV-892',
+      source: 'glovo',
+      customerName: 'Anna S.',
+      items: [{ name: 'Matcha Croissant', quantity: 2, price: 3.5 }, { name: 'Flat White', quantity: 1, price: 3.8 }],
+      total: 10.8,
+      status: 'incoming',
+      time: new Date(Date.now() - 2 * 60000),
+      deliveryId: 'G-12948',
+      paid: true,
+      orderedBy: 'app',
+      readyByTime: '15:45',
+    },
+    {
+      id: 'UBR-441',
+      source: 'ubereats',
+      customerName: 'David M.',
+      items: [{ name: 'Brunch Set For 2', quantity: 1, price: 24.0 }],
+      total: 24.0,
+      status: 'ready',
+      time: new Date(Date.now() - 25 * 60000),
+      deliveryId: 'U-9921A',
+      paid: true,
+      orderedBy: 'app',
+      readyByTime: '16:00',
+    },
+    {
       id: 'ORD-002',
       source: 'takeaway',
-      customerName: 'Maria Garcia',
-      customerId: 'g-2',
-      items: [
-        { name: 'Flat White', quantity: 1, price: 3.8 },
-        { name: 'Salmon Bagel', quantity: 1, price: 9.5 }
-      ],
-      total: 13.3,
-      status: 'completed',
-      time: new Date(Date.now() - 12 * 3600000),
+      customerName: 'Walk-in (John)',
+      items: [{ name: 'Americano', quantity: 1, price: 3.0 }, { name: 'Blueberry Muffin', quantity: 2, price: 3.5 }],
+      total: 10.0,
+      status: 'incoming',
+      time: new Date(Date.now() - 1 * 60000),
       paid: true,
-      orderedBy: 'waiter'
+      orderedBy: 'waiter',
+    },
+    {
+      id: 'GLV-893',
+      source: 'glovo',
+      customerName: 'Elena P.',
+      items: [{ name: 'Iced Latte', quantity: 1, price: 4.5 }, { name: 'Vegan Wrap', quantity: 1, price: 7.5 }],
+      total: 12.0,
+      status: 'preparing',
+      time: new Date(Date.now() - 8 * 60000),
+      deliveryId: 'G-12950',
+      paid: true,
+      orderedBy: 'app',
+      readyByTime: '16:10',
     },
     {
       id: 'ORD-003',
       source: 'dine_in',
-      customerName: 'John Doe',
-      customerId: 'g-3',
+      customerName: 'Table 7',
       items: [
-        { name: 'Espresso', quantity: 1, price: 3.0 },
-        { name: 'Egg Benedict', quantity: 1, price: 12.0 }
+        { name: 'Cappuccino', quantity: 3, price: 4.0 }, 
+        { name: 'Cheesecake', quantity: 3, price: 5.5 },
+        { name: 'Eggs Benedict', quantity: 2, price: 12.0 }
       ],
-      total: 15.0,
-      status: 'completed',
-      time: new Date(Date.now() - 36 * 3600000),
-      paid: true,
-      orderedBy: 'waiter'
+      total: 52.5,
+      status: 'preparing',
+      time: new Date(Date.now() - 12 * 60000),
+      paid: false,
+      orderedBy: 'waiter',
     },
     {
-      id: 'ORD-004',
-      source: 'dine_in',
-      customerName: 'Oleksandr Kovalenko',
-      customerId: 'g-1',
-      items: [
-        { name: 'Cappuccino', quantity: 1, price: 4.0 },
-        { name: 'Croissant', quantity: 2, price: 2.5 }
-      ],
-      total: 9.0,
-      status: 'completed',
-      time: new Date(Date.now() - 2 * 3600000),
+      id: 'UBR-443',
+      source: 'ubereats',
+      customerName: 'Jessica W.',
+      items: [{ name: 'Smoothie Bowl', quantity: 1, price: 9.0 }, { name: 'Iced Americano', quantity: 1, price: 3.5 }],
+      total: 12.5,
+      status: 'served',
+      time: new Date(Date.now() - 50 * 60000),
       paid: true,
-      orderedBy: 'waiter'
+      orderedBy: 'app',
+      deliveryId: 'U-9925C',
     }
   ];
   
   if (typeof window !== 'undefined') {
-    localStorage.setItem('corgi_orders', JSON.stringify(seed));
+    localStorage.setItem('corgi_orders_v2', JSON.stringify(seed));
   }
   return seed;
 };
 
 export const saveOrders = (orders: Order[]) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('corgi_orders', JSON.stringify(orders));
+    localStorage.setItem('corgi_orders_v2', JSON.stringify(orders));
   }
 };
+
+export async function getOrdersAsync(locationId: string = DEFAULT_LOCATION_ID): Promise<Order[]> {
+  const res = await fetch(`/api/orders?locationId=${locationId}`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch active orders from PostgreSQL');
+  }
+  const data = await res.json();
+  return data.map((o) => mapApiOrderToUi(o) as Order);
+}
+
+export async function createOrderAsync(
+  order: Partial<Order> & { items: OrderItem[]; tableId?: string; locationId?: string }
+): Promise<Order> {
+  const payload = mapUiOrderToApi({
+    ...order,
+    locationId: order.locationId || DEFAULT_LOCATION_ID,
+    source: order.source || 'dine_in',
+    status: order.status || 'preparing',
+    items: order.items,
+  });
+
+  const res = await fetch('/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || body.details || 'Failed to create order in PostgreSQL');
+  }
+  return mapApiOrderToUi(await res.json()) as Order;
+}
+
+export async function updateOrderAsync(id: string, order: Partial<Order> & { items?: OrderItem[] }): Promise<Order> {
+  const payload = order.items
+    ? mapUiOrderToApi({
+        ...order,
+        items: order.items,
+        locationId: DEFAULT_LOCATION_ID,
+      })
+    : order;
+
+  const res = await fetch(`/api/orders/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || body.details || `Failed to update order [${id}] in PostgreSQL`);
+  }
+  return mapApiOrderToUi(await res.json()) as Order;
+}
+
+/** @deprecated Use createOrderAsync */
+export async function saveOrderAsync(order: Partial<Order>): Promise<Order> {
+  return createOrderAsync(order as Partial<Order> & { items: OrderItem[] });
+}
+
+export async function updateOrderStatusAsync(id: string, status: string): Promise<Order> {
+  const res = await fetch(`/api/orders/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to update order status for [${id}] in PostgreSQL`);
+  }
+  return mapApiOrderToUi(await res.json()) as Order;
+}
+

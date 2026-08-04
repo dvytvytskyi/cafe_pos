@@ -89,7 +89,7 @@ export function StaffPerformanceTables() {
 
       <div className="flex flex-wrap justify-start gap-6 w-full">
         {MOCK_STAFF_DATA.map((loc) => (
-          <div key={loc.location} className="w-full md:w-[calc(50%-0.75rem)] xl:w-[calc(33.333%-1rem)] min-w-[320px] border border-gray-100 rounded-2xl flex flex-col bg-white overflow-hidden transition-colors hover:border-gray-200">
+          <div key={loc.location} className="w-full lg:w-[calc(50%-0.75rem)] xl:w-[calc(33.333%-1rem)] min-w-[320px] border border-gray-100 rounded-2xl flex flex-col bg-white overflow-hidden transition-colors hover:border-gray-200">
             {/* Location Header */}
             <div className="pt-4 px-4 pb-2 flex items-center gap-2 bg-white">
               <div className="w-2 h-2 rounded-full bg-[#f59e0b]"></div>

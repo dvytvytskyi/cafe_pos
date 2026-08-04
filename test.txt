@@ -1,0 +1,68 @@
+📍 Сторінки (Маршрутизація / Pages)
+Це всі сторінки, які налаштовані через Next.js App Router:
+
+/ (Головний дашборд)
+/settings (Налаштування, Матриця ролей)
+/pos (Каса / Термінал, Карта столів)
+/menu (Редактор меню)
+/orders (Дошка активних замовлень)
+/history (Історія чеків)
+/crm (База клієнтів та лояльність)
+/inventory (Склад та логістика)
+/reports (Фінансові звіти та аналітика)
+/shift (Касові зміни та VERI*FACTU інвойси)
+/operations (Менеджер завдань та чек-листи)
+/staff (CRUD база співробітників)
+/staff/schedule (Календар графіків роботи)
+/staff/time-tracking (Облік робочого часу)
+/emenu (Клієнтське електронне меню)
+/dev-components (Сторінка для тестування UI-компонентів)
+🧩 Модулі та Модалки (Components)
+Усі компоненти розбиті за логічними директоріями всередині src/components/:
+
+1. Інвентар / Склад (Inventory)
+
+InventoryDashboard.tsx
+StockTable.tsx
+LogisticsTransfers.tsx
+AddItemModal.tsx (Модалка створення товару)
+NewTransferModal.tsx (Модалка створення накладної)
+TransferDetailsModal.tsx (Модалка деталей накладної)
+2. Операції та Менеджмент (Operations)
+
+OperationsDashboard.tsx
+TaskManager.tsx
+OrdersBoard.tsx (Kanban-дошка KDS)
+DailyChecklists.tsx (SOPs)
+NewTaskModal.tsx (Модалка нового завдання)
+OrderDetailsModal.tsx (Модалка деталей замовлення)
+EmployeeModal.tsx (Модалка редагування співробітника)
+BoardSettingsModal.tsx (Модалка налаштувань колонок KDS)
+PhotoProofUpload.tsx (Компонент завантаження фотозвітів)
+3. Звіти (Reports)
+
+RevenueTable.tsx
+DishPerformanceTables.tsx (Хіти продажів)
+StaffPerformanceTables.tsx (Ефективність офіціантів)
+FinancialSummaries.tsx (Податкові/фінансові зведення)
+4. Дашборд (Dashboard)
+
+DashboardWidgets.tsx (Верхні KPI-картки)
+ActiveTablesCard.tsx
+HourlySalesWidget.tsx
+SalesCharts.tsx (Графік Chart.js)
+LocationsLeaderboard.tsx (Рейтинг філій)
+GlobalFilters.tsx (Перемикання періодів для порівняння)
+5. POS / Каса
+
+OrderTerminalModal.tsx (Головна модалка набивання чека офіціантом)
+6. Загальний UI (Глобальні компоненти та Модалки)
+
+Sidebar.tsx та Header.tsx
+DishModal.tsx (Потужна модалка редактора страви)
+ModifiersManagerModal.tsx (Модалка модифікаторів до страви)
+SearchModal.tsx (Глобальний пошук через ⌘K)
+NotificationsPopover.tsx (Спливаюче вікно сповіщень)
+SettingsView.tsx, MenusView.tsx, TablesView.tsx (Інтерфейси редакторів)
+ReputationView.tsx (Відгуки Google/TripAdvisor)
+DatePicker.tsx, DateRangePicker.tsx, DateTimePicker.tsx (Календарі)

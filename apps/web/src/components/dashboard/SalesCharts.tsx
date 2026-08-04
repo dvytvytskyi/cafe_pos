@@ -322,7 +322,8 @@ export function PaymentGaugeChart({ compare = false }: { compare?: boolean }) {
 
   const gaugeOptions = {
     responsive: true,
-    maintainAspectRatio: false,
+    maintainAspectRatio: true,
+    aspectRatio: 2,
     rotation: -90,
     circumference: 180,
     cutout: '80%',
@@ -333,12 +334,12 @@ export function PaymentGaugeChart({ compare = false }: { compare?: boolean }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-end w-full h-64 pb-[8px]">
-      <div className="relative flex-1 w-full flex items-end justify-center mb-6">
-        <div className="absolute inset-0 -translate-y-4">
+    <div className="flex flex-col items-center justify-center w-full pb-[8px]">
+      <div className="relative w-full max-w-[425px] mx-auto flex items-center justify-center mb-6 aspect-[2/1]">
+        <div className="absolute inset-0">
           <Doughnut data={gaugeData} options={gaugeOptions} />
         </div>
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center z-10 w-full">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center z-10 w-full">
           <span className={`${compare ? 'text-2xl' : 'text-3xl'} font-black text-gray-900 leading-none`}>€9,000</span>
           <span className="text-xs font-medium text-gray-500 mt-1 leading-none">Total Sales</span>
           {compare && (

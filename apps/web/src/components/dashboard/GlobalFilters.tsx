@@ -7,9 +7,10 @@ interface GlobalFiltersProps {
   compare?: boolean;
   onCompareChange?: (val: boolean) => void;
   variant?: 'default' | 'reports';
+  children?: React.ReactNode;
 }
 
-export default function GlobalFilters({ compare: externalCompare, onCompareChange, variant = 'default' }: GlobalFiltersProps) {
+export default function GlobalFilters({ compare: externalCompare, onCompareChange, variant = 'default', children }: GlobalFiltersProps) {
   const [activePreset, setActivePreset] = useState('Last 7 days');
   const [internalCompare, setInternalCompare] = useState(false);
   const compare = externalCompare !== undefined ? externalCompare : internalCompare;
@@ -193,13 +194,10 @@ export default function GlobalFilters({ compare: externalCompare, onCompareChang
     : 'Select Date Range';
 
   return (
-    <div className={variant === 'reports' ? "flex flex-col xl:flex-row items-center justify-between gap-3 z-20 relative flex-1 w-full" : "flex flex-col xl:flex-row items-center justify-between gap-4 z-20 relative mb-5 w-full"}>
+    <div className={variant === 'reports' ? "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-3 z-20 relative flex-1 w-full" : "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-4 z-20 relative mb-5 w-full"}>
       
-      {/* Left Group: Date Filters */}
-      <div className={variant === 'reports' ? "flex flex-wrap xl:flex-nowrap items-center gap-3" : "flex flex-col lg:flex-row items-center gap-3 w-full xl:w-auto"}>
-        
-        {/* Presets Segmented Control */}
-        <div className="flex items-center gap-0.5 h-[40px] bg-gray-50/80 p-1 rounded-[12px] border border-gray-200/60 w-full sm:w-auto overflow-x-auto custom-scrollbar">
+      {/* Presets Segmented Control (Row 1 on tablet) */}
+      <div className="flex items-center gap-0.5 h-[40px] bg-gray-50/80 p-1 rounded-[12px] border border-gray-200/60 w-full xl:w-auto overflow-x-auto custom-scrollbar shrink-0">
           {presets.map(preset => (
             <button
               key={preset}
@@ -212,7 +210,7 @@ export default function GlobalFilters({ compare: externalCompare, onCompareChang
                   setRangeEnd(null);
                 }
               }}
-              className={`cursor-pointer whitespace-nowrap h-full flex items-center px-3.5 text-[13px] font-semibold rounded-[8px] transition-all duration-200 ${
+              className={`cursor-pointer whitespace-nowrap h-full flex flex-1 xl:flex-none items-center justify-center px-3.5 text-[13px] font-semibold rounded-[8px] transition-all duration-200 ${
                 activePreset === preset 
                   ? 'bg-white text-gray-900 shadow-sm' 
                   : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
@@ -223,11 +221,14 @@ export default function GlobalFilters({ compare: externalCompare, onCompareChang
           ))}
         </div>
 
+      {/* Secondary Filters (Row 2 on tablet) */}
+      <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full xl:w-auto overflow-x-auto custom-scrollbar pb-1 sm:pb-0">
+        
         {/* Month Picker Button & Modal */}
-        <div className="relative w-full sm:w-auto" ref={monthRef}>
+        <div className="relative flex-1 xl:flex-none min-w-[140px]" ref={monthRef}>
           <button 
             onClick={() => { setMonthOpen(!monthOpen); setDateOpen(false); setPaymentOpen(false); setActivePreset('Month'); }}
-            className={`cursor-pointer flex items-center justify-center h-[40px] gap-2.5 px-4 rounded-[10px] border transition-colors w-full sm:w-auto ${
+            className={`cursor-pointer flex items-center justify-center h-[40px] gap-2.5 px-4 rounded-[10px] border transition-colors w-full ${
               variant === 'reports' 
                 ? (activePreset === 'Month' || monthOpen 
                   ? 'bg-gray-50 border-gray-100 text-gray-900' 
@@ -289,10 +290,10 @@ export default function GlobalFilters({ compare: externalCompare, onCompareChang
         </div>
 
         {/* Custom Date Range Button & Modal */}
-        <div className="relative w-full sm:w-auto" ref={dateRef}>
+        <div className="relative flex-shrink-0" ref={dateRef}>
           <button 
             onClick={() => { setDateOpen(!dateOpen); setMonthOpen(false); setPaymentOpen(false); setActivePreset('Custom'); }}
-            className={`cursor-pointer flex items-center justify-center h-[40px] gap-2.5 px-4 rounded-[10px] border transition-colors w-full sm:w-auto ${
+            className={`cursor-pointer flex items-center justify-center h-[40px] w-[40px] px-0 lg:w-auto lg:px-4 lg:gap-2.5 rounded-[10px] border transition-colors shrink-0 ${
               variant === 'reports' 
                 ? (activePreset === 'Custom' || dateOpen 
                   ? 'bg-gray-50 border-gray-100 text-gray-900' 
@@ -302,8 +303,8 @@ export default function GlobalFilters({ compare: externalCompare, onCompareChang
                   : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50')
             }`}
           >
-            <Calendar className={`w-3.5 h-3.5 ${activePreset === 'Custom' || dateOpen ? 'text-gray-900' : 'text-gray-500'}`} />
-            <span className="text-[13px] font-semibold tracking-tight whitespace-nowrap">{buttonLabel}</span>
+            <Calendar className={`w-3.5 h-3.5 shrink-0 ${activePreset === 'Custom' || dateOpen ? 'text-gray-900' : 'text-gray-500'}`} />
+            <span className="hidden lg:inline text-[13px] font-semibold tracking-tight whitespace-nowrap">{buttonLabel}</span>
           </button>
           
           {/* Dual Calendar Modal (Scaled Down) */}
@@ -340,10 +341,6 @@ export default function GlobalFilters({ compare: externalCompare, onCompareChang
             </div>
           )}
         </div>
-      </div>
-
-      {/* Right Group: Compare Toggle & Payment Method */}
-      <div className={variant === 'reports' ? "flex flex-wrap xl:flex-nowrap items-center gap-3" : "flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto"}>
         
         {/* Compare Toggle */}
         {variant === 'reports' ? (
@@ -361,7 +358,7 @@ export default function GlobalFilters({ compare: externalCompare, onCompareChang
             <span className="text-[13px] font-semibold tracking-tight">Compare</span>
           </button>
         ) : (
-          <div className="flex items-center gap-2.5 bg-white px-4 py-2 rounded-[10px] border border-gray-200 w-full sm:w-auto">
+          <div className="flex items-center justify-center gap-2.5 bg-white px-4 h-[40px] rounded-[10px] border border-gray-200 flex-1 xl:flex-none min-w-[120px]">
             <button 
               onClick={() => setCompare(!compare)}
               className={`cursor-pointer relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#1a2333]' : 'bg-gray-200'}`}
@@ -373,12 +370,12 @@ export default function GlobalFilters({ compare: externalCompare, onCompareChang
         )}
 
         {/* Payment Method Selector Dropdown */}
-        <div className="relative w-full sm:w-auto" ref={paymentRef}>
+        <div className="relative flex-1 xl:flex-none min-w-[140px]" ref={paymentRef}>
           <button 
             onClick={() => { setPaymentOpen(!paymentOpen); setDateOpen(false); }}
             className={variant === 'reports' 
-              ? `cursor-pointer flex items-center justify-between h-[40px] px-4 rounded-[10px] border transition-colors w-full sm:w-[160px] focus:outline-none ${paymentOpen ? 'border-[#1a2333]' : 'border-gray-100 hover:border-gray-200'} bg-white hover:bg-gray-50` 
-              : `cursor-pointer flex items-center justify-between gap-3 bg-white hover:bg-gray-50 px-4 py-2 rounded-[10px] border transition-colors w-full sm:w-[160px] focus:outline-none ${paymentOpen ? 'border-[#1a2333] shadow-[0_0_0_1px_rgba(26,35,51,1)]' : 'border-gray-200'}`
+              ? `cursor-pointer flex items-center justify-between h-[40px] px-4 rounded-[10px] border transition-colors w-full focus:outline-none ${paymentOpen ? 'border-[#1a2333]' : 'border-gray-100 hover:border-gray-200'} bg-white hover:bg-gray-50` 
+              : `cursor-pointer flex items-center justify-between gap-3 bg-white hover:bg-gray-50 px-4 h-[40px] rounded-[10px] border transition-colors w-full focus:outline-none ${paymentOpen ? 'border-[#1a2333] shadow-[0_0_0_1px_rgba(26,35,51,1)]' : 'border-gray-200'}`
             }
           >
             <div className="flex items-center gap-2">
@@ -410,6 +407,12 @@ export default function GlobalFilters({ compare: externalCompare, onCompareChang
             </div>
           </div>
         </div>
+        
+        {children && (
+          <div className={variant === 'reports' ? "flex items-center gap-3 ml-auto" : "flex items-center gap-3"}>
+            {children}
+          </div>
+        )}
       </div>
 
     </div>

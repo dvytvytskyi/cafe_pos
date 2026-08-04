@@ -182,23 +182,24 @@ export default function HourlySalesWidget({ compare = false }: { compare?: boole
 
   return (
     <div className="bg-white rounded-3xl p-6 border border-gray-100 flex flex-col mb-8 h-[450px]">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 flex-shrink-0">
-        <div>
-          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+      <div className="flex flex-col gap-4 mb-6 flex-shrink-0 w-full overflow-hidden">
+        {/* Title and Description Row */}
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 w-full">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 whitespace-nowrap">
             Peak Hours & Hourly Load
           </h3>
-          <p className="text-sm font-medium text-gray-500 mt-1">Average daily sales distribution</p>
+          <p className="text-sm font-medium text-gray-500 whitespace-nowrap">Average daily sales distribution</p>
         </div>
         
-        {/* Location Tabs */}
-        <div className="flex flex-wrap items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100/50">
+        {/* Location Tabs Row */}
+        <div className="flex items-center gap-1 bg-gray-50 p-1.5 rounded-2xl border border-gray-100/50 overflow-x-auto scrollbar-hide w-full">
           {locations.map((loc) => {
             const isActive = selectedLoc === loc.id;
             return (
               <button
                 key={loc.id}
                 onClick={() => setSelectedLoc(loc.id as LocationId)}
-                className={`cursor-pointer px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+                className={`cursor-pointer flex-1 flex items-center justify-center px-3 py-1.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex-shrink-0 min-w-max ${
                   isActive 
                     ? 'bg-white text-gray-900 shadow-sm border border-gray-200/50' 
                     : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'

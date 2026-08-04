@@ -27,9 +27,9 @@ export default function Home() {
         <GlobalFilters compare={compare} onCompareChange={setCompare} />
 
         {/* Charts Section (Side by side, 66% / 33%) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
           {/* Left Column (Chart + Scorecards) */}
-          <div className="flex flex-col justify-between gap-6 lg:col-span-2 h-full">
+          <div className="flex flex-col justify-between gap-6 xl:col-span-2 h-full">
             {/* Left Chart: Revenue */}
             <div className="flex-1 border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white">
               <div className="flex items-center justify-between mb-4">
@@ -103,12 +103,12 @@ export default function Home() {
             </div>
 
             {/* Scorecards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {/* Total Orders */}
               <motion.div layout transition={smoothTransition} className="border border-gray-100 rounded-3xl p-6 hover:border-gray-200 transition-colors bg-white flex flex-col justify-between overflow-hidden">
-                <motion.div layout transition={smoothTransition} className="flex justify-between items-start mb-2">
-                  <div className="text-gray-500 text-sm font-medium">Total Orders</div>
-                  <div className="flex items-center gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-200/60">
+                <motion.div layout transition={smoothTransition} className="flex flex-col items-start gap-3 mb-2">
+                  <div className="text-gray-500 text-sm font-medium leading-tight pt-0.5">Total Orders</div>
+                  <div className="flex-shrink-0 flex items-center gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-200/60">
                     <button onClick={() => setOrdersViewMode('total')} className={`cursor-pointer px-2 py-0.5 text-[10px] font-semibold rounded-md transition-all ${ordersViewMode === 'total' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'}`}>Total</button>
                     <button onClick={() => setOrdersViewMode('locations')} className={`cursor-pointer px-2 py-0.5 text-[10px] font-semibold rounded-md transition-all ${ordersViewMode === 'locations' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'}`}>Locations</button>
                   </div>
@@ -139,9 +139,9 @@ export default function Home() {
               
               {/* Avg. Ticket Size */}
               <motion.div layout transition={smoothTransition} className="border border-gray-100 rounded-3xl p-6 hover:border-gray-200 transition-colors bg-white flex flex-col justify-between overflow-hidden">
-                <motion.div layout transition={smoothTransition} className="flex justify-between items-start mb-2">
-                  <div className="text-gray-500 text-sm font-medium">Avg. Ticket Size</div>
-                  <div className="flex items-center gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-200/60">
+                <motion.div layout transition={smoothTransition} className="flex flex-col items-start gap-3 mb-2">
+                  <div className="text-gray-500 text-sm font-medium leading-tight pt-0.5">Avg. Ticket Size</div>
+                  <div className="flex-shrink-0 flex items-center gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-200/60">
                     <button onClick={() => setTicketViewMode('total')} className={`cursor-pointer px-2 py-0.5 text-[10px] font-semibold rounded-md transition-all ${ticketViewMode === 'total' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'}`}>Total</button>
                     <button onClick={() => setTicketViewMode('locations')} className={`cursor-pointer px-2 py-0.5 text-[10px] font-semibold rounded-md transition-all ${ticketViewMode === 'locations' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'}`}>Locations</button>
                   </div>
@@ -172,9 +172,9 @@ export default function Home() {
               
               {/* New App Signups */}
               <motion.div layout transition={smoothTransition} className="border border-gray-100 rounded-3xl p-6 hover:border-gray-200 transition-colors bg-white flex flex-col justify-between overflow-hidden">
-                <motion.div layout transition={smoothTransition} className="flex justify-between items-start mb-2">
-                  <div className="text-gray-500 text-sm font-medium">New App Signups</div>
-                  <div className="flex items-center gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-200/60">
+                <motion.div layout transition={smoothTransition} className="flex flex-col items-start gap-3 mb-2">
+                  <div className="text-gray-500 text-sm font-medium leading-tight pt-0.5">New App Signups</div>
+                  <div className="flex-shrink-0 flex items-center gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-200/60">
                     <button onClick={() => setSignupsViewMode('total')} className={`cursor-pointer px-2 py-0.5 text-[10px] font-semibold rounded-md transition-all ${signupsViewMode === 'total' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'}`}>Total</button>
                     <button onClick={() => setSignupsViewMode('locations')} className={`cursor-pointer px-2 py-0.5 text-[10px] font-semibold rounded-md transition-all ${signupsViewMode === 'locations' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'}`}>Locations</button>
                   </div>
@@ -206,13 +206,13 @@ export default function Home() {
           </div>
           
           {/* Right Column */}
-          <div className="flex flex-col justify-between gap-6 lg:col-span-1 h-full">
+          <div className="flex flex-col gap-6 xl:col-span-1">
             {/* Right Chart: Payment Distribution */}
-            <motion.div layout transition={smoothTransition} className="flex-1 border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white overflow-hidden">
+            <motion.div layout transition={smoothTransition} className="border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white overflow-hidden">
               <motion.h3 layout transition={smoothTransition} className="text-lg font-bold text-gray-900 mb-4">Revenue by Payment Method</motion.h3>
               {/* Invisible spacer to match the height of the Gross/Net Volume block on the left */}
-              <motion.div layout transition={smoothTransition} className="hidden lg:block h-[52px] mb-6"></motion.div>
-              <motion.div layout transition={smoothTransition} className="flex-1 flex items-end justify-center">
+              <motion.div layout transition={smoothTransition} className="hidden xl:block h-[52px] mb-6"></motion.div>
+              <motion.div layout transition={smoothTransition} className="flex flex-col items-center justify-center flex-1 w-full">
                 <PaymentGaugeChart compare={compare} />
               </motion.div>
             </motion.div>
@@ -231,7 +231,7 @@ export default function Home() {
         <HourlySalesWidget compare={compare} />
 
         {/* Bottom Widgets Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
           <ShiftRoster />
           <RecentReviews />
           <CategoryBreakdown />

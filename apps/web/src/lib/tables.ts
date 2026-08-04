@@ -7,7 +7,16 @@ export interface Table {
   status?: 'available' | 'occupied' | 'billed' | 'dirty'; 
 }
 export interface Obstacle { id: string; x?: number; y?: number; width?: number; height?: number; name: string; rotation?: number; points?: Point[] }
-export interface Room { id: string; name: string; tables: Table[]; zones: Zone[]; obstacles: Obstacle[] }
+export interface Room {
+  id: string;
+  name: string;
+  tables: Table[];
+  zones: Zone[];
+  obstacles: Obstacle[];
+  defaultZoom?: number;
+  defaultScrollX?: number;
+  defaultScrollY?: number;
+}
 
 export const DEFAULT_ROOMS: Room[] = [
   {
@@ -85,11 +94,54 @@ export const saveRooms = (rooms: Room[]) => {
   }
 };
 
+export async function updateTableStatusAsync(
+  tableId: string,
+  newStatus: NonNullable<Table['status']>
+): Promise<Table> {
+  const res = await fetch(`/api/tables/${tableId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: newStatus }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || body.error || `Failed to update table [${tableId}] status`);
+  }
+  return res.json();
+}
+
+/** @deprecated Prefer updateTableStatusAsync — kept for callers migrating off localStorage */
 export const updateTableStatus = (tableId: string, newStatus: Table['status']) => {
-  const rooms = getRooms();
-  const updated = rooms.map(r => ({
-    ...r,
-    tables: r.tables.map(t => t.id === tableId ? { ...t, status: newStatus } : t)
-  }));
-  saveRooms(updated);
+  updateTableStatusAsync(tableId, newStatus!).catch(err =>
+    console.error('Failed to update table status in DB:', err)
+  );
 };
+
+// --- Database Connected Async Operations ---
+
+export async function seedDefaultLayoutAsync(locationId: string): Promise<Room[]> {
+  await saveRoomsAsync(locationId, DEFAULT_ROOMS);
+  return DEFAULT_ROOMS;
+}
+
+export async function getRoomsAsync(locationId: string): Promise<Room[]> {
+  const res = await fetch(`/api/locations/${locationId}/layout`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch rooms and tables layout from PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function saveRoomsAsync(locationId: string, rooms: Room[]): Promise<boolean> {
+  const res = await fetch(`/api/locations/${locationId}/layout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rooms }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to save rooms and tables layout to PostgreSQL');
+  }
+  const result = await res.json();
+  return result.success;
+}
+

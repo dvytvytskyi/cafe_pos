@@ -93,3 +93,48 @@ export const calculateHappyHourDiscount = (items: OrderItem[], dateInput?: Date)
     amountDeducted: parseFloat(totalDeduction.toFixed(2))
   };
 };
+
+// --- Database Connected Async Operations ---
+
+export async function getPromotionsAsync(): Promise<Promotion[]> {
+  const res = await fetch('/api/promotions');
+  if (!res.ok) {
+    throw new Error('Failed to fetch promotions from PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function createPromotionAsync(data: {
+  name: string;
+  discountPercent: number;
+  activeDays: number[];
+  startHour: number;
+  endHour: number;
+  targetItems?: string[];
+}): Promise<Promotion> {
+  const res = await fetch('/api/promotions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to create promotion rule in PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function calculateHappyHourDiscountAsync(
+  items: OrderItem[],
+  dateInput?: Date | string
+): Promise<{ name: string; value: number; amountDeduction: number } | null> {
+  const res = await fetch('/api/promotions/calculate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items, date: dateInput }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to evaluate promotion discount calculations on server');
+  }
+  return res.json();
+}
+

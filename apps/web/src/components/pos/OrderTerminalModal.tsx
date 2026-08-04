@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Minus, Plus, Search, MessageSquare, CreditCard, Receipt, ChefHat, Check, UserMinus, Users, Star, Trash2 } from 'lucide-react';
-import { Order, getOrders } from '@/lib/orders';
-import { getGuests, Guest } from '@/lib/crm';
+import { Order, getOrdersAsync } from '@/lib/orders';
+import { Guest, getGuestsAsync, saveGuestAsync } from '@/lib/crm';
+import { getMenuCategoriesAsync } from '@/lib/menu';
+import { mapCategoriesToPosMenu, PosMenuCategory } from '@/lib/mappers/menu.mapper';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 
 export interface OrderItem {
   id: string;
@@ -18,92 +21,53 @@ interface OrderTerminalModalProps {
   onAction: (action: 'send_to_kitchen' | 'print_check' | 'pay' | 'clean', items: OrderItem[], discountPercent: number, customerId?: string, keepOpen?: boolean) => void;
   currentStatus: 'available' | 'occupied' | 'billed' | 'dirty';
   initialOrder?: Order | null;
+  guests?: Guest[];
+  locationId?: string;
 }
 
-const generateCoffeeItems = () => {
-  const base = [
-    { id: 'm1', name: 'Double Shot Hot Espresso Premium Arabica Blend', price: 2.50, image: 'https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['S', 'M', 'L'], allergens: ['gluten-free'] },
-    { id: 'm2', name: 'Corgi Special Hazelnut Latte with Extra Creamy Milk', price: 4.50, image: 'https://images.pexels.com/photos/350478/pexels-photo-350478.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: ['dairy'] },
-    { id: 'm3', name: 'Flat White Organic Beans Double Shot Coffee', price: 3.80, image: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['S', 'M'], allergens: ['dairy'] },
-  ];
-  
-  const extras = [
-    { name: 'Cappuccino Classic Recipe', price: 3.50, image: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['S', 'M', 'L'], allergens: ['dairy'] },
-    { name: 'Caramel Macchiato Sweet Drizzle', price: 4.80, image: 'https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: ['dairy'] },
-    { name: 'Iced Latte Shaken', price: 4.20, image: 'https://images.pexels.com/photos/350478/pexels-photo-350478.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: ['dairy'] },
-    { name: 'Cold Brew Vanilla Cream', price: 5.00, image: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: [] },
-    { name: 'Cortado Traditional', price: 3.20, image: 'https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['S'], allergens: ['dairy'] },
-    { name: 'Americano Classic Black', price: 2.80, image: 'https://images.pexels.com/photos/350478/pexels-photo-350478.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['S', 'M', 'L'], allergens: [] },
-    { name: 'Mocaccino Dark Chocolate', price: 4.90, image: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: ['dairy'] },
-    { name: 'Raf Coffee Lavender Syrup', price: 5.20, image: 'https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M'], allergens: ['dairy'] },
-    { name: 'Irish Coffee Warm Blend', price: 6.50, image: 'https://images.pexels.com/photos/350478/pexels-photo-350478.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['L'], allergens: [] },
-    { name: 'Affogato Gelato Scoop', price: 4.50, image: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['S'], allergens: ['dairy'] },
-  ];
+export default function OrderTerminalModal({
+  tableId,
+  tableName,
+  onClose,
+  onAction,
+  currentStatus,
+  initialOrder,
+  guests: guestsProp,
+  locationId = DEFAULT_LOCATION_ID,
+}: OrderTerminalModalProps) {
+  const [menu, setMenu] = useState<PosMenuCategory[]>([]);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [menuError, setMenuError] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>('');
 
-  const items = [...base];
-  for (let i = 0; i < 27; i++) {
-    const template = extras[i % extras.length];
-    items.push({
-      id: `m-coffee-gen-${i}`,
-      name: `${template.name} #${i + 4}`,
-      price: template.price,
-      image: template.image,
-      sizes: template.sizes,
-      allergens: template.allergens
-    });
-  }
-  return items;
-};
+  useEffect(() => {
+    let cancelled = false;
+    setMenuLoading(true);
+    setMenuError(null);
 
-const MOCK_MENU = [
-  { id: 'c1', name: 'Coffee', items: generateCoffeeItems() },
-  { id: 'c2', name: 'Tea & Matcha', items: [
-    { id: 'm4', name: 'Matcha Latte', price: 4.80, image: 'https://images.pexels.com/photos/5946631/pexels-photo-5946631.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: ['dairy'] },
-    { id: 'm5', name: 'Earl Grey', price: 3.50, image: 'https://images.pexels.com/photos/2638026/pexels-photo-2638026.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M'], allergens: [] },
-  ]},
-  { id: 'c3', name: 'Pastries', items: [
-    { id: 'm6', name: 'Croissant', price: 2.80, image: 'https://images.pexels.com/photos/3824032/pexels-photo-3824032.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['gluten', 'dairy'] },
-    { id: 'm7', name: 'Matcha Croissant', price: 3.50, image: 'https://images.pexels.com/photos/5945564/pexels-photo-5945564.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['gluten', 'dairy'] },
-  ]},
-  { id: 'c4', name: 'Sandwiches', items: [
-    { id: 'm8', name: 'Club Sandwich', price: 7.50, image: 'https://images.pexels.com/photos/1603901/pexels-photo-1603901.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['gluten', 'dairy', 'egg'] },
-    { id: 'm9', name: 'Caprese Sandwich', price: 6.80, image: 'https://images.pexels.com/photos/1600139/pexels-photo-1600139.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['gluten', 'dairy', 'nuts'] },
-  ]},
-  { id: 'c5', name: 'Brunch', items: [
-    { id: 'm10', name: 'Avocado Toast', price: 8.00, image: 'https://images.pexels.com/photos/566566/pexels-photo-566566.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['gluten'] },
-    { id: 'm11', name: 'Eggs Benedict', price: 12.00, image: 'https://images.pexels.com/photos/1435907/pexels-photo-1435907.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['gluten', 'egg', 'dairy'] },
-  ]},
-  { id: 'c6', name: 'Smoothies', items: [
-    { id: 'm12', name: 'Green Detox', price: 5.50, image: 'https://images.pexels.com/photos/3625372/pexels-photo-3625372.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: [] },
-    { id: 'm13', name: 'Berry Blast', price: 5.80, image: 'https://images.pexels.com/photos/812805/pexels-photo-812805.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: [] },
-  ]},
-  { id: 'c7', name: 'Cold Drinks', items: [
-    { id: 'm14', name: 'Iced Americano', price: 3.00, image: 'https://images.pexels.com/photos/2615323/pexels-photo-2615323.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: [] },
-    { id: 'm15', name: 'Lemonade', price: 4.00, image: 'https://images.pexels.com/photos/2109099/pexels-photo-2109099.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: ['M', 'L'], allergens: [] },
-  ]},
-  { id: 'c8', name: 'Desserts', items: [
-    { id: 'm16', name: 'Cheesecake', price: 5.00, image: 'https://images.pexels.com/photos/1126359/pexels-photo-1126359.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['dairy', 'gluten'] },
-    { id: 'm17', name: 'Tiramisu', price: 5.50, image: 'https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['dairy', 'gluten', 'egg'] },
-  ]},
-  { id: 'c9', name: 'Salads', items: [
-    { id: 'm18', name: 'Caesar Salad', price: 8.50, image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['dairy', 'gluten', 'fish'] },
-    { id: 'm19', name: 'Greek Salad', price: 8.00, image: 'https://images.pexels.com/photos/1211887/pexels-photo-1211887.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['dairy'] },
-  ]},
-  { id: 'c10', name: 'Bowls', items: [
-    { id: 'm20', name: 'Acai Bowl', price: 9.00, image: 'https://images.pexels.com/photos/109275/pexels-photo-109275.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['nuts'] },
-    { id: 'm21', name: 'Poke Bowl Salmon', price: 13.50, image: 'https://images.pexels.com/photos/2097090/pexels-photo-2097090.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['fish', 'soy'] },
-  ]},
-  { id: 'c11', name: 'Soups', items: [
-    { id: 'm22', name: 'Tomato Soup', price: 6.00, image: 'https://images.pexels.com/photos/539451/pexels-photo-539451.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['dairy'] },
-    { id: 'm23', name: 'Pumpkin Soup', price: 6.50, image: 'https://images.pexels.com/photos/539451/pexels-photo-539451.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['dairy'] },
-  ]},
-  { id: 'c12', name: 'Specials', items: [
-    { id: 'm24', name: 'Corgi Special Pancake', price: 10.00, image: 'https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg?auto=compress&cs=tinysrgb&w=300', sizes: [], allergens: ['gluten', 'egg', 'dairy'] },
-  ]}
-];
+    getMenuCategoriesAsync()
+      .then((data) => {
+        if (cancelled) return;
+        const mapped = mapCategoriesToPosMenu(data);
+        setMenu(mapped);
+        setActiveCategory(mapped[0]?.id || '');
+      })
+      .catch((err) => {
+        console.error('Error fetching menu categories:', err);
+        if (!cancelled) {
+          setMenu([]);
+          setMenuError('Could not load menu from server.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setMenuLoading(false);
+      });
 
-export default function OrderTerminalModal({ tableId, tableName, onClose, onAction, currentStatus, initialOrder }: OrderTerminalModalProps) {
-  const [activeCategory, setActiveCategory] = useState(MOCK_MENU[0].id);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [orderItems, setOrderItems] = useState<OrderItem[]>(() => {
     if (initialOrder) {
       return initialOrder.items.map((item, idx) => ({
@@ -132,14 +96,40 @@ export default function OrderTerminalModal({ tableId, tableName, onClose, onActi
   });
   const [isReady, setIsReady] = useState(initialOrder ? initialOrder.status === 'ready' : false);
 
-  // Poll active order status to see if it changes to 'ready'
+  useEffect(() => {
+    if (!initialOrder) {
+      setOrderItems([]);
+      setDiscount(0);
+      setIsSentToKitchen(false);
+      setIsReady(false);
+      setSelectedCustomer(null);
+      return;
+    }
+
+    setOrderItems(
+      initialOrder.items.map((item, idx) => ({
+        id: `m-${idx}-${initialOrder.id}`,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        comments: item.comments,
+      }))
+    );
+    setDiscount(initialOrder.discount ? initialOrder.discount.value / 100 : 0);
+    setIsSentToKitchen(['preparing', 'ready', 'served', 'completed'].includes(initialOrder.status));
+    setIsReady(initialOrder.status === 'ready');
+  }, [initialOrder]);
+
+  // Poll active order status from API
   useEffect(() => {
     if (!initialOrder) return;
-    
-    const interval = setInterval(() => {
-      const allOrders = getOrders();
-      const currentOrder = allOrders.find(o => o.id === initialOrder.id);
-      if (currentOrder) {
+
+    const interval = setInterval(async () => {
+      try {
+        const orders = await getOrdersAsync(locationId);
+        const currentOrder = orders.find((o) => o.id === initialOrder.id);
+        if (!currentOrder) return;
+
         if (currentOrder.status === 'ready') {
           setIsSentToKitchen(true);
           setIsReady(true);
@@ -150,20 +140,39 @@ export default function OrderTerminalModal({ tableId, tableName, onClose, onActi
           setIsSentToKitchen(true);
           setIsReady(false);
         }
+      } catch (error) {
+        console.error('Failed to poll order status:', error);
       }
     }, 2000);
-    
+
     return () => clearInterval(interval);
-  }, [initialOrder]);
+  }, [initialOrder, locationId]);
   
-  // CRM States
-  const [selectedCustomer, setSelectedCustomer] = useState<Guest | null>(() => {
-    if (initialOrder && initialOrder.customerId) {
-      const guests = getGuests();
-      return guests.find(g => g.id === initialOrder.customerId) || null;
+  const [crmGuests, setCrmGuests] = useState<Guest[]>(guestsProp || []);
+  const loadCrmGuests = async () => {
+    if (guestsProp && guestsProp.length > 0) {
+      setCrmGuests(guestsProp);
+      return;
     }
-    return null;
-  });
+    try {
+      const guests = await getGuestsAsync();
+      setCrmGuests(guests);
+    } catch (e) {
+      console.error(e);
+      setCrmGuests([]);
+    }
+  };
+  useEffect(() => {
+    loadCrmGuests();
+  }, [guestsProp]);
+
+  const [selectedCustomer, setSelectedCustomer] = useState<Guest | null>(null);
+  useEffect(() => {
+    if (!initialOrder?.customerId) return;
+    const source = guestsProp && guestsProp.length > 0 ? guestsProp : crmGuests;
+    const found = source.find((g) => g.id === initialOrder.customerId);
+    if (found) setSelectedCustomer(found);
+  }, [initialOrder, guestsProp, crmGuests]);
   const [guestSearchQuery, setGuestSearchQuery] = useState('');
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   
@@ -239,8 +248,124 @@ export default function OrderTerminalModal({ tableId, tableName, onClose, onActi
     }
   };
 
+  const menuList = menu;
   const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const total = subtotal * (1 - discount);
+  const activeCategoryItems = menuList.find((c) => c.id === activeCategory)?.items ?? [];
+
+  const renderCategories = () => {
+    if (menuLoading) {
+      return <div className="p-4 text-sm font-semibold text-gray-500 border-b border-gray-100">Loading menu…</div>;
+    }
+    if (menuError) {
+      return <div className="p-4 text-sm font-semibold text-red-600 border-b border-gray-100">{menuError}</div>;
+    }
+    if (menuList.length === 0) return null;
+    return (
+      <div className="grid grid-cols-6 gap-2 p-4 border-b border-gray-100 bg-gray-50/30 shrink-0">
+        {menuList.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => setActiveCategory(cat.id)}
+            className={`py-2 px-1 rounded-xl font-black text-xs text-center transition-colors cursor-pointer truncate ${
+              activeCategory === cat.id
+                ? 'bg-corgi text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200/60'
+            }`}
+            title={cat.name}
+          >
+            {cat.name}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderMenuItems = () => {
+    if (menuLoading) {
+      return <div className="flex items-center justify-center h-full text-gray-500 font-semibold">Loading menu…</div>;
+    }
+    if (menuList.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 gap-2">
+          <p className="font-bold text-gray-700">No menu items configured</p>
+          <p className="text-sm">Add categories and dishes in Menu settings to use the POS terminal.</p>
+        </div>
+      );
+    }
+    return (
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        {activeCategoryItems.map((item) => (
+          <div
+            key={item.id}
+            className="flex flex-col bg-white border border-gray-100 hover:border-corgi/40 hover:shadow-md rounded-2xl transition-all overflow-hidden relative group"
+          >
+            <div className="h-28 w-full bg-gray-100 relative overflow-hidden shrink-0">
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
+              )}
+            </div>
+            <div className="p-3 flex-1 flex flex-col justify-between">
+              <div className="min-h-[36px] flex flex-col justify-start">
+                <h4 className="font-extrabold text-gray-900 text-xs line-clamp-2 leading-tight" title={item.name}>
+                  {item.name}
+                </h4>
+              </div>
+              <span className="text-xs font-black text-corgi mt-0.5 block">€{item.price.toFixed(2)}</span>
+              <div className="mt-2">
+                <div className="flex gap-1 flex-wrap min-h-[16px] mb-1 items-center">
+                  {item.allergens?.map((alg: string) => (
+                    <span
+                      key={alg}
+                      className={`text-[8px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded border ${
+                        alg === 'gluten-free'
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : alg === 'dairy'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : alg === 'nuts'
+                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                              : alg === 'egg'
+                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                : 'bg-orange-50 text-orange-700 border-orange-200'
+                      }`}
+                    >
+                      {alg}
+                    </span>
+                  ))}
+                </div>
+                {item.sizes && item.sizes.length > 0 ? (
+                  <div className="flex gap-1">
+                    {item.sizes.map((sz: string) => (
+                      <button
+                        key={sz}
+                        onClick={() => addItem(item, sz)}
+                        className="flex-1 py-1 bg-gray-50 hover:bg-corgi border border-gray-100 hover:border-corgi hover:text-white rounded-lg text-[10px] font-black text-gray-700 transition-all cursor-pointer active:scale-95 text-center"
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => addItem(item)}
+                    className="w-full py-1.5 bg-gray-50 hover:bg-corgi border border-gray-200 hover:border-corgi hover:text-white rounded-xl text-[10px] font-black text-gray-700 transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1"
+                  >
+                    <Plus size={10} /> Add to Order
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-6">
@@ -263,114 +388,9 @@ export default function OrderTerminalModal({ tableId, tableName, onClose, onActi
             </button>
           </div>
 
-          {/* Categories */}
-          <div className="grid grid-cols-6 gap-2 p-4 border-b border-gray-100 bg-gray-50/30 shrink-0">
-            {MOCK_MENU.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`py-2 px-1 rounded-xl font-black text-xs text-center transition-colors cursor-pointer truncate ${
-                  activeCategory === cat.id 
-                    ? 'bg-corgi text-white' 
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200/60'
-                }`}
-                title={cat.name}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
+          {renderCategories()}
 
-          {/* Items Grid */}
-          <div className="flex-1 p-4 overflow-y-auto">
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {MOCK_MENU.find(c => c.id === activeCategory)?.items.map(item => {
-                const ALLERGEN_MAP: Record<string, string> = {
-                  'dairy': '🥛',
-                  'gluten': '🌾',
-                  'gluten-free': '🌱',
-                  'nuts': '🥜',
-                  'egg': '🥚',
-                  'fish': '🐟',
-                  'soy': '🫘',
-                };
-
-                return (
-                  <div
-                    key={item.id}
-                    className="flex flex-col bg-white border border-gray-100 hover:border-corgi/40 hover:shadow-md rounded-2xl transition-all overflow-hidden relative group"
-                  >
-                    {/* Image Container */}
-                    <div className="h-28 w-full bg-gray-100 relative overflow-hidden shrink-0">
-                      {item.image ? (
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Dish details */}
-                    <div className="p-3 flex-1 flex flex-col justify-between">
-                      <div className="min-h-[36px] flex flex-col justify-start">
-                        <h4 className="font-extrabold text-gray-900 text-xs line-clamp-2 leading-tight" title={item.name}>
-                          {item.name}
-                        </h4>
-                      </div>
-                      <span className="text-xs font-black text-corgi mt-0.5 block">€{item.price.toFixed(2)}</span>
-
-                      {/* Sizes / Add Action */}
-                      <div className="mt-2">
-                        {/* Allergens text tags */}
-                        <div className="flex gap-1 flex-wrap min-h-[16px] mb-1 items-center">
-                          {item.allergens && item.allergens.length > 0 && item.allergens.map((alg: string) => (
-                            <span 
-                              key={alg} 
-                              className={`text-[8px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded border ${
-                                alg === 'gluten-free' ? 'bg-green-50 text-green-700 border-green-200' :
-                                alg === 'dairy' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                alg === 'nuts' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                alg === 'egg' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                'bg-orange-50 text-orange-700 border-orange-200'
-                              }`}
-                            >
-                              {alg}
-                            </span>
-                          ))}
-                        </div>
-
-                        {item.sizes && item.sizes.length > 0 ? (
-                          <div className="flex gap-1">
-                            {item.sizes.map((sz: string) => (
-                              <button
-                                key={sz}
-                                onClick={() => addItem(item, sz)}
-                                className="flex-1 py-1 bg-gray-50 hover:bg-corgi border border-gray-100 hover:border-corgi hover:text-white rounded-lg text-[10px] font-black text-gray-700 transition-all cursor-pointer active:scale-95 text-center"
-                              >
-                                {sz}
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => addItem(item)}
-                            className="w-full py-1.5 bg-gray-50 hover:bg-corgi border border-gray-200 hover:border-corgi hover:text-white rounded-xl text-[10px] font-black text-gray-700 transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1"
-                          >
-                            <Plus size={10} /> Add to Order
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <div className="flex-1 p-4 overflow-y-auto">{renderMenuItems()}</div>
         </div>
 
         {/* Right Side: Ticket */}
@@ -383,32 +403,23 @@ export default function OrderTerminalModal({ tableId, tableName, onClose, onActi
             {/* Guest Selector Component */}
             {isQuickAddOpen ? (
               <form 
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   if (!quickAddName.trim()) return;
-                  const newGuest: Guest = {
-                    id: 'g-' + Date.now(),
-                    name: quickAddName.trim(),
-                    phone: quickAddPhone.trim() || 'N/A',
-                    email: 'N/A',
-                    birthday: 'N/A',
-                    tier: 'Bronze',
-                    points: 0,
-                    ltv: 0,
-                    visitCount: 0,
-                    lastVisitDate: 'Never',
-                    favoriteDishes: [],
-                    joinedDate: new Date().toISOString().split('T')[0]
-                  };
-                  const crmGuests = getGuests();
-                  const updated = [newGuest, ...crmGuests];
-                  if (typeof window !== 'undefined') {
-                    localStorage.setItem('corgi_guests', JSON.stringify(updated));
+                  try {
+                    const saved = await saveGuestAsync({
+                      name: quickAddName.trim(),
+                      phone: quickAddPhone.trim() || '00000000',
+                      email: quickAddName.trim().toLowerCase().replace(/[^a-z0-9]/g, '') + '@placeholder.com'
+                    });
+                    setSelectedCustomer(saved);
+                    await loadCrmGuests();
+                    setIsQuickAddOpen(false);
+                    setQuickAddName('');
+                    setQuickAddPhone('');
+                  } catch (err) {
+                    console.error('Failed to quick register guest:', err);
                   }
-                  setSelectedCustomer(newGuest);
-                  setIsQuickAddOpen(false);
-                  setQuickAddName('');
-                  setQuickAddPhone('');
                 }}
                 className="bg-orange-50/30 border border-orange-100/60 rounded-2xl p-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-200 shadow-sm"
               >
@@ -485,12 +496,12 @@ export default function OrderTerminalModal({ tableId, tableName, onClose, onActi
                     
                     {(() => {
                       const list = guestSearchQuery
-                        ? getGuests().filter(g => 
+                        ? crmGuests.filter(g => 
                             g.name.toLowerCase().includes(guestSearchQuery.toLowerCase()) || 
                             g.phone.includes(guestSearchQuery) ||
-                            g.email.toLowerCase().includes(guestSearchQuery.toLowerCase())
+                            (g.email && g.email.toLowerCase().includes(guestSearchQuery.toLowerCase()))
                           )
-                        : getGuests().filter(g => g.tier === 'VIP' || g.tier === 'Gold').slice(0, 4);
+                        : crmGuests.filter(g => g.tier === 'VIP' || g.tier === 'Gold').slice(0, 4);
 
                       return (
                         <>
@@ -587,8 +598,8 @@ export default function OrderTerminalModal({ tableId, tableName, onClose, onActi
                     };
 
                     let allergens: string[] = [];
-                    for (const cat of MOCK_MENU) {
-                      const dish = cat.items.find(d => d.name === baseName || d.name.startsWith(baseName));
+                    for (const cat of menuList) {
+                      const dish = cat.items.find((d: any) => d.name === baseName || d.name.startsWith(baseName));
                       if (dish && dish.allergens) {
                         allergens = dish.allergens;
                         break;

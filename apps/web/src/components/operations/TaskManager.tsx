@@ -372,8 +372,7 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
     <div className="flex-1 flex flex-col min-h-0 bg-white rounded-2xl border border-gray-100">
 
       {/* Filter Bar */}
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0 gap-4 flex-wrap">
-        <div className="flex items-center gap-3 shrink-0">
+      <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-y-4 gap-x-3 shrink-0 w-full">
           
           {/* Back Button */}
           {onBack && (
@@ -387,18 +386,18 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
           )}
 
           {/* Search */}
-          <div className="relative">
+          <div className="relative flex-grow min-w-[140px] max-w-[280px] xl:max-w-[225px] xl:flex-none">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
               placeholder="Search tasks..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-corgi/20 focus:border-corgi/30 w-[225px] transition-all placeholder:text-gray-400"
+              className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-corgi/20 focus:border-corgi/30 w-full transition-all placeholder:text-gray-400"
             />
           </div>
 
-          <div className="w-px h-6 bg-gray-200 mx-1" />
+          <div className="hidden lg:block w-px h-6 bg-gray-200 mx-1" />
 
           {/* Date Selector */}
           <DatePicker 
@@ -406,7 +405,7 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
             onChange={setSelectedDate}
           />
 
-          <div className="w-px h-6 bg-gray-200 mx-1" />
+          <div className="hidden lg:block w-px h-6 bg-gray-200 mx-1" />
 
           {/* User Filter */}
           <div className="relative">
@@ -519,7 +518,7 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
             </AnimatePresence>
           </div>
 
-          {/* Tags Filter */}
+          <div className="hidden xl:block w-px h-6 bg-gray-200 mx-1" />
           <div className="relative">
             <button 
               onClick={() => setIsTagFilterOpen(!isTagFilterOpen)}
@@ -574,7 +573,7 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
             </AnimatePresence>
           </div>
 
-          <div className="w-px h-6 bg-gray-200 mx-1" />
+          <div className="hidden lg:block w-px h-6 bg-gray-200 mx-1" />
 
           {/* Settings Button */}
           <button 
@@ -583,12 +582,11 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
           >
              <Settings size={16} />
           </button>
-        </div>
 
         {/* Create New */}
         <button 
           onClick={() => openNewTaskModal('todo')}
-          className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors cursor-pointer shrink-0"
+          className="ml-auto flex items-center gap-2 px-4 py-1.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors cursor-pointer shrink-0"
         >
           <Plus size={16} />
           <span className="text-[13px] font-bold">New Task</span>

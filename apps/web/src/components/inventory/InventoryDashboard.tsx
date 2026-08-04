@@ -15,7 +15,7 @@ export default function InventoryDashboard() {
 
   return (
     <div className="bg-white rounded-3xl p-5 md:px-8 md:pb-8 pt-6 md:pt-6 shadow-sm flex-1 overflow-hidden flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 flex-shrink-0">
+      <div className="flex flex-wrap lg:flex-nowrap items-start lg:items-center justify-between mb-5 gap-4 flex-shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Inventory & Logistics</h2>
           <p className="text-sm font-medium text-gray-500 mt-1">Manage stock levels and branch transfers</p>
@@ -38,17 +38,6 @@ export default function InventoryDashboard() {
               Logistics
             </button>
           </div>
-          
-          <button 
-            onClick={() => {
-              if (activeTab === 'stock') setIsAddItemModalOpen(true);
-              else setIsNewTransferModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl shadow-sm transition-all cursor-pointer hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 shrink-0"
-          >
-            <Plus size={16} strokeWidth={2.5} />
-            {activeTab === 'stock' ? 'Add Item' : 'New Transfer'}
-          </button>
         </div>
       </div>
 
@@ -63,7 +52,7 @@ export default function InventoryDashboard() {
               transition={{ duration: 0.2 }}
               className="flex-1 overflow-hidden flex flex-col"
             >
-              <StockTable />
+              <StockTable onAdd={() => setIsAddItemModalOpen(true)} />
             </motion.div>
           ) : (
             <motion.div
@@ -74,7 +63,7 @@ export default function InventoryDashboard() {
               transition={{ duration: 0.2 }}
               className="flex-1 overflow-hidden flex flex-col"
             >
-              <LogisticsTransfers />
+              <LogisticsTransfers onAdd={() => setIsNewTransferModalOpen(true)} />
             </motion.div>
           )}
         </AnimatePresence>

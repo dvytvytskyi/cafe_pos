@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Plus, Search, ChevronDown, ChevronUp, MoreHorizontal, Edit2, Trash2, Image as ImageIcon, GripVertical, Coffee, Croissant, Sandwich, CupSoda, Utensils, LayoutGrid, List, Eye, EyeOff, X, Check, Archive, Star, Sliders } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, ChevronDown, ChevronUp, MoreHorizontal, Edit2, Trash2, Image as ImageIcon, GripVertical, Coffee, Croissant, Sandwich, CupSoda, Utensils, LayoutGrid, List, Eye, EyeOff, X, Check, Archive, Star, Sliders, Ruler, Tags } from 'lucide-react';
 import { Reorder, motion, AnimatePresence } from 'framer-motion';
 import DishModal from './DishModal';
 import ModifiersManagerModal from './ModifiersManagerModal';
+import { getMenuCategoriesAsync, createCategoryAsync } from '@/lib/menu';
 
 type Category = { id: string; name: string; count: number; icon: React.ElementType };
 type Dish = {
@@ -20,13 +21,8 @@ type Dish = {
 };
 
 export default function MenusView() {
-  const [categories, setCategories] = useState<Category[]>([
-    { id: '1', name: 'Coffee', count: 8, icon: Coffee },
-    { id: '2', name: 'Pastries', count: 6, icon: Croissant },
-    { id: '3', name: 'Sandwiches', count: 6, icon: Sandwich },
-    { id: '4', name: 'Smoothies', count: 4, icon: CupSoda },
-  ]);
-  const [activeCategoryId, setActiveCategoryId] = useState<string>('1');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategoryId, setActiveCategoryId] = useState<string>('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -53,11 +49,40 @@ export default function MenusView() {
   const [hideToggleConfirm, setHideToggleConfirm] = useState(false);
   const [dontShowAgainCheck, setDontShowAgainCheck] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const hidden = localStorage.getItem('corgi_hide_menu_toggle_confirm') === 'true';
       setHideToggleConfirm(hidden);
     }
+
+    async function loadMenu() {
+      try {
+        const dbCategories = await getMenuCategoriesAsync(true);
+        if (dbCategories && dbCategories.length > 0) {
+          setCategories(dbCategories.map(c => ({
+            id: c.id,
+            name: c.name,
+            count: c.items.length,
+            icon: Coffee
+          })));
+          setActiveCategoryId(dbCategories[0].id);
+
+          setDishes(dbCategories.flatMap(c => c.items.map(item => ({
+            id: item.id,
+            categoryId: item.categoryId,
+            name: item.name,
+            description: item.description || '',
+            image: imgUrl,
+            basePrice: item.price,
+            isArchived: item.isArchived,
+            isActive: !item.isArchived
+          }))));
+        }
+      } catch (error) {
+        console.error('Failed to load menu layout from PostgreSQL:', error);
+      }
+    }
+    loadMenu();
   }, []);
   
   const [newAllergenName, setNewAllergenName] = useState('');
@@ -85,56 +110,28 @@ export default function MenusView() {
 
   const imgUrl = 'https://images.pexels.com/photos/37417630/pexels-photo-37417630.jpeg';
 
-  const [dishes, setDishes] = useState<Dish[]>([
-    // Coffee (8)
-    { id: 'd1', categoryId: '1', name: 'Espresso', description: 'Single shot of rich espresso', image: imgUrl, basePrice: 2.50 },
-    { id: 'd2', categoryId: '1', name: 'Macchiato', description: 'Espresso with a dash of frothy milk', image: imgUrl, basePrice: 2.80 },
-    { id: 'd3', categoryId: '1', name: 'Cortado', description: 'Equal parts espresso and steamed milk', image: imgUrl, basePrice: 3.00 },
-    { id: 'd4', categoryId: '1', name: 'Americano', description: 'Espresso with hot water', image: imgUrl, basePrice: 2.50 },
-    { id: 'd5', categoryId: '1', name: 'Flat White', description: 'Espresso with microfoam', image: imgUrl, basePrice: 3.50 },
-    { id: 'd6', categoryId: '1', name: 'Cappuccino', description: 'Espresso with steamed milk and thick foam', image: imgUrl, basePrice: 3.50 },
-    { id: 'd7', categoryId: '1', name: 'Latte', description: 'Espresso with lots of steamed milk and a light layer of foam', image: imgUrl, basePrice: 4.00 },
-    { id: 'd8', categoryId: '1', name: 'Mocha', description: 'Espresso with chocolate and steamed milk', image: imgUrl, basePrice: 4.50 },
-    // Pastries (6)
-    { id: 'd9', categoryId: '2', name: 'Croissant', description: 'Buttery, flaky, viennoiserie pastry', image: imgUrl, basePrice: 3.00 },
-    { id: 'd10', categoryId: '2', name: 'Pain au Chocolat', description: 'Croissant dough with dark chocolate', image: imgUrl, basePrice: 3.50 },
-    { id: 'd11', categoryId: '2', name: 'Almond Croissant', description: 'Croissant filled with almond paste', image: imgUrl, basePrice: 4.00 },
-    { id: 'd12', categoryId: '2', name: 'Cinnamon Roll', description: 'Sweet roll with cinnamon and glaze', image: imgUrl, basePrice: 3.50 },
-    { id: 'd13', categoryId: '2', name: 'Blueberry Muffin', description: 'Classic muffin bursting with blueberries', image: imgUrl, basePrice: 3.00 },
-    { id: 'd14', categoryId: '2', name: 'Banana Bread', description: 'Slice of moist banana bread', image: imgUrl, basePrice: 3.00 },
-    // Sandwiches (6)
-    { id: 'd15', categoryId: '3', name: 'Ham & Cheese', description: 'Classic ham and gruyere on baguette', image: imgUrl, basePrice: 5.50 },
-    { id: 'd16', categoryId: '3', name: 'Turkey Club', description: 'Turkey, bacon, lettuce, tomato', image: imgUrl, basePrice: 6.50 },
-    { id: 'd17', categoryId: '3', name: 'Caprese', description: 'Mozzarella, tomato, basil, balsamic', image: imgUrl, basePrice: 6.00 },
-    { id: 'd18', categoryId: '3', name: 'Tuna Salad', description: 'Tuna salad with lettuce on whole wheat', image: imgUrl, basePrice: 5.50 },
-    { id: 'd19', categoryId: '3', name: 'BLT', description: 'Bacon, lettuce, tomato with mayo', image: imgUrl, basePrice: 6.00 },
-    { id: 'd20', categoryId: '3', name: 'Chicken Avocado', description: 'Grilled chicken with smashed avocado', image: imgUrl, basePrice: 7.00 },
-    // Smoothies (4)
-    { id: 'd21', categoryId: '4', name: 'Berry Blast', description: 'Strawberry, blueberry, raspberry blend', image: imgUrl, basePrice: 5.00 },
-    { id: 'd22', categoryId: '4', name: 'Tropical Mango', description: 'Mango, pineapple, coconut water', image: imgUrl, basePrice: 5.50 },
-    { id: 'd23', categoryId: '4', name: 'Green Detox', description: 'Spinach, kale, apple, ginger', image: imgUrl, basePrice: 5.50 },
-    { id: 'd24', categoryId: '4', name: 'Protein PB', description: 'Peanut butter, banana, whey protein', image: imgUrl, basePrice: 6.00 },
-    // Archived (for testing)
-    { id: 'd25', categoryId: '1', name: 'Pumpkin Spice Latte', description: 'Seasonal favorite with pumpkin spices', image: imgUrl, basePrice: 4.50, isArchived: true },
-    { id: 'd26', categoryId: '2', name: 'Gingerbread Cookie', description: 'Festive soft gingerbread cookie', image: imgUrl, basePrice: 2.00, isArchived: true },
-    { id: 'd27', categoryId: '3', name: 'Holiday Turkey Panini', description: 'Turkey, cranberry sauce, and stuffing', image: imgUrl, basePrice: 7.50, isArchived: true },
-  ]);
+  const [dishes, setDishes] = useState<Dish[]>([]);
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
       setIsAddingCategory(false);
       return;
     }
-    const newCat: Category = {
-      id: Date.now().toString(),
-      name: newCategoryName.trim(),
-      count: 0,
-      icon: Utensils
-    };
-    setCategories([...categories, newCat]);
-    setNewCategoryName('');
-    setIsAddingCategory(false);
-    setActiveCategoryId(newCat.id);
+    try {
+      const dbCat = await createCategoryAsync(newCategoryName.trim());
+      const newCat: Category = {
+        id: dbCat.id,
+        name: dbCat.name,
+        count: 0,
+        icon: Utensils
+      };
+      setCategories([...categories, newCat]);
+      setNewCategoryName('');
+      setIsAddingCategory(false);
+      setActiveCategoryId(newCat.id);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const activeCategory = categories.find(c => c.id === activeCategoryId);
@@ -162,33 +159,33 @@ export default function MenusView() {
   });
 
   return (
-    <div className="flex h-full w-full animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="flex flex-col xl:flex-row h-full w-full animate-in fade-in slide-in-from-right-4 duration-500">
       {/* Left Sidebar: Categories */}
-      <div className="w-72 shrink-0 flex flex-col border-r border-gray-100 pr-6 mr-6 overflow-y-auto">
-        <div className="flex items-center justify-between mb-8 mt-2">
+      <div className="w-full xl:w-72 shrink-0 flex flex-col border-b xl:border-b-0 xl:border-r border-gray-100 pb-6 mb-6 xl:pb-0 xl:mb-0 xl:pr-6 xl:mr-6 xl:overflow-y-auto">
+        <div className="flex items-center justify-between mb-4 xl:mb-8 mt-2">
           <h3 className="text-[12px] font-extrabold text-gray-400 tracking-widest uppercase">Categories</h3>
           <button 
             onClick={() => setIsAddingCategory(true)}
-            className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-corgi hover:text-white hover:border-corgi transition-all shadow-sm cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+            className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-corgi hover:text-white hover:border-corgi transition-all cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
           >
             <Plus size={16} strokeWidth={3} />
           </button>
         </div>
 
-        <Reorder.Group axis="y" values={categories} onReorder={setCategories} className="flex flex-col gap-1 list-none p-0">
+        <Reorder.Group axis="y" values={categories} onReorder={setCategories} className="flex flex-row flex-wrap xl:flex-col gap-2 xl:gap-1 list-none p-0">
           {categories.map((cat) => (
             <Reorder.Item 
               key={cat.id}
               value={cat}
               onClick={() => { setActiveCategoryId(cat.id); setMainView('dishes'); }}
-              className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors group/item relative ${
+              className={`group/item flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 mb-1 shrink-0 ${
                 activeCategoryId === cat.id 
-                  ? 'bg-gray-100/80 text-gray-900' 
-                  : 'bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-gray-100 text-gray-900 shadow-sm' 
+                  : 'text-gray-500 hover:bg-gray-50/80 hover:text-gray-900'
               }`}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div className={`cursor-grab active:cursor-grabbing opacity-0 group-hover/item:opacity-100 transition-opacity shrink-0 ${activeCategoryId === cat.id ? 'text-gray-400 hover:text-gray-600' : 'text-gray-300 hover:text-gray-500'}`}>
+                <div className={`hidden xl:block cursor-grab active:cursor-grabbing opacity-0 group-hover/item:opacity-100 transition-opacity shrink-0 ${activeCategoryId === cat.id ? 'text-gray-400 hover:text-gray-600' : 'text-gray-300 hover:text-gray-500'}`}>
                   <GripVertical size={14} />
                 </div>
                 {editingCategoryId === cat.id ? (
@@ -213,14 +210,14 @@ export default function MenusView() {
                         setEditingCategoryId(cat.id);
                         setEditingCategoryName(cat.name);
                       }}
-                      className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-gray-200/50 rounded transition-colors text-gray-400 hover:text-gray-600 ml-auto shrink-0 cursor-pointer"
+                      className="hidden xl:block opacity-0 group-hover/item:opacity-100 p-1 hover:bg-gray-200/50 rounded transition-colors text-gray-400 hover:text-gray-600 ml-auto shrink-0 cursor-pointer"
                     >
                       <Edit2 size={12} />
                     </button>
                   </>
                 )}
               </div>
-              <span className={`text-[12px] font-semibold px-2 py-0.5 rounded-md ${
+              <span className={`text-[12px] font-semibold px-2 py-0.5 rounded-md shrink-0 ml-1 ${
                 activeCategoryId === cat.id ? 'bg-white text-gray-600 shadow-sm border border-gray-200/50' : 'bg-transparent text-gray-400 group-hover/item:bg-gray-100'
               }`}>
                 {cat.count}
@@ -254,77 +251,30 @@ export default function MenusView() {
       {/* Right Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8 shrink-0">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {mainView === 'modifiers' ? 'Global Modifiers' : mainView === 'allergens' ? 'Global Allergens' : mainView === 'archived' ? 'Archived Dishes' : activeCategory?.name || 'Menu'}
-            </h2>
+        <div className="flex flex-wrap 2xl:flex-nowrap items-center gap-y-2 gap-x-3 mb-8 shrink-0 w-full">
+          {/* 1. Title */}
+          <h2 className="w-full lg:w-auto text-2xl font-bold text-gray-900 truncate order-1 2xl:mr-auto">
+            {mainView === 'modifiers' ? 'Global Modifiers' : mainView === 'allergens' ? 'Global Allergens' : mainView === 'archived' ? 'Archived Dishes' : activeCategory?.name || 'Menu'}
+          </h2>
+
+          {/* 2. Search */}
+          <div className="relative group shrink-0 w-full sm:w-[270px] xl:w-[200px] order-2 lg:ml-auto 2xl:ml-0 2xl:order-3">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search dishes..." 
+              className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all placeholder:font-medium placeholder:text-gray-400"
+            />
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Search */}
-            <div className="relative group shrink-0">
-              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              <input 
-                type="text" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search dishes..." 
-                className="w-[270px] bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all placeholder:font-medium placeholder:text-gray-400"
-              />
-            </div>
+          {/* Line Break for lg (iPad Pro) */}
+          <div className="hidden lg:block 2xl:hidden w-full order-3" style={{ height: 0 }}></div>
 
-            {/* Sort Dropdown */}
-            <div className="relative group shrink-0">
-              <select 
-                value={sortMode}
-                onChange={(e) => setSortMode(e.target.value as any)}
-                className="bg-white border border-gray-200 text-gray-700 text-[13px] font-semibold rounded-xl pl-4 pr-9 py-2 cursor-pointer outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all appearance-none"
-              >
-                <option value="name">Sort by: Name</option>
-                <option value="price_asc">Sort by: Lower price</option>
-                <option value="price_desc">Sort by: Higher price</option>
-                <option value="recommended">Sort by: Recommended</option>
-              </select>
-              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-transform group-hover:text-gray-600" />
-            </div>
-
-            {/* Archive Button */}
-            <button
-              onClick={() => setMainView(mainView === 'archived' ? 'dishes' : 'archived')}
-              className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all cursor-pointer shrink-0 ml-1 ${mainView === 'archived' ? 'bg-corgi text-white border-transparent hover:bg-corgi/90' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}`}
-              title={mainView === 'archived' ? 'Back to Menu' : 'Archive'}
-            >
-              <Archive size={16} strokeWidth={2} />
-            </button>
-
-            {/* Modifiers Manager Button */}
-            <button
-              onClick={() => setShowModifiersModal(true)}
-              className="flex items-center justify-center w-9 h-9 rounded-lg transition-all bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 cursor-pointer shrink-0 ml-1"
-              title="Global Modifiers Options Manager"
-            >
-              <Sliders size={16} strokeWidth={2} />
-            </button>
-
-            {/* View Toggle */}
-            <div className={`flex bg-gray-50/80 p-1 rounded-xl shrink-0 border border-gray-100 mr-2 transition-opacity ${mainView !== 'dishes' ? 'opacity-30 pointer-events-none' : ''}`}>
-              <button 
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg cursor-pointer transition-all ${viewMode === 'grid' ? 'bg-white text-gray-800 font-semibold shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'}`}
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg cursor-pointer transition-all ${viewMode === 'list' ? 'bg-white text-gray-800 font-semibold shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'}`}
-              >
-                <List size={16} />
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex items-center gap-0.5 h-9 bg-gray-50/80 p-1 rounded-xl border border-gray-200/60 mr-1 shrink-0">
+          {/* 4. Tabs */}
+          <div className="order-5 lg:order-4 2xl:order-2 shrink-0">
+            <div className="flex items-center gap-0.5 h-9 bg-gray-50/80 p-1 rounded-xl border border-gray-200/60">
               <button 
                 onClick={() => setMainView('dishes')}
                 className={`cursor-pointer whitespace-nowrap h-7 flex items-center justify-center px-4 text-[13px] font-semibold rounded-lg transition-all duration-200 ${
@@ -356,13 +306,69 @@ export default function MenusView() {
                 Allergens
               </button>
             </div>
+          </div>
 
+          {/* 5. Sort, Archive, Sliders */}
+          <div className="flex items-center gap-3 order-4 lg:order-5 2xl:order-4 ml-auto 2xl:ml-0">
+            {/* Sort Dropdown */}
+            <div className="relative group shrink-0">
+              <select 
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as any)}
+                className="bg-white border border-gray-200 text-gray-700 text-[13px] font-semibold rounded-xl pl-4 pr-9 py-2 cursor-pointer outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all appearance-none"
+              >
+                <option value="name">Sort by: Name</option>
+                <option value="price_asc">Sort by: Lower price</option>
+                <option value="price_desc">Sort by: Higher price</option>
+                <option value="recommended">Sort by: Recommended</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-transform group-hover:text-gray-600" />
+            </div>
+
+            {/* Archive Button */}
+            <button
+              onClick={() => setMainView(mainView === 'archived' ? 'dishes' : 'archived')}
+              className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all cursor-pointer shrink-0 ${mainView === 'archived' ? 'bg-corgi text-white border-transparent hover:bg-corgi/90' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}`}
+              title={mainView === 'archived' ? 'Back to Menu' : 'Archive'}
+            >
+              <Archive size={16} strokeWidth={2} />
+            </button>
+
+            {/* Modifiers Manager Button */}
+            <button
+              onClick={() => setShowModifiersModal(true)}
+              className="flex items-center justify-center w-9 h-9 rounded-lg transition-all bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 cursor-pointer shrink-0"
+              title="Global Modifiers Options Manager"
+            >
+              <Sliders size={16} strokeWidth={2} />
+            </button>
+          </div>
+
+          {/* 6. Toggle & Add Dish */}
+          <div className="flex justify-end items-center gap-3 order-6 ml-auto lg:ml-0 shrink-0">
+            {/* View Toggle */}
+            <div className={`flex bg-gray-50/80 p-1 rounded-xl shrink-0 border border-gray-100 transition-opacity ${mainView !== 'dishes' ? 'opacity-30 pointer-events-none' : ''}`}>
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-lg cursor-pointer transition-all ${viewMode === 'grid' ? 'bg-white text-gray-800 font-semibold shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'}`}
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-lg cursor-pointer transition-all ${viewMode === 'list' ? 'bg-white text-gray-800 font-semibold shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'}`}
+              >
+                <List size={16} />
+              </button>
+            </div>
+
+            {/* Add Dish */}
             <button 
               onClick={() => {
                 setDishModalMode('create');
                 setIsDishModalOpen(true);
               }}
-              className={`flex items-center gap-1.5 px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl transition-all cursor-pointer shrink-0 ml-1 shadow-sm ${(mainView !== 'dishes' && mainView !== 'archived') ? 'opacity-30 pointer-events-none' : 'hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'}`}
+              className={`flex items-center gap-1.5 px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl transition-all cursor-pointer shrink-0 shadow-sm ${(mainView !== 'dishes' && mainView !== 'archived') ? 'opacity-30 pointer-events-none' : 'hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'}`}
             >
               <Plus size={16} strokeWidth={2.5} />
               Add Dish
@@ -431,12 +437,20 @@ export default function MenusView() {
                               value={newModMin}
                               onChange={(e) => setNewModMin(e.target.value)}
                               placeholder="0"
-                              className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-3 pr-7 py-3 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center"
+                              className="hidden xl:block w-full bg-gray-50 border border-gray-200 rounded-xl pl-3 pr-7 py-3 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center"
                             />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+                            <div className="hidden xl:flex absolute right-2 top-1/2 -translate-y-1/2 flex-col gap-0.5">
                               <button onClick={() => setNewModMin((parseInt(newModMin || '0') + 1).toString())} className="text-gray-400 hover:text-gray-900 bg-gray-200/50 hover:bg-gray-200 rounded p-0.5 cursor-pointer transition-colors"><ChevronUp size={11}/></button>
                               <button onClick={() => setNewModMin(Math.max(0, parseInt(newModMin || '0') - 1).toString())} className="text-gray-400 hover:text-gray-900 bg-gray-200/50 hover:bg-gray-200 rounded p-0.5 cursor-pointer transition-colors"><ChevronDown size={11}/></button>
                             </div>
+                            <select
+                              value={newModMin || '0'}
+                              onChange={(e) => setNewModMin(e.target.value)}
+                              className="xl:hidden w-full bg-gray-50 border border-gray-200 rounded-xl pl-3 pr-7 py-3 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all appearance-none text-center"
+                            >
+                              {[...Array(21)].map((_, i) => <option key={i} value={i}>{i}</option>)}
+                            </select>
+                            <ChevronDown size={14} className="xl:hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                           </div>
                         </div>
                         <div className="w-24">
@@ -447,12 +461,20 @@ export default function MenusView() {
                               value={newModMax}
                               onChange={(e) => setNewModMax(e.target.value)}
                               placeholder="1"
-                              className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-3 pr-7 py-3 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center"
+                              className="hidden xl:block w-full bg-gray-50 border border-gray-200 rounded-xl pl-3 pr-7 py-3 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center"
                             />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+                            <div className="hidden xl:flex absolute right-2 top-1/2 -translate-y-1/2 flex-col gap-0.5">
                               <button onClick={() => setNewModMax((parseInt(newModMax || '1') + 1).toString())} className="text-gray-400 hover:text-gray-900 bg-gray-200/50 hover:bg-gray-200 rounded p-0.5 cursor-pointer transition-colors"><ChevronUp size={11}/></button>
                               <button onClick={() => setNewModMax(Math.max(0, parseInt(newModMax || '1') - 1).toString())} className="text-gray-400 hover:text-gray-900 bg-gray-200/50 hover:bg-gray-200 rounded p-0.5 cursor-pointer transition-colors"><ChevronDown size={11}/></button>
                             </div>
+                            <select
+                              value={newModMax || '1'}
+                              onChange={(e) => setNewModMax(e.target.value)}
+                              className="xl:hidden w-full bg-gray-50 border border-gray-200 rounded-xl pl-3 pr-7 py-3 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all appearance-none text-center"
+                            >
+                              {[...Array(21)].map((_, i) => <option key={i} value={i}>{i}</option>)}
+                            </select>
+                            <ChevronDown size={14} className="xl:hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                           </div>
                         </div>
                         <button 
@@ -529,23 +551,39 @@ export default function MenusView() {
 
                     <div className="flex items-center gap-2">
                       <span className="text-[12px] font-bold text-gray-400">MIN:</span>
-                      <div className="relative w-16">
-                        <input type="number" value={mod.minQty} onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, minQty: e.target.value } : m))} className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center hover:bg-white focus:bg-white" />
-                        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+                      <div className="relative w-16 md:w-16">
+                        <input type="number" value={mod.minQty} onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, minQty: e.target.value } : m))} className="hidden xl:block w-full bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center hover:bg-white focus:bg-white" />
+                        <div className="hidden xl:flex absolute right-1 top-1/2 -translate-y-1/2 flex-col gap-0.5">
                           <button onClick={() => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, minQty: (parseInt(m.minQty || '0') + 1).toString() } : m))} className="text-gray-400 hover:text-gray-900 rounded p-px cursor-pointer"><ChevronUp size={9}/></button>
                           <button onClick={() => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, minQty: Math.max(0, parseInt(m.minQty || '0') - 1).toString() } : m))} className="text-gray-400 hover:text-gray-900 rounded p-px cursor-pointer"><ChevronDown size={9}/></button>
                         </div>
+                        <select
+                          value={mod.minQty || '0'}
+                          onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, minQty: e.target.value } : m))}
+                          className="xl:hidden w-full bg-gray-50 border border-gray-200 rounded-lg pl-1 pr-5 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all appearance-none text-center hover:bg-white focus:bg-white"
+                        >
+                          {[...Array(21)].map((_, i) => <option key={i} value={i}>{i}</option>)}
+                        </select>
+                        <ChevronDown size={12} className="xl:hidden absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <span className="text-[12px] font-bold text-gray-400">MAX:</span>
-                      <div className="relative w-16">
-                        <input type="number" value={mod.maxQty} onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, maxQty: e.target.value } : m))} className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center hover:bg-white focus:bg-white" />
-                        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+                      <div className="relative w-16 md:w-16">
+                        <input type="number" value={mod.maxQty} onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, maxQty: e.target.value } : m))} className="hidden xl:block w-full bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center hover:bg-white focus:bg-white" />
+                        <div className="hidden xl:flex absolute right-1 top-1/2 -translate-y-1/2 flex-col gap-0.5">
                           <button onClick={() => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, maxQty: (parseInt(m.maxQty || '1') + 1).toString() } : m))} className="text-gray-400 hover:text-gray-900 rounded p-px cursor-pointer"><ChevronUp size={9}/></button>
                           <button onClick={() => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, maxQty: Math.max(0, parseInt(m.maxQty || '1') - 1).toString() } : m))} className="text-gray-400 hover:text-gray-900 rounded p-px cursor-pointer"><ChevronDown size={9}/></button>
                         </div>
+                        <select
+                          value={mod.maxQty || '1'}
+                          onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, maxQty: e.target.value } : m))}
+                          className="xl:hidden w-full bg-gray-50 border border-gray-200 rounded-lg pl-1 pr-5 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all appearance-none text-center hover:bg-white focus:bg-white"
+                        >
+                          {[...Array(21)].map((_, i) => <option key={i} value={i}>{i}</option>)}
+                        </select>
+                        <ChevronDown size={12} className="xl:hidden absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                       </div>
                     </div>
                   </div>
@@ -721,8 +759,12 @@ export default function MenusView() {
                       </div>
                       <p className="text-[14px] text-gray-500 font-medium line-clamp-2 leading-relaxed flex-1">{dish.description}</p>
                       <div className="mt-5 pt-4 border-t border-gray-100 flex gap-2">
-                         <span className="inline-flex px-2 py-1 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[11px] font-bold uppercase tracking-wider">1 Size</span>
-                         <span className="inline-flex px-2 py-1 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[11px] font-bold uppercase tracking-wider">0 Attributes</span>
+                         <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            1 <span className="hidden xl:inline">Size</span><Ruler className="xl:hidden" size={12} />
+                         </span>
+                         <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            0 <span className="hidden xl:inline">Attributes</span><Tags className="xl:hidden" size={12} />
+                         </span>
                       </div>
                     </div>
                   </div>
@@ -747,8 +789,12 @@ export default function MenusView() {
                       <h3 className="text-[15px] font-bold text-gray-900 truncate">{dish.name}</h3>
                       <p className="text-[13px] text-gray-500 font-medium truncate mt-0.5">{dish.description}</p>
                       <div className="mt-1.5 flex gap-2">
-                         <span className="inline-flex px-1.5 py-0.5 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-wider">1 Size</span>
-                         <span className="inline-flex px-1.5 py-0.5 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-wider">0 Attributes</span>
+                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            1 <span className="hidden xl:inline">Size</span><Ruler className="xl:hidden" size={10} />
+                         </span>
+                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-wider whitespace-nowrap">
+                            0 <span className="hidden xl:inline">Attributes</span><Tags className="xl:hidden" size={10} />
+                         </span>
                       </div>
                     </div>
 

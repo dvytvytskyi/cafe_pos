@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, MapPin, ShoppingBag, Bike, Store, Printer, CreditCard, Trash2, SplitSquareHorizontal, Banknote, CheckCircle2, ChevronLeft, Tag, Percent, Coins, Heart, Mail, Send, Download, AlertCircle, Users, Sparkles, Gift, UserPlus, MessageSquare, Receipt, ChefHat, AlertTriangle, Search, Minus, Plus, Check } from 'lucide-react';
 import { Order, OrderSource, OrderItem } from '@/lib/orders';
 import { getDiscountPresets, DiscountPreset } from '@/lib/discounts';
-import { getGuests, Guest, getTierCashbackRate, updateGuestPointsAndLTV } from '@/lib/crm';
+import { getGuests, Guest, getTierCashbackRate, updateGuestPointsAndLTV, getGuestsAsync } from '@/lib/crm';
 import { updateTableStatus } from '@/lib/tables';
 import { logAuditEvent } from '@/lib/audit';
 import { calculateHappyHourDiscount } from '@/lib/promotions';
 import { getCurrentShift } from '@/lib/shifts';
-import { getGiftCards, redeemGiftCard } from '@/lib/giftcards';
+import { getGiftCards, redeemGiftCard, findCardByCodeAsync, redeemGiftCardAsync } from '@/lib/giftcards';
 
 interface OrderDetailsModalProps {
   order: Order | null;
@@ -138,7 +138,10 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     if (isOpen) {
       setView(initialView);
       setDiscountPresets(getDiscountPresets());
-      setAllGuests(getGuests());
+      getGuestsAsync().then(setAllGuests).catch(e => {
+        console.error('Failed to load guests dynamically:', e);
+        setAllGuests(getGuests());
+      });
       setManualDiscount('');
       setManualTip('');
       setManualTipType('percent');
@@ -162,17 +165,23 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
 
       // Auto-apply Happy Hour discount on open if eligible
       if (order && !order.paid && !order.discount) {
-        const hh = calculateHappyHourDiscount(order.items);
-        if (hh) {
-          const { finalTotal } = calculateFinalTotal(order.items, hh, order.tip);
-          setTimeout(() => {
-            onUpdateOrder({
-              ...order,
-              discount: hh,
-              total: finalTotal
-            });
-          }, 50);
-        }
+        fetch('/api/promotions/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: order.items })
+        })
+          .then(res => res.ok ? res.json() : null)
+          .then(hh => {
+            if (hh && hh.value > 0) {
+              const { finalTotal } = calculateFinalTotal(order.items, hh, order.tip);
+              onUpdateOrder({
+                ...order,
+                discount: hh,
+                total: finalTotal
+              });
+            }
+          })
+          .catch(err => console.error('Failed to calculate Happy Hour discount:', err));
       }
     }
   }, [isOpen, initialView]);
@@ -289,67 +298,71 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     }, 600);
   };
 
-  const handleGiftCardRedeem = (code: string) => {
+  const handleGiftCardRedeem = async (code: string) => {
     if (!order) return;
-    const cards = getGiftCards();
-    const card = cards.find(c => c.code.trim().toUpperCase() === code.trim().toUpperCase());
-    
-    if (!card) {
-      setGiftCardError('Gift Card not found.');
-      setGiftCardSuccess(null);
-      return;
-    }
-    if (card.status !== 'active') {
-      setGiftCardError(`Gift Card is ${card.status}.`);
-      setGiftCardSuccess(null);
-      return;
-    }
-    if (new Date(card.expiryDate).getTime() < Date.now()) {
-      setGiftCardError('Gift Card has expired.');
-      setGiftCardSuccess(null);
-      return;
-    }
-    if (card.balance <= 0) {
-      setGiftCardError('Gift Card has zero balance.');
-      setGiftCardSuccess(null);
-      return;
-    }
-
-    const redeemAmount = parseFloat(Math.min(remainingBalance, card.balance).toFixed(2));
-    const res = redeemGiftCard(code, redeemAmount);
-    
-    if (!res.success) {
-      setGiftCardError(res.error || 'Failed to redeem gift card.');
-      setGiftCardSuccess(null);
-      return;
-    }
-
-    setGiftCardError(null);
-    setGiftCardSuccess(`Successfully applied €${redeemAmount.toFixed(2)} from Gift Card!`);
-
-    const newPayments = [...(order.payments || []), { method: 'giftcard' as const, amount: redeemAmount, code }];
-    const newAmountPaid = parseFloat(((order.amountPaid || 0) + redeemAmount).toFixed(2));
-    const isFullyPaid = newAmountPaid >= order.total - 0.01;
-
-    onUpdateOrder({
-      ...order,
-      amountPaid: newAmountPaid,
-      payments: newPayments,
-      paid: isFullyPaid
-    });
-
-    setGiftCardCode('');
-    
-    if (isFullyPaid) {
-      setTimeout(() => {
+    try {
+      const card = await findCardByCodeAsync(code);
+      if (!card) {
+        setGiftCardError('Gift Card not found.');
         setGiftCardSuccess(null);
-        setView('default');
-        setShowGiftCardInput(false);
-      }, 1200);
-    } else {
-      setTimeout(() => {
+        return;
+      }
+      if (card.status !== 'active') {
+        setGiftCardError(`Gift Card is ${card.status}.`);
         setGiftCardSuccess(null);
-      }, 2000);
+        return;
+      }
+      if (new Date(card.expiryDate).getTime() < Date.now()) {
+        setGiftCardError('Gift Card has expired.');
+        setGiftCardSuccess(null);
+        return;
+      }
+      if (card.balance <= 0) {
+        setGiftCardError('Gift Card has zero balance.');
+        setGiftCardSuccess(null);
+        return;
+      }
+
+      const redeemAmount = parseFloat(Math.min(remainingBalance, card.balance).toFixed(2));
+      const res = await redeemGiftCardAsync(code, redeemAmount);
+      
+      if (!res.success) {
+        setGiftCardError(res.error || 'Failed to redeem gift card.');
+        setGiftCardSuccess(null);
+        return;
+      }
+
+      setGiftCardError(null);
+      setGiftCardSuccess(`Successfully applied €${redeemAmount.toFixed(2)} from Gift Card!`);
+
+      const newPayments = [...(order.payments || []), { method: 'giftcard' as const, amount: redeemAmount, code }];
+      const newAmountPaid = parseFloat(((order.amountPaid || 0) + redeemAmount).toFixed(2));
+      const isFullyPaid = newAmountPaid >= order.total - 0.01;
+
+      onUpdateOrder({
+        ...order,
+        amountPaid: newAmountPaid,
+        payments: newPayments,
+        paid: isFullyPaid
+      });
+
+      setGiftCardCode('');
+      
+      if (isFullyPaid) {
+        setTimeout(() => {
+          setGiftCardSuccess(null);
+          setView('default');
+          setShowGiftCardInput(false);
+        }, 1200);
+      } else {
+        setTimeout(() => {
+          setGiftCardSuccess(null);
+          setShowGiftCardInput(false);
+        }, 1200);
+      }
+    } catch (e: any) {
+      setGiftCardError(e.message || 'Gift Card not found or invalid.');
+      setGiftCardSuccess(null);
     }
   };
 
@@ -538,7 +551,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-gray-900">€{(item.price * item.quantity).toFixed(2)}</span>
-                    {!order.paid && !item.paid && (
+                    {(!order.paid || order.status === 'incoming' || order.status === 'preparing') && !item.paid && (
                       <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-0.5 shrink-0 border border-gray-200/50">
                         <button 
                           onClick={() => handleMinusClick(idx, item.quantity)} 
@@ -564,7 +577,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 </div>
                 
                 {/* Preparation Comments */}
-                {!item.paid && !order.paid && (
+                {(!order.paid || order.status === 'incoming' || order.status === 'preparing') && !item.paid && (
                   <div className="pl-2 w-full mt-1.5 mb-1">
                     {editingCommentIdx === idx ? (
                       <div className="flex gap-2 w-full items-center animate-in fade-in slide-in-from-top-1 duration-150">
@@ -761,14 +774,6 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
 
         {/* State Actions */}
         {order.status === 'incoming' && (
-          <button 
-            onClick={() => { onUpdateStatus(order.id, 'new'); onClose(); }}
-            className="w-full py-4 bg-red-600 text-white rounded-xl font-black text-lg hover:bg-red-700 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
-          >
-            <Bike size={20} /> Accept Order
-          </button>
-        )}
-        {order.status === 'new' && (
           <button 
             onClick={() => { onUpdateStatus(order.id, 'preparing'); onClose(); }}
             className="w-full py-4 bg-gray-900 text-white rounded-xl font-black text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"

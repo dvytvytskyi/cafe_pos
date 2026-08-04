@@ -112,15 +112,15 @@ function HistoryPageContent() {
       <div className="bg-white rounded-3xl p-6 md:p-8 flex-1 flex flex-col h-full overflow-hidden">
         
         {/* CRM-Style Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6 shrink-0">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Order History & Archive</h1>
-            <p className="text-sm font-medium text-gray-500 mt-1">Review, inspect, print and manage past cafe transactions.</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-6 shrink-0">
+          <div className="flex-1 min-w-0 pr-4 sm:pr-6">
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-tight">Order History & Archive</h1>
+            <p className="text-sm font-medium text-gray-500 mt-1.5 leading-relaxed">Review, inspect, print and manage past cafe transactions.</p>
           </div>
-          <div className="flex gap-2 self-end lg:self-center">
+          <div className="flex gap-2 w-full sm:w-auto shrink-0 mt-1 sm:mt-0">
             <button 
               onClick={() => setShowAnalytics(!showAnalytics)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${
+              className={`w-full sm:w-auto justify-center px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${
                 showAnalytics 
                   ? 'bg-gray-950 text-white border-gray-950' 
                   : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
@@ -238,7 +238,7 @@ function HistoryPageContent() {
         )}
 
         {/* Filter controls row */}
-        <div className="flex flex-col lg:flex-row gap-4 justify-between items-center mb-6 shrink-0">
+        <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center mb-6 shrink-0">
           {/* Corgi style Search Input */}
           <div className="relative w-full lg:w-80">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -251,14 +251,14 @@ function HistoryPageContent() {
             />
           </div>
 
-          <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+          <div className="flex flex-wrap gap-3 w-full xl:w-auto">
             {/* Status Filter Tabs */}
-            <div className="flex bg-gray-100/80 p-1.5 rounded-xl">
+            <div className="flex flex-auto bg-gray-100/80 p-1.5 rounded-xl">
               {(['all', 'completed', 'cancelled', 'active'] as const).map(status => (
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status)}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
+                  className={`flex-1 text-center whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
                     statusFilter === status 
                       ? 'bg-white text-gray-900 shadow-sm' 
                       : 'text-gray-400 hover:text-gray-700'
@@ -270,12 +270,12 @@ function HistoryPageContent() {
             </div>
 
             {/* Channel Filter Tabs */}
-            <div className="flex bg-gray-100/80 p-1.5 rounded-xl">
+            <div className="flex flex-auto bg-gray-100/80 p-1.5 rounded-xl">
               {(['all', 'dine_in', 'takeaway', 'glovo', 'ubereats'] as const).map(source => (
                 <button
                   key={source}
                   onClick={() => setSourceFilter(source)}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
+                  className={`flex-1 text-center whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
                     sourceFilter === source 
                       ? 'bg-white text-gray-900 shadow-sm' 
                       : 'text-gray-400 hover:text-gray-700'

@@ -102,7 +102,13 @@ export default function LocationsLeaderboard({ compare = false }: { compare?: bo
   };
 
   useEffect(() => {
-    if (map.current || !mapContainer.current) return;
+    if (!mapContainer.current) return;
+    if (!MAPBOX_TOKEN) {
+      console.warn("Mapbox token is missing. Map will not load.");
+      return;
+    }
+    
+    if (map.current) return;
     
     mapboxgl.accessToken = MAPBOX_TOKEN;
     
@@ -292,14 +298,14 @@ export default function LocationsLeaderboard({ compare = false }: { compare?: bo
   }, [selectedLocation, hoverSource]);
 
   return (
-    <div className="bg-white rounded-3xl p-6 border border-gray-100 flex flex-col mb-8 h-[500px]">
+    <div className="bg-white rounded-3xl p-6 border border-gray-100 flex flex-col mb-8 h-auto xl:h-[600px]">
       <style>{`
         .mapboxgl-ctrl-logo { display: none !important; }
         .mapboxgl-ctrl-attrib { display: none !important; }
       `}</style>
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-0">
+      <div className="flex-1 grid grid-cols-1 xl:grid-cols-12 gap-8 min-h-0">
         {/* Left Side: Header + Leaderboard List (col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col h-full overflow-hidden">
+        <div className="xl:col-span-5 flex flex-col h-full overflow-hidden">
           <div className="flex-shrink-0 mb-6">
             <h3 className="text-lg font-bold text-gray-900">Locations Overview</h3>
             <p className="text-sm font-medium text-gray-500 mt-1">Network performance across Barcelona</p>
@@ -382,7 +388,7 @@ export default function LocationsLeaderboard({ compare = false }: { compare?: bo
         </div>
 
         {/* Right Side: Mapbox (col-span-7) */}
-        <div className="lg:col-span-7 rounded-2xl overflow-hidden relative border border-gray-100 h-[300px] lg:h-full min-h-[300px]">
+        <div className="xl:col-span-7 rounded-2xl overflow-hidden relative border border-gray-100 h-[300px] xl:h-full min-h-[300px]">
           <div ref={mapContainer} className="w-full h-full absolute inset-0" />
           
           <button 

@@ -6,7 +6,7 @@ import TablesView from './TablesView';
 import ReputationView from './ReputationView';
 import { getDiscountPresets, saveDiscountPresets, DiscountPreset } from '@/lib/discounts';
 import { getPromotions, savePromotions, Promotion } from '@/lib/promotions';
-import { getGiftCards, saveGiftCards, createGiftCard, GiftCard } from '@/lib/giftcards';
+import { getGiftCards, saveGiftCards, createGiftCard, GiftCard, getGiftCardsAsync, createGiftCardAsync } from '@/lib/giftcards';
 import { getGuests, getLoyaltyConfig, saveLoyaltyConfig, LoyaltyConfig } from '@/lib/crm';
 
 export default function SettingsView() {
@@ -62,7 +62,7 @@ export default function SettingsView() {
   useEffect(() => {
     setDiscountPresets(getDiscountPresets());
     setPromotions(getPromotions());
-    setGiftCards(getGiftCards());
+    getGiftCardsAsync().then(setGiftCards).catch(console.error);
     setGuests(getGuests());
     setLoyaltyConfig(getLoyaltyConfig());
 
@@ -1983,12 +1983,13 @@ export default function SettingsView() {
                           >
                             Cancel
                           </button>
-                          <button 
+                          <button
                             onClick={() => {
                               if (giftCardBalance <= 0) return;
-                              const newCard = createGiftCard(giftCardBalance, giftCardGuestId || undefined);
-                              setGiftCards(getGiftCards());
-                              setNewlyCreatedGiftCard(newCard);
+                              createGiftCardAsync(giftCardBalance, giftCardGuestId || undefined).then(newCard => {
+                                setNewlyCreatedGiftCard(newCard);
+                                getGiftCardsAsync().then(setGiftCards).catch(console.error);
+                              }).catch(console.error);
                             }}
                             className="px-4 py-2 text-xs font-bold text-white bg-black hover:bg-gray-800 rounded-xl cursor-pointer"
                           >

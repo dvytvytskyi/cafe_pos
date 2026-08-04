@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Clock, Check, MoreHorizontal, AlertCircle, Bike, MapPin, Store, Settings, X, ChevronDown, Minimize2, Maximize2, CheckSquare, CreditCard, Plus } from 'lucide-react';
 import BoardSettingsModal, { Stage } from './BoardSettingsModal';
 import OrderDetailsModal from './OrderDetailsModal';
+import OrderTerminalModal from '@/components/pos/OrderTerminalModal';
 
 import { Order, OrderItem, OrderSource, getOrders, saveOrders } from '@/lib/orders';
+import { getGuests } from '@/lib/crm';
 
 const MOCK_ORDERS: Order[] = [
   {
@@ -50,7 +52,7 @@ const MOCK_ORDERS: Order[] = [
     customerName: 'Walk-in (John)',
     items: [{ name: 'Americano', quantity: 1, price: 3.0 }, { name: 'Blueberry Muffin', quantity: 2, price: 3.5 }],
     total: 10.0,
-    status: 'new',
+    status: 'incoming',
     time: new Date(Date.now() - 1 * 60000),
     paid: true,
     orderedBy: 'waiter',
@@ -92,7 +94,7 @@ const MOCK_ORDERS: Order[] = [
     customerName: 'Michael B.',
     items: [{ name: 'Espresso', quantity: 2, price: 2.5 }, { name: 'Croissant', quantity: 2, price: 2.8 }],
     total: 10.6,
-    status: 'new',
+    status: 'incoming',
     time: new Date(Date.now() - 3 * 60000),
     deliveryId: 'U-9922B',
     paid: true,
@@ -159,7 +161,7 @@ const MOCK_ORDERS: Order[] = [
     customerName: 'Table 10',
     items: [{ name: 'Filter Coffee', quantity: 4, price: 3.0 }, { name: 'Banana Bread', quantity: 2, price: 4.5 }],
     total: 21.0,
-    status: 'new',
+    status: 'incoming',
     time: new Date(Date.now() - 4 * 60000),
     paid: false,
     orderedBy: 'waiter',
@@ -168,7 +170,6 @@ const MOCK_ORDERS: Order[] = [
 
 const COLUMNS = [
   { id: 'incoming', label: 'Incoming', color: 'bg-yellow-500' },
-  { id: 'new', label: 'New Orders', color: 'bg-blue-500' },
   { id: 'preparing', label: 'Preparing', color: 'bg-orange-500' },
   { id: 'served', label: 'Served', color: 'bg-indigo-500' },
   { id: 'ready', label: 'Ready for Pickup', color: 'bg-green-500' },
@@ -210,6 +211,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [modalInitialView, setModalInitialView] = useState<'default' | 'checkout' | 'split_bill' | 'discount' | 'tip'>('default');
+  const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
 
   const LOCATIONS = ['All Locations', 'Gothic', 'Sagrada', 'Gracia', 'Arc de Triumph', 'Eixample', 'HQ'];
 
@@ -268,92 +270,115 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
   return (
     <div className="flex flex-col h-full bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10 shrink-0">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Active Orders</h1>
-          <p className="text-sm text-gray-500 font-medium mt-1">Manage POS and Delivery Aggregator orders.</p>
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between p-6 border-b border-gray-100 bg-white z-10 shrink-0 gap-4 w-full">
+        {/* Title and Description */}
+        <div className="flex flex-col sm:flex-row sm:items-baseline xl:flex-col xl:items-start justify-between gap-2 shrink-0">
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight whitespace-nowrap">Active Orders</h1>
+          <p className="text-sm text-gray-500 font-medium whitespace-nowrap">Manage POS and Delivery Aggregator orders.</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div 
-              onClick={() => setIsLocationOpen(!isLocationOpen)}
-              className="flex items-center justify-center gap-2 px-3 h-[38px] bg-gray-50 border border-gray-200 rounded-[10px] cursor-pointer hover:bg-gray-100 transition-colors"
-            >
-              <MapPin size={16} className="text-gray-500" />
-              <span className="text-[13px] font-bold text-gray-700">{location}</span>
-              <ChevronDown size={14} className="text-gray-400" />
-            </div>
-
-            <AnimatePresence>
-              {isLocationOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setIsLocationOpen(false)} />
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-[200px] py-2"
-                  >
-                    {LOCATIONS.map(l => (
-                      <button 
-                        key={l}
-                        onClick={() => { setLocation(l); setIsLocationOpen(false); }}
-                        className="w-full text-left px-4 py-2.5 text-[14px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between group cursor-pointer"
-                      >
-                        {l}
-                        {location === l && <CheckSquare size={16} className="text-corgi" />}
-                      </button>
-                    ))}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div className="flex items-center gap-0.5 bg-gray-50/80 p-0.5 h-[40px] rounded-[10px] border border-gray-200/60">
-            {(['all', 'dine_in', 'glovo', 'ubereats'] as const).map(f => (
-              <button
-                key={f}
-                onClick={() => setActiveFilter(f)}
-                className={`px-3 h-full rounded-lg text-[13px] font-bold transition-all cursor-pointer ${activeFilter === f ? 'bg-white text-gray-900 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+        {/* Controls Area (Responsive Flex Ordering) */}
+        <div className="flex flex-wrap xl:flex-nowrap items-center gap-x-3 gap-y-1.5 xl:gap-3 w-full xl:w-auto xl:justify-end">
+          
+          {/* 1. Location */}
+          {/* Tablet: Top Left (order-1) | PC: Pos 1 (xl:order-1) */}
+          <div className="order-1 xl:order-1 shrink-0">
+            <div className="relative">
+              <div 
+                onClick={() => setIsLocationOpen(!isLocationOpen)}
+                className="flex items-center justify-center gap-2 px-3 h-[38px] bg-gray-50 border border-gray-200 rounded-[10px] cursor-pointer hover:bg-gray-100 transition-colors shrink-0"
               >
-                {f === 'all' ? 'All' : f === 'dine_in' ? 'Dine-in' : f === 'glovo' ? 'Glovo' : 'Uber Eats'}
-              </button>
-            ))}
+                <MapPin size={16} className="text-gray-500" />
+                <span className="text-[13px] font-bold text-gray-700 whitespace-nowrap">{location}</span>
+                <ChevronDown size={14} className="text-gray-400" />
+              </div>
+
+              <AnimatePresence>
+                {isLocationOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsLocationOpen(false)} />
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-[200px] py-2"
+                    >
+                      {LOCATIONS.map(l => (
+                        <button 
+                          key={l}
+                          onClick={() => { setLocation(l); setIsLocationOpen(false); }}
+                          className="w-full text-left px-4 py-2.5 text-[14px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between group cursor-pointer"
+                        >
+                          {l}
+                          {location === l && <CheckSquare size={16} className="text-corgi" />}
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
-          <div className="h-6 w-px bg-gray-200 mx-1" />
-
-          <button 
-            onClick={() => setIsMinimized(!isMinimized)}
-            className="w-[38px] h-[38px] flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 rounded-[10px] transition-all border border-gray-200 cursor-pointer active:scale-95"
-            title={isMinimized ? "Maximize Cards" : "Minimize Cards"}
-          >
-            {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
-          </button>
-
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="flex items-center justify-center gap-2 px-3 h-[38px] bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 rounded-[10px] font-bold transition-all text-[13px] border border-gray-200 cursor-pointer active:scale-95"
-          >
-            <Settings size={16} /> Board Settings
-          </button>
-
-          <button 
-            onClick={() => {}} // Placeholder for now
-            className="flex items-center justify-center gap-2 px-4 h-[38px] bg-corgi hover:brightness-110 text-white rounded-[10px] font-bold transition-all text-[13px] shadow-sm cursor-pointer active:scale-95 shrink-0"
-          >
-            <Plus size={16} /> Create Order
-          </button>
-
+          {/* 2. Tabs (extraHeaderActions) */}
+          {/* Tablet: Top Right (order-2) | PC: Pos 6 (xl:order-6) */}
           {extraHeaderActions && (
-            <>
-              <div className="h-6 w-px bg-gray-200 mx-1 shrink-0" />
+            <div className="order-2 xl:order-6 flex items-center ml-auto xl:ml-0 shrink-0">
+              <div className="hidden xl:block h-6 w-px bg-gray-200 mr-3 shrink-0" />
               {extraHeaderActions}
-            </>
+            </div>
           )}
+
+          {/* 3. Force Line Break on Tablet */}
+          <div className="w-full basis-full xl:hidden order-3" />
+
+          {/* 4. Filters */}
+          {/* Tablet: Bottom Left (order-4) | PC: Pos 2 (xl:order-2) */}
+          <div className="order-4 xl:order-2 shrink-0">
+            <div className="flex items-center gap-0.5 bg-gray-50/80 p-0.5 h-[40px] rounded-[10px] border border-gray-200/60 shrink-0">
+              {(['all', 'dine_in', 'glovo', 'ubereats'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setActiveFilter(f)}
+                  className={`px-3 h-full rounded-lg text-[13px] font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeFilter === f ? 'bg-white text-gray-900 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+                >
+                  {f === 'all' ? 'All' : f === 'dine_in' ? 'Dine-in' : f === 'glovo' ? 'Glovo' : 'Uber Eats'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 5. PC Divider */}
+          {/* Tablet: Hidden | PC: Pos 3 (xl:order-3) */}
+          <div className="hidden xl:block h-6 w-px bg-gray-200 shrink-0 order-3" />
+
+          {/* 6. Actions */}
+          {/* Tablet: Bottom Right (order-5) | PC: Pos 4 (xl:order-4) */}
+          <div className="order-5 xl:order-4 flex items-center gap-3 ml-auto xl:ml-0 shrink-0">
+            <button 
+              onClick={() => setIsMinimized(!isMinimized)}
+              className="w-[38px] h-[38px] shrink-0 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 rounded-[10px] transition-all border border-gray-200 cursor-pointer active:scale-95"
+              title={isMinimized ? "Maximize Cards" : "Minimize Cards"}
+            >
+              {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
+            </button>
+
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className="flex shrink-0 items-center justify-center gap-2 px-3 h-[38px] bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 rounded-[10px] font-bold transition-all text-[13px] border border-gray-200 cursor-pointer active:scale-95"
+            >
+              <Settings size={16} /> <span className="whitespace-nowrap">Board Settings</span>
+            </button>
+
+            <button 
+              onClick={() => setIsCreateOrderOpen(true)}
+              className="flex shrink-0 items-center justify-center gap-2 px-4 h-[38px] bg-corgi hover:brightness-110 text-white rounded-[10px] font-bold transition-all text-[13px] shadow-sm cursor-pointer active:scale-95"
+            >
+              <Plus size={16} /> <span className="whitespace-nowrap">Create Order</span>
+            </button>
+          </div>
+
         </div>
       </div>
 
@@ -476,14 +501,6 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
                       <div className={`${isMinimized ? 'px-3 pb-3 pt-2' : 'px-5 pb-5 pt-3'} flex gap-2 bg-white`}>
                         {order.status === 'incoming' && (
                           <button 
-                            onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, 'new'); }}
-                            className={`flex-1 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors cursor-pointer active:scale-95 shadow-sm ${isMinimized ? 'py-1.5 text-[12px]' : 'py-2 text-sm'}`}
-                          >
-                            {isMinimized ? 'Accept' : 'Accept Order'}
-                          </button>
-                        )}
-                        {order.status === 'new' && (
-                          <button 
                             onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, 'preparing'); }}
                             className={`flex-1 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors cursor-pointer active:scale-95 ${isMinimized ? 'py-1.5 text-[12px]' : 'py-2 text-sm'}`}
                           >
@@ -522,7 +539,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
                             <CreditCard size={isMinimized ? 14 : 16}/> Checkout
                           </button>
                         )}
-                        {(order.status === 'new' || order.status === 'preparing') && (
+                        {(order.status === 'incoming' || order.status === 'preparing') && (
                            <button 
                              onClick={(e) => { e.stopPropagation(); setOrderToCancel(order.id); }}
                              className={`flex items-center justify-center bg-gray-100 text-gray-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer active:scale-95 ${isMinimized ? 'w-8 h-8' : 'w-10 h-10'}`}
@@ -550,7 +567,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)}
         stages={columns}
-        lockedStages={['new', 'preparing', 'ready', 'served', 'completed', 'cancelled']}
+        lockedStages={['incoming', 'preparing', 'ready', 'served', 'completed', 'cancelled']}
         tasksWithStatus={orders.reduce((acc, order) => {
           acc[order.status] = (acc[order.status] || 0) + 1;
           return acc;
@@ -614,6 +631,57 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
         onUpdateStatus={updateOrderStatus}
         onUpdateOrder={updateOrder}
       />
+
+      {isCreateOrderOpen && (
+        <OrderTerminalModal
+          tableId="takeaway"
+          tableName="Takeaway / Walk-in"
+          currentStatus="available"
+          onClose={() => setIsCreateOrderOpen(false)}
+          onAction={(action, items, discountPercent, customerId) => {
+            if (action === 'send_to_kitchen' || action === 'pay') {
+              const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+              const discountAmount = subtotal * discountPercent;
+              const finalTotal = parseFloat(Math.max(0, subtotal - discountAmount).toFixed(2));
+              const formattedItems = items.map(i => ({
+                name: i.name,
+                price: i.price,
+                quantity: i.quantity,
+                comments: i.comments
+              }));
+
+              const finalCustomerId = customerId || undefined;
+              const guestName = finalCustomerId ? (getGuests().find(g => g.id === finalCustomerId)?.name || 'Guest') : 'Walk-in (POS)';
+
+              const newOrder: Order = {
+                id: `ORD-${Math.floor(Math.random() * 1000)}`,
+                source: 'takeaway',
+                customerName: guestName,
+                customerId: finalCustomerId,
+                items: formattedItems,
+                total: finalTotal,
+                discount: discountPercent > 0 ? {
+                  name: 'Manual Discount',
+                  value: discountPercent,
+                  amountDeducted: discountAmount
+                } : undefined,
+                status: action === 'pay' ? 'completed' : 'incoming',
+                time: new Date(),
+                paid: action === 'pay',
+                amountPaid: action === 'pay' ? finalTotal : 0,
+                orderedBy: 'waiter'
+              };
+              
+              setOrders(prev => [newOrder, ...prev]);
+              
+              if (action === 'send_to_kitchen') {
+                setSelectedOrder(newOrder);
+              }
+            }
+            setIsCreateOrderOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

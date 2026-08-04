@@ -110,16 +110,16 @@ export default function ShiftPage() {
       <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm flex-1 flex flex-col h-full overflow-hidden">
         
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6 shrink-0">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Cash Register & Shifts</h1>
-            <p className="text-sm font-medium text-gray-500 mt-1">Manage shift opening, cash drawer audits, and Z-Reports.</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-6 shrink-0">
+          <div className="flex-1 min-w-0 pr-4 sm:pr-6">
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-tight">Cash Register & Shifts</h1>
+            <p className="text-sm font-medium text-gray-500 mt-1.5 leading-relaxed">Manage shift opening, cash drawer audits, and Z-Reports.</p>
           </div>
           
-          <div className="flex bg-gray-100/80 p-1.5 rounded-xl shrink-0 self-end lg:self-center relative">
+          <div className="flex w-full sm:w-auto bg-gray-100/80 p-1.5 rounded-xl shrink-0 relative mt-1 sm:mt-0">
             <button
               onClick={() => setActiveTab('current')}
-              className={`relative px-5 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+              className={`relative flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
                 activeTab === 'current' ? 'text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-700'
               }`}
             >
@@ -134,7 +134,7 @@ export default function ShiftPage() {
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`relative px-5 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+              className={`relative flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
                 activeTab === 'history' ? 'text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-700'
               }`}
             >
@@ -211,11 +211,11 @@ export default function ShiftPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
+                className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start"
               >
                 
                 {/* Left Col: Metrics & Close Shift */}
-                <div className="lg:col-span-2 space-y-4">
+                <div className="xl:col-span-2 space-y-4">
                   
                   {/* Status Banner */}
                   <div className="bg-white rounded-3xl p-5 border border-gray-200/60 flex items-center justify-between">
@@ -239,7 +239,7 @@ export default function ShiftPage() {
                   </div>
 
                   {/* Shift Summary Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="bg-gray-50/50 border border-gray-200/60 rounded-[1.5rem] p-5">
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Expected Cash</span>
                       <span className="text-2xl font-black text-gray-900">€{liveExpectedCash.toFixed(2)}</span>
@@ -248,7 +248,7 @@ export default function ShiftPage() {
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Cash Float</span>
                       <span className="text-2xl font-black text-gray-900">€{activeShift.floatAmount.toFixed(2)}</span>
                     </div>
-                    <div className="bg-white border border-gray-200/60 rounded-[1.5rem] p-5">
+                    <div className="bg-white border border-gray-200/60 rounded-[1.5rem] p-5 sm:col-span-2 lg:col-span-1">
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Cash / Card Sales</span>
                       <span className="text-2xl font-black text-gray-900">
                         €{activeShift.cashSales.toFixed(2)} <span className="text-gray-300 font-medium">/</span> €{activeShift.cardSales.toFixed(2)}
@@ -257,12 +257,13 @@ export default function ShiftPage() {
                   </div>
 
                   {/* Cash In / Out Form & Logs */}
-                  <div className="bg-white rounded-[2rem] p-6 border border-gray-200/60 mt-4">
-                    <h3 className="text-base font-bold text-gray-900 mb-5 flex items-center gap-2">
-                      <TrendingUp size={18} className="text-brown" /> Cash Drawer Adjustments
-                    </h3>
+                  <div className="bg-white rounded-3xl border border-gray-200/60 overflow-hidden">
+                    <div className="p-5 sm:p-6 border-b border-gray-100 flex items-center gap-3">
+                      <TrendingUp size={20} className="text-gray-400" />
+                      <h3 className="font-bold text-gray-900 text-sm">Cash Drawer Adjustments</h3>
+                    </div>
                     
-                    <form onSubmit={handleAddAdjustment} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end mb-8 pb-8 border-b border-gray-100">
+                    <form onSubmit={handleAddAdjustment} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5 sm:p-6 pb-2 border-b border-gray-100">
                       <div className="relative">
                         <label className="text-[10px] font-black text-gray-400 uppercase block mb-2">Action</label>
                         <select
@@ -311,7 +312,7 @@ export default function ShiftPage() {
                     </form>
 
                     {/* Adjustments List */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 p-5 sm:p-6">
                       <div className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-4">Adjustments History</div>
                       {activeShift.adjustments.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 text-sm font-semibold bg-gray-50/30 rounded-2xl border border-dashed border-gray-200">No adjustments yet</div>
@@ -341,7 +342,7 @@ export default function ShiftPage() {
                 </div>
 
                 {/* Right Col: Close Shift & Z-Report Form */}
-                <div className="bg-white rounded-[2rem] p-8 border border-gray-200/60 flex flex-col gap-6">
+                <div className="xl:col-span-1 bg-white rounded-[2rem] p-8 border border-gray-200/60 flex flex-col gap-6">
                   <div>
                     <h3 className="text-base font-bold text-gray-900 mb-1">
                       Close Shift (Z-Report)
