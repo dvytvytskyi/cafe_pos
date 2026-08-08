@@ -1,66 +1,26 @@
 import { NextResponse } from 'next/server';
-import net from 'net';
+import { PrinterValidationError } from '@/lib/printer-validation';
+import { sendTestPrint } from '@/lib/printer-tcp';
 
 export async function POST(req: Request) {
   try {
-    const { ip } = await req.json();
+    const body = await req.json();
+    const ip = body.ip ?? body.ipAddress;
+    const port = body.port;
 
-    if (!ip) {
-      return NextResponse.json({ error: 'IP address is required' }, { status: 400 });
+    const result = await sendTestPrint(ip, port);
+    if (!result.ok) {
+      return NextResponse.json(
+        { error: result.error, details: result.details },
+        { status: result.status }
+      );
     }
-
-    return new Promise((resolve) => {
-      const client = new net.Socket();
-      const printerPort = 9100;
-      
-      let resolved = false;
-
-      const finish = (res: any) => {
-        if (!resolved) {
-          resolved = true;
-          resolve(res);
-        }
-      };
-
-      client.connect(printerPort, ip, () => {
-        // ESC/POS commands
-        const init = Buffer.from([0x1B, 0x40]);
-        const alignCenter = Buffer.from([0x1B, 0x61, 0x01]);
-        const doubleSize = Buffer.from([0x1D, 0x21, 0x11]);
-        const normalSize = Buffer.from([0x1D, 0x21, 0x00]);
-        const boldOn = Buffer.from([0x1B, 0x45, 0x01]);
-        const boldOff = Buffer.from([0x1B, 0x45, 0x00]);
-        const cutPaper = Buffer.from([0x1D, 0x56, 0x41, 0x00]);
-
-        client.write(init);
-        client.write(alignCenter);
-        client.write(doubleSize);
-        client.write(boldOn);
-        client.write(Buffer.from("CORGI CAFE\n", 'utf8'));
-        client.write(boldOff);
-        client.write(normalSize);
-        client.write(Buffer.from("Server Test Receipt\n\n", 'utf8'));
-        client.write(Buffer.from("Connection successful!\n\n\n\n\n", 'utf8'));
-        client.write(cutPaper);
-        
-        setTimeout(() => {
-          client.destroy();
-          finish(NextResponse.json({ success: true, message: 'Printed successfully' }));
-        }, 500);
-      });
-
-      client.on('error', (err) => {
-        client.destroy();
-        finish(NextResponse.json({ error: 'Connection failed', details: err.message }, { status: 500 }));
-      });
-
-      client.setTimeout(3000, () => {
-        client.destroy();
-        finish(NextResponse.json({ error: 'Connection timeout' }, { status: 504 }));
-      });
-    });
-
-  } catch (error: any) {
-    return NextResponse.json({ error: 'Invalid request', details: error.message }, { status: 400 });
+    return NextResponse.json({ success: true, message: result.message }, { status: 200 });
+  } catch (error: unknown) {
+    if (error instanceof PrinterValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    const message = error instanceof Error ? error.message : 'Invalid request';
+    return NextResponse.json({ error: 'Invalid request', details: message }, { status: 400 });
   }
 }

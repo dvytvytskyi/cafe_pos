@@ -1,103 +1,134 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Square, DollarSign, TrendingUp, Plus, Minus, History, AlertTriangle, CheckCircle2, Calendar, ArrowDownRight, ArrowUpRight, Lock, Unlock, ChevronDown } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Shift, getShifts, openShift, closeShift, recordCashAdjustment, getCurrentShift, calculateShiftMetrics } from '@/lib/shifts';
+import {
+  Shift,
+  getShiftsAsync,
+  openShiftAsync,
+  closeShiftAsync,
+  recordCashAdjustmentAsync,
+  getCurrentShiftAsync,
+} from '@/lib/shifts';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
+import { getCurrentUserId } from '@/lib/current-user';
 
 export default function ShiftPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [activeShift, setActiveShift] = useState<Shift | null>(null);
-  
-  // Open Shift Form State
-  const [floatInput, setFloatInput] = useState('100.00');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  // Cash Adjustment Form State
+  const [floatInput, setFloatInput] = useState('100.00');
   const [adjType, setAdjType] = useState<'in' | 'out'>('out');
   const [adjAmount, setAdjAmount] = useState('');
   const [adjReason, setAdjReason] = useState('');
-
-  // Close Shift Form State
   const [actualCashInput, setActualCashInput] = useState('');
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
-
-  // Tab state: 'current' | 'history'
   const [activeTab, setActiveTab] = useState<'current' | 'history'>('current');
 
-  useEffect(() => {
-    refreshShifts();
+  const refreshShifts = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [all, active] = await Promise.all([
+        getShiftsAsync(DEFAULT_LOCATION_ID),
+        getCurrentShiftAsync(DEFAULT_LOCATION_ID),
+      ]);
+      setShifts(all);
+      setActiveShift(active);
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Failed to load shifts');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const refreshShifts = () => {
-    const all = getShifts();
-    setShifts(all);
-    const active = getCurrentShift();
-    
-    // Recalculate metrics in real-time when loading active shift
-    if (active) {
-      const metrics = calculateShiftMetrics(active.openedAt, null, active.floatAmount, active.adjustments);
-      const updatedActive = { ...active, ...metrics };
-      setActiveShift(updatedActive);
-    } else {
-      setActiveShift(null);
+  useEffect(() => {
+    refreshShifts().catch(console.error);
+  }, [refreshShifts]);
+
+  const handleOpenShift = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActionError(null);
+    setBusy(true);
+    try {
+      const float = parseFloat(floatInput.replace(/,/g, '')) || 0;
+      const opened = await openShiftAsync(DEFAULT_LOCATION_ID, getCurrentUserId(), float);
+      setActiveShift(opened);
+      await refreshShifts();
+      setFloatInput('100.00');
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to open shift');
+    } finally {
+      setBusy(false);
     }
   };
 
-  const handleOpenShift = (e: React.FormEvent) => {
-    e.preventDefault();
-    const float = parseFloat(floatInput.replace(/,/g, '')) || 0;
-    const opened = openShift(float);
-    setActiveShift(opened);
-    refreshShifts();
-    setFloatInput('100.00');
-  };
-
-  const handleCloseShift = (e: React.FormEvent) => {
+  const handleCloseShift = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeShift) return;
-    const actual = parseFloat(actualCashInput.replace(/,/g, '')) || 0;
-    closeShift(activeShift.id, actual);
-    setActualCashInput('');
-    refreshShifts();
-    setActiveTab('history');
+    setActionError(null);
+    setBusy(true);
+    try {
+      const actual = parseFloat(actualCashInput.replace(/,/g, '')) || 0;
+      await closeShiftAsync(activeShift.id, actual);
+      setActualCashInput('');
+      await refreshShifts();
+      setActiveTab('history');
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to close shift');
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const handleAddAdjustment = (e: React.FormEvent) => {
+  const handleAddAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeShift) return;
     const amount = parseFloat(adjAmount.replace(/,/g, '')) || 0;
     if (amount <= 0 || !adjReason.trim()) return;
 
-    recordCashAdjustment(activeShift.id, adjType, amount, adjReason);
-    setAdjAmount('');
-    setAdjReason('');
-    refreshShifts();
+    setActionError(null);
+    setBusy(true);
+    try {
+      const updated = await recordCashAdjustmentAsync(activeShift.id, adjType, amount, adjReason);
+      setActiveShift(updated);
+      setAdjAmount('');
+      setAdjReason('');
+      await refreshShifts();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to record adjustment');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const formatCurrencyInput = (val: string) => {
     const digits = val.replace(/\D/g, '');
     if (!digits) return '';
-    
+
     const num = parseInt(digits, 10);
     if (isNaN(num)) return '';
-    
+
     const decimalValue = (num / 100).toFixed(2);
     const parts = decimalValue.split('.');
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     return parts.join('.');
   };
 
-  // Live calculation of expected cash and discrepancy
-  const liveExpectedCash = activeShift ? calculateShiftMetrics(activeShift.openedAt, null, activeShift.floatAmount, activeShift.adjustments).expectedCash : 0;
+  const liveExpectedCash = activeShift?.expectedCash ?? 0;
   const typedActualCash = parseFloat(actualCashInput.replace(/,/g, '')) || 0;
   const liveDiscrepancy = actualCashInput ? parseFloat((typedActualCash - liveExpectedCash).toFixed(2)) : 0;
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
     const el = e.target;
     setter(formatCurrencyInput(el.value));
-    
-    // Force cursor to the end of the input for POS right-to-left feel
+
     setTimeout(() => {
       if (el) {
         el.selectionStart = el.selectionEnd = el.value.length;
@@ -105,10 +136,26 @@ export default function ShiftPage() {
     }, 0);
   };
 
+  if (loading && shifts.length === 0 && !activeShift) {
+    return (
+      <DashboardLayout>
+        <div className="bg-white rounded-3xl p-8 flex-1 flex items-center justify-center text-gray-500 font-medium">
+          Loading shifts…
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm flex-1 flex flex-col h-full overflow-hidden">
-        
+
+        {(loadError || actionError) && (
+          <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-semibold">
+            {actionError || loadError}
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-6 shrink-0">
           <div className="flex-1 min-w-0 pr-4 sm:pr-6">

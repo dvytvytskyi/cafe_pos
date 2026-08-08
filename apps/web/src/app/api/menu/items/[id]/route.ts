@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { menuRepository } from '@/repositories/menu.repository';
+import { auditRepository } from '@/repositories/audit.repository';
+import { MenuValidationError } from '@/lib/menu-validation';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, description, price, categoryId, allergens } = body;
+    const { name, description, price, categoryId, allergens, isArchived } = body;
 
     const updatedItem = await menuRepository.updateMenuItem(id, {
       name,
@@ -13,13 +15,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       price,
       categoryId,
       allergens,
+      isArchived,
     });
 
     return NextResponse.json(updatedItem, { status: 200 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof MenuValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error(`Error updating menu item [${req.url}]:`, error);
-    return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Internal Server Error', details: message }, { status: 500 });
   }
 }
 
@@ -27,6 +34,11 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   try {
     const { id } = await params;
     const archivedItem = await menuRepository.archiveMenuItem(id);
+    await auditRepository.logEvent('menu_item_archived', {
+      itemId: id,
+      name: archivedItem.name,
+      categoryId: archivedItem.categoryId,
+    });
     return NextResponse.json(archivedItem, { status: 200 });
   } catch (error: any) {
     console.error(`Error archiving menu item:`, error);

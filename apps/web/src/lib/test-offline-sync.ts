@@ -116,9 +116,12 @@ async function main() {
     // Mock BullMQ worker to intercept verifactu sync jobs
     const verifactuJobs: any[] = [];
     const queueConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null });
+    const syncOrderIds = new Set(syncOrders.map((o) => o.id));
     const worker = new Worker('verifactu-sync', async (job: any) => {
-      console.log('BullMQ Intercepted Veri*Factu sync job:', job.data);
-      verifactuJobs.push(job.data);
+      if (syncOrderIds.has(job.data?.orderId)) {
+        console.log('BullMQ Intercepted Veri*Factu sync job:', job.data);
+        verifactuJobs.push(job.data);
+      }
     }, { connection: queueConnection });
 
     // 3. Construct request and call POST offline-sync handler

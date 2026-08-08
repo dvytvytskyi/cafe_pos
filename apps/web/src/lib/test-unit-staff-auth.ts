@@ -1,12 +1,5 @@
 import assert from 'assert';
-
-interface RolePermissions {
-  [resource: string]: ('create' | 'view' | 'edit' | 'delete')[];
-}
-
-function hasPermission(permissions: RolePermissions, resource: string, action: 'create' | 'view' | 'edit' | 'delete'): boolean {
-  return !!permissions[resource]?.includes(action);
-}
+import { hasPermission, type RolePermissions } from './auth.ts';
 
 export async function run() {
   console.log('Running test-unit-staff-auth...');
@@ -31,4 +24,11 @@ export async function run() {
   assert.strictEqual(hasPermission(managerPermissions, 'orders', 'delete'), true, 'Manager must be able to delete orders');
 
   console.log('✅ test-unit-staff-auth passed.');
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  run().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 }

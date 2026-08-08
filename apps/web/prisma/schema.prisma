@@ -4,7 +4,8 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "client"
 }
 
 model Role {
@@ -20,17 +21,20 @@ model User {
   id             String      @id @default(uuid())
   name           String
   pinHash        String      // Захешований PIN-код для входу на терміналі
+  passwordHash   String?     // Dashboard login password (scrypt)
   roleId         String
   role           Role        @relation(fields: [roleId], references: [id])
   locations      Location[]  @relation("UserLocations")
   shifts         CashShift[]
+  timeCards      TimeCard[]
+  shiftSchedules ShiftSchedule[]
   
   // Employee details
   position       String?
   section        String?     // "Floor" | "Kitchen"
   nie            String?
   phone          String?
-  email          String?
+  email          String?     @unique
   contractStart  String?
   contractEnd    String?
   scheduleStart  String?
@@ -51,6 +55,7 @@ model Location {
   tables         Table[]
   orders         Order[]
   shifts         CashShift[]
+  tasks          Task[]
   layoutMetadata Json?       // Room zones and obstacles details
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -80,12 +85,39 @@ model Table {
 }
 
 model MenuCategory {
-  id         String     @id @default(uuid())
+  id             String          @id @default(uuid())
+  name           String
+  sortOrder      Int             @default(0)
+  isArchived     Boolean         @default(false)
+  items          MenuItem[]
+  modifierGroups ModifierGroup[] @relation("CategoryModifierGroups")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model ModifierGroup {
+  id          String           @id @default(uuid())
+  name        String
+  minQty      Int              @default(0)
+  maxQty      Int              @default(1)
+  isArchived  Boolean          @default(false)
+  sortOrder   Int              @default(0)
+  options     ModifierOption[]
+  categories  MenuCategory[]   @relation("CategoryModifierGroups")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model ModifierOption {
+  id         String        @id @default(uuid())
+  groupId    String
+  group      ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   name       String
-  isArchived Boolean    @default(false)
-  items      MenuItem[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  price      Float         @default(0)
+  isArchived Boolean       @default(false)
+  sortOrder  Int           @default(0)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 }
 
 model MenuItem {
@@ -120,11 +152,16 @@ model Order {
   tipValue      Float          @default(0)
   paid          Boolean        @default(false)
   amountPaid    Float          @default(0)
+  refundedAmount Float         @default(0)
   items         OrderItem[]
   transactions  Transaction[]
-  fiscalRecord  FiscalRecord?
+  fiscalRecords FiscalRecord[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([locationId, createdAt])
 }
 
 model OrderItem {
@@ -136,6 +173,7 @@ model OrderItem {
   quantity  Int
   paid      Boolean  @default(false)
   comments  String?  // Коментарі для кухні
+  refundedQuantity Int @default(0)
   createdAt DateTime @default(now())
 }
 
@@ -147,14 +185,21 @@ model Transaction {
   amount    Float
   code      String?  // Код сертифіката чи транзакції терміналу
   createdAt DateTime @default(now())
+
+  @@index([method])
 }
 
 model FiscalRecord {
-  id            String   @id @default(uuid())
-  orderId       String   @unique
-  order         Order    @relation(fields: [orderId], references: [id])
-  invoiceNumber String   @unique // T-2026-0001 або F-2026-0001
-  invoiceType   String   // "simplificada" | "completa"
+  id                     String         @id @default(uuid())
+  orderId                String
+  order                  Order          @relation(fields: [orderId], references: [id])
+  recordType             String         @default("invoice") // "invoice" | "rectificativa"
+  originalFiscalRecordId String?
+  originalFiscalRecord   FiscalRecord?  @relation("Rectificativa", fields: [originalFiscalRecordId], references: [id])
+  rectificativas         FiscalRecord[] @relation("Rectificativa")
+  refundReason           String?
+  invoiceNumber          String         @unique
+  invoiceType            String         // "simplificada" | "completa" | "rectificativa"
   clientNif     String?
   clientName    String?
   clientAddress String?
@@ -196,20 +241,43 @@ model AuditLog {
   id        String   @id @default(uuid())
   action    String   // e.g. "shift_open", "shift_close", "cash_adjustment", etc.
   details   Json?
+  userId    String?
   prevHash  String
   hash      String
   createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId])
 }
 
 model MerchInventory {
-  id        String              @id @default(uuid())
-  sku       String              @unique
-  name      String
-  price     Float
-  quantity  Int                 @default(0)
-  transfers InventoryTransfer[]
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  id             String              @id @default(uuid())
+  sku            String              @unique
+  name           String
+  price          Float
+  quantity       Int                 @default(0)
+  minStockLevel  Int                 @default(10)
+  transfers      InventoryTransfer[]
+  stockTransfers StockTransfer[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+model StockTransfer {
+  id               String         @id @default(uuid())
+  itemId           String
+  item             MerchInventory @relation(fields: [itemId], references: [id])
+  sourceLocationId String         @default("main")
+  targetLocationId String
+  quantity         Int
+  status           String         @default("pending") // pending | in_transit | completed
+  createdByName    String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([status])
+  @@index([itemId])
 }
 
 model InventoryTransfer {
@@ -225,7 +293,7 @@ model InventoryTransfer {
 model Customer {
   id             String               @id @default(uuid())
   name           String
-  phone          String
+  phone          String               @unique
   email          String
   birthday       String?
   tier           String               @default("Bronze") // "Bronze" | "Silver" | "Gold" | "VIP"
@@ -299,7 +367,151 @@ model GiftCard {
   updatedAt      DateTime  @updatedAt
 }
 
+model Task {
+  id               String    @id @default(uuid())
+  title            String
+  description      String?
+  branch           String    @default("All Branches")
+  tags             Json      @default("[]")
+  commentsCount    Int       @default(0)
+  attachmentsCount Int       @default(0)
+  progress         Int       @default(0)
+  dueAt            DateTime?
+  scheduledDate    DateTime  @db.Date
+  assigneeIds      String[]
+  status           String    @default("todo")
+  locationId       String?
+  location         Location? @relation(fields: [locationId], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
+  @@index([scheduledDate])
+  @@index([status])
+}
 
+model BoardSettings {
+  id         String   @id @default(uuid())
+  type       String   // "orders" | "tasks"
+  locationId String   @default("default")
+  stages     Json     // [{ id, label, color }]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([type, locationId])
+  @@index([type])
+}
+
+model ChecklistTemplate {
+  id            String   @id @default(uuid())
+  taskKey       String   @unique
+  title         String
+  requiresPhoto Boolean  @default(false)
+  category      String   // "opening" | "closing"
+  sortOrder     Int      @default(0)
+  permissions   Json     // { gotico: true, sagrada: true, ... }
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model DailyChecklist {
+  id            String    @id @default(uuid())
+  shiftType     String    // "opening" | "closing"
+  scheduledDate DateTime  @db.Date
+  locationKey   String
+  taskKey       String
+  completed     Boolean   @default(false)
+  photoUrl      String?
+  completedAt   DateTime?
+  completedById String?
+  cashShiftId   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([shiftType, scheduledDate, locationKey, taskKey])
+  @@index([scheduledDate, shiftType])
+}
+
+model TimeCard {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workDate     DateTime  @db.Date
+  clockIn      DateTime
+  clockOut     DateTime?
+  totalMinutes Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId, workDate])
+  @@index([workDate])
+  @@index([userId, clockOut])
+}
+
+model ShiftSchedule {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime @db.Date
+  dayOfWeek Int      // 0=Mon … 6=Sun
+  startTime String   // HH:mm
+  endTime   String   // HH:mm
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, weekStart, dayOfWeek])
+  @@index([weekStart])
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Printer {
+  id         String   @id @default(cuid())
+  name       String
+  ipAddress  String
+  port       Int      @default(9100)
+  type       String
+  locationId String   @default("default")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([locationId])
+}
+
+model TaxRate {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String
+  ratePercent Float
+  locationId  String   @default("default")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([locationId, slug])
+  @@index([locationId])
+}
+
+model CustomerReview {
+  id         String    @id @default(uuid())
+  source     String    // GOOGLE | TRIPADVISOR | YELP
+  rating     Int
+  authorName String
+  comment    String?
+  replyText  String?
+  repliedAt  DateTime?
+  locationId String    @default("default")
+  externalId String?
+  reviewDate DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([source])
+  @@index([locationId])
+  @@index([reviewDate])
+}
 
 

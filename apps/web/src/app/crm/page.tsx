@@ -3,15 +3,28 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useSearchParams } from 'next/navigation';
-import { getOrders } from '@/lib/orders';
+import { getOrderHistoryAsync, Order } from '@/lib/orders';
 import { 
-  getGuests, 
-  saveGuests, 
+  getGuestsAsync, 
+  saveGuestAsync,
+  updateGuestAsync,
+  deleteGuestAsync,
+  adjustGuestPointsAsync,
+  CrmApiError,
   Guest, 
   getTierCashbackRate,
-  updateTier,
-  getLoyaltyConfig
+  getLoyaltyConfigAsync,
+  DEFAULT_LOYALTY_CONFIG,
+  type LoyaltyConfig,
+  buildCustomerQrCode,
 } from '@/lib/crm';
+import {
+  filterCustomersBySearch,
+  EMPTY_CRM_LIST_MESSAGE,
+  validateCustomerName,
+  validatePhoneE164,
+  validateEmail,
+} from '@/lib/crm-validation';
 import { 
   Search, 
   UserPlus, 
@@ -43,6 +56,14 @@ function CrmPageContent() {
   const activeTab = searchParams.get('tab') || 'overview';
 
   const [guests, setGuests] = useState<Guest[]>([]);
+  const [crmOrders, setCrmOrders] = useState<Order[]>([]);
+  const [loyaltyConfig, setLoyaltyConfig] = useState<LoyaltyConfig>(DEFAULT_LOYALTY_CONFIG);
+  const [manualActivityLogs, setManualActivityLogs] = useState<
+    Array<{ id: string | number; type: string; guestName: string; description: string; time: Date }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedGuestId, setSelectedGuestId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'vip' | 'inactive' | 'allergies'>('all');
@@ -66,10 +87,54 @@ function CrmPageContent() {
   const [formBirthday, setFormBirthday] = useState('');
   const [formAllergies, setFormAllergies] = useState('');
   const [formNotes, setFormNotes] = useState('');
+  const [formErrors, setFormErrors] = useState<{ name?: string; phone?: string; email?: string }>({});
+  const [toast, setToast] = useState<string | null>(null);
+  const [adjustError, setAdjustError] = useState<string | null>(null);
 
-  // Load guests on mount
   useEffect(() => {
-    setGuests(getGuests());
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  // Load guests from PostgreSQL on mount
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    setLoadError(null);
+    getGuestsAsync()
+      .then((data) => {
+        if (!cancelled) setGuests(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Failed to load guests');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 365);
+    Promise.all([
+      getOrderHistoryAsync({
+        startDate: start.toISOString().slice(0, 10),
+        endDate: end.toISOString().slice(0, 10),
+        limit: 100,
+      }),
+      getLoyaltyConfigAsync(),
+    ])
+      .then(([history, config]) => {
+        if (cancelled) return;
+        setCrmOrders(history.orders);
+        setLoyaltyConfig(config);
+      })
+      .catch(console.error);
+    return () => { cancelled = true; };
   }, []);
 
   // Set default selected guest
@@ -88,15 +153,8 @@ function CrmPageContent() {
     return diffDays > 30;
   };
 
-  // Filtered guests
-  const filteredGuests = guests.filter(guest => {
-    const matchesSearch = 
-      guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      guest.phone.includes(searchQuery) ||
-      guest.email.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    if (!matchesSearch) return false;
-
+  // Filtered guests (client-side search + segment filters)
+  const filteredGuests = filterCustomersBySearch(guests, searchQuery).filter(guest => {
     if (activeFilter === 'vip') {
       return guest.tier === 'VIP' || guest.tier === 'Gold';
     }
@@ -111,74 +169,107 @@ function CrmPageContent() {
 
   const selectedGuest = guests.find(g => g.id === selectedGuestId) || null;
 
+  const validateGuestForm = () => {
+    const errors: { name?: string; phone?: string; email?: string } = {};
+    try {
+      validateCustomerName(formName);
+    } catch (err) {
+      errors.name = err instanceof Error ? err.message : 'Invalid name';
+    }
+    try {
+      validatePhoneE164(formPhone);
+    } catch (err) {
+      errors.phone = err instanceof Error ? err.message : 'Invalid phone';
+    }
+    try {
+      validateEmail(formEmail);
+    } catch (err) {
+      errors.email = err instanceof Error ? err.message : 'Invalid email';
+    }
+    setFormErrors(errors);
+    return !errors.name && !errors.phone && !errors.email;
+  };
+
   // Add Guest handler
-  const handleAddGuest = (e: React.FormEvent) => {
+  const handleAddGuest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName.trim()) return;
+    if (!validateGuestForm()) return;
 
-    const newGuest: Guest = {
-      id: 'g-' + Date.now(),
-      name: formName,
-      phone: formPhone || 'N/A',
-      email: formEmail || 'N/A',
-      birthday: formBirthday || 'N/A',
-      tier: 'Bronze',
-      points: 0,
-      ltv: 0,
-      visitCount: 0,
-      lastVisitDate: 'Never',
-      favoriteDishes: [],
-      allergyNotes: formAllergies || undefined,
-      notes: formNotes || undefined,
-      joinedDate: new Date().toISOString().split('T')[0]
-    };
-
-    const updated = [newGuest, ...guests];
-    setGuests(updated);
-    saveGuests(updated);
-    setSelectedGuestId(newGuest.id);
-    setIsAddOpen(false);
-    resetForm();
+    setIsSaving(true);
+    try {
+      const created = await saveGuestAsync({
+        name: formName,
+        phone: formPhone,
+        email: formEmail,
+        birthday: formBirthday || undefined,
+        allergyNotes: formAllergies || undefined,
+        notes: formNotes || undefined,
+      });
+      setGuests((prev) => [created, ...prev]);
+      setSelectedGuestId(created.id);
+      setIsAddOpen(false);
+      resetForm();
+    } catch (err) {
+      if (err instanceof CrmApiError && err.code === 'PHONE_DUPLICATE') {
+        setToast('This phone number is already registered to another guest.');
+        return;
+      }
+      console.error('Failed to create guest:', err);
+      setToast(err instanceof Error ? err.message : 'Failed to create guest');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Edit Guest handler
-  const handleEditGuest = (e: React.FormEvent) => {
+  const handleEditGuest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedGuestId || !formName.trim()) return;
+    if (!selectedGuestId || !validateGuestForm()) return;
 
-    const updated = guests.map(g => {
-      if (g.id === selectedGuestId) {
-        return {
-          ...g,
-          name: formName,
-          phone: formPhone,
-          email: formEmail,
-          birthday: formBirthday,
-          allergyNotes: formAllergies || undefined,
-          notes: formNotes || undefined
-        };
+    setIsSaving(true);
+    try {
+      const updated = await updateGuestAsync(selectedGuestId, {
+        name: formName,
+        phone: formPhone,
+        email: formEmail,
+        birthday: formBirthday,
+        allergyNotes: formAllergies || undefined,
+        notes: formNotes || undefined,
+      });
+      setGuests((prev) => prev.map((g) => (g.id === selectedGuestId ? updated : g)));
+      setIsEditOpen(false);
+      resetForm();
+    } catch (err) {
+      if (err instanceof CrmApiError && err.code === 'PHONE_DUPLICATE') {
+        setToast('This phone number is already registered to another guest.');
+        return;
       }
-      return g;
-    });
-
-    setGuests(updated);
-    saveGuests(updated);
-    setIsEditOpen(false);
-    resetForm();
+      console.error('Failed to update guest:', err);
+      setToast(err instanceof Error ? err.message : 'Failed to update guest');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Delete Guest handler
-  const handleDeleteGuest = () => {
+  const handleDeleteGuest = async () => {
     if (!selectedGuestId) return;
-    const updated = guests.filter(g => g.id !== selectedGuestId);
-    setGuests(updated);
-    saveGuests(updated);
-    setSelectedGuestId(updated.length > 0 ? updated[0].id : null);
-    setIsDeleteConfirmOpen(false);
+    setIsSaving(true);
+    try {
+      await deleteGuestAsync(selectedGuestId);
+      const updated = guests.filter((g) => g.id !== selectedGuestId);
+      setGuests(updated);
+      setSelectedGuestId(updated.length > 0 ? updated[0]!.id : null);
+      setIsDeleteConfirmOpen(false);
+    } catch (err) {
+      console.error('Failed to delete guest:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Adjust Points handler
-  const handleAdjustPoints = (e: React.FormEvent) => {
+  const handleAdjustPoints = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGuestId) return;
     const amountVal = parseFloat(adjustAmount);
@@ -186,35 +277,38 @@ function CrmPageContent() {
     if (!adjustReason.trim()) return;
 
     const diff = adjustType === 'add' ? amountVal : -amountVal;
+    const currentGuest = guests.find((g) => g.id === selectedGuestId);
+    if (!currentGuest) return;
 
-    const updated = guests.map(g => {
-      if (g.id === selectedGuestId) {
-        const newPoints = parseFloat(Math.max(0, g.points + diff).toFixed(2));
-        return {
-          ...g,
-          points: newPoints
-        };
+    setAdjustError(null);
+    setIsSaving(true);
+    try {
+      const updated = await adjustGuestPointsAsync(selectedGuestId, diff, adjustReason);
+      setGuests((prev) => prev.map((g) => (g.id === selectedGuestId ? updated : g)));
+      setIsAdjustPointsOpen(false);
+      setAdjustAmount('');
+      setAdjustReason('');
+
+      setManualActivityLogs((prev) => [
+        {
+          id: Date.now(),
+          type: 'adjustment',
+          guestName: currentGuest.name,
+          description: `Manually adjusted points by ${diff > 0 ? '+' : ''}${diff.toFixed(2)} pts (${adjustReason})`,
+          time: new Date(),
+        },
+        ...prev,
+      ]);
+    } catch (err) {
+      if (err instanceof CrmApiError && err.code === 'INSUFFICIENT_POINTS') {
+        setAdjustError('Not enough points for this deduction.');
+        return;
       }
-      return g;
-    });
-
-    setGuests(updated);
-    saveGuests(updated);
-    setIsAdjustPointsOpen(false);
-    setAdjustAmount('');
-    setAdjustReason('');
-
-    // Save points log event to sessionStorage
-    const logs = JSON.parse(sessionStorage.getItem('crm_activity_log') || '[]');
-    const targetGuestName = guests.find(g => g.id === selectedGuestId)?.name || 'Guest';
-    logs.unshift({
-      id: Date.now(),
-      type: 'adjustment',
-      guestName: targetGuestName,
-      description: `Manually adjusted points by ${diff > 0 ? '+' : ''}${diff.toFixed(2)} pts (${adjustReason})`,
-      time: new Date().toISOString()
-    });
-    sessionStorage.setItem('crm_activity_log', JSON.stringify(logs));
+      console.error('Failed to adjust points:', err);
+      setAdjustError(err instanceof Error ? err.message : 'Failed to adjust points');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const resetForm = () => {
@@ -224,6 +318,7 @@ function CrmPageContent() {
     setFormBirthday('');
     setFormAllergies('');
     setFormNotes('');
+    setFormErrors({});
   };
 
   const openEditModal = () => {
@@ -255,7 +350,15 @@ function CrmPageContent() {
 
   return (
     <DashboardLayout>
-      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm flex-1 flex flex-col h-full overflow-hidden">
+      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm flex-1 flex flex-col h-full overflow-hidden relative">
+        {toast && (
+          <div
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-xl shadow-lg"
+            data-testid="crm-toast"
+          >
+            {toast}
+          </div>
+        )}
         
         {/* CRM Top Headers & Stats */}
          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6 shrink-0">
@@ -299,6 +402,7 @@ function CrmPageContent() {
                   <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
+                    data-testid="crm-search-input"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Search by name, phone, email..."
@@ -306,6 +410,7 @@ function CrmPageContent() {
                   />
                 </div>
                 <button
+                  data-testid="crm-add-guest-btn"
                   onClick={() => { resetForm(); setIsAddOpen(true); }}
                   className="bg-corgi hover:bg-corgi/90 text-white rounded-xl px-4 py-2.5 text-xs font-black flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer shrink-0"
                 >
@@ -337,10 +442,18 @@ function CrmPageContent() {
 
             {/* Guest list scrollable panel */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-50 bg-white">
-              {filteredGuests.length > 0 ? (
+              {isLoading ? (
+                <div className="p-8 text-center text-gray-400 text-xs font-semibold" data-testid="crm-loading">
+                  Loading guests…
+                </div>
+              ) : loadError ? (
+                <div className="p-8 text-center text-red-400 text-xs font-semibold" data-testid="crm-load-error">
+                  {loadError}
+                </div>
+              ) : filteredGuests.length > 0 ? (
                 filteredGuests.map(guest => {
                   const isSelected = guest.id === selectedGuestId;
-                  const cashbackRate = getTierCashbackRate(guest.tier) * 100;
+                  const cashbackRate = getTierCashbackRate(guest.tier, loyaltyConfig) * 100;
                   return (
                     <div
                       key={guest.id}
@@ -355,7 +468,7 @@ function CrmPageContent() {
                           {guest.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-bold text-gray-900 truncate">{guest.name}</span>
+                          <span className="text-sm font-bold text-gray-900 truncate" data-testid="crm-guest-row-name">{guest.name}</span>
                           <span className="text-[11px] font-semibold text-gray-400 mt-0.5 truncate">{guest.phone}</span>
                         </div>
                       </div>
@@ -371,8 +484,8 @@ function CrmPageContent() {
                   );
                 })
               ) : (
-                <div className="p-8 text-center text-gray-400 text-xs font-semibold">
-                  No guests match the search criteria.
+                <div className="p-8 text-center text-gray-400 text-xs font-semibold" data-testid="crm-empty-state">
+                  {EMPTY_CRM_LIST_MESSAGE}
                 </div>
               )}
             </div>
@@ -410,6 +523,7 @@ function CrmPageContent() {
                       </button>
                       <button
                         onClick={() => setIsQrOpen(true)}
+                        data-testid="crm-qr-open"
                         className="p-2 border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-400 rounded-xl transition-colors cursor-pointer"
                         title="Show Loyalty Card"
                       >
@@ -462,7 +576,8 @@ function CrmPageContent() {
                         <div className="text-lg font-black text-gray-900">{selectedGuest.points.toFixed(2)} pts</div>
                       </div>
                       <button 
-                        onClick={() => setIsAdjustPointsOpen(true)}
+                        onClick={() => { setAdjustError(null); setIsAdjustPointsOpen(true); }}
+                        data-testid="crm-adjust-open"
                         className="px-2.5 py-1.5 bg-white border border-gray-200 hover:border-corgi hover:text-corgi text-gray-700 transition-all text-[11px] font-bold rounded-xl shadow-sm cursor-pointer"
                       >
                         +/- Adjust
@@ -579,7 +694,7 @@ function CrmPageContent() {
                     </h3>
                     
                     {(() => {
-                      const guestOrders = getOrders().filter(o => o.customerId === selectedGuest.id);
+                      const guestOrders = crmOrders.filter(o => o.customerId === selectedGuest.id);
                       if (guestOrders.length === 0) {
                         return (
                           <div className="text-xs text-gray-400 font-semibold block italic py-2">
@@ -646,7 +761,7 @@ function CrmPageContent() {
               {(() => {
                 const logs: any[] = [];
                 // 1. Add order activities
-                getOrders().forEach(o => {
+                crmOrders.forEach(o => {
                   if (o.customerId) {
                     logs.push({
                       id: o.id + '-' + o.time.getTime(),
@@ -657,13 +772,8 @@ function CrmPageContent() {
                     });
                   }
                 });
-                // 2. Add manual adjustments from sessionStorage
-                const manualLogs = typeof window !== 'undefined' ? JSON.parse(sessionStorage.getItem('crm_activity_log') || '[]') : [];
-                manualLogs.forEach((l: any) => {
-                  logs.push({
-                    ...l,
-                    time: new Date(l.time)
-                  });
+                manualActivityLogs.forEach((l) => {
+                  logs.push(l);
                 });
 
                 // Sort by time desc
@@ -757,17 +867,21 @@ function CrmPageContent() {
                   <button onClick={() => setIsAddOpen(false)} className="p-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={20} /></button>
                 </div>
                 
-                <form onSubmit={handleAddGuest} className="space-y-4">
+                <form onSubmit={handleAddGuest} noValidate className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Full Name *</label>
                     <input
                       type="text"
                       required
+                      data-testid="crm-form-name"
                       value={formName}
-                      onChange={e => setFormName(e.target.value)}
+                      onChange={e => { setFormName(e.target.value); setFormErrors(p => ({ ...p, name: undefined })); }}
                       placeholder="e.g. John Smith"
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:border-gray-900 focus:bg-white transition-all"
+                      className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:bg-white transition-all ${formErrors.name ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-gray-900'}`}
                     />
+                    {formErrors.name && (
+                      <p className="text-xs font-semibold text-red-500" data-testid="crm-form-name-error">{formErrors.name}</p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -775,11 +889,15 @@ function CrmPageContent() {
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Phone Number</label>
                       <input
                         type="text"
+                        data-testid="crm-form-phone"
                         value={formPhone}
-                        onChange={e => setFormPhone(e.target.value)}
+                        onChange={e => { setFormPhone(e.target.value); setFormErrors(p => ({ ...p, phone: undefined })); }}
                         placeholder="+34 600..."
-                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:border-gray-900 focus:bg-white transition-all"
+                        className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:bg-white transition-all ${formErrors.phone ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-gray-900'}`}
                       />
+                      {formErrors.phone && (
+                        <p className="text-xs font-semibold text-red-500" data-testid="crm-form-phone-error">{formErrors.phone}</p>
+                      )}
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Birthday</label>
@@ -796,11 +914,15 @@ function CrmPageContent() {
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Email Address</label>
                     <input
                       type="email"
+                      data-testid="crm-form-email"
                       value={formEmail}
-                      onChange={e => setFormEmail(e.target.value)}
+                      onChange={e => { setFormEmail(e.target.value); setFormErrors(p => ({ ...p, email: undefined })); }}
                       placeholder="john@example.com"
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:border-gray-900 focus:bg-white transition-all"
+                      className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:bg-white transition-all ${formErrors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-gray-900'}`}
                     />
+                    {formErrors.email && (
+                      <p className="text-xs font-semibold text-red-500" data-testid="crm-form-email-error">{formErrors.email}</p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -834,7 +956,9 @@ function CrmPageContent() {
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors cursor-pointer"
+                      disabled={isSaving}
+                      data-testid="crm-form-submit"
+                      className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors cursor-pointer disabled:opacity-50"
                     >
                       Create Profile
                     </button>
@@ -864,17 +988,21 @@ function CrmPageContent() {
                   <button onClick={() => setIsEditOpen(false)} className="p-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={20} /></button>
                 </div>
                 
-                <form onSubmit={handleEditGuest} className="space-y-4">
+                <form onSubmit={handleEditGuest} noValidate className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Full Name *</label>
                     <input
                       type="text"
                       required
+                      data-testid="crm-form-name"
                       value={formName}
-                      onChange={e => setFormName(e.target.value)}
+                      onChange={e => { setFormName(e.target.value); setFormErrors(p => ({ ...p, name: undefined })); }}
                       placeholder="e.g. John Smith"
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:border-gray-900 focus:bg-white transition-all"
+                      className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:bg-white transition-all ${formErrors.name ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-gray-900'}`}
                     />
+                    {formErrors.name && (
+                      <p className="text-xs font-semibold text-red-500" data-testid="crm-form-name-error">{formErrors.name}</p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -882,11 +1010,15 @@ function CrmPageContent() {
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Phone Number</label>
                       <input
                         type="text"
+                        data-testid="crm-form-phone"
                         value={formPhone}
-                        onChange={e => setFormPhone(e.target.value)}
+                        onChange={e => { setFormPhone(e.target.value); setFormErrors(p => ({ ...p, phone: undefined })); }}
                         placeholder="+34 600..."
-                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:border-gray-900 focus:bg-white transition-all"
+                        className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:bg-white transition-all ${formErrors.phone ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-gray-900'}`}
                       />
+                      {formErrors.phone && (
+                        <p className="text-xs font-semibold text-red-500" data-testid="crm-form-phone-error">{formErrors.phone}</p>
+                      )}
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Birthday</label>
@@ -903,11 +1035,15 @@ function CrmPageContent() {
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Email Address</label>
                     <input
                       type="email"
+                      data-testid="crm-form-email"
                       value={formEmail}
-                      onChange={e => setFormEmail(e.target.value)}
+                      onChange={e => { setFormEmail(e.target.value); setFormErrors(p => ({ ...p, email: undefined })); }}
                       placeholder="john@example.com"
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:border-gray-900 focus:bg-white transition-all"
+                      className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none focus:bg-white transition-all ${formErrors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-gray-900'}`}
                     />
+                    {formErrors.email && (
+                      <p className="text-xs font-semibold text-red-500" data-testid="crm-form-email-error">{formErrors.email}</p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -1003,39 +1139,30 @@ function CrmPageContent() {
                   </div>
                 </div>
 
-                {/* Mock QR Code */}
+                {/* QR Code */}
                 <div className="bg-gray-50 border border-gray-100 p-6 rounded-2xl flex flex-col items-center gap-3">
-                  <div className="w-40 h-40 bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-center">
-                    {/* Visual QR Simulator */}
-                    <div className="grid grid-cols-5 grid-rows-5 gap-2 w-full h-full p-2 bg-gray-55 opacity-90">
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-100 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-100 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-100 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-100 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-100 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-100 rounded-sm"></div>
-                      <div className="bg-gray-900 rounded-sm"></div>
-                      <div className="bg-gray-950 rounded-sm"></div>
-                      <div className="bg-gray-100 rounded-sm"></div>
-                      <div className="bg-gray-950 rounded-sm"></div>
-                      <div className="bg-gray-950 rounded-sm"></div>
-                      <div className="bg-gray-950 rounded-sm"></div>
-                    </div>
-                  </div>
-                  <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Scan to Redeem Points</span>
+                  {(() => {
+                    const qrToken = buildCustomerQrCode(selectedGuest.id);
+                    return (
+                      <>
+                        <div className="w-40 h-40 bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-center">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(qrToken)}`}
+                            alt="Loyalty QR Code"
+                            className="w-full h-full object-contain"
+                            data-testid="crm-qr-image"
+                          />
+                        </div>
+                        <span
+                          className="text-[10px] font-mono text-gray-500 break-all text-center max-w-[240px]"
+                          data-testid="crm-qr-token"
+                        >
+                          {qrToken}
+                        </span>
+                        <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Scan to Redeem Points</span>
+                      </>
+                    );
+                  })()}
                 </div>
               </motion.div>
             </div>
@@ -1122,6 +1249,7 @@ function CrmPageContent() {
                     <button
                       type="button"
                       onClick={() => setAdjustType('subtract')}
+                      data-testid="crm-adjust-subtract"
                       className={`flex-1 py-2.5 rounded-xl text-xs transition-all cursor-pointer border ${
                         adjustType === 'subtract' 
                           ? 'bg-gray-900 border-gray-900 text-white shadow-sm font-black' 
@@ -1139,6 +1267,7 @@ function CrmPageContent() {
                       step="0.01"
                       min="0.01"
                       required
+                      data-testid="crm-adjust-amount"
                       value={adjustAmount}
                       onChange={e => setAdjustAmount(e.target.value)}
                       placeholder="e.g. 10.00"
@@ -1151,12 +1280,17 @@ function CrmPageContent() {
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Reason / Comment *</label>
                     <textarea
                       required
+                      data-testid="crm-adjust-reason"
                       value={adjustReason}
                       onChange={e => setAdjustReason(e.target.value)}
                       placeholder="Why is this change being made? (e.g. Compensation for long wait time)"
                       className="w-full bg-gray-50 border border-gray-150 hover:bg-white hover:border-gray-200 focus:bg-white focus:border-corgi rounded-xl px-4 py-2.5 text-[13px] font-medium text-gray-900 outline-none transition-all min-h-[80px]"
                     />
                   </div>
+
+                  {adjustError && (
+                    <p className="text-xs font-semibold text-red-500" data-testid="crm-adjust-error">{adjustError}</p>
+                  )}
  
                   <div className="flex justify-end gap-3 pt-2">
                     <button 
@@ -1168,7 +1302,9 @@ function CrmPageContent() {
                     </button>
                     <button 
                       type="submit"
-                      className={`px-5 py-2.5 text-xs font-black text-white rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-sm ${
+                      disabled={isSaving}
+                      data-testid="crm-adjust-submit"
+                      className={`px-5 py-2.5 text-xs font-black text-white rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-sm disabled:opacity-50 ${
                         adjustType === 'add' ? 'bg-corgi hover:bg-corgi/90' : 'bg-gray-900 hover:bg-gray-900/90'
                       }`}
                     >

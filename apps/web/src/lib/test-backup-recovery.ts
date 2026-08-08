@@ -1,11 +1,14 @@
-import { runDatabaseBackup } from './backup';
-import { prisma } from './db';
+import { runDatabaseBackup } from './backup.ts';
+import { prisma } from './db.ts';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 
 const execPromise = promisify(exec);
+
+function psqlShellQuote(sql: string): string {
+  return `'${sql.replace(/'/g, `'\\''`)}'`;
+}
 
 async function isDockerContainerRunning(containerName: string): Promise<boolean> {
   try {
@@ -43,9 +46,10 @@ async function main() {
 
   let backupFilePath = '';
   const containerName = 'corgi_postgres';
+  let useDocker = false;
 
   try {
-    const useDocker = (host === '127.0.0.1' || host === 'localhost') && await isDockerContainerRunning(containerName);
+    useDocker = (host === '127.0.0.1' || host === 'localhost') && await isDockerContainerRunning(containerName);
 
     // 1. Create a dummy location and verify it is in the main DB
     console.log('Creating mock location in main DB to backup...');
@@ -103,30 +107,24 @@ async function main() {
     }
     console.log('✅ Success: pg_restore execution completed.');
 
-    // 5. Connect to the restored database using Prisma and verify data integrity
-    console.log('Connecting to restored database using Prisma to verify integrity...');
-    const testPrisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: testDbUrl,
-        },
-      },
-    });
-
-    // Check if the mock location is present in the restored database
-    const restoredLoc = await testPrisma.location.findUnique({
-      where: { id: testLocId },
-    });
-
-    if (restoredLoc && restoredLoc.name === 'Backup Test Location') {
-      console.log('✅ Success: Verified database integrity! Mock location was successfully restored.');
+    // 5. Verify restored data via psql (avoids separate Prisma adapter in test script)
+    console.log('Verifying restored database integrity...');
+    const verifyQuery = `SELECT name FROM "Location" WHERE id = '${testLocId}';`;
+    let verifyStdout = '';
+    if (useDocker) {
+      const verifyCmd = `docker exec -i -e PGPASSWORD="${password}" ${containerName} psql -h 127.0.0.1 -U ${username} -d ${testDbName} -t -c ${psqlShellQuote(verifyQuery)}`;
+      verifyStdout = (await execPromise(verifyCmd, { env })).stdout;
     } else {
-      console.error('❌ ERROR: Mock location not found in restored database or values do not match.');
-      await testPrisma.$disconnect();
-      process.exit(1);
+      const verifyCmd = `psql -h ${host} -p ${port} -U ${username} -d ${testDbName} -t -c ${psqlShellQuote(verifyQuery)}`;
+      verifyStdout = (await execPromise(verifyCmd, { env })).stdout;
     }
 
-    await testPrisma.$disconnect();
+    if (verifyStdout.includes('Backup Test Location')) {
+      console.log('✅ T30.3 Verified database integrity! Mock location restored.');
+    } else {
+      console.error('❌ ERROR: Mock location not found in restored database.');
+      process.exit(1);
+    }
 
     // 6. Clean up temporary database & mock location in main DB
     console.log('Cleaning up mock location in main DB...');

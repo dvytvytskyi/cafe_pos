@@ -20,7 +20,10 @@ import {
   updateTableStatusAsync,
 } from '@/lib/tables';
 import { DEFAULT_LOCATION_ID } from '@/lib/constants';
+import { buildEmenuQrUrl } from '@/lib/emenu';
 import { logAuditEvent } from '@/lib/audit';
+import { resolveTableDisplayStatus } from '@/lib/table-status-sync';
+import { calculateOrderTotals } from '@/lib/order-totals';
 
 const GRID_SIZE = 40; // 40px = 1m
 const SNAP_SIZE = GRID_SIZE / 4; // 10px = 0.25m
@@ -140,6 +143,9 @@ export default function TablesView({
   const tables = activeRoom?.tables ?? [];
   const zones = activeRoom?.zones ?? [];
   const obstacles = activeRoom?.obstacles ?? [];
+
+  const displayStatus = (table: Table) =>
+    isLiveView ? resolveTableDisplayStatus(table.status, activeOrders, table.id) : (table.status || 'available');
 
   const setTables = (newTables: Table[] | ((prev: Table[]) => Table[])) => {
     setRooms(rooms.map(r => r.id === activeRoomId ? { 
@@ -956,6 +962,7 @@ export default function TablesView({
             return (
               <g
                 key={table.id}
+                data-testid={`pos-table-${table.id}`}
                 transform={`translate(${table.x}, ${table.y})`}
                 className={`group ${mode === 'select' && !isLiveView ? 'cursor-move' : isLiveView ? 'cursor-pointer' : ''}`}
                 onPointerDown={(e) => {
@@ -1001,7 +1008,9 @@ export default function TablesView({
                 </text>
 
                 {/* Table Status Badge Plate - Centered top overlapping pill */}
-                {table.status && table.status !== 'available' && (() => {
+                {(() => {
+                  const status = displayStatus(table);
+                  if (!status || status === 'available') return null;
                   let badgeX = 0;
                   let badgeY = -6; // slightly overlapping top edge
                   if (table.type === 'rect') {
@@ -1025,14 +1034,14 @@ export default function TablesView({
                         height="12"
                         rx="6"
                         fill={
-                          table.status === 'occupied' ? '#fee2e2' :
-                          table.status === 'billed' ? '#fef3c7' :
-                          table.status === 'dirty' ? '#ffedd5' : '#f3f4f6'
+                          status === 'occupied' ? '#fee2e2' :
+                          status === 'billed' ? '#fef3c7' :
+                          status === 'dirty' ? '#ffedd5' : '#f3f4f6'
                         }
                         stroke={
-                          table.status === 'occupied' ? '#ef4444' :
-                          table.status === 'billed' ? '#d97706' :
-                          table.status === 'dirty' ? '#ea580c' : '#9ca3af'
+                          status === 'occupied' ? '#ef4444' :
+                          status === 'billed' ? '#d97706' :
+                          status === 'dirty' ? '#ea580c' : '#9ca3af'
                         }
                         strokeWidth="1.5"
                       />
@@ -1040,9 +1049,9 @@ export default function TablesView({
                         x={badgeX}
                         y={badgeY + 8.5}
                         fill={
-                          table.status === 'occupied' ? '#991b1b' :
-                          table.status === 'billed' ? '#92400e' :
-                          table.status === 'dirty' ? '#c2410c' : '#374151'
+                          status === 'occupied' ? '#991b1b' :
+                          status === 'billed' ? '#92400e' :
+                          status === 'dirty' ? '#c2410c' : '#374151'
                         }
                         fontSize="6.5"
                         fontWeight="black"
@@ -1050,7 +1059,7 @@ export default function TablesView({
                         letterSpacing="0.5"
                         className="uppercase"
                       >
-                        {table.status}
+                        {status}
                       </text>
                     </g>
                   );
@@ -1408,95 +1417,49 @@ export default function TablesView({
               const modalTable = tables.find(t => t.id === qrModalTable);
               if (!modalTable) return null;
               
-              const generateQR = () => {
-                const newCode = Math.random().toString(36).substring(2, 10);
-                updateTable(modalTable.id, { qrCode: newCode });
-              };
+              const emenuUrl = buildEmenuQrUrl(
+                modalTable.id,
+                DEFAULT_LOCATION_ID,
+                typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+              );
+              const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(emenuUrl)}&color=1f2937&margin=0`;
 
               const downloadQR = async () => {
-                if (!modalTable.qrCode) return;
-                const url = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://corgi-cafe.com/table/${modalTable.qrCode}&color=1f2937&margin=0`;
                 try {
-                  const response = await fetch(url);
+                  const response = await fetch(qrImageUrl);
                   const blob = await response.blob();
                   const link = document.createElement('a');
                   link.href = URL.createObjectURL(blob);
-                  link.download = `Table-${modalTable.name}-QR.png`;
+                  link.download = `Table-${modalTable.name}-eMenu-QR.png`;
                   link.click();
-                } catch (err) {
-                  window.open(url, '_blank');
+                } catch {
+                  window.open(qrImageUrl, '_blank');
                 }
               };
 
               return (
                 <div className="flex flex-col items-center">
-                  <h3 className="text-xl font-bold text-gray-800 mb-6">Table {modalTable.name} QR Code</h3>
-                  
-                  {confirmRegenerate ? (
-                    <div className="flex flex-col items-center gap-4 w-full py-6 animate-in zoom-in-95 duration-200">
-                      <div className="w-16 h-16 rounded-2xl bg-orange-50 text-corgi flex items-center justify-center mb-2">
-                        <RefreshCw size={32} />
-                      </div>
-                      <h4 className="text-lg font-bold text-gray-800">Are you sure?</h4>
-                      <p className="text-gray-500 text-center text-sm px-2">The old QR code will immediately stop working. This action cannot be undone.</p>
-                      <div className="flex w-full gap-3 mt-4">
-                        <button 
-                          onClick={() => setConfirmRegenerate(false)}
-                          className="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                        <button 
-                          onClick={() => {
-                            generateQR();
-                            setConfirmRegenerate(false);
-                          }}
-                          className="flex-1 py-2.5 rounded-xl bg-corgi text-white font-semibold hover:bg-orange-600 transition-colors cursor-pointer"
-                        >
-                          Yes, Regenerate
-                        </button>
-                      </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Table {modalTable.name} eMenu QR</h3>
+                  <p className="text-[11px] text-gray-500 font-medium text-center break-all px-2 mb-4">{emenuUrl}</p>
+
+                  <div className="flex flex-col items-center gap-6 w-full animate-in zoom-in-95 duration-200">
+                    <div className="p-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center">
+                      <img
+                        src={qrImageUrl.replace('500x500', '250x250')}
+                        alt="eMenu QR Code"
+                        className="w-48 h-48 rounded-md"
+                      />
                     </div>
-                  ) : modalTable.qrCode ? (
-                    <div className="flex flex-col items-center gap-6 w-full animate-in zoom-in-95 duration-200">
-                      <div className="p-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center">
-                        <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://corgi-cafe.com/table/${modalTable.qrCode}&color=1f2937&margin=0`} 
-                          alt="QR Code" 
-                          className="w-48 h-48 rounded-md"
-                        />
-                      </div>
-                      
-                      <div className="flex w-full gap-3">
-                        <button 
-                          onClick={downloadQR}
-                          className="flex-1 flex items-center justify-center gap-2 bg-corgi text-white font-semibold py-2.5 rounded-xl hover:bg-orange-600 transition-colors cursor-pointer"
-                        >
-                          <Download size={18} /> Download
-                        </button>
-                        <button 
-                          onClick={() => setConfirmRegenerate(true)}
-                          className="flex items-center justify-center gap-2 bg-orange-50 text-corgi font-semibold px-4 py-2.5 rounded-xl hover:bg-orange-100 transition-colors cursor-pointer"
-                          title="Generate New QR"
-                        >
-                          <RefreshCw size={20} />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-6 w-full py-4">
-                      <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 bg-gray-50">
-                        <QrCode size={48} opacity={0.5} />
-                      </div>
-                      <p className="text-gray-500 text-center text-sm px-4">No QR code generated for this table yet.</p>
-                      <button 
-                        onClick={generateQR}
-                        className="w-full flex items-center justify-center gap-2 bg-corgi text-white font-semibold py-2.5 rounded-xl hover:bg-orange-600 transition-colors cursor-pointer"
+
+                    <div className="flex w-full gap-3">
+                      <button
+                        onClick={downloadQR}
+                        className="flex-1 flex items-center justify-center gap-2 bg-corgi text-white font-semibold py-2.5 rounded-xl hover:bg-orange-600 transition-colors cursor-pointer"
                       >
-                        Generate QR Code
+                        <Download size={18} /> Download
                       </button>
                     </div>
-                  )}
+                  </div>
                   
                   <button 
                     onClick={() => { setQrModalTable(null); setConfirmRegenerate(false); }}
@@ -1552,14 +1515,15 @@ export default function TablesView({
         (() => {
           const table = tables.find(t => t.id === activeOrderTableId);
           if (!table) return null;
-          
+
+          const tableDisplayStatus = displayStatus(table);
           const activeOrder = activeOrders.find(o => o.tableId === activeOrderTableId && !o.paid);
-          
+
           return (
             <OrderTerminalModal
               tableId={activeOrderTableId}
               tableName={table.name}
-              currentStatus={table.status || 'available'}
+              currentStatus={tableDisplayStatus}
               initialOrder={activeOrder}
               guests={crmGuests}
               locationId={DEFAULT_LOCATION_ID}
@@ -1574,15 +1538,15 @@ export default function TablesView({
                 let orderToOpen: Order | null = null;
 
                 if (action !== 'clean') {
-                  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                  const discountAmount = subtotal * discountPercent;
-                  const finalTotal = parseFloat(Math.max(0, subtotal - discountAmount).toFixed(2));
                   const formattedItems = items.map((i) => ({
                     name: i.name,
                     price: i.price,
                     quantity: i.quantity,
                     comments: i.comments,
                   }));
+                  const { discountAmount, total: finalTotal } = calculateOrderTotals(formattedItems, {
+                    discountPercent: discountPercent,
+                  });
 
                   const finalCustomerId = customerId || activeOrder?.customerId;
                   const guestName = finalCustomerId
@@ -1673,31 +1637,22 @@ export default function TablesView({
         }}
         onUpdateOrder={async (updatedOrder) => {
           try {
-            const res = await fetch(`/api/orders/${updatedOrder.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(updatedOrder),
-            });
-            if (res.ok) {
-              const updated = await res.json();
-              setSelectedOrderForSidebar(updated);
-              await fetchActiveOrders();
-
-              // Update table status based on payment or completion
-              const table = tables.find(t => t.id === updated.tableId);
-              if (table) {
-                let newStatus = table.status;
-                if (updated.paid) newStatus = 'dirty';
-                else if (updated.status === 'completed') newStatus = 'dirty';
-                else if (updated.status === 'cancelled') newStatus = 'available';
-                
-                if (newStatus !== table.status) {
-                  updateTable(table.id, { status: newStatus });
-                }
-              }
-            }
+            const updated = await updateOrderAsync(updatedOrder.id, updatedOrder);
+            setSelectedOrderForSidebar(updated);
+            await fetchActiveOrders();
           } catch (err) {
             console.error('Failed to update order:', err);
+          }
+        }}
+        onPaymentComplete={async (updated) => {
+          setSelectedOrderForSidebar(updated.paid ? null : updated);
+          await fetchActiveOrders();
+          if (updated.paid && updated.tableId) {
+            await updateTableStatusAsync(updated.tableId, 'dirty');
+            const table = tables.find(t => t.id === updated.tableId);
+            if (table) {
+              updateTable(table.id, { status: 'dirty' });
+            }
           }
         }}
       />

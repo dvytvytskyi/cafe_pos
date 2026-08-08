@@ -12,6 +12,7 @@ export interface MenuItem {
 export interface MenuCategory {
   id: string;
   name: string;
+  sortOrder?: number;
   isArchived: boolean;
   items: MenuItem[];
 }
@@ -31,9 +32,43 @@ export async function createCategoryAsync(name: string): Promise<MenuCategory> {
     body: JSON.stringify({ name }),
   });
   if (!res.ok) {
-    throw new Error('Failed to create menu category in PostgreSQL');
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to create menu category in PostgreSQL');
   }
   return res.json();
+}
+
+export async function updateCategoryAsync(id: string, name: string): Promise<MenuCategory> {
+  const res = await fetch(`/api/menu/categories/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to update menu category');
+  }
+  return res.json();
+}
+
+export async function reorderCategoriesAsync(orderedIds: string[]): Promise<void> {
+  const res = await fetch('/api/menu/categories/reorder', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderedIds }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to reorder menu categories');
+  }
+}
+
+export async function deleteCategoryAsync(id: string, mode: 'block' | 'cascade' = 'cascade'): Promise<void> {
+  const res = await fetch(`/api/menu/categories/${id}?mode=${mode}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to delete menu category');
+  }
 }
 
 export async function createMenuItemAsync(data: {
@@ -62,6 +97,7 @@ export async function updateMenuItemAsync(
     price?: number;
     categoryId?: string;
     allergens?: string[];
+    isArchived?: boolean;
   }
 ): Promise<MenuItem> {
   const res = await fetch(`/api/menu/items/${id}`, {
@@ -84,3 +120,5 @@ export async function archiveMenuItemAsync(id: string): Promise<MenuItem> {
   }
   return res.json();
 }
+
+export { filterDishesBySearch } from './menu-validation.ts';

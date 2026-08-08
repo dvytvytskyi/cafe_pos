@@ -1,10 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Minus, Plus, Search, MessageSquare, CreditCard, Receipt, ChefHat, Check, UserMinus, Users, Star, Trash2 } from 'lucide-react';
 import { Order, getOrdersAsync } from '@/lib/orders';
-import { Guest, getGuestsAsync, saveGuestAsync } from '@/lib/crm';
+import { Guest, getGuestsAsync, saveGuestAsync, getGuestByQrAsync, isCustomerQrCode } from '@/lib/crm';
 import { getMenuCategoriesAsync } from '@/lib/menu';
-import { mapCategoriesToPosMenu, PosMenuCategory } from '@/lib/mappers/menu.mapper';
+import { mapCategoriesToPosMenu, PosMenuCategory, PosMenuItem, PosModifierGroup } from '@/lib/mappers/menu.mapper';
 import { DEFAULT_LOCATION_ID } from '@/lib/constants';
+import {
+  formatPosAmount,
+  getPosSettingsAsync,
+  POS_SETTINGS_UPDATED_EVENT,
+  type PosSettings,
+} from '@/lib/pos-settings';
+import { calculateOrderTotals, DEFAULT_FOOD_TAX_RATE } from '@/lib/order-totals';
 
 export interface OrderItem {
   id: string;
@@ -68,6 +75,31 @@ export default function OrderTerminalModal({
     };
   }, []);
 
+  const [posCurrency, setPosCurrency] = useState('EUR');
+  const money = (amount: number) => formatPosAmount(amount, posCurrency);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const settings = await getPosSettingsAsync();
+        if (!cancelled) setPosCurrency(settings.currency);
+      } catch {
+        /* defaults to EUR */
+      }
+    };
+    load();
+    const onUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<PosSettings>).detail;
+      if (detail?.currency) setPosCurrency(detail.currency);
+    };
+    window.addEventListener(POS_SETTINGS_UPDATED_EVENT, onUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(POS_SETTINGS_UPDATED_EVENT, onUpdated);
+    };
+  }, []);
+
   const [orderItems, setOrderItems] = useState<OrderItem[]>(() => {
     if (initialOrder) {
       return initialOrder.items.map((item, idx) => ({
@@ -88,6 +120,8 @@ export default function OrderTerminalModal({
   });
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [deleteConfirmItemId, setDeleteConfirmItemId] = useState<string | null>(null);
+  const [modifierPickerItem, setModifierPickerItem] = useState<PosMenuItem | null>(null);
+  const [selectedModifiers, setSelectedModifiers] = useState<Record<string, string>>({});
   const [isSentToKitchen, setIsSentToKitchen] = useState(() => {
     if (initialOrder) {
       return initialOrder.status === 'preparing' || initialOrder.status === 'completed' || initialOrder.status === 'ready';
@@ -174,6 +208,24 @@ export default function OrderTerminalModal({
     if (found) setSelectedCustomer(found);
   }, [initialOrder, guestsProp, crmGuests]);
   const [guestSearchQuery, setGuestSearchQuery] = useState('');
+  const [qrLookupError, setQrLookupError] = useState<string | null>(null);
+
+  const handleGuestSearchChange = async (value: string) => {
+    setGuestSearchQuery(value);
+    setShowSearchDropdown(true);
+    setQrLookupError(null);
+
+    if (isCustomerQrCode(value.trim())) {
+      try {
+        const guest = await getGuestByQrAsync(value.trim());
+        setSelectedCustomer(guest);
+        setGuestSearchQuery('');
+        setShowSearchDropdown(false);
+      } catch {
+        setQrLookupError('QR code not recognized. Check the loyalty pass and try again.');
+      }
+    }
+  };
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   
   // Quick Add Customer States
@@ -195,17 +247,59 @@ export default function OrderTerminalModal({
     };
   }, []);
 
-  const addItem = (item: any, size?: string) => {
+  const getCategoryModifierGroups = (categoryId: string): PosModifierGroup[] => {
+    const cat = menuList.find((c) => c.id === categoryId);
+    return cat?.modifierGroups?.filter((g) => g.options.length > 0) ?? [];
+  };
+
+  const addItem = (item: PosMenuItem, size?: string, modifierExtra = 0, modifierLabel = '') => {
     setIsSentToKitchen(false);
     setIsReady(false);
-    const itemName = size ? `${item.name} (${size})` : item.name;
+    const baseName = size ? `${item.name} (${size})` : item.name;
+    const itemName = modifierLabel ? `${baseName} (${modifierLabel})` : baseName;
+    const price = item.price + modifierExtra;
     setOrderItems(prev => {
-      const existing = prev.find(i => i.name === itemName);
+      const existing = prev.find(i => i.name === itemName && i.price === price);
       if (existing) {
-        return prev.map(i => i.name === itemName ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map(i => i.name === itemName && i.price === price ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { id: `m-${Date.now()}-${item.id}`, name: itemName, price: item.price, quantity: 1 }];
+      return [...prev, { id: `m-${Date.now()}-${item.id}`, name: itemName, price, quantity: 1 }];
     });
+  };
+
+  const requestAddItem = (item: PosMenuItem, size?: string) => {
+    if (size) {
+      addItem(item, size);
+      return;
+    }
+    const categoryId = item.categoryId || activeCategory;
+    const groups = getCategoryModifierGroups(categoryId);
+    if (groups.length > 0) {
+      setModifierPickerItem(item);
+      setSelectedModifiers({});
+      return;
+    }
+    addItem(item);
+  };
+
+  const confirmAddWithModifiers = () => {
+    if (!modifierPickerItem) return;
+    const categoryId = modifierPickerItem.categoryId || activeCategory;
+    const groups = getCategoryModifierGroups(categoryId);
+    let extra = 0;
+    const names: string[] = [];
+    for (const group of groups) {
+      const optionId = selectedModifiers[group.id];
+      if (!optionId) continue;
+      const option = group.options.find((o) => o.id === optionId);
+      if (option) {
+        extra += option.price;
+        names.push(option.name);
+      }
+    }
+    addItem(modifierPickerItem, undefined, extra, names.join(', '));
+    setModifierPickerItem(null);
+    setSelectedModifiers({});
   };
 
   const updateQuantity = (id: string, delta: number) => {
@@ -249,8 +343,8 @@ export default function OrderTerminalModal({
   };
 
   const menuList = menu;
-  const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const total = subtotal * (1 - discount);
+  const orderTotals = calculateOrderTotals(orderItems, { discountPercent: discount });
+  const { subtotal, discountAmount, tax, total } = orderTotals;
   const activeCategoryItems = menuList.find((c) => c.id === activeCategory)?.items ?? [];
 
   const renderCategories = () => {
@@ -266,6 +360,7 @@ export default function OrderTerminalModal({
         {menuList.map((cat) => (
           <button
             key={cat.id}
+            data-testid={`pos-category-${cat.id}`}
             onClick={() => setActiveCategory(cat.id)}
             className={`py-2 px-1 rounded-xl font-black text-xs text-center transition-colors cursor-pointer truncate ${
               activeCategory === cat.id
@@ -317,7 +412,7 @@ export default function OrderTerminalModal({
                   {item.name}
                 </h4>
               </div>
-              <span className="text-xs font-black text-corgi mt-0.5 block">€{item.price.toFixed(2)}</span>
+              <span className="text-xs font-black text-corgi mt-0.5 block">{money(item.price)}</span>
               <div className="mt-2">
                 <div className="flex gap-1 flex-wrap min-h-[16px] mb-1 items-center">
                   {item.allergens?.map((alg: string) => (
@@ -344,7 +439,7 @@ export default function OrderTerminalModal({
                     {item.sizes.map((sz: string) => (
                       <button
                         key={sz}
-                        onClick={() => addItem(item, sz)}
+                        onClick={() => requestAddItem(item, sz)}
                         className="flex-1 py-1 bg-gray-50 hover:bg-corgi border border-gray-100 hover:border-corgi hover:text-white rounded-lg text-[10px] font-black text-gray-700 transition-all cursor-pointer active:scale-95 text-center"
                       >
                         {sz}
@@ -353,7 +448,8 @@ export default function OrderTerminalModal({
                   </div>
                 ) : (
                   <button
-                    onClick={() => addItem(item)}
+                    data-testid={`pos-menu-item-${item.id}`}
+                    onClick={() => requestAddItem(item)}
                     className="w-full py-1.5 bg-gray-50 hover:bg-corgi border border-gray-200 hover:border-corgi hover:text-white rounded-xl text-[10px] font-black text-gray-700 transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1"
                   >
                     <Plus size={10} /> Add to Order
@@ -368,7 +464,7 @@ export default function OrderTerminalModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-6" data-testid="pos-terminal-modal">
       <div className="bg-gray-50 w-full max-w-6xl h-[90vh] rounded-3xl overflow-hidden flex flex-row shadow-2xl relative animate-in zoom-in-95 duration-200">
         
         {/* Left Side: Menu */}
@@ -465,16 +561,19 @@ export default function OrderTerminalModal({
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Link customer (Name, Phone)..."
+                    data-testid="pos-guest-search-input"
+                    placeholder="Link customer (Name, Phone, QR)..."
                     value={guestSearchQuery}
-                    onChange={(e) => {
-                      setGuestSearchQuery(e.target.value);
-                      setShowSearchDropdown(true);
-                    }}
+                    onChange={(e) => { void handleGuestSearchChange(e.target.value); }}
                     onFocus={() => setShowSearchDropdown(true)}
                     className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all placeholder:font-medium placeholder:text-gray-400"
                   />
                   <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  {qrLookupError && (
+                    <p className="mt-1.5 text-[10px] font-semibold text-red-500" data-testid="pos-qr-lookup-error">
+                      {qrLookupError}
+                    </p>
+                  )}
                   {guestSearchQuery && (
                     <button 
                       onClick={() => { setGuestSearchQuery(''); setShowSearchDropdown(false); }}
@@ -545,7 +644,7 @@ export default function OrderTerminalModal({
               <div className="bg-gradient-to-r from-amber-50/70 to-orange-50/50 border border-orange-100 rounded-2xl p-3.5 flex items-start justify-between gap-3 shadow-sm hover:shadow-md hover:border-orange-200 transition-all duration-300">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-sm text-gray-900 tracking-tight">{selectedCustomer.name}</span>
+                    <span className="font-bold text-sm text-gray-900 tracking-tight" data-testid="pos-linked-guest-name">{selectedCustomer.name}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-1.5 text-[11px] text-gray-500 font-bold">
                     <span className="flex items-center gap-0.5 text-amber-600">
@@ -689,7 +788,7 @@ export default function OrderTerminalModal({
                       ) : (
                         <div className="flex items-center justify-between text-xs mt-1">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="font-bold text-gray-500">€{item.price.toFixed(2)}</span>
+                            <span className="font-bold text-gray-500">{money(item.price)}</span>
                             {item.comments ? (
                               <span 
                                 onClick={() => setEditingCommentId(item.id)}
@@ -707,7 +806,7 @@ export default function OrderTerminalModal({
                               </button>
                             )}
                           </div>
-                          <span className="font-black text-gray-950">€{(item.price * item.quantity).toFixed(2)}</span>
+                          <span className="font-black text-gray-950">{money(item.price * item.quantity)}</span>
                         </div>
                       )}
                     </div>
@@ -721,19 +820,24 @@ export default function OrderTerminalModal({
           <div className="p-5 bg-white border-t border-gray-200 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
             <div className="flex justify-between items-center mb-2 text-sm">
               <span className="text-gray-500 font-medium">Subtotal</span>
-              <span className="font-bold text-gray-900">€{subtotal.toFixed(2)}</span>
+              <span className="font-bold text-gray-900">{money(subtotal)}</span>
             </div>
             
             {discount > 0 && (
               <div className="flex justify-between items-center mb-2 text-sm text-green-600">
                 <span className="font-medium">Discount ({(discount * 100).toFixed(0)}%)</span>
-                <span className="font-bold">-€{(subtotal * discount).toFixed(2)}</span>
+                <span className="font-bold">-{money(discountAmount)}</span>
               </div>
             )}
+
+            <div className="flex justify-between items-center mb-2 text-sm">
+              <span className="text-gray-500 font-medium">IVA ({(DEFAULT_FOOD_TAX_RATE * 100).toFixed(0)}%)</span>
+              <span className="font-bold text-gray-900">{money(tax)}</span>
+            </div>
             
             <div className="flex justify-between items-center mb-6 pt-3 border-t border-gray-100">
               <span className="text-xl font-black text-gray-900">Total</span>
-              <span className="text-3xl font-black text-gray-900">€{total.toFixed(2)}</span>
+              <span className="text-3xl font-black text-gray-900" data-testid="pos-order-total">{money(total)}</span>
             </div>
 
             {currentStatus === 'dirty' ? (
@@ -769,13 +873,74 @@ export default function OrderTerminalModal({
                   disabled={orderItems.length === 0 && currentStatus !== 'billed'}
                   className="flex-[1.5] py-4 bg-corgi hover:brightness-105 text-white rounded-2xl font-black transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 text-lg disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <CreditCard size={20} /> Pay €{total.toFixed(2)}
+                  <CreditCard size={20} /> Pay {money(total)}
                 </button>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {modifierPickerItem && (
+        <div
+          className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6"
+          data-testid="pos-modifier-picker"
+        >
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5">
+            <h3 className="text-lg font-black text-gray-900">{modifierPickerItem.name}</h3>
+            <p className="text-sm text-gray-500 font-medium">Choose modifiers (optional)</p>
+            {getCategoryModifierGroups(modifierPickerItem.categoryId || activeCategory).map((group) => (
+              <div key={group.id} className="space-y-2">
+                <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider">{group.name}</span>
+                <div className="flex flex-wrap gap-2">
+                  {group.options.map((option) => {
+                    const selected = selectedModifiers[group.id] === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        data-testid={`pos-modifier-option-${option.id}`}
+                        onClick={() => {
+                          setSelectedModifiers((prev) => {
+                            const next = { ...prev };
+                            if (selected) delete next[group.id];
+                            else next[group.id] = option.id;
+                            return next;
+                          });
+                        }}
+                        className={`px-3 py-2 rounded-xl text-[13px] font-bold border cursor-pointer transition-all ${
+                          selected
+                            ? 'border-corgi bg-corgi/10 text-corgi'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        {option.name} {option.price > 0 ? `(+${money(option.price)})` : ''}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setModifierPickerItem(null)}
+                className="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                data-testid="pos-modifier-confirm-btn"
+                onClick={confirmAddWithModifiers}
+                className="flex-1 py-3 rounded-xl font-bold text-white bg-black hover:bg-gray-800 cursor-pointer"
+              >
+                Add to order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

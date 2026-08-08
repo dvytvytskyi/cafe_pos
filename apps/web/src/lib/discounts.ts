@@ -23,29 +23,11 @@ export const DEFAULT_DISCOUNTS: DiscountPreset[] = [
   { id: '15', name: 'Special Event', value: 20 },
 ];
 
-// Helper to get from local storage or return defaults
-export const getDiscountPresets = (): DiscountPreset[] => {
-  if (typeof window === 'undefined') return DEFAULT_DISCOUNTS;
-  
-  const stored = localStorage.getItem('corgi_discounts_v2'); // updated key to ignore old colored ones
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch (e) {
-      console.error("Failed to parse discounts", e);
-    }
-  }
-  
-  // Set defaults initially if missing
-  localStorage.setItem('corgi_discounts_v2', JSON.stringify(DEFAULT_DISCOUNTS));
-  return DEFAULT_DISCOUNTS;
-};
+/** @deprecated Use getDiscountPresetsAsync — presets are stored in PostgreSQL. */
+export const getDiscountPresets = (): DiscountPreset[] => DEFAULT_DISCOUNTS;
 
-export const saveDiscountPresets = (presets: DiscountPreset[]) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('corgi_discounts_v2', JSON.stringify(presets));
-  }
-};
+/** @deprecated Use createDiscountPresetAsync / updateDiscountPresetAsync — no local cache. */
+export const saveDiscountPresets = (_presets: DiscountPreset[]) => {};
 
 // --- Database Connected Async Operations ---
 
@@ -67,5 +49,27 @@ export async function createDiscountPresetAsync(name: string, value: number): Pr
     throw new Error('Failed to create discount preset in PostgreSQL');
   }
   return res.json();
+}
+
+export async function updateDiscountPresetAsync(
+  id: string,
+  patch: { name?: string; value?: number }
+): Promise<DiscountPreset> {
+  const res = await fetch(`/api/discounts/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to update discount preset [${id}] in PostgreSQL`);
+  }
+  return res.json();
+}
+
+export async function deleteDiscountPresetAsync(id: string): Promise<void> {
+  const res = await fetch(`/api/discounts/${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error(`Failed to delete discount preset [${id}] in PostgreSQL`);
+  }
 }
 

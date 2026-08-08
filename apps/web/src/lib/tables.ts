@@ -68,31 +68,11 @@ export const DEFAULT_ROOMS: Room[] = [
   }
 ];
 
-export const getRooms = (): Room[] => {
-  if (typeof window === 'undefined') return DEFAULT_ROOMS;
-  const stored = localStorage.getItem('corgi_rooms');
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (parsed.length > 1) return parsed;
-      // Auto-migrate if the user has only 1 room stored and it's 'Main Hall'
-      if (parsed.length === 1 && parsed[0].name === 'Main Hall') {
-        saveRooms(DEFAULT_ROOMS);
-        return DEFAULT_ROOMS;
-      }
-      return parsed;
-    } catch (e) {
-      console.error("Failed to parse rooms", e);
-    }
-  }
-  return DEFAULT_ROOMS;
-};
+/** @deprecated Use getRoomsAsync — layout is stored in PostgreSQL. */
+export const getRooms = (): Room[] => DEFAULT_ROOMS;
 
-export const saveRooms = (rooms: Room[]) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('corgi_rooms', JSON.stringify(rooms));
-  }
-};
+/** @deprecated Use saveRoomsAsync — layout is stored in PostgreSQL. */
+export const saveRooms = (_rooms: Room[]) => {};
 
 export async function updateTableStatusAsync(
   tableId: string,

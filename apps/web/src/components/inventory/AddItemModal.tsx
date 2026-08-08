@@ -21,9 +21,10 @@ type AddItemModalProps = {
   isOpen: boolean;
   onClose: () => void;
   initialItem?: StockItemData | null;
+  onSaved?: () => void;
 };
 
-export default function AddItemModal({ isOpen, onClose, initialItem }: AddItemModalProps) {
+export default function AddItemModal({ isOpen, onClose, initialItem, onSaved }: AddItemModalProps) {
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
   const [category, setCategory] = useState<'merch' | 'kitchen' | 'bar'>('merch');
@@ -36,6 +37,8 @@ export default function AddItemModal({ isOpen, onClose, initialItem }: AddItemMo
     eixample: '0',
     sagrada: '0'
   });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (initialItem && isOpen) {
@@ -250,15 +253,43 @@ export default function AddItemModal({ isOpen, onClose, initialItem }: AddItemMo
               Cancel
             </button>
             <button 
-              onClick={() => {
-                // Mock save logic
-                onClose();
+              onClick={async () => {
+                if (initialItem) {
+                  onClose();
+                  return;
+                }
+                setSaving(true);
+                setSaveError(null);
+                try {
+                  const { createInventoryItemAsync } = await import('@/lib/inventory');
+                  const prefix =
+                    category === 'kitchen' ? 'KIT' : category === 'bar' ? 'BAR' : 'MER';
+                  const normalizedSku =
+                    sku.trim().toUpperCase().match(/^INV-[A-Z]{3}-\d{4}$/)
+                      ? sku.trim().toUpperCase()
+                      : `INV-${prefix}-${String(Date.now()).slice(-4)}`;
+                  await createInventoryItemAsync({
+                    name: name.trim(),
+                    sku: normalizedSku,
+                    price: 0,
+                    initialStock: Number.parseInt(locations.main, 10) || 0,
+                    minStockLevel: Number.parseInt(minThreshold, 10) || 10,
+                  });
+                  onSaved?.();
+                  onClose();
+                } catch (err) {
+                  setSaveError(err instanceof Error ? err.message : 'Failed to save item');
+                } finally {
+                  setSaving(false);
+                }
               }}
+              disabled={saving}
               className="btn-primary-corgi whitespace-nowrap min-w-[128px]"
             >
-              {initialItem ? 'Save Changes' : 'Save Item'}
+              {initialItem ? 'Save Changes' : saving ? 'Saving…' : 'Save Item'}
             </button>
           </div>
+          {saveError && <p className="px-8 pb-4 text-sm text-red-500">{saveError}</p>}
         </motion.div>
       </div>
     </AnimatePresence>

@@ -1,91 +1,166 @@
-import { GET as invGET, POST as invPOST } from '../app/api/inventory/route';
-import { POST as adjustPOST } from '../app/api/inventory/adjust/route';
-import { inventoryRepository } from '../repositories/inventory.repository';
-import { prisma } from './db';
+/**
+ * Module 34 — Inventory integration (T34.3–T34.5, T34.7 regression)
+ */
+import { prisma, disconnectDb } from './db.ts';
+import { inventoryRepository } from '../repositories/inventory.repository.ts';
+import { cache } from './cache/index.ts';
+import { INVENTORY_ITEMS_CACHE_KEY } from './inventory-cache.ts';
+
+const BASE = 'http://localhost:3000';
+const SKU = 'INV-MER-0001';
+const locationId = 'loc-inv-test';
+const orderId = 'ord-inv-test-id';
+
+async function cleanup() {
+  await prisma.stockTransfer.deleteMany({ where: { item: { sku: SKU } } });
+  await prisma.inventoryTransfer.deleteMany({ where: { item: { sku: SKU } } });
+  await prisma.merchInventory.deleteMany({ where: { sku: SKU } });
+  await prisma.orderItem.deleteMany({ where: { orderId } });
+  await prisma.order.deleteMany({ where: { id: orderId } });
+  await prisma.location.delete({ where: { id: locationId } }).catch(() => {});
+}
 
 async function main() {
-  console.log('--- Starting Merch Inventory & Transfers Integration Test ---');
-
-  const locationId = 'loc-inv-test';
-  const sku = 'CRG-TEE';
-  const orderId = 'ord-inv-test-id';
+  console.log('--- Module 34 Inventory Integration Test ---');
 
   try {
-    // 0. Cleanup past items and orders
-    console.log('Cleaning up past test records from DB...');
-    await prisma.inventoryTransfer.deleteMany({ where: { item: { sku } } });
-    await prisma.merchInventory.deleteMany({ where: { sku } });
-    await prisma.orderItem.deleteMany({ where: { orderId } });
-    await prisma.order.deleteMany({ where: { id: orderId } });
-    await prisma.location.delete({ where: { id: locationId } }).catch(() => {});
+    await cleanup();
 
     await prisma.location.create({
-      data: { id: locationId, name: 'Inventory Shop', address: 'Warehouse Rd 10' }
+      data: { id: locationId, name: 'Inventory Shop', address: 'Warehouse Rd 10' },
     });
 
-    // 1. Create a Merch item via POST /api/inventory
-    console.log('Creating Merch Item: Corgi T-Shirt (initial stock: 10)...');
-    const createReq = new Request('http://localhost/api/inventory', {
+    console.log('Creating Merch Item (initial stock: 10)...');
+    const createRes = await fetch(`${BASE}/api/inventory`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: 'Corgi T-Shirt',
-        sku,
-        price: 25.00,
-        initialStock: 10
-      })
+        sku: SKU,
+        price: 25.0,
+        initialStock: 10,
+      }),
     });
-
-    const createRes = await invPOST(createReq);
     const createdItem = await createRes.json();
 
-    console.log('Created Item Response:', createdItem);
     if (createRes.status !== 201 || createdItem.quantity !== 10) {
-      console.error('❌ ERROR: Failed to create inventory item.');
+      console.error('❌ ERROR: Failed to create inventory item.', createRes.status, createdItem);
       process.exit(1);
     }
-    console.log('✅ Success: Merch item created with initial stock level.');
-
+    console.log('✅ Merch item created with initial stock level.');
     const itemId = createdItem.id;
 
-    // 2. Adjust stock: Restock +5 items (check_in)
-    console.log('Restocking +5 items (check_in)...');
-    const restockReq = new Request('http://localhost/api/inventory/adjust', {
+    const badSkuRes = await fetch(`${BASE}/api/inventory`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, type: 'check_in', quantity: 5, reason: 'Weekly shipment' })
+      body: JSON.stringify({ name: 'Bad SKU', sku: 'BAD', price: 1 }),
     });
+    if (badSkuRes.status !== 400) {
+      console.error('❌ invalid SKU expected 400, got', badSkuRes.status);
+      process.exit(1);
+    }
+    console.log('✅ invalid SKU → 400');
 
-    const restockRes = await adjustPOST(restockReq);
+    const restockRes = await fetch(`${BASE}/api/inventory/adjust`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, type: 'check_in', quantity: 5, reason: 'Weekly shipment' }),
+    });
     const restockItem = await restockRes.json();
-
-    console.log('Restock Response Quantity:', restockItem.quantity);
     if (restockRes.status !== 200 || restockItem.quantity !== 15) {
-      console.error('❌ ERROR: Check-in stock adjustment failed.');
+      console.error('❌ Check-in failed.', restockRes.status, restockItem);
       process.exit(1);
     }
-    console.log('✅ Success: Stock level increased successfully.');
+    console.log('✅ Stock level increased successfully.');
 
-    // 3. Adjust stock: Write-off -2 items (check_out)
-    console.log('Writing-off -2 items (check_out)...');
-    const checkoutReq = new Request('http://localhost/api/inventory/adjust', {
+    const zeroAdjust = await fetch(`${BASE}/api/inventory/adjust`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, type: 'check_out', quantity: 2, reason: 'Damaged item' })
+      body: JSON.stringify({ itemId, type: 'check_out', quantity: 0 }),
     });
-
-    const checkoutRes = await adjustPOST(checkoutReq);
-    const checkoutItem = await checkoutRes.json();
-
-    console.log('Checkout Response Quantity:', checkoutItem.quantity);
-    if (checkoutRes.status !== 200 || checkoutItem.quantity !== 13) {
-      console.error('❌ ERROR: Check-out stock adjustment failed.');
+    if (zeroAdjust.status !== 400) {
+      console.error('❌ zero adjust expected 400, got', zeroAdjust.status);
       process.exit(1);
     }
-    console.log('✅ Success: Stock level decreased successfully.');
+    console.log('✅ zero quantity adjust → 400');
 
-    // 4. Simulate complete sales order containing 3 Corgi T-Shirts
-    console.log('Simulating completed order containing 3 Corgi T-Shirts...');
+    const checkoutRes = await fetch(`${BASE}/api/inventory/adjust`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, type: 'check_out', quantity: 2, reason: 'Damaged item' }),
+    });
+    const checkoutItem = await checkoutRes.json();
+    if (checkoutRes.status !== 200 || checkoutItem.quantity !== 13) {
+      console.error('❌ Check-out failed.', checkoutRes.status, checkoutItem);
+      process.exit(1);
+    }
+    console.log('✅ Stock level decreased successfully.');
+
+    const overTransfer = await fetch(`${BASE}/api/inventory/transfers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, quantity: 999, targetLocationId: 'sagrada' }),
+    });
+    const overBody = await overTransfer.json();
+    if (overTransfer.status !== 400 || overBody.code !== 'INSUFFICIENT_STOCK') {
+      console.error('❌ T34.3 expected INSUFFICIENT_STOCK 400, got', overTransfer.status, overBody);
+      process.exit(1);
+    }
+    console.log('✅ T34.3 INSUFFICIENT_STOCK on transfer → 400');
+
+    const transferRes = await fetch(`${BASE}/api/inventory/transfers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, quantity: 3, targetLocationId: 'eixample' }),
+    });
+    const transfer = await transferRes.json();
+    if (transferRes.status !== 201 || transfer.status !== 'in_transit') {
+      console.error('❌ transfer create failed', transferRes.status, transfer);
+      process.exit(1);
+    }
+
+    const afterDebit = await prisma.merchInventory.findUnique({ where: { id: itemId } });
+    if (!afterDebit || afterDebit.quantity !== 10) {
+      console.error('❌ T34.4 debit failed, quantity=', afterDebit?.quantity);
+      process.exit(1);
+    }
+
+    const completeRes = await fetch(`${BASE}/api/inventory/transfers/${transfer.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'completed' }),
+    });
+    const completed = await completeRes.json();
+    if (completeRes.status !== 200 || completed.status !== 'completed') {
+      console.error('❌ T34.4 complete failed', completeRes.status, completed);
+      process.exit(1);
+    }
+
+    const logs = await prisma.inventoryTransfer.findMany({
+      where: { itemId },
+      orderBy: { createdAt: 'asc' },
+    });
+    const outLog = logs.find((l) => l.type === 'check_out' && l.quantity === 3);
+    const inLog = logs.find((l) => l.type === 'check_in' && l.reason?.includes('received'));
+    if (!outLog || !inLog) {
+      console.error('❌ T34.4 transfer logs missing', logs);
+      process.exit(1);
+    }
+    console.log('✅ T34.4 COMPLETED transfer atomic debit/credit');
+
+    await cache.set(INVENTORY_ITEMS_CACHE_KEY, [{ id: 'stale', sku: 'STALE' }]);
+    await fetch(`${BASE}/api/inventory/adjust`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, type: 'check_in', quantity: 1 }),
+    });
+    const cachedAfter = await cache.get(INVENTORY_ITEMS_CACHE_KEY);
+    if (cachedAfter !== null) {
+      console.error('❌ T34.5 cache should be invalidated, got', cachedAfter);
+      process.exit(1);
+    }
+    console.log('✅ T34.5 Redis inventory cache invalidated');
+
     await prisma.order.create({
       data: {
         id: orderId,
@@ -93,79 +168,64 @@ async function main() {
         locationId,
         status: 'completed',
         paid: true,
-        total: 75.00,
+        total: 75.0,
         source: 'waiter',
         items: {
           create: [
             {
               id: 'ord-item-inv-test',
-              name: 'Corgi T-Shirt', // Matches name of inventory item
-              price: 25.00,
-              quantity: 3
-            }
-          ]
-        }
-      }
+              name: 'Corgi T-Shirt',
+              price: 25.0,
+              quantity: 3,
+            },
+          ],
+        },
+      },
     });
 
-    // Trigger automated stock deduction hook
-    console.log('Triggering automated stock deduction hook for order...');
     await inventoryRepository.deductStockFromOrder(orderId);
 
-    // Verify database stock level is 10 and transfer log of type 'sale' exists
     const finalItem = await prisma.merchInventory.findUnique({
       where: { id: itemId },
-      include: { transfers: true }
+      include: { transfers: true },
     });
 
-    console.log('Final Item Stock Quantity:', finalItem?.quantity);
-    console.log('Final Item Transfers logs count:', finalItem?.transfers.length);
-
-    if (!finalItem || finalItem.quantity !== 10) {
-      console.error('❌ ERROR: Automated stock deduction failed.');
+    if (!finalItem || finalItem.quantity !== 8) {
+      console.error('❌ Automated stock deduction failed.', finalItem?.quantity);
       process.exit(1);
     }
 
-    const saleTransfer = finalItem.transfers.find(t => t.type === 'sale');
-    if (!saleTransfer || saleTransfer.quantity !== 3 || !saleTransfer.reason?.includes('ORD-INV-999')) {
-      console.error('❌ ERROR: Sale transfer log not found or details mismatch.', saleTransfer);
+    const saleTransfer = finalItem.transfers.find((t) => t.type === 'sale');
+    if (!saleTransfer || saleTransfer.quantity !== 3) {
+      console.error('❌ Sale transfer log mismatch.', saleTransfer);
       process.exit(1);
     }
-    console.log('✅ Success: Automated stock deduction hook executed correctly, recording sale logs.');
+    console.log('✅ Automated stock deduction hook executed correctly.');
 
-    // 5. GET inventory list
-    console.log('Fetching inventory list via GET /api/inventory...');
-    const listRes = await invGET();
+    const listRes = await fetch(`${BASE}/api/inventory`);
     const list = await listRes.json();
-
-    console.log('Inventory list size:', list.length);
-    if (listRes.status !== 200 || list.length !== 1 || list[0].id !== itemId) {
-      console.error('❌ ERROR: GET inventory list failed.');
+    if (listRes.status !== 200 || !list.some((i: { id: string }) => i.id === itemId)) {
+      console.error('❌ GET inventory list failed.');
       process.exit(1);
     }
-    console.log('✅ Success: GET inventory list fetched and verified.');
+    console.log('✅ GET inventory list fetched and verified.');
 
-    // 6. Cleanup
-    console.log('Cleaning up mock database records...');
-    await prisma.inventoryTransfer.deleteMany({ where: { itemId } });
-    await prisma.merchInventory.delete({ where: { id: itemId } });
-    await prisma.orderItem.deleteMany({ where: { orderId } });
-    await prisma.order.delete({ where: { id: orderId } });
-    await prisma.location.delete({ where: { id: locationId } });
+    const transfersList = await fetch(`${BASE}/api/inventory/transfers`);
+    const transfersBody = await transfersList.json();
+    if (transfersList.status !== 200 || !Array.isArray(transfersBody)) {
+      console.error('❌ GET transfers failed');
+      process.exit(1);
+    }
+    console.log('✅ GET /api/inventory/transfers ok');
 
-    console.log('--- Merch Inventory & Transfers Integration Test Passed Successfully ---');
-    process.exit(0);
-
+    await cleanup();
+    console.log('--- Module 34 Inventory Integration Test Passed ---');
   } catch (error) {
     console.error('Unexpected error during Inventory integration test:', error);
-    try {
-      await prisma.inventoryTransfer.deleteMany({ where: { item: { sku } } }).catch(() => {});
-      await prisma.merchInventory.deleteMany({ where: { sku } }).catch(() => {});
-      await prisma.orderItem.deleteMany({ where: { orderId } }).catch(() => {});
-      await prisma.order.deleteMany({ where: { id: orderId } }).catch(() => {});
-      await prisma.location.delete({ where: { id: locationId } }).catch(() => {});
-    } catch (e) {}
+    await cleanup().catch(() => {});
     process.exit(1);
+  } finally {
+    await disconnectDb();
   }
 }
 

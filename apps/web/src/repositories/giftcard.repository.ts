@@ -1,4 +1,15 @@
 import { prisma } from '../lib/db';
+import {
+  defaultExpiryDate,
+  formatGiftCardCode,
+  GIFT_CODE_MAX_RETRIES,
+  GiftCardValidationError,
+  isValidGiftCardCode,
+  validateExpiryDate,
+  validateInitialBalance,
+} from '../lib/gift-card-validation';
+
+type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
 export class GiftCardRepository {
   async getGiftCards() {
@@ -9,47 +20,113 @@ export class GiftCardRepository {
   }
 
   async findCardByCode(code: string) {
+    const normalized = code.trim().toUpperCase();
+    if (!isValidGiftCardCode(normalized)) {
+      return null;
+    }
     return prisma.giftCard.findUnique({
-      where: { code: code.trim().toUpperCase() },
+      where: { code: normalized },
       include: { customer: true },
     });
   }
 
-  async createGiftCard(initialBalance: number, customerId?: string) {
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000).toString();
-    const code = `CORGI-${initialBalance}-${randomSuffix}`;
-    const expiryDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year expiry
+  private async generateUniqueCode(tx: TxClient): Promise<string> {
+    for (let attempt = 0; attempt < GIFT_CODE_MAX_RETRIES; attempt++) {
+      const code = formatGiftCardCode();
+      const existing = await tx.giftCard.findUnique({ where: { code } });
+      if (!existing) return code;
+    }
+    throw new GiftCardValidationError('Failed to generate unique gift card code');
+  }
 
-    return prisma.giftCard.create({
-      data: {
-        code,
-        initialBalance,
-        balance: initialBalance,
-        customerId: customerId || null,
-        status: 'active',
-        expiryDate,
-      },
+  async createGiftCard(initialBalance: number, customerId?: string) {
+    const balance = validateInitialBalance(initialBalance);
+    const expiryDate = defaultExpiryDate();
+
+    return prisma.$transaction(async (tx) => {
+      const code = await this.generateUniqueCode(tx);
+      return tx.giftCard.create({
+        data: {
+          code,
+          initialBalance: balance,
+          balance,
+          customerId: customerId || null,
+          status: 'active',
+          expiryDate,
+        },
+        include: { customer: true },
+      });
+    });
+  }
+
+  async createGiftCardsBatch(count: number, initialBalance: number, customerId?: string) {
+    const balance = validateInitialBalance(initialBalance);
+    const expiryDate = defaultExpiryDate();
+
+    return prisma.$transaction(async (tx) => {
+      const cards = [];
+      for (let i = 0; i < count; i++) {
+        const code = await this.generateUniqueCode(tx);
+        const card = await tx.giftCard.create({
+          data: {
+            code,
+            initialBalance: balance,
+            balance,
+            customerId: customerId || null,
+            status: 'active',
+            expiryDate,
+          },
+          include: { customer: true },
+        });
+        cards.push(card);
+      }
+      return cards;
+    });
+  }
+
+  async setStatus(id: string, status: 'active' | 'disabled') {
+    const existing = await prisma.giftCard.findUnique({ where: { id } });
+    if (!existing) {
+      throw new GiftCardValidationError('Gift Card not found');
+    }
+    if (existing.status === 'redeemed' || existing.status === 'expired') {
+      throw new GiftCardValidationError(`Cannot change status of ${existing.status} card`);
+    }
+    return prisma.giftCard.update({
+      where: { id },
+      data: { status },
       include: { customer: true },
     });
   }
 
   async redeemCard(code: string, amount: number) {
-    return prisma.$transaction(async (tx) => {
-      const card = await tx.giftCard.findUnique({
-        where: { code: code.trim().toUpperCase() },
-      });
+    const normalized = code.trim().toUpperCase();
+    if (!isValidGiftCardCode(normalized)) {
+      throw new Error('Gift Card not found.');
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error('Invalid redemption amount.');
+    }
 
+    return prisma.$transaction(async (tx) => {
+      const locked = await tx.$queryRaw<Array<{ id: string; balance: number; status: string; expiryDate: Date }>>`
+        SELECT id, balance, status, "expiryDate"
+        FROM "GiftCard"
+        WHERE code = ${normalized}
+        FOR UPDATE
+      `;
+
+      const card = locked[0];
       if (!card) throw new Error('Gift Card not found.');
 
       if (card.status !== 'active') {
         throw new Error(`Gift Card is ${card.status}.`);
       }
 
-      if (new Date(card.expiryDate).getTime() < Date.now()) {
-        await tx.giftCard.update({
-          where: { id: card.id },
-          data: { status: 'expired' },
-        });
+      try {
+        validateExpiryDate(new Date(card.expiryDate));
+      } catch {
+        await tx.giftCard.update({ where: { id: card.id }, data: { status: 'expired' } });
         throw new Error('Gift Card has expired.');
       }
 
@@ -62,10 +139,7 @@ export class GiftCardRepository {
 
       return tx.giftCard.update({
         where: { id: card.id },
-        data: {
-          balance: newBalance,
-          status,
-        },
+        data: { balance: newBalance, status },
         include: { customer: true },
       });
     });

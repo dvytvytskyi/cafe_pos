@@ -4,11 +4,14 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Calendar, Filter, Eye, AlertCircle, ShoppingBag, Bike, Store, Tablet, ChevronDown, X, RefreshCw, BarChart3, TrendingUp, Coins, DollarSign, Percent, ReceiptText, CheckCircle2, Split, Printer } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Order, getOrders, saveOrders } from '@/lib/orders';
+import ClientDateTime from '@/components/ui/ClientDateTime';
+import { Order, getOrderHistoryAsync, updateOrderAsync } from '@/lib/orders';
 import OrderDetailsModal from '@/components/operations/OrderDetailsModal';
 
 function HistoryPageContent() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'cancelled' | 'active'>('all');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'dine_in' | 'takeaway' | 'glovo' | 'ubereats'>('all');
@@ -16,14 +19,41 @@ function HistoryPageContent() {
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
-  // Load orders on mount
   useEffect(() => {
-    setOrders(getOrders());
+    setIsClient(true);
   }, []);
 
+  const loadHistory = async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 90);
+      const data = await getOrderHistoryAsync({
+        source: sourceFilter === 'all' ? undefined : sourceFilter,
+        query: searchQuery.trim() || undefined,
+        startDate: start.toISOString().slice(0, 10),
+        endDate: end.toISOString().slice(0, 10),
+        limit: 100,
+      });
+      setOrders(data.orders);
+    } catch (e) {
+      console.error('Failed to load order history:', e);
+      setLoadError(e instanceof Error ? e.message : 'Failed to load history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadHistory();
+  }, [sourceFilter, searchQuery]);
+
   const refreshOrders = () => {
-    setOrders(getOrders());
+    loadHistory();
   };
 
   // Stats Calculations based on filtered list (or all list)
@@ -53,9 +83,12 @@ function HistoryPageContent() {
 
   // Filter orders
   const filteredOrders = orders.filter(order => {
-    // Search query
-    const matchSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        order.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+    // Search handled server-side; keep client match for instant feedback on status-only rows
+    const matchSearch =
+      !searchQuery.trim() ||
+      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (order.orderNumber ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customerName.toLowerCase().includes(searchQuery.toLowerCase());
     
     // Status filter
     let matchStatus = true;
@@ -63,8 +96,8 @@ function HistoryPageContent() {
     else if (statusFilter === 'cancelled') matchStatus = order.status === 'cancelled';
     else if (statusFilter === 'active') matchStatus = !order.paid && order.status !== 'cancelled' && order.status !== 'completed';
 
-    // Source filter
-    const matchSource = sourceFilter === 'all' || order.source === sourceFilter;
+    // Source filter handled server-side via sourceFilter reload
+    const matchSource = true;
 
     return matchSearch && matchStatus && matchSource;
   }).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()); // newest first
@@ -79,6 +112,21 @@ function HistoryPageContent() {
   };
 
   const getStatusBadge = (order: Order) => {
+    const refunded = order.refundedAmount ?? 0;
+    if (refunded >= order.total - 0.01) {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200 flex items-center gap-1 w-fit">
+          Refunded
+        </span>
+      );
+    }
+    if (refunded > 0) {
+      return (
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 w-fit">
+          Partial Refund
+        </span>
+      );
+    }
     if (order.status === 'cancelled') {
       return (
         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100 flex items-center gap-1 w-fit">
@@ -103,13 +151,21 @@ function HistoryPageContent() {
   const handleUpdateOrder = (updatedOrder: Order) => {
     const updated = orders.map(o => o.id === updatedOrder.id ? updatedOrder : o);
     setOrders(updated);
-    saveOrders(updated);
     setSelectedOrder(updatedOrder);
+  };
+
+  const handlePaymentComplete = (updated: Order) => {
+    const updatedList = orders.map(o => o.id === updated.id ? updated : o);
+    setOrders(updatedList);
+    setSelectedOrder(updated.paid ? null : updated);
   };
 
   return (
     <DashboardLayout>
-      <div className="bg-white rounded-3xl p-6 md:p-8 flex-1 flex flex-col h-full overflow-hidden">
+      <div
+        data-testid="history-page"
+        className="bg-white rounded-3xl p-6 md:p-8 flex-1 flex flex-col h-full overflow-hidden"
+      >
         
         {/* CRM-Style Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-6 shrink-0">
@@ -118,6 +174,14 @@ function HistoryPageContent() {
             <p className="text-sm font-medium text-gray-500 mt-1.5 leading-relaxed">Review, inspect, print and manage past cafe transactions.</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto shrink-0 mt-1 sm:mt-0">
+            <button
+              onClick={refreshOrders}
+              disabled={loading}
+              className="w-full sm:w-auto justify-center px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 bg-white text-gray-700 border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+            >
+              <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+              <span>Refresh</span>
+            </button>
             <button 
               onClick={() => setShowAnalytics(!showAnalytics)}
               className={`w-full sm:w-auto justify-center px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${
@@ -132,8 +196,15 @@ function HistoryPageContent() {
           </div>
         </div>
 
+        {loadError && (
+          <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-medium flex items-center gap-2">
+            <AlertCircle size={16} />
+            {loadError}
+          </div>
+        )}
+
         {/* Analytics Section */}
-        {showAnalytics && (
+        {isClient && showAnalytics && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 shrink-0 animate-in fade-in duration-300">
             {/* Sales Volume */}
             <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex items-center gap-3">
@@ -181,7 +252,7 @@ function HistoryPageContent() {
           </div>
         )}
 
-        {showAnalytics && (
+        {isClient && showAnalytics && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 shrink-0 animate-in fade-in duration-300">
             {/* Channels Breakdown */}
             <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 space-y-3">
@@ -244,9 +315,10 @@ function HistoryPageContent() {
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
+              data-testid="history-search"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by ID or customer name..."
+              placeholder="Search by receipt #, ID or customer..."
               className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-bold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/20 transition-all placeholder:text-gray-400"
             />
           </div>
@@ -274,6 +346,7 @@ function HistoryPageContent() {
               {(['all', 'dine_in', 'takeaway', 'glovo', 'ubereats'] as const).map(source => (
                 <button
                   key={source}
+                  data-testid={`history-source-${source}`}
                   onClick={() => setSourceFilter(source)}
                   className={`flex-1 text-center whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
                     sourceFilter === source 
@@ -289,6 +362,7 @@ function HistoryPageContent() {
         </div>
 
         {/* Order Archive Table Container */}
+        {isClient ? (
         <div className="flex-1 border border-gray-100 rounded-2xl overflow-hidden bg-gray-50/20 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto">
             {filteredOrders.length === 0 ? (
@@ -313,7 +387,8 @@ function HistoryPageContent() {
                 <tbody className="divide-y divide-gray-50 bg-white">
                   {filteredOrders.map(order => (
                     <React.Fragment key={order.id}>
-                      <tr 
+                      <tr
+                        data-testid={`history-row-${order.orderNumber ?? order.id}`}
                         className="hover:bg-gray-50 transition-colors cursor-pointer group"
                         onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
                       >
@@ -323,13 +398,25 @@ function HistoryPageContent() {
                               size={16} 
                               className={`text-gray-400 transition-transform duration-200 ${expandedOrderId === order.id ? 'rotate-180' : '-rotate-90'}`}
                             />
-                            {order.id}
+                            {order.orderNumber ?? order.id}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-xs text-gray-500 font-semibold">
-                          {order.time.toLocaleDateString()} {order.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <ClientDateTime date={order.time} />
                         </td>
-                        <td className="px-6 py-4 text-xs font-bold text-gray-900">{order.customerName}</td>
+                        <td className="px-6 py-4 text-xs font-bold text-gray-900">
+                          {order.customerName}
+                          {order.waiterName && (
+                            <span className="block text-[10px] text-gray-400 font-semibold mt-0.5">
+                              Waiter: {order.waiterName}
+                            </span>
+                          )}
+                          {order.tableNumber && (
+                            <span className="block text-[10px] text-gray-400 font-semibold">
+                              Table {order.tableNumber}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 text-xs font-bold text-gray-700">
                           <div className="flex items-center gap-2 capitalize">
                             {order.source.replace('_', ' ')}
@@ -480,6 +567,11 @@ function HistoryPageContent() {
             )}
           </div>
         </div>
+        ) : (
+          <div className="flex-1 border border-gray-100 rounded-2xl overflow-hidden bg-gray-50/20 flex items-center justify-center text-gray-400 text-sm font-medium">
+            Loading order archive…
+          </div>
+        )}
       </div>
 
       {/* Details slide over / modal */}
@@ -491,12 +583,19 @@ function HistoryPageContent() {
           onUpdateStatus={(id, status) => {
             const updated = orders.map(o => o.id === id ? { ...o, status: status as Order['status'] } : o);
             setOrders(updated);
-            saveOrders(updated);
             if (selectedOrder.id === id) {
               setSelectedOrder({ ...selectedOrder, status: status as Order['status'] });
             }
           }}
-          onUpdateOrder={handleUpdateOrder}
+          onUpdateOrder={async (updatedOrder) => {
+            try {
+              const updated = await updateOrderAsync(updatedOrder.id, updatedOrder);
+              handleUpdateOrder(updated);
+            } catch (err) {
+              console.error('Failed to update order:', err);
+            }
+          }}
+          onPaymentComplete={handlePaymentComplete}
         />
       )}
 
@@ -535,8 +634,7 @@ function HistoryPageContent() {
                   </div>
                   
                   <div className="flex justify-between border-b border-dashed border-gray-300 pb-2 mb-2">
-                    <span>Date: {receiptOrder.time.toLocaleDateString()}</span>
-                    <span>{receiptOrder.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>Date: <ClientDateTime date={receiptOrder.time} /></span>
                   </div>
                   <div className="flex justify-between border-b border-dashed border-gray-300 pb-2 mb-4">
                     <span>Order: {receiptOrder.id}</span>

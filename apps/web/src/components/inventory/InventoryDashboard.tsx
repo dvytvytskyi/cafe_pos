@@ -12,9 +12,12 @@ export default function InventoryDashboard() {
   const [activeTab, setActiveTab] = useState<'stock' | 'logistics'>('stock');
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [isNewTransferModalOpen, setIsNewTransferModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const bumpRefresh = () => setRefreshKey((k) => k + 1);
 
   return (
-    <div className="bg-white rounded-3xl p-5 md:px-8 md:pb-8 pt-6 md:pt-6 shadow-sm flex-1 overflow-hidden flex flex-col">
+    <div className="bg-white rounded-3xl p-5 md:px-8 md:pb-8 pt-6 md:pt-6 shadow-sm flex-1 overflow-hidden flex flex-col" data-testid="inventory-dashboard">
       <div className="flex flex-wrap lg:flex-nowrap items-start lg:items-center justify-between mb-5 gap-4 flex-shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Inventory & Logistics</h2>
@@ -25,6 +28,7 @@ export default function InventoryDashboard() {
           <div className="flex items-center gap-0.5 h-9 bg-gray-50/80 p-1 rounded-xl border border-gray-200/60 shrink-0">
             <button 
               onClick={() => setActiveTab('stock')} 
+              data-testid="inventory-tab-stock"
               className={`cursor-pointer whitespace-nowrap h-7 flex items-center justify-center px-4 text-[13px] font-semibold rounded-lg transition-all duration-200 gap-1.5 ${activeTab === 'stock' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'}`}
             >
               <PackageSearch size={16} />
@@ -32,6 +36,7 @@ export default function InventoryDashboard() {
             </button>
             <button 
               onClick={() => setActiveTab('logistics')} 
+              data-testid="inventory-tab-logistics"
               className={`cursor-pointer whitespace-nowrap h-7 flex items-center justify-center px-4 text-[13px] font-semibold rounded-lg transition-all duration-200 gap-1.5 ${activeTab === 'logistics' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'}`}
             >
               <ArrowRightLeft size={16} />
@@ -52,7 +57,7 @@ export default function InventoryDashboard() {
               transition={{ duration: 0.2 }}
               className="flex-1 overflow-hidden flex flex-col"
             >
-              <StockTable onAdd={() => setIsAddItemModalOpen(true)} />
+              <StockTable onAdd={() => setIsAddItemModalOpen(true)} refreshKey={refreshKey} />
             </motion.div>
           ) : (
             <motion.div
@@ -63,7 +68,7 @@ export default function InventoryDashboard() {
               transition={{ duration: 0.2 }}
               className="flex-1 overflow-hidden flex flex-col"
             >
-              <LogisticsTransfers onAdd={() => setIsNewTransferModalOpen(true)} />
+              <LogisticsTransfers onAdd={() => setIsNewTransferModalOpen(true)} refreshKey={refreshKey} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -71,11 +76,13 @@ export default function InventoryDashboard() {
 
       <AddItemModal 
         isOpen={isAddItemModalOpen} 
-        onClose={() => setIsAddItemModalOpen(false)} 
+        onClose={() => setIsAddItemModalOpen(false)}
+        onSaved={bumpRefresh}
       />
       <NewTransferModal
         isOpen={isNewTransferModalOpen}
         onClose={() => setIsNewTransferModalOpen(false)}
+        onCreated={bumpRefresh}
       />
     </div>
   );

@@ -3,11 +3,30 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, ChevronDown, ChevronUp, MoreHorizontal, Edit2, Trash2, Image as ImageIcon, GripVertical, Coffee, Croissant, Sandwich, CupSoda, Utensils, LayoutGrid, List, Eye, EyeOff, X, Check, Archive, Star, Sliders, Ruler, Tags } from 'lucide-react';
 import { Reorder, motion, AnimatePresence } from 'framer-motion';
-import DishModal from './DishModal';
+import DishModal, { type DishEditData } from './DishModal';
 import ModifiersManagerModal from './ModifiersManagerModal';
-import { getMenuCategoriesAsync, createCategoryAsync } from '@/lib/menu';
+import { getMenuCategoriesAsync, createCategoryAsync, updateCategoryAsync, reorderCategoriesAsync, updateMenuItemAsync, archiveMenuItemAsync, filterDishesBySearch } from '@/lib/menu';
+import {
+  getModifierGroupsAsync,
+  createModifierGroupAsync,
+  updateModifierGroupAsync,
+  archiveModifierGroupAsync,
+  type ModifierGroup,
+} from '@/lib/modifiers';
 
-type Category = { id: string; name: string; count: number; icon: React.ElementType };
+const IMG_URL = 'https://images.pexels.com/photos/37417630/pexels-photo-37417630.jpeg';
+
+const ALLERGEN_ICONS: Record<string, string> = {
+  Dairy: '🥛',
+  Nuts: '🥜',
+  Gluten: '🌾',
+  Soy: '🫘',
+  Eggs: '🥚',
+  Fish: '🐟',
+  Shellfish: '🦐',
+};
+
+type Category = { id: string; name: string; count: number; icon: React.ElementType; sortOrder?: number };
 type Dish = {
   id: string;
   categoryId: string;
@@ -15,6 +34,7 @@ type Dish = {
   description: string;
   image: string;
   basePrice: number;
+  allergens: string[];
   isActive?: boolean;
   isRecommended?: boolean;
   isArchived?: boolean;
@@ -31,6 +51,7 @@ export default function MenusView() {
   const [isDishModalOpen, setIsDishModalOpen] = useState(false);
   const [showModifiersModal, setShowModifiersModal] = useState(false);
   const [dishModalMode, setDishModalMode] = useState<'create' | 'edit'>('create');
+  const [editingDishId, setEditingDishId] = useState<string | null>(null);
 
   // Quick Manage State
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,51 +70,88 @@ export default function MenusView() {
   const [hideToggleConfirm, setHideToggleConfirm] = useState(false);
   const [dontShowAgainCheck, setDontShowAgainCheck] = useState(false);
 
+  const loadMenu = async () => {
+    try {
+      const dbCategories = await getMenuCategoriesAsync(true);
+      if (dbCategories && dbCategories.length > 0) {
+        const sorted = [...dbCategories].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        setCategories(sorted.map(c => ({
+          id: c.id,
+          name: c.name,
+          count: c.items.filter(i => !i.isArchived).length,
+          sortOrder: c.sortOrder,
+          icon: Coffee
+        })));
+        setActiveCategoryId((prev) => prev || sorted[0].id);
+
+        setDishes(sorted.flatMap(c => c.items.map(item => ({
+          id: item.id,
+          categoryId: item.categoryId,
+          name: item.name,
+          description: item.description || '',
+          image: IMG_URL,
+          basePrice: item.price,
+          allergens: item.allergens ?? [],
+          isArchived: item.isArchived,
+          isActive: !item.isArchived
+        }))));
+      }
+    } catch (error) {
+      console.error('Failed to load menu layout from PostgreSQL:', error);
+    }
+  };
+
+  const loadModifierGroups = async () => {
+    try {
+      const groups = await getModifierGroupsAsync(true);
+      setGlobalModifiers(
+        groups.flatMap((g) =>
+          g.options.length > 0
+            ? g.options.map((o) => ({
+                id: o.id,
+                groupId: g.id,
+                optionId: o.id,
+                name: o.name,
+                price: o.price.toFixed(2),
+                minQty: String(g.minQty),
+                maxQty: String(g.maxQty),
+                isActive: !g.isArchived && !o.isArchived,
+              }))
+            : [
+                {
+                  id: g.id,
+                  groupId: g.id,
+                  optionId: '',
+                  name: g.name,
+                  price: '0.00',
+                  minQty: String(g.minQty),
+                  maxQty: String(g.maxQty),
+                  isActive: !g.isArchived,
+                },
+              ]
+        )
+      );
+    } catch (error) {
+      console.error('Failed to load modifier groups:', error);
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hidden = localStorage.getItem('corgi_hide_menu_toggle_confirm') === 'true';
       setHideToggleConfirm(hidden);
     }
-
-    async function loadMenu() {
-      try {
-        const dbCategories = await getMenuCategoriesAsync(true);
-        if (dbCategories && dbCategories.length > 0) {
-          setCategories(dbCategories.map(c => ({
-            id: c.id,
-            name: c.name,
-            count: c.items.length,
-            icon: Coffee
-          })));
-          setActiveCategoryId(dbCategories[0].id);
-
-          setDishes(dbCategories.flatMap(c => c.items.map(item => ({
-            id: item.id,
-            categoryId: item.categoryId,
-            name: item.name,
-            description: item.description || '',
-            image: imgUrl,
-            basePrice: item.price,
-            isArchived: item.isArchived,
-            isActive: !item.isArchived
-          }))));
-        }
-      } catch (error) {
-        console.error('Failed to load menu layout from PostgreSQL:', error);
-      }
-    }
-    loadMenu();
+    void loadMenu();
+    void loadModifierGroups();
   }, []);
   
   const [newAllergenName, setNewAllergenName] = useState('');
   const [isAddingAllergen, setIsAddingAllergen] = useState(false);
   const [highlightedAllergenId, setHighlightedAllergenId] = useState<string | null>(null);
   
-  const [globalModifiers, setGlobalModifiers] = useState([
-    { id: '1', name: 'Extra Shot', price: '1.50', minQty: '0', maxQty: '1', isActive: true },
-    { id: '2', name: 'Almond Milk', price: '0.80', minQty: '0', maxQty: '1', isActive: true },
-    { id: '3', name: 'Oat Milk', price: '0.80', minQty: '0', maxQty: '1', isActive: true }
-  ]);
+  const [globalModifiers, setGlobalModifiers] = useState<
+    Array<{ id: string; groupId: string; optionId: string; name: string; price: string; minQty: string; maxQty: string; isActive: boolean }>
+  >([]);
   
   const [globalAllergens, setGlobalAllergens] = useState([
     { id: '1', name: 'Dairy', isActive: true },
@@ -101,16 +159,90 @@ export default function MenusView() {
     { id: '3', name: 'Gluten', isActive: true }
   ]);
 
-  const handleSaveCategoryName = (id: string) => {
-    if (editingCategoryName.trim()) {
-      setCategories(categories.map(c => c.id === id ? { ...c, name: editingCategoryName.trim() } : c));
+  const handleSaveCategoryName = async (id: string) => {
+    const trimmed = editingCategoryName.trim();
+    if (!trimmed) {
+      setEditingCategoryId(null);
+      return;
+    }
+    try {
+      const updated = await updateCategoryAsync(id, trimmed);
+      setCategories(categories.map(c => c.id === id ? { ...c, name: updated.name } : c));
+    } catch (error) {
+      console.error('Failed to update category:', error);
     }
     setEditingCategoryId(null);
   };
 
-  const imgUrl = 'https://images.pexels.com/photos/37417630/pexels-photo-37417630.jpeg';
+  const handleReorderCategories = async (newOrder: Category[]) => {
+    setCategories(newOrder);
+    try {
+      await reorderCategoriesAsync(newOrder.map(c => c.id));
+    } catch (error) {
+      console.error('Failed to reorder categories:', error);
+    }
+  };
+
+  const handleToggleDishVisibility = async (dishId: string, currentlyVisible: boolean) => {
+    try {
+      if (currentlyVisible) {
+        await archiveMenuItemAsync(dishId);
+      } else {
+        await updateMenuItemAsync(dishId, { isArchived: false });
+      }
+      setDishes((prev) => {
+        const next = prev.map((d) =>
+          d.id === dishId
+            ? { ...d, isArchived: currentlyVisible, isActive: !currentlyVisible }
+            : d
+        );
+        setCategories((cats) =>
+          cats.map((c) => ({
+            ...c,
+            count: next.filter((d) => d.categoryId === c.id && !d.isArchived).length,
+          }))
+        );
+        return next;
+      });
+    } catch (error) {
+      console.error('Failed to toggle dish visibility:', error);
+    }
+  };
 
   const [dishes, setDishes] = useState<Dish[]>([]);
+
+  const openCreateDish = () => {
+    setDishModalMode('create');
+    setEditingDishId(null);
+    setIsDishModalOpen(true);
+  };
+
+  const openEditDish = (dishId: string) => {
+    setDishModalMode('edit');
+    setEditingDishId(dishId);
+    setIsDishModalOpen(true);
+  };
+
+  const editingDish: DishEditData | null = editingDishId
+    ? (() => {
+        const d = dishes.find((x) => x.id === editingDishId);
+        if (!d) return null;
+        return {
+          id: d.id,
+          categoryId: d.categoryId,
+          name: d.name,
+          description: d.description,
+          price: d.basePrice,
+          allergens: d.allergens,
+          isArchived: d.isArchived,
+        };
+      })()
+    : null;
+
+  const handleDishSaved = async () => {
+    await loadMenu();
+    setEditingDishId(null);
+  };
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
@@ -140,11 +272,7 @@ export default function MenusView() {
     : dishes.filter(d => d.categoryId === activeCategoryId && !d.isArchived);
 
   if (searchQuery.trim()) {
-    const query = searchQuery.toLowerCase();
-    filteredDishes = filteredDishes.filter(d => 
-      d.name.toLowerCase().includes(query) || 
-      d.description.toLowerCase().includes(query)
-    );
+    filteredDishes = filterDishesBySearch(filteredDishes, searchQuery);
   }
 
   filteredDishes = [...filteredDishes].sort((a, b) => {
@@ -172,11 +300,12 @@ export default function MenusView() {
           </button>
         </div>
 
-        <Reorder.Group axis="y" values={categories} onReorder={setCategories} className="flex flex-row flex-wrap xl:flex-col gap-2 xl:gap-1 list-none p-0">
+        <Reorder.Group axis="y" values={categories} onReorder={handleReorderCategories} className="flex flex-row flex-wrap xl:flex-col gap-2 xl:gap-1 list-none p-0">
           {categories.map((cat) => (
             <Reorder.Item 
               key={cat.id}
               value={cat}
+              data-testid={`menu-category-${cat.id}`}
               onClick={() => { setActiveCategoryId(cat.id); setMainView('dishes'); }}
               className={`group/item flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 mb-1 shrink-0 ${
                 activeCategoryId === cat.id 
@@ -328,6 +457,7 @@ export default function MenusView() {
             {/* Archive Button */}
             <button
               onClick={() => setMainView(mainView === 'archived' ? 'dishes' : 'archived')}
+              data-testid="menu-archived-toggle"
               className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all cursor-pointer shrink-0 ${mainView === 'archived' ? 'bg-corgi text-white border-transparent hover:bg-corgi/90' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}`}
               title={mainView === 'archived' ? 'Back to Menu' : 'Archive'}
             >
@@ -364,10 +494,8 @@ export default function MenusView() {
 
             {/* Add Dish */}
             <button 
-              onClick={() => {
-                setDishModalMode('create');
-                setIsDishModalOpen(true);
-              }}
+              data-testid="menu-add-dish-btn"
+              onClick={openCreateDish}
               className={`flex items-center gap-1.5 px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl transition-all cursor-pointer shrink-0 shadow-sm ${(mainView !== 'dishes' && mainView !== 'archived') ? 'opacity-30 pointer-events-none' : 'hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'}`}
             >
               <Plus size={16} strokeWidth={2.5} />
@@ -478,22 +606,37 @@ export default function MenusView() {
                           </div>
                         </div>
                         <button 
+                          data-testid="menu-add-modifier-btn"
                           disabled={isAddingMod}
                           onClick={() => {
                             if (newModName.trim() && !isAddingMod) {
                               setIsAddingMod(true);
-                              setTimeout(() => {
-                                const newId = Date.now().toString();
-                                setGlobalModifiers([{ id: newId, name: newModName.trim(), price: newModPrice || '0.00', minQty: newModMin || '0', maxQty: newModMax || '1', isActive: true }, ...globalModifiers]);
-                                setNewModName('');
-                                setNewModPrice('');
-                                setNewModMin('');
-                                setNewModMax('');
-                                setIsAddingMod(false);
-                                
-                                setHighlightedModId(newId);
-                                setTimeout(() => setHighlightedModId(null), 800);
-                              }, 500);
+                              void (async () => {
+                                try {
+                                  const created = await createModifierGroupAsync({
+                                    name: newModName.trim(),
+                                    minQty: parseInt(newModMin || '0', 10),
+                                    maxQty: parseInt(newModMax || '1', 10),
+                                    options: [
+                                      {
+                                        name: newModName.trim(),
+                                        price: parseFloat(newModPrice || '0'),
+                                      },
+                                    ],
+                                  });
+                                  await loadModifierGroups();
+                                  setNewModName('');
+                                  setNewModPrice('');
+                                  setNewModMin('');
+                                  setNewModMax('');
+                                  setHighlightedModId(created.options[0]?.id ?? created.id);
+                                  setTimeout(() => setHighlightedModId(null), 800);
+                                } catch (error) {
+                                  console.error('Failed to create modifier:', error);
+                                } finally {
+                                  setIsAddingMod(false);
+                                }
+                              })();
                             }
                           }}
                           className={`h-[46px] px-6 text-white text-[14px] font-bold rounded-xl transition-colors cursor-pointer active:scale-95 shadow-sm whitespace-nowrap w-full md:w-auto flex items-center justify-center shrink-0 ${isAddingMod ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-gray-800'}`}
@@ -545,6 +688,10 @@ export default function MenusView() {
                           if (/^\d*\.?\d{0,2}$/.test(val)) {
                             setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, price: val } : m));
                           }
+                        }} onBlur={() => {
+                          if (mod.optionId) {
+                            void updateModifierOptionAsync(mod.optionId, { price: parseFloat(mod.price || '0') }).catch(console.error);
+                          }
                         }} className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-7 pr-3 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all hover:bg-white focus:bg-white" />
                       </div>
                     </div>
@@ -552,7 +699,12 @@ export default function MenusView() {
                     <div className="flex items-center gap-2">
                       <span className="text-[12px] font-bold text-gray-400">MIN:</span>
                       <div className="relative w-16 md:w-16">
-                        <input type="number" value={mod.minQty} onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, minQty: e.target.value } : m))} className="hidden xl:block w-full bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center hover:bg-white focus:bg-white" />
+                        <input type="number" value={mod.minQty} onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, minQty: e.target.value } : m))} onBlur={() => {
+                          void updateModifierGroupAsync(mod.groupId, {
+                            minQty: parseInt(mod.minQty || '0', 10),
+                            maxQty: parseInt(mod.maxQty || '1', 10),
+                          }).catch(console.error);
+                        }} className="hidden xl:block w-full bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center hover:bg-white focus:bg-white" />
                         <div className="hidden xl:flex absolute right-1 top-1/2 -translate-y-1/2 flex-col gap-0.5">
                           <button onClick={() => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, minQty: (parseInt(m.minQty || '0') + 1).toString() } : m))} className="text-gray-400 hover:text-gray-900 rounded p-px cursor-pointer"><ChevronUp size={9}/></button>
                           <button onClick={() => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, minQty: Math.max(0, parseInt(m.minQty || '0') - 1).toString() } : m))} className="text-gray-400 hover:text-gray-900 rounded p-px cursor-pointer"><ChevronDown size={9}/></button>
@@ -571,7 +723,12 @@ export default function MenusView() {
                     <div className="flex items-center gap-2">
                       <span className="text-[12px] font-bold text-gray-400">MAX:</span>
                       <div className="relative w-16 md:w-16">
-                        <input type="number" value={mod.maxQty} onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, maxQty: e.target.value } : m))} className="hidden xl:block w-full bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center hover:bg-white focus:bg-white" />
+                        <input type="number" value={mod.maxQty} onChange={(e) => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, maxQty: e.target.value } : m))} onBlur={() => {
+                          void updateModifierGroupAsync(mod.groupId, {
+                            minQty: parseInt(mod.minQty || '0', 10),
+                            maxQty: parseInt(mod.maxQty || '1', 10),
+                          }).catch(console.error);
+                        }} className="hidden xl:block w-full bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all text-center hover:bg-white focus:bg-white" />
                         <div className="hidden xl:flex absolute right-1 top-1/2 -translate-y-1/2 flex-col gap-0.5">
                           <button onClick={() => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, maxQty: (parseInt(m.maxQty || '1') + 1).toString() } : m))} className="text-gray-400 hover:text-gray-900 rounded p-px cursor-pointer"><ChevronUp size={9}/></button>
                           <button onClick={() => setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, maxQty: Math.max(0, parseInt(m.maxQty || '1') - 1).toString() } : m))} className="text-gray-400 hover:text-gray-900 rounded p-px cursor-pointer"><ChevronDown size={9}/></button>
@@ -590,11 +747,18 @@ export default function MenusView() {
 
                   <div className="flex items-center gap-4 md:ml-auto pl-6 border-l border-gray-100">
                     <button 
+                      data-testid={`modifier-visibility-${mod.groupId}`}
                       onClick={() => {
                         if (hideToggleConfirm) {
-                          setGlobalModifiers(globalModifiers.map(m => m.id === mod.id ? { ...m, isActive: !m.isActive } : m));
+                          void (async () => {
+                            try {
+                              if (mod.isActive) await archiveModifierGroupAsync(mod.groupId);
+                              else await updateModifierGroupAsync(mod.groupId, { isArchived: false });
+                              await loadModifierGroups();
+                            } catch (e) { console.error(e); }
+                          })();
                         } else {
-                          setPendingToggleInfo({ id: mod.id, type: 'modifier', currentState: mod.isActive, name: mod.name });
+                          setPendingToggleInfo({ id: mod.groupId, type: 'modifier', currentState: mod.isActive, name: mod.name });
                           setDontShowAgainCheck(false);
                         }
                       }}
@@ -603,7 +767,9 @@ export default function MenusView() {
                       <div className={`absolute top-[2px] left-[2px] bg-white w-4.5 h-4.5 rounded-full transition-transform ${mod.isActive ? 'translate-x-4.5 shadow-sm' : 'translate-x-0'}`} />
                     </button>
                     <button 
-                      onClick={() => setGlobalModifiers(globalModifiers.filter(m => m.id !== mod.id))}
+                      onClick={() => {
+                        void archiveModifierGroupAsync(mod.groupId).then(() => loadModifierGroups()).catch(console.error);
+                      }}
                       className="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-xl hover:bg-red-50 cursor-pointer"
                     >
                       <Trash2 size={18} />
@@ -715,11 +881,9 @@ export default function MenusView() {
               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                 {filteredDishes.map(dish => (
                   <div 
-                    key={dish.id} 
-                    onClick={() => {
-                      setDishModalMode('edit');
-                      setIsDishModalOpen(true);
-                    }}
+                    key={dish.id}
+                    data-testid={`dish-card-${dish.id}`}
+                    onClick={() => openEditDish(dish.id)}
                     className={`bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-gray-200 hover:shadow-lg hover:shadow-gray-100/50 transition-all duration-300 group flex flex-col cursor-pointer ${dish.isActive === false ? 'opacity-60 grayscale-[0.8]' : ''}`}
                   >
                     <div className="aspect-square w-full relative bg-gray-100 overflow-hidden">
@@ -737,9 +901,10 @@ export default function MenusView() {
 
                       {/* Active Toggle Button */}
                       <button 
+                        data-testid={`dish-visibility-${dish.id}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setDishes(dishes.map(d => d.id === dish.id ? { ...d, isActive: d.isActive === false ? true : false } : d))
+                          void handleToggleDishVisibility(dish.id, dish.isActive !== false);
                         }}
                         className="absolute top-3 left-3 w-8 h-8 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center transition-all duration-200 hover:bg-white hover:scale-110 hover:shadow z-10 cursor-pointer group/eye"
                       >
@@ -758,6 +923,18 @@ export default function MenusView() {
                         <span className="text-[16px] font-extrabold text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg shrink-0">€{dish.basePrice.toFixed(2)}</span>
                       </div>
                       <p className="text-[14px] text-gray-500 font-medium line-clamp-2 leading-relaxed flex-1">{dish.description}</p>
+                      {dish.allergens.length > 0 && (
+                        <div
+                          data-testid={`dish-allergens-${dish.id}`}
+                          className="flex gap-1 mt-2"
+                        >
+                          {dish.allergens.map((a) => (
+                            <span key={a} title={a} className="text-base leading-none">
+                              {ALLERGEN_ICONS[a] || '⚠️'}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div className="mt-5 pt-4 border-t border-gray-100 flex gap-2">
                          <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
                             1 <span className="hidden xl:inline">Size</span><Ruler className="xl:hidden" size={12} />
@@ -774,11 +951,9 @@ export default function MenusView() {
               <div className="flex flex-col gap-3">
                 {filteredDishes.map(dish => (
                   <div 
-                    key={dish.id} 
-                    onClick={() => {
-                      setDishModalMode('edit');
-                      setIsDishModalOpen(true);
-                    }}
+                    key={dish.id}
+                    data-testid={`dish-card-${dish.id}`}
+                    onClick={() => openEditDish(dish.id)}
                     className={`flex items-center gap-4 bg-white border border-gray-100 rounded-2xl p-3 hover:border-gray-200 hover:shadow-sm transition-all duration-300 cursor-pointer ${dish.isActive === false ? 'opacity-60 grayscale-[0.8]' : ''}`}
                   >
                     <div className="w-14 h-14 rounded-xl relative bg-gray-100 overflow-hidden shrink-0">
@@ -821,9 +996,10 @@ export default function MenusView() {
                             {dish.isActive !== false ? 'Visible' : 'Hidden'}
                           </span>
                           <button 
+                            data-testid={`dish-visibility-${dish.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setDishes(dishes.map(d => d.id === dish.id ? { ...d, isActive: dish.isActive === false ? true : false } : d))
+                              void handleToggleDishVisibility(dish.id, dish.isActive !== false);
                             }}
                             className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${dish.isActive !== false ? 'bg-corgi' : 'bg-gray-200'}`}
                           >
@@ -834,8 +1010,7 @@ export default function MenusView() {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            setDishModalMode('edit');
-                            setIsDishModalOpen(true);
+                            openEditDish(dish.id);
                           }}
                           className="w-9 h-9 rounded-xl bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-white hover:shadow-sm hover:border-gray-200 border border-transparent transition-all cursor-pointer"
                         >
@@ -858,10 +1033,8 @@ export default function MenusView() {
               <h3 className="text-xl font-bold text-gray-900 mb-2">No dishes in this category</h3>
               <p className="text-gray-500 font-medium mb-6">Get started by adding your first dish to the menu.</p>
               <button 
-                onClick={() => {
-                  setDishModalMode('create');
-                  setIsDishModalOpen(true);
-                }}
+                data-testid="menu-add-first-dish-btn"
+                onClick={openCreateDish}
                 className="px-6 py-3 bg-black text-white text-[14px] font-bold rounded-xl hover:bg-gray-800 transition-all shadow-sm hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
                 Add First Dish
@@ -874,8 +1047,14 @@ export default function MenusView() {
 
       <DishModal 
         isOpen={isDishModalOpen} 
-        onClose={() => setIsDishModalOpen(false)} 
+        onClose={() => {
+          setIsDishModalOpen(false);
+          setEditingDishId(null);
+        }} 
         mode={dishModalMode}
+        categoryId={activeCategoryId}
+        dish={editingDish}
+        onSaved={() => void handleDishSaved()}
       />
 
       {pendingToggleInfo && (
@@ -911,7 +1090,16 @@ export default function MenusView() {
                   }
                   
                   if (pendingToggleInfo.type === 'modifier') {
-                    setGlobalModifiers(globalModifiers.map(m => m.id === pendingToggleInfo.id ? { ...m, isActive: !m.isActive } : m));
+                    void (async () => {
+                      try {
+                        if (pendingToggleInfo.currentState) {
+                          await archiveModifierGroupAsync(pendingToggleInfo.id);
+                        } else {
+                          await updateModifierGroupAsync(pendingToggleInfo.id, { isArchived: false });
+                        }
+                        await loadModifierGroups();
+                      } catch (e) { console.error(e); }
+                    })();
                   } else {
                     setGlobalAllergens(globalAllergens.map(a => a.id === pendingToggleInfo.id ? { ...a, isActive: !a.isActive } : a));
                   }
@@ -931,6 +1119,7 @@ export default function MenusView() {
         isOpen={showModifiersModal} 
         onClose={() => setShowModifiersModal(false)} 
         dishes={dishes}
+        categories={categories}
       />
     </div>
   );

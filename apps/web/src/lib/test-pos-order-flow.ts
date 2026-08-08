@@ -1,17 +1,26 @@
-import { POST as ordersPOST, GET as ordersGET } from '../app/api/orders/route';
-import { PUT as orderPUT } from '../app/api/orders/[id]/route';
-import { prisma } from './db';
-import { cache } from './cache';
+/**
+ * Module 2 — POS order flow integration (T2.5–T2.7)
+ */
+import { prisma, disconnectDb } from './db.ts';
+import { orderService } from '../services/order.service.ts';
+import { cache } from './cache/index.ts';
+
+const locationId = 'default';
+const tableId = `tab-pos-${Date.now()}`;
+const orderId = `ORD-POS-${Date.now().toString().slice(-6)}`;
+
+async function cleanup() {
+  await prisma.orderItem.deleteMany({ where: { orderId } }).catch(() => {});
+  await prisma.order.delete({ where: { id: orderId } }).catch(() => {});
+  await prisma.table.delete({ where: { id: tableId } }).catch(() => {});
+}
 
 async function main() {
   console.log('--- Starting POS Order Flow Integration Test ---');
 
-  const locationId = 'default';
-  const tableId = `tab-pos-${Date.now()}`;
-  const orderId = `ORD-POS-${Date.now().toString().slice(-6)}`;
-
   try {
     await cache.delete(`active_orders_${locationId}`);
+    await cleanup();
 
     await prisma.location.upsert({
       where: { id: locationId },
@@ -38,74 +47,58 @@ async function main() {
       update: {},
     });
 
-    const createReq = new Request('http://localhost/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: orderId,
-        locationId,
-        source: 'dine_in',
-        status: 'preparing',
-        tableId,
-        customerName: 'Table POS-1',
-        total: 9,
-        items: [{ name: 'Cappuccino', price: 4.5, quantity: 2, comments: 'no sugar' }],
-      }),
-    });
+    const created = await orderService.createOrder({
+      id: orderId,
+      locationId,
+      source: 'dine_in',
+      status: 'preparing',
+      tableId,
+      customerName: 'Table POS-1',
+      total: 9,
+      items: [{ name: 'Cappuccino', price: 4.5, quantity: 2, comments: 'no sugar' }],
+    } as any);
 
-    const createRes = await ordersPOST(createReq);
-    const created = await createRes.json();
-    if (createRes.status !== 201 || created.status !== 'preparing') {
-      console.error('❌ Create failed', createRes.status, created);
+    if (created.status !== 'preparing') {
+      console.error('❌ Create failed', created);
       process.exit(1);
     }
-    console.log('✅ POST order with status preparing');
+    console.log('✅ T2.5: POST order with status preparing');
 
-    const getReq = new Request(`http://localhost/api/orders?locationId=${locationId}`);
-    const getRes = await ordersGET(getReq);
-    const active = await getRes.json();
-    const found = active.find((o: { id: string }) => o.id === orderId);
+    const active = await orderService.getActiveOrders(locationId);
+    const found = active.find((o) => o.id === orderId);
     if (!found || found.tableId !== tableId) {
       console.error('❌ Active orders missing created order', active);
       process.exit(1);
     }
-    console.log('✅ GET active orders includes preparing order on table');
+    console.log('✅ T2.5: Active orders include preparing order on table');
 
-    const updateReq = new Request(`http://localhost/api/orders/${orderId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items: [{ name: 'Cappuccino', price: 4.5, quantity: 3, comments: 'no sugar' }],
-        total: 13.5,
-        customerName: 'Table POS-1',
-      }),
-    });
-    const updateRes = await orderPUT(updateReq, { params: Promise.resolve({ id: orderId }) });
-    const updated = await updateRes.json();
-    if (updateRes.status !== 200 || updated.items.length !== 1 || updated.total !== 13.5) {
-      console.error('❌ PUT update failed', updated);
+    const updated = await orderService.updateOrder(orderId, {
+      items: [{ name: 'Cappuccino', price: 4.5, quantity: 3, comments: 'no sugar' }],
+      total: 14.85,
+      customerName: 'Table POS-1',
+    } as any);
+
+    if (!updated.items || updated.items.length !== 1 || updated.total !== 14.85) {
+      console.error('❌ T2.6 PUT update failed', updated);
       process.exit(1);
     }
-    console.log('✅ PUT order items updated');
+    console.log('✅ T2.6: Order items updated');
 
     const cached = await cache.get(`active_orders_${locationId}`);
     if (cached !== null) {
-      console.error('❌ Cache should be invalidated after update');
+      console.error('❌ T2.7 Cache should be invalidated after update');
       process.exit(1);
     }
-    console.log('✅ Cache invalidated after order update');
-
-    await prisma.orderItem.deleteMany({ where: { orderId } });
-    await prisma.order.delete({ where: { id: orderId } });
-    await prisma.table.delete({ where: { id: tableId } }).catch(() => {});
+    console.log('✅ T2.7: Cache invalidated after order update');
 
     console.log('--- POS Order Flow Integration Test PASSED ---');
     process.exit(0);
   } catch (error) {
     console.error('Unexpected error:', error);
-    await prisma.order.delete({ where: { id: orderId } }).catch(() => {});
-    await prisma.table.delete({ where: { id: tableId } }).catch(() => {});
     process.exit(1);
+  } finally {
+    await cleanup().catch(() => {});
+    await disconnectDb();
   }
 }
 

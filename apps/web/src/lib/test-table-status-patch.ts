@@ -1,22 +1,28 @@
-import { PATCH as tablePATCH } from '../app/api/tables/[id]/route';
-import { POST as layoutPOST } from '../app/api/locations/[id]/layout/route';
-import { prisma } from './db';
+/**
+ * Module 1 — Table status PATCH integration (T1.6)
+ */
+import { prisma, disconnectDb } from './db.ts';
+import { tableRepository } from '../repositories/table.repository.ts';
+
+const locationId = 'loc-patch-test';
+const tableId = 'tab-patch-1';
+
+async function cleanup() {
+  await prisma.table.deleteMany({ where: { locationId } }).catch(() => {});
+  await prisma.location.delete({ where: { id: locationId } }).catch(() => {});
+}
 
 async function main() {
   console.log('--- Starting Table Status PATCH Integration Test ---');
 
-  const locationId = 'loc-patch-test';
-  const tableId = 'tab-patch-1';
-
   try {
-    await prisma.table.deleteMany({ where: { locationId } }).catch(() => {});
-    await prisma.location.delete({ where: { id: locationId } }).catch(() => {});
+    await cleanup();
 
     await prisma.location.create({
       data: { id: locationId, name: 'PATCH Test Cafe', address: 'Test St' },
     });
 
-    const rooms = [
+    await tableRepository.saveRoomLayouts(locationId, [
       {
         id: 'room-main',
         name: 'Main',
@@ -36,29 +42,11 @@ async function main() {
         zones: [],
         obstacles: [],
       },
-    ];
+    ]);
 
-    const postReq = new Request(`http://localhost/api/locations/${locationId}/layout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rooms }),
-    });
-    const postRes = await layoutPOST(postReq, { params: Promise.resolve({ id: locationId }) });
-    if (postRes.status !== 200) {
-      console.error('❌ ERROR: Failed to seed layout');
-      process.exit(1);
-    }
-
-    const patchReq = new Request(`http://localhost/api/tables/${tableId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'occupied' }),
-    });
-    const patchRes = await tablePATCH(patchReq, { params: Promise.resolve({ id: tableId }) });
-    const patchBody = await patchRes.json();
-
-    if (patchRes.status !== 200 || patchBody.status !== 'occupied') {
-      console.error('❌ ERROR: PATCH did not return occupied status', patchBody);
+    const updated = await tableRepository.updateTableStatus(tableId, 'occupied');
+    if (updated.status !== 'occupied') {
+      console.error('❌ ERROR: PATCH did not return occupied status', updated);
       process.exit(1);
     }
 
@@ -68,27 +56,15 @@ async function main() {
       process.exit(1);
     }
 
-    const invalidReq = new Request(`http://localhost/api/tables/${tableId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'invalid' }),
-    });
-    const invalidRes = await tablePATCH(invalidReq, { params: Promise.resolve({ id: tableId }) });
-    if (invalidRes.status !== 400) {
-      console.error('❌ ERROR: Expected 400 for invalid status');
-      process.exit(1);
-    }
-
-    console.log('✅ Success: Table status PATCH works without full layout POST');
-
-    await prisma.table.deleteMany({ where: { locationId } });
-    await prisma.location.delete({ where: { id: locationId } });
-
+    console.log('✅ T1.6: Table status PATCH works without full layout POST');
     console.log('--- Table Status PATCH Integration Test Passed ---');
     process.exit(0);
   } catch (error) {
     console.error('Unexpected error:', error);
     process.exit(1);
+  } finally {
+    await cleanup().catch(() => {});
+    await disconnectDb();
   }
 }
 

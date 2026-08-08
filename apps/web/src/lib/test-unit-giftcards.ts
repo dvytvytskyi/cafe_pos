@@ -1,10 +1,21 @@
+/**
+ * Module 28 — gift card validation unit tests
+ */
 import assert from 'assert';
+import {
+  formatGiftCardCode,
+  GiftCardValidationError,
+  isValidGiftCardCode,
+  validateBatchCount,
+  validateExpiryDate,
+  validateInitialBalance,
+} from './gift-card-validation.ts';
 
 interface GiftCard {
   code: string;
   balance: number;
   expiryDate: string;
-  status: 'active' | 'redeemed' | 'expired';
+  status: 'active' | 'redeemed' | 'expired' | 'disabled';
 }
 
 function tryRedeem(card: GiftCard, amount: number, simulatedNow: Date = new Date()): { success: boolean; error?: string } {
@@ -27,30 +38,68 @@ function tryRedeem(card: GiftCard, amount: number, simulatedNow: Date = new Date
 }
 
 export async function run() {
-  console.log('Running test-unit-giftcards...');
+  console.log('--- Module 28 Gift Cards Unit Tests ---');
+  let failed = 0;
 
-  // 1. Success redemption
-  const card1: GiftCard = { code: 'GC-1', balance: 50.00, expiryDate: '2027-08-01', status: 'active' };
-  const res1 = tryRedeem(card1, 20.00);
-  assert.strictEqual(res1.success, true, 'Valid redemption must return success');
-  assert.strictEqual(card1.balance, 30.00, 'Balance must drop to 30');
-  assert.strictEqual(card1.status, 'active', 'Card must remain active');
+  const check = (name: string, fn: () => void) => {
+    try {
+      fn();
+      console.log(`✅ ${name}`);
+    } catch (e) {
+      failed++;
+      console.error(`❌ ${name}`, e);
+    }
+  };
 
-  // 2. Full redemption draining balance
-  const res2 = tryRedeem(card1, 30.00);
-  assert.strictEqual(res2.success, true, 'Valid redemption draining balance must succeed');
-  assert.strictEqual(card1.balance, 0.00, 'Balance must be zero');
-  assert.strictEqual(card1.status, 'redeemed', 'Fully drained card status must update to redeemed');
+  check('T28.1 code alphanumeric no O/0/I/1', () => {
+    for (let i = 0; i < 20; i++) {
+      const code = formatGiftCardCode();
+      assert.match(code, /^CORGI-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/);
+      assert.strictEqual(isValidGiftCardCode(code), true);
+      assert.strictEqual(isValidGiftCardCode('CORGI-50-1234'), false);
+      assert.strictEqual(isValidGiftCardCode('CORGI-OABC-2345'), false);
+    }
+  });
 
-  // 3. Redeeming from inactive card
-  const res3 = tryRedeem(card1, 5.00);
-  assert.strictEqual(res3.success, false, 'Redeem from redeemed card must be blocked');
+  check('T28.2 expiresAt in future validation', () => {
+    const future = new Date(Date.now() + 86400000);
+    validateExpiryDate(future);
+    assert.throws(
+      () => validateExpiryDate(new Date(Date.now() - 1000)),
+      GiftCardValidationError
+    );
+  });
 
-  // 4. Expiration check
-  const expiredCard: GiftCard = { code: 'GC-2', balance: 100.00, expiryDate: '2026-08-01', status: 'active' };
-  const res4 = tryRedeem(expiredCard, 10.00, new Date('2026-08-05'));
-  assert.strictEqual(res4.success, false, 'Redemption on expired card must be blocked');
-  assert.strictEqual(expiredCard.status, 'expired', 'Card status must update to expired');
+  check('validate initial balance', () => {
+    assert.strictEqual(validateInitialBalance(50), 50);
+    assert.throws(() => validateInitialBalance(0), GiftCardValidationError);
+  });
 
-  console.log('✅ test-unit-giftcards passed.');
+  check('validate batch count', () => {
+    assert.strictEqual(validateBatchCount(5), 5);
+    assert.throws(() => validateBatchCount(0), GiftCardValidationError);
+  });
+
+  check('redemption success + drain + block inactive', () => {
+    const card1: GiftCard = { code: 'CORGI-ABCD-EFGH', balance: 50, expiryDate: '2027-08-01', status: 'active' };
+    assert.strictEqual(tryRedeem(card1, 20).success, true);
+    assert.strictEqual(card1.balance, 30);
+    assert.strictEqual(tryRedeem(card1, 30).success, true);
+    assert.strictEqual(card1.status, 'redeemed');
+    assert.strictEqual(tryRedeem(card1, 5).success, false);
+  });
+
+  check('expiration blocks redeem', () => {
+    const expiredCard: GiftCard = { code: 'CORGI-WXYZ-2345', balance: 100, expiryDate: '2026-08-01', status: 'active' };
+    assert.strictEqual(tryRedeem(expiredCard, 10, new Date('2026-08-05')).success, false);
+    assert.strictEqual(expiredCard.status, 'expired');
+  });
+
+  if (failed) process.exit(1);
+  console.log('--- Module 28 Unit Tests Passed ---');
 }
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

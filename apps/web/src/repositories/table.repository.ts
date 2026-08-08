@@ -1,4 +1,5 @@
-import { prisma } from '../lib/db';
+import { prisma } from '../lib/db.ts';
+import { LayoutValidationError, validateRoomLayout } from '../lib/tables-validation.ts';
 
 export interface Point { x: number; y: number }
 export interface Zone { id: string; points: Point[]; name: string; closed?: boolean }
@@ -49,6 +50,8 @@ export class TableRepository {
   }
 
   async saveRoomLayouts(locationId: string, rooms: Room[]) {
+    validateRoomLayout(rooms);
+
     // 1. Extract non-table layout metadata (zones and obstacles per room)
     const layoutMetadata: Record<string, RoomLayoutMeta> = {};
     const incomingTableIds = new Set<string>();
@@ -92,8 +95,17 @@ export class TableRepository {
       // Delete tables that are no longer present in the incoming layout
       const idsToDelete = Array.from(existingTableIds).filter(id => !incomingTableIds.has(id));
       if (idsToDelete.length > 0) {
-        // Note: cascading delete or nullification handles related orders if needed.
-        // For tests and clean updates, we delete.
+        const tablesWithOrders = await tx.order.findMany({
+          where: { tableId: { in: idsToDelete } },
+          select: { tableId: true },
+          distinct: ['tableId'],
+        });
+        if (tablesWithOrders.length > 0) {
+          const blocked = tablesWithOrders.map((o) => o.tableId).filter(Boolean).join(', ');
+          throw new LayoutValidationError(
+            `Cannot delete table(s) with existing orders: ${blocked}. Complete or reassign orders first.`,
+          );
+        }
         await tx.table.deleteMany({
           where: { id: { in: idsToDelete } },
         });

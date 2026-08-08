@@ -1,42 +1,63 @@
-import React, { useState } from 'react';
-import { ArrowRight, Truck, CheckCircle2, Clock, ArrowUpDown, ArrowUp, ArrowDown, Plus } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ArrowRight, Truck, CheckCircle2, Clock, ArrowUpDown, ArrowUp, ArrowDown, Plus, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TransferDetailsModal, { TransferData } from './TransferDetailsModal';
+import {
+  completeStockTransferAsync,
+  getStockTransfersAsync,
+  locationLabelFromId,
+  type StockTransferRecord,
+} from '@/lib/inventory';
 
-// Re-using the exported type from the modal
 type Transfer = TransferData;
 
-const MOCK_TRANSFERS: Transfer[] = [
-  { id: 'TRF-1042', date: 'Jul 3, 14:30', item: 'Corgi Signature Mug', sku: 'M-MUG-01', quantity: 50, from: 'Main WH', to: 'Sagrada', status: 'completed', user: 'Emma W.' },
-  { id: 'TRF-1043', date: 'Jul 3, 10:15', item: 'Oat Milk 1L', sku: 'K-MILK-01', quantity: 24, from: 'Main WH', to: 'Eixample', status: 'in_transit', user: 'James L.' },
-  { id: 'TRF-1044', date: 'Jul 2, 18:45', item: 'Vanilla Syrup 1L', sku: 'B-SYR-01', quantity: 5, from: 'Eixample', to: 'Gótico', status: 'completed', user: 'Sophia R.' },
-  { id: 'TRF-1045', date: 'Jul 2, 09:00', item: 'Corgi Staff T-Shirt', sku: 'M-TEE-02', quantity: 10, from: 'Main WH', to: 'Arc de Triomf', status: 'pending', user: 'Oliver T.' },
-  { id: 'TRF-1046', date: 'Jul 4, 08:30', item: 'Free Range Eggs (Dozen)', sku: 'K-EGG-01', quantity: 15, from: 'Main WH', to: 'Gótico', status: 'in_transit', user: 'Liam K.' },
-  { id: 'TRF-1047', date: 'Jul 4, 09:15', item: 'Takeaway Cups 8oz', sku: 'B-CUP-01', quantity: 500, from: 'Main WH', to: 'Eixample', status: 'completed', user: 'Emma W.' },
-  { id: 'TRF-1048', date: 'Jul 3, 16:20', item: 'Ceremonial Matcha 500g', sku: 'B-MTCH-01', quantity: 2, from: 'Main WH', to: 'Sagrada', status: 'completed', user: 'James L.' },
-  { id: 'TRF-1049', date: 'Jul 3, 11:00', item: 'Corgi Tote Bag', sku: 'M-BAG-01', quantity: 10, from: 'Main WH', to: 'Eixample', status: 'pending', user: 'Sophia R.' },
-  { id: 'TRF-1050', date: 'Jul 2, 14:10', item: 'Sourdough Loaf', sku: 'K-BREAD-01', quantity: 20, from: 'Main WH', to: 'Gótico', status: 'completed', user: 'Oliver T.' },
-  { id: 'TRF-1051', date: 'Jul 4, 07:45', item: 'Enamel Corgi Pin', sku: 'M-PIN-01', quantity: 100, from: 'Main WH', to: 'Sagrada', status: 'in_transit', user: 'Liam K.' },
-  { id: 'TRF-1052', date: 'Jul 4, 10:05', item: 'Spiced Chai Mix 1kg', sku: 'B-CHAI-01', quantity: 5, from: 'Main WH', to: 'Gótico', status: 'pending', user: 'Emma W.' },
-  { id: 'TRF-1053', date: 'Jul 3, 08:30', item: 'Hass Avocados (Box)', sku: 'K-AVO-01', quantity: 3, from: 'Main WH', to: 'Eixample', status: 'completed', user: 'James L.' },
-  { id: 'TRF-1054', date: 'Jul 2, 17:50', item: 'Corgi Dad Cap', sku: 'M-HAT-01', quantity: 5, from: 'Main WH', to: 'Gótico', status: 'completed', user: 'Sophia R.' },
-  { id: 'TRF-1055', date: 'Jul 4, 11:30', item: 'All-Purpose Flour 25kg', sku: 'K-FLR-01', quantity: 2, from: 'Main WH', to: 'Sagrada', status: 'in_transit', user: 'Oliver T.' },
-  { id: 'TRF-1056', date: 'Jul 3, 15:40', item: 'Cup Lids 8oz/12oz', sku: 'B-LID-01', quantity: 1000, from: 'Main WH', to: 'Eixample', status: 'completed', user: 'Liam K.' },
-  { id: 'TRF-1057', date: 'Jul 4, 09:20', item: 'Corgi Print Socks', sku: 'M-SOCKS-01', quantity: 15, from: 'Main WH', to: 'Gótico', status: 'pending', user: 'Emma W.' },
-  { id: 'TRF-1058', date: 'Jul 2, 12:15', item: 'Unsalted Butter 1kg', sku: 'K-BUT-01', quantity: 4, from: 'Main WH', to: 'Sagrada', status: 'completed', user: 'James L.' },
-  { id: 'TRF-1059', date: 'Jul 3, 13:25', item: 'Hot Chocolate Powder 2kg', sku: 'B-COCO-01', quantity: 6, from: 'Main WH', to: 'Eixample', status: 'completed', user: 'Sophia R.' },
-  { id: 'TRF-1060', date: 'Jul 4, 08:10', item: 'Smoked Bacon 5kg', sku: 'K-BACON-01', quantity: 2, from: 'Main WH', to: 'Gótico', status: 'in_transit', user: 'Oliver T.' },
-  { id: 'TRF-1061', date: 'Jul 3, 10:45', item: 'Paper Straws (Pack)', sku: 'B-STRAW-01', quantity: 50, from: 'Main WH', to: 'Sagrada', status: 'pending', user: 'Liam K.' },
-  { id: 'TRF-1062', date: 'Jul 4, 12:00', item: 'Corgi Hoodie (L)', sku: 'M-HOOD-01', quantity: 3, from: 'Main WH', to: 'Eixample', status: 'in_transit', user: 'Emma W.' },
-  { id: 'TRF-1063', date: 'Jul 2, 08:55', item: 'Cherry Tomatoes (Box)', sku: 'K-TOM-01', quantity: 4, from: 'Main WH', to: 'Gótico', status: 'completed', user: 'James L.' },
-  { id: 'TRF-1064', date: 'Jul 3, 17:30', item: 'Soy Milk 1L', sku: 'B-SMLK-01', quantity: 12, from: 'Main WH', to: 'Sagrada', status: 'completed', user: 'Sophia R.' },
-  { id: 'TRF-1065', date: 'Jul 4, 09:50', item: 'Cheddar Cheese Block', sku: 'K-CHZ-01', quantity: 5, from: 'Main WH', to: 'Eixample', status: 'pending', user: 'Oliver T.' },
-];
+function mapTransfer(record: StockTransferRecord): Transfer {
+  const date = new Date(record.createdAt).toLocaleString('en-GB', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return {
+    id: record.id,
+    date,
+    item: record.item.name,
+    sku: record.item.sku,
+    quantity: record.quantity,
+    from: locationLabelFromId(record.sourceLocationId),
+    to: locationLabelFromId(record.targetLocationId),
+    status: record.status,
+    user: record.createdByName ?? 'Staff',
+  };
+}
 
-export default function LogisticsTransfers({ onAdd }: { onAdd?: () => void }) {
-  const [transfers, setTransfers] = useState<Transfer[]>(MOCK_TRANSFERS);
+export default function LogisticsTransfers({
+  onAdd,
+  refreshKey = 0,
+}: {
+  onAdd?: () => void;
+  refreshKey?: number;
+}) {
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Transfer | null, direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
+
+  const loadTransfers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getStockTransfersAsync();
+      setTransfers(data.map(mapTransfer));
+    } catch {
+      setTransfers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTransfers();
+  }, [loadTransfers, refreshKey]);
 
   const handleSort = (key: keyof Transfer) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -55,10 +76,26 @@ export default function LogisticsTransfers({ onAdd }: { onAdd?: () => void }) {
     return 0;
   });
 
-  const handleUpdateStatus = (id: string, newStatus: Transfer['status']) => {
-    setTransfers(transfers.map(t => t.id === id ? { ...t, status: newStatus } : t));
-    if (selectedTransfer?.id === id) {
-      setSelectedTransfer({ ...selectedTransfer, status: newStatus });
+  const handleUpdateStatus = async (id: string, newStatus: Transfer['status']) => {
+    if (newStatus !== 'completed') {
+      setTransfers(transfers.map(t => t.id === id ? { ...t, status: newStatus } : t));
+      if (selectedTransfer?.id === id) {
+        setSelectedTransfer({ ...selectedTransfer, status: newStatus });
+      }
+      return;
+    }
+
+    const fullRecord = transfers.find(t => t.id === id);
+    if (!fullRecord) return;
+
+    try {
+      await completeStockTransferAsync(id);
+      await loadTransfers();
+      if (selectedTransfer?.id === id) {
+        setSelectedTransfer({ ...selectedTransfer, status: 'completed' });
+      }
+    } catch (err) {
+      console.error('Failed to complete transfer', err);
     }
   };
   const getStatusBadge = (status: Transfer['status']) => {
@@ -73,11 +110,12 @@ export default function LogisticsTransfers({ onAdd }: { onAdd?: () => void }) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-testid="inventory-transfers-table">
       {onAdd && (
         <div className="flex justify-end mb-6">
           <button 
             onClick={onAdd}
+            data-testid="new-transfer-open-btn"
             className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl shadow-sm transition-all cursor-pointer hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 shrink-0"
           >
             <Plus size={16} strokeWidth={2.5} />
@@ -86,6 +124,13 @@ export default function LogisticsTransfers({ onAdd }: { onAdd?: () => void }) {
         </div>
       )}
       <div className="flex-1 overflow-auto rounded-xl bg-white border border-gray-100">
+        {loading && (
+          <div className="flex items-center justify-center py-16 text-gray-500 gap-2">
+            <Loader2 size={18} className="animate-spin" />
+            <span className="text-sm font-medium">Loading transfers…</span>
+          </div>
+        )}
+        {!loading && (
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-white border-b border-gray-50 sticky top-0 z-10">
@@ -151,12 +196,13 @@ export default function LogisticsTransfers({ onAdd }: { onAdd?: () => void }) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   key={transfer.id} 
+                  data-testid={`transfer-row-${transfer.sku}`}
                   onClick={() => setSelectedTransfer(transfer)}
                   className="hover:bg-gray-50/80 transition-colors group cursor-pointer"
                 >
                 <td className="px-5 py-3">
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-bold text-gray-900 text-sm">{transfer.id}</span>
+                    <span className="font-bold text-gray-900 text-sm">{transfer.id.slice(0, 8).toUpperCase()}</span>
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">{transfer.date}</span>
                   </div>
                 </td>
@@ -187,6 +233,7 @@ export default function LogisticsTransfers({ onAdd }: { onAdd?: () => void }) {
             </AnimatePresence>
           </tbody>
         </table>
+        )}
       </div>
 
       <TransferDetailsModal 

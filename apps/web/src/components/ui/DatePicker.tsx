@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatDateParam } from '@/lib/task-dates';
 
 const fullWeekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const shortWeekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -13,12 +14,18 @@ interface DatePickerProps {
   selectedDate: Date;
   onChange: (date: Date) => void;
   isMissed?: (day: number, month: number) => boolean;
+  testId?: string;
 }
 
-export default function DatePicker({ selectedDate, onChange, isMissed }: DatePickerProps) {
+export default function DatePicker({ selectedDate, onChange, isMissed, testId }: DatePickerProps) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [baseDate, setBaseDate] = useState(() => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     setBaseDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
@@ -41,23 +48,35 @@ export default function DatePicker({ selectedDate, onChange, isMissed }: DatePic
   return (
     <div className="relative" ref={containerRef}>
       <button 
+        type="button"
+        data-testid={testId ?? 'date-picker-toggle'}
+        data-date-iso={formatDateParam(selectedDate)}
         onClick={() => setIsCalendarOpen(!isCalendarOpen)}
         className={`w-[145px] py-1.5 rounded-xl border transition-all flex items-center justify-center gap-2 cursor-pointer ${isCalendarOpen ? 'border-gray-900 bg-white text-gray-900 shadow-sm' : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300'}`}
       >
         <Calendar size={16} className="text-gray-500 shrink-0" />
         <div className="relative w-[85px] h-[18px] flex items-center justify-center overflow-hidden">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.span
-              key={selectedDate.getTime()}
-              initial={{ opacity: 0, y: -15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="text-[13px] font-semibold whitespace-nowrap absolute w-full text-center left-0"
+          {!isMounted ? (
+            <span
+              suppressHydrationWarning
+              className="text-[13px] font-semibold whitespace-nowrap"
             >
-              {selectedDate.getDate()} {fullWeekdays[selectedDate.getDay()]}
-            </motion.span>
-          </AnimatePresence>
+              {selectedDate.getDate()}
+            </span>
+          ) : (
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={selectedDate.getTime()}
+                initial={{ opacity: 0, y: -15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 15 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="text-[13px] font-semibold whitespace-nowrap absolute w-full text-center left-0"
+              >
+                {selectedDate.getDate()} {fullWeekdays[selectedDate.getDay()]}
+              </motion.span>
+            </AnimatePresence>
+          )}
         </div>
       </button>
       

@@ -1,8 +1,10 @@
 import { Order } from './types/domain';
+import { TaskRecord } from './task-mapper';
 
 const DB_NAME = 'corgi_pos_offline';
-const DB_VERSION = 1;
-const STORE_NAME = 'orders';
+const DB_VERSION = 2;
+const ORDER_STORE = 'orders';
+const TASK_STORE = 'tasks';
 
 export function initOfflineDb(): Promise<IDBDatabase | null> {
   if (typeof window === 'undefined') return Promise.resolve(null);
@@ -21,8 +23,11 @@ export function initOfflineDb(): Promise<IDBDatabase | null> {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      if (!db.objectStoreNames.contains(ORDER_STORE)) {
+        db.createObjectStore(ORDER_STORE, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(TASK_STORE)) {
+        db.createObjectStore(TASK_STORE, { keyPath: 'id' });
       }
     };
   });
@@ -33,8 +38,8 @@ export async function saveOrderOffline(order: Order): Promise<void> {
   if (!db) return;
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
+    const transaction = db.transaction([ORDER_STORE], 'readwrite');
+    const store = transaction.objectStore(ORDER_STORE);
     const request = store.put(order);
 
     request.onsuccess = () => resolve();
@@ -47,8 +52,8 @@ export async function getOfflineOrders(): Promise<Order[]> {
   if (!db) return [];
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
+    const transaction = db.transaction([ORDER_STORE], 'readonly');
+    const store = transaction.objectStore(ORDER_STORE);
     const request = store.getAll();
 
     request.onsuccess = () => resolve(request.result);
@@ -61,8 +66,50 @@ export async function clearOfflineOrder(id: string): Promise<void> {
   if (!db) return;
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
+    const transaction = db.transaction([ORDER_STORE], 'readwrite');
+    const store = transaction.objectStore(ORDER_STORE);
+    const request = store.delete(id);
+
+    request.onsuccess = () => resolve();
+    request.onerror = (e) => reject(e);
+  });
+}
+
+export async function saveTaskOffline(task: TaskRecord): Promise<void> {
+  const db = await initOfflineDb();
+  if (!db) return;
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([TASK_STORE], 'readwrite');
+    const store = transaction.objectStore(TASK_STORE);
+    const request = store.put(task);
+
+    request.onsuccess = () => resolve();
+    request.onerror = (e) => reject(e);
+  });
+}
+
+export async function getOfflineTasks(): Promise<TaskRecord[]> {
+  const db = await initOfflineDb();
+  if (!db) return [];
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([TASK_STORE], 'readonly');
+    const store = transaction.objectStore(TASK_STORE);
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = (e) => reject(e);
+  });
+}
+
+export async function clearOfflineTask(id: string): Promise<void> {
+  const db = await initOfflineDb();
+  if (!db) return;
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([TASK_STORE], 'readwrite');
+    const store = transaction.objectStore(TASK_STORE);
     const request = store.delete(id);
 
     request.onsuccess = () => resolve();
@@ -73,15 +120,13 @@ export async function clearOfflineOrder(id: string): Promise<void> {
 export async function syncOfflineData(locationId: string): Promise<{ syncedCount: number; errors: any[] }> {
   try {
     const orders = await getOfflineOrders();
-    if (orders.length === 0) {
+    const tasks = await getOfflineTasks();
+
+    if (orders.length === 0 && tasks.length === 0) {
       return { syncedCount: 0, errors: [] };
     }
 
-    // Filter orders by location if specified
     const targetOrders = orders.filter(o => o.locationId === locationId);
-    if (targetOrders.length === 0) {
-      return { syncedCount: 0, errors: [] };
-    }
 
     const response = await fetch('/api/offline-sync', {
       method: 'POST',
@@ -90,6 +135,7 @@ export async function syncOfflineData(locationId: string): Promise<{ syncedCount
       },
       body: JSON.stringify({
         orders: targetOrders,
+        tasks,
         clientTime: new Date().toISOString(),
       }),
     });
@@ -100,13 +146,24 @@ export async function syncOfflineData(locationId: string): Promise<{ syncedCount
     }
 
     const result = await response.json();
-    
-    // Clear successfully synced orders from IndexedDB
+
+    let syncedCount = 0;
     if (result.syncedIds && Array.isArray(result.syncedIds)) {
       for (const id of result.syncedIds) {
         await clearOfflineOrder(id);
+        syncedCount++;
       }
-      return { syncedCount: result.syncedIds.length, errors: result.errors || [] };
+    }
+    if (result.syncedTaskIds && Array.isArray(result.syncedTaskIds)) {
+      for (const id of result.syncedTaskIds) {
+        await clearOfflineTask(id);
+        syncedCount++;
+      }
+      return { syncedCount, errors: result.errors || [] };
+    }
+
+    if (syncedCount > 0) {
+      return { syncedCount, errors: result.errors || [] };
     }
 
     return { syncedCount: 0, errors: ['Invalid server response structure'] };

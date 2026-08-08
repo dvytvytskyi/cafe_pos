@@ -79,9 +79,18 @@ export async function shutdownWSServer() {
   });
 }
 
-// Only start the server directly if executed as a standalone script
-if (require.main === module) {
+function startWSServer() {
   httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`WebSocket Server listening on http://0.0.0.0:${PORT}`);
   });
+}
+
+export { startWSServer };
+
+const isDirectRun =
+  typeof process.argv[1] === 'string' &&
+  (process.argv[1].endsWith('ws-server.ts') || process.argv[1].endsWith('ws-server.js'));
+
+if (isDirectRun) {
+  startWSServer();
 }

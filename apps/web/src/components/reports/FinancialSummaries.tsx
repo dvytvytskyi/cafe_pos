@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { FileText, ShieldCheck, AlertCircle, RefreshCw, XCircle, FilePlus, Filter, Check, Copy } from 'lucide-react';
+import { FileText, Filter, Check, Copy, RefreshCw, XCircle, FilePlus } from 'lucide-react';
+import type { FinancialReport } from '@/repositories/reports.repository';
 
-// Mock Data for Ledger
 type LedgerEntry = {
   id: string;
   time: string;
@@ -14,61 +14,19 @@ type LedgerEntry = {
   synced: boolean;
 };
 
-const MOCK_LEDGER: LedgerEntry[] = [
-  { id: 'TKT-2605-0042', time: '14:32', location: 'Eixample', type: 'Receipt', amount: 42.50, base: 38.64, iva: 3.86, hash: 'a1b2...8f9e', synced: true },
-  { id: 'TKT-2605-0043', time: '14:35', location: 'Gótico', type: 'Receipt', amount: 15.00, base: 13.64, iva: 1.36, hash: 'c3d4...7e6d', synced: true },
-  { id: 'TKT-2605-0044', time: '14:38', location: 'Arc de Triomf', type: 'Void', amount: -28.00, base: -25.45, iva: -2.55, hash: 'e5f6...5c4b', synced: true },
-  { id: 'TKT-2605-0045', time: '14:41', location: 'Sagrada Família', type: 'Receipt', amount: 89.90, base: 81.73, iva: 8.17, hash: 'g7h8...3a2z', synced: true },
-  { id: 'TKT-2605-0046', time: '14:45', location: 'Eixample', type: 'Receipt', amount: 12.50, base: 11.36, iva: 1.14, hash: 'i9j0...1y0x', synced: false },
-  { id: 'TKT-2605-0047', time: '14:50', location: 'Gràcia', type: 'Receipt', amount: 55.00, base: 50.00, iva: 5.00, hash: 'k1l2...9w8v', synced: false },
-  { id: 'TKT-2605-0048', time: '14:55', location: 'Gótico', type: 'Void', amount: -15.00, base: -13.64, iva: -1.36, hash: 'm3n4...7u6t', synced: false },
-];
-
-export function FinancialSummaries() {
+export function FinancialSummaries({ report }: { report?: FinancialReport | null }) {
   const [filter, setFilter] = useState<'All' | 'Receipt' | 'Void'>('All');
-  const [ledger, setLedger] = useState<LedgerEntry[]>(MOCK_LEDGER);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  const loadMore = () => {
-    if (isLoadingMore) return;
-    setIsLoadingMore(true);
-    
-    setTimeout(() => {
-      const newEntries: LedgerEntry[] = Array.from({ length: 10 }).map((_, i) => {
-        const idNum = ledger.length + i + 49;
-        const type = Math.random() > 0.8 ? 'Void' : 'Receipt';
-        const base = type === 'Void' ? -(10 + Math.random() * 40) : (10 + Math.random() * 80);
-        const iva = base * 0.1;
-        const amount = base + iva;
-        return {
-          id: `TKT-2605-${idNum.toString().padStart(4, '0')}`,
-          time: `15:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
-          location: ['Eixample', 'Gótico', 'Arc de Triomf', 'Sagrada Família', 'Gràcia'][Math.floor(Math.random() * 5)],
-          type,
-          amount,
-          base,
-          iva,
-          hash: Math.random().toString(36).substring(2, 6) + '...' + Math.random().toString(36).substring(2, 6),
-          synced: Math.random() > 0.3
-        };
-      });
-      setLedger(prev => [...prev, ...newEntries]);
-      setIsLoadingMore(false);
-    }, 800); // Simulate network delay
-  };
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLDivElement;
-    // Add a small threshold (10px) to trigger slightly before bottom
-    if (target.scrollHeight - target.scrollTop <= target.clientHeight + 10) {
-      loadMore();
-    }
-  };
-
-  const filteredLedger = ledger.filter(entry => filter === 'All' || entry.type === filter);
+  const ledger: LedgerEntry[] = report?.ledger ?? [];
+  const summary = report?.summary;
+  const filteredLedger = ledger.filter((entry) => filter === 'All' || entry.type === filter);
+  const voidRate =
+    summary && summary.orderCount + summary.voidCount > 0
+      ? ((summary.voidCount / (summary.orderCount + summary.voidCount)) * 100).toFixed(1)
+      : '0.0';
+  const pendingCount = ledger.filter((e) => !e.synced).length;
 
   return (
-    <div className="border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white w-full">
+    <div data-testid="financial-summaries" className="border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white w-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
@@ -85,11 +43,13 @@ export function FinancialSummaries() {
         <div className="p-5 rounded-2xl bg-white border border-gray-100 flex flex-col gap-4 relative overflow-hidden">
           <div className="flex flex-col relative z-10">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Revenue</p>
-            <h4 className="text-xl font-black text-gray-900">€33,244.00</h4>
+            <h4 data-testid="reports-total-revenue" className="text-xl font-black text-gray-900">
+              €{(summary?.grossRevenue ?? 0).toFixed(2)}
+            </h4>
           </div>
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 relative z-10">
             <span className="text-xs font-bold text-gray-500">Closed Receipts</span>
-            <span className="text-sm font-black text-gray-900">1,248</span>
+            <span className="text-sm font-black text-gray-900">{summary?.orderCount ?? 0}</span>
           </div>
         </div>
 
@@ -97,11 +57,11 @@ export function FinancialSummaries() {
         <div className="p-5 rounded-2xl bg-white border border-gray-100 flex flex-col gap-4 relative overflow-hidden">
           <div className="flex flex-col relative z-10">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Void / Cancelled</p>
-            <h4 className="text-xl font-black text-gray-900">€840.50</h4>
+            <h4 className="text-xl font-black text-gray-900">€{(summary?.voidAmount ?? 0).toFixed(2)}</h4>
           </div>
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 relative z-10">
             <span className="text-xs font-bold text-gray-500">Transactions</span>
-            <span className="text-sm font-black text-gray-900">14 (1.1%)</span>
+            <span className="text-sm font-black text-gray-900">{summary?.voidCount ?? 0} ({voidRate}%)</span>
           </div>
         </div>
 
@@ -109,16 +69,16 @@ export function FinancialSummaries() {
         <div className="p-5 rounded-2xl bg-white border border-gray-100 flex flex-col gap-4 relative overflow-hidden">
           <div className="flex flex-col relative z-10">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Tax Collection</p>
-            <h4 className="text-xl font-black text-gray-900">€3,704.00</h4>
+            <h4 className="text-xl font-black text-gray-900">€{(summary?.taxTotal ?? 0).toFixed(2)}</h4>
           </div>
           <div className="flex flex-col gap-1 mt-auto pt-2 border-t border-gray-100 relative z-10">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-gray-500">Base Imponible</span>
-              <span className="text-[11px] font-black text-gray-900">€29,540.00</span>
+              <span className="text-[11px] font-black text-gray-900">€{(summary?.netRevenue ?? 0).toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-gray-500">IVA 10% (F&B)</span>
-              <span className="text-[11px] font-black text-gray-900">€2,850.00</span>
+              <span className="text-[11px] font-black text-gray-900">€{(summary?.taxTotal ?? 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -131,7 +91,7 @@ export function FinancialSummaries() {
           </div>
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 relative z-10">
             <span className="text-xs font-bold text-gray-500">Pending</span>
-            <span className="text-sm font-black text-gray-900">3 Receipts</span>
+            <span className="text-sm font-black text-gray-900">{pendingCount} Receipts</span>
           </div>
         </div>
 
@@ -170,7 +130,6 @@ export function FinancialSummaries() {
 
         <div 
           className="overflow-x-auto overflow-y-auto max-h-[400px] w-full custom-scrollbar"
-          onScroll={handleScroll}
         >
           <table className="w-full text-left border-collapse relative">
             <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_#f3f4f6]">
@@ -239,10 +198,8 @@ export function FinancialSummaries() {
               ))}
             </tbody>
           </table>
-          {isLoadingMore && (
-            <div className="py-4 flex items-center justify-center">
-              <RefreshCw className="w-5 h-5 text-gray-400 animate-spin" />
-            </div>
+          {filteredLedger.length === 0 && (
+            <div className="py-8 text-center text-sm text-gray-400 font-medium">No ledger entries for this period.</div>
           )}
         </div>
       </div>

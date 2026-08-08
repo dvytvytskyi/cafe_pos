@@ -47,41 +47,41 @@
 
 | # | Модуль | Plan | BE | FE | Schema | Пріор. |
 |---|--------|------|----|----|--------|--------|
-| 1 | TablesView | 🟢 | partial | partial | ready | P0 |
-| 2 | POS Terminal | 🟢 | partial | partial | ready | P0 |
-| 3 | Payment | 🟢 | partial | partial | ready | P0 |
-| 4 | Refunds/Fiscal | 🔴 | partial | partial | partial | P1 |
-| 5 | eMenu | 🔴 | partial | mock | ready | P2 |
-| 6 | OrdersBoard | 🔴 | broken | mock | ready | P1 |
-| 7 | TaskManager | 🔴 | missing | mock | **missing** | P4 |
-| 8 | NewTaskModal | 🔴 | partial | mock | **missing** | P4 |
-| 9 | BoardSettings | 🔴 | missing | mock | **missing** | P4 |
-| 10 | DailyChecklists | 🔴 | missing | mock | **missing** | P4 |
-| 11 | PhotoProofUpload | 🔴 | missing | mock | **missing** | P4 |
-| 12 | OpsDashboard | 🔴 | missing | shell | N/A | P4 |
-| 13 | MenusView | 🟡 | partial | partial | partial | P2 |
-| 14 | DishModal | 🟡 | ready | mock | partial | P2 |
-| 15 | Modifiers | 🟡 | missing | mock | **missing** | P3 |
-| 16 | Staff admin | 🟢 | ready | partial | ready | P2 |
-| 17 | EmployeeModal | 🟢 | ready | partial | ready | P2 |
-| 18 | Time tracking | 🟢 | **missing** | mock | **missing** | P3 |
-| 19 | Schedule | 🟢 | **missing** | mock | **missing** | P3 |
-| 20 | CRM admin | 🟢 | ready | mock | ready | P2 |
-| 21 | Customer modal | 🟢 | ready | mock | ready | P2 |
-| 22 | Points modal | 🟢 | partial | mock | partial | P2 |
-| 23 | QR code | 🟢 | missing | partial | ready | P2 |
-| 24 | Profile | 🔴 | missing | mock | partial | P3 |
-| 25 | POS settings | 🔴 | missing | mock | **missing** | P3 |
-| 26 | Printers | 🔴 | partial | mock | **missing** | P3 |
-| 27 | Taxes | 🔴 | missing | mock | **missing** | P3 |
-| 28 | Gift cards | 🟢 | ready | partial | ready | P2 |
-| 29 | Audit panel | 🔴 | partial | no UI | partial | P3 |
-| 30 | Backups | 🔴 | lib only | no UI | N/A | P4 |
-| 31 | Reputation | 🔴 | missing | mock | **missing** | P5 |
-| 32 | History | 🔴 | missing | mock | ready | P2 |
-| 33 | Reports | 🔴 | missing | mock | ready | P3 |
-| 34 | Inventory | 🔴 | ready | mock | partial | P2 |
-| 35 | Auth/home | 🔴 | partial | mock | ready | P1 |
+| 1 | TablesView | 🟢 | ready | wired | ready | P0 |
+| 2 | POS Terminal | 🟢 | ready | wired | ready | P0 |
+| 3 | Payment | 🟢 | ready | wired | ready | P0 |
+| 4 | Refunds/Fiscal | 🟢 | ready | wired | ready | P1 |
+| 5 | eMenu | 🟢 | ready | wired | ready | P2 |
+| 6 | OrdersBoard | 🟢 | ready | wired | ready | P0 |
+| 7 | TaskManager | 🟢 | ready | wired | ready | P4 |
+| 8 | NewTaskModal | 🟢 | ready | wired | ready | P4 |
+| 9 | BoardSettings | 🟢 | ready | wired | ready | P4 |
+| 10 | DailyChecklists | 🟢 | ready | wired | ready | P4 |
+| 11 | PhotoProofUpload | 🟢 | ready | wired | ready | P4 |
+| 12 | OpsDashboard | 🟢 | ready | wired | ready | P4 |
+| 13 | MenusView | 🟢 | ready | wired | ready | P2 |
+| 14 | DishModal | 🟢 | ready | wired | ready | P2 |
+| 15 | Modifiers | 🟢 | ready | wired | ready | P3 |
+| 16 | Staff admin | 🟢 | ready | wired | ready | P2 |
+| 17 | EmployeeModal | 🟢 | ready | wired | ready | P2 |
+| 18 | Time tracking | 🟢 | ready | wired | ready | P3 |
+| 19 | Schedule | 🟢 | ready | wired | ready | P3 |
+| 20 | CRM admin | 🟢 | ready | wired | ready | P2 |
+| 21 | Customer modal | 🟢 | ready | wired | ready | P2 |
+| 22 | Points modal | 🟢 | ready | wired | ready | P2 |
+| 23 | QR code | 🟢 | ready | wired | ready | P2 |
+| 24 | Profile | 🟢 | ready | wired | ready | P3 |
+| 25 | POS settings | 🟢 | ready | wired | ready | P3 |
+| 26 | Printers | 🟢 | ready | wired | ready | P3 |
+| 27 | Taxes | 🟢 | ready | wired | ready | P3 |
+| 28 | Gift cards | 🟢 | ready | wired | ready | P2 |
+| 29 | Audit panel | 🟢 | ready | wired | ready | P3 |
+| 30 | Backups | 🟢 | ready | wired | ready | P4 |
+| 31 | Reputation | 🟢 | ready | wired | ready | P5 |
+| 32 | History | 🟢 | ready | wired | ready | P2 |
+| 33 | Reports | 🟢 | ready | wired | ready | P3 |
+| 34 | Inventory | 🟢 | ready | wired | ready | P2 |
+| 35 | Auth/home | 🟢 | ready | wired | ready | P1 |
 
 **Легенда:** P0 = POS блокер; P1 = операційний flow; P2 = quick wins; P3 = settings/staff; P4 = operations domain; P5 = external.
 
@@ -150,7 +150,7 @@ fiscal, pin, promotions, offline-sync, shifts, giftcards, inventory, orders, web
 - [ ] Integration test for new API route pass
 - [ ] Existing unit suite still passes (no regression)
 - [ ] Manual QA checklist completed
-- [ ] No silent localStorage fallback in production path
+- [x] No silent localStorage fallback in production path (orders/shifts/tables/crm/discounts wired to API; eMenu fallback dev-only)
 - [ ] fe-be.md status updated
 
 ### Матриця тестів по модулях
@@ -166,7 +166,7 @@ fiscal, pin, promotions, offline-sync, shifts, giftcards, inventory, orders, web
 | 6 | test-unit-orders | test-order-service, test-ws | 4 steps | test-orders-board-api |
 | 7–12 | test-unit-offline-sync | new test-tasks | per module | test-tasks, test-checklists |
 | 13–15 | test-unit-menu | test-menu | per module | test-category-reorder |
-| 16–17 | test-unit-staff-auth, test-unit-pin | test-staff-auth | per module | extend PIN duplicate |
+| 16–17 | test-unit-staff, test-staff-fix, test-staff-auth | test-staff-browser | `npm run test:staff` | PIN duplicate, search, archived |
 | 18–19 | test-unit-shifts | test-cash-shifts | per module | test-timecard, test-schedule |
 | 20–23 | — | test-crm | per module | test-points-adjustment, test-by-qr |
 | 24–31 | test-unit-audit-trail, test-unit-backups | test-audit-trail, test-backup-recovery | per module | per settings panel |
@@ -454,7 +454,9 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 
 ---
 
-### Модуль 7 — TaskManager
+### Модуль 7 — TaskManager ✅
+
+**Статус:** BE + FE + Schema + тести (T7.1–T7.10) пройдені.
 
 **API:** `GET/POST /api/tasks`, `PUT/DELETE /api/tasks/[id]`, filters `?date&assigneeId&status`
 
@@ -480,13 +482,17 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 | Manual | T7.9 | Assignee filter | filtered list |
 | Manual | T7.10 | Offline create → online sync | task in DB |
 
-**Новий test:** `test-tasks.ts`, extend `test-offline-sync.ts`
+**Новий test:** `npm run test:tasks` (`test-tasks.ts`, `test-unit-tasks.ts`, `test-unit-task-offline.ts`)
 
-**Оцінка:** 6–8 год + 3 год тести
+**Offline:** IndexedDB store `tasks`, auto-sync on mount + `online` event via `syncTasksFromOffline()`
+
+**Оцінка:** 6–8 год + 3 год тести — **done**
 
 ---
 
-### Модуль 8 — NewTaskModal
+### Модуль 8 — NewTaskModal ✅
+
+**Статус:** BE validation + FE wiring + tests T8.1–T8.4.
 
 **Кроки:**
 1. `getEmployeesAsync()` for assignee dropdown
@@ -505,7 +511,9 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 | Manual | T8.5 | Create task → appears on board | visible |
 | Manual | T8.6 | Empty title → UI error | blocked |
 
-**Оцінка:** 3–4 год + 1 год тести
+**Новий test:** `npm run test:new-task`
+
+**Оцінка:** 3–4 год + 1 год тести — **done**
 
 ---
 
@@ -523,7 +531,22 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 | Manual | T9.4 | Rename column → refresh | name kept |
 | Manual | T9.5 | Reorder columns → refresh | order kept |
 
-**Оцінка:** 4–5 год + 2 год тести
+**Оцінка:** 4–5 год + 2 год тести — **done**
+
+**Реалізовано:**
+- Prisma `BoardSettings` + migration
+- `GET/PUT /api/settings/board?type=orders|tasks`
+- `board-settings.repository.ts`, `board-validation.ts`, `lib/board-settings.ts`
+- `BoardSettingsModal`: rename, drag reorder, validation (T9.1–T9.2)
+- `TaskManager` + `OrdersBoard` завантажують/зберігають колонки через API
+- `npm run test:board-settings` — T9.1–T9.3 + extended browser (M9-O/T/A) PASS
+
+**Extended manual/browser (M9-extra):**
+- Orders Board: rename, locked stages, custom column
+- Tasks: save empty rename, delete empty col, delete+migrate tasks
+- API: locationId isolation, invalid type, 500 error UX
+
+**Bugfix під час тестів:** міграція tasks при delete column тепер через `getTasksAsync({ status })`, не лише local state
 
 ---
 
@@ -542,7 +565,16 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 | Manual | T10.5 | Check item → API call | DB updated |
 | Manual | T10.6 | Waiter edits yesterday checklist | 403 |
 
-**Оцінка:** 6–8 год + 2 год тести
+**Оцінка:** 6–8 год + 2 год тести — **done**
+
+**Реалізовано:**
+- Prisma `ChecklistTemplate` + `DailyChecklist` + migration
+- `GET/POST /api/checklists`, `PATCH /api/checklists/[id]`
+- Guards: T10.2 shift closed, T10.6 past date → 403
+- `checklist.repository.ts`, `checklist-validation.ts`, `lib/checklists.ts`
+- `DailyChecklists.tsx` wired to API (completions); setup mode still local
+- `npm run test:checklists` — T10.1–T10.6 PASS (unit + integration + browser)
+- Browser extras: uncheck (T10.5b), reload persist (T10.5c), shift closed UI (T10.2-ui), closing tab, photo modal
 
 ---
 
@@ -561,7 +593,14 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 | Manual | T11.5 | Upload image → thumbnail on card | visible |
 | Manual | T11.6 | Upload text file → error toast | blocked |
 
-**Оцінка:** 4–5 год + 2 год тести
+**Оцінка:** 4–5 год + 2 год тести — **done**
+
+**Реалізовано:**
+- `POST /api/upload` (multipart, jpeg/png, max 5MB) → `public/uploads/`
+- `upload-validation.ts`, `upload-storage.ts`, `lib/upload.ts`
+- `PhotoProofUpload.tsx` — real file input + API upload + error alert
+- Thumbnail on checklist card when `photoUrl` set
+- `npm run test:upload` — T11.1–T11.6 PASS (unit + integration + browser)
 
 ---
 
@@ -578,7 +617,16 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 | Integration | T12.3 | SQL COUNT/GROUP BY statuses | matches API |
 | Manual | T12.4 | Complete task → KPI updates | no page refresh |
 
-**Оцінка:** 4–5 год + 2 год тести
+**Оцінка:** 4–5 год + 2 год тести — **done**
+
+**Реалізовано:**
+- `GET /api/operations/kpi?date&shiftId` — tasks + checklists completion %
+- `operations-kpi.ts`, `operations-kpi.repository.ts`, `operations-kpi-client.ts`
+- `OperationsKpiBar.tsx` — 4 KPI cards, `refresh()` via ref
+- `OperationsDashboard.tsx` — KPI bar + `onTasksChanged` / `onCompletionChanged`
+- `NewTaskModal` — status select when editing (for task completion flow)
+- `npm run test:operations-kpi` — T12.1–T12.4 PASS (unit + integration + browser)
+- Browser manual extended: T12-M1–M8 (4 cards, tab switch, API sync, reload, SOP refresh)
 
 ---
 
@@ -602,7 +650,14 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 | Manual | T13.8 | Show Archived toggle | archived items visible |
 | Regression | T13.9 | test-unit-menu, test-menu | green |
 
-**Оцінка:** 6–8 год + 2 год тести
+**Оцінка:** 6–8 год + 2 год тести — **done**
+
+**Реалізовано:**
+- `sortOrder` on `MenuCategory` + migration
+- `PUT /api/menu/categories/[id]`, `DELETE` (block/cascade), `PUT /api/menu/categories/reorder`
+- `menu-validation.ts`, `menu-cache.ts` (Redis invalidate on mutations)
+- `MenusView` — API reorder/rename, dish visibility toggle, shared search filter
+- `npm run test:menus` — T13.1–T13.9 PASS (unit + integration + browser + regression)
 
 ---
 
@@ -622,7 +677,15 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 | Manual | T14.6 | Change price → POS shows new price | immediate |
 | Manual | T14.7 | Add Gluten allergen → icon on card | visible |
 
-**Оцінка:** 6–8 год + 2 год тести
+**Оцінка:** 6–8 год + 2 год тести — **done**
+
+**Реалізовано:**
+- `menu-validation.ts` — `validateDishPrice`, `validateAllergenIds`, `validateVariantPrices`, `validateDishName`
+- API `POST/PUT /api/menu/items` — validation + 400 on bad input
+- `DishModal` wired to `createMenuItemAsync` / `updateMenuItemAsync` / `archiveMenuItemAsync`
+- `MenusView` — `categoryId`, `editingDish`, reload on save, allergen icons on cards
+- MVP: single price in DB (variants validated client-side only)
+- `npm run test:dish-modal` — T14.1–T14.7 PASS (unit + integration + browser)
 
 ---
 
@@ -640,7 +703,15 @@ const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
 | Integration | T15.4 | Link group to category M2M | association |
 | Manual | T15.5 | Oat Milk on Coffee POS | +€0.80 in total |
 
-**Оцінка:** 12–16 год + 3 год тести
+**Оцінка:** 12–16 год + 3 год тести — **done**
+
+**Реалізовано:**
+- Prisma `ModifierGroup`, `ModifierOption`, M2M з `MenuCategory`
+- `modifier-validation.ts`, `modifier.repository.ts`, API routes
+- `MenusView` modifiers tab → API create/update/archive
+- `ModifiersManagerModal` → load groups, link categories M2M
+- `OrderTerminalModal` → modifier picker, price in total
+- `npm run test:modifiers` — T15.1–T15.5 PASS
 
 ---
 
@@ -1037,43 +1108,46 @@ jobs:
 ## Master TODO
 
 ### Phase 0
-- [ ] Mappers + api-client + constants + seed
-- [ ] test-unit-order-mapper, test-unit-menu-mapper
-- [ ] npm scripts test:unit, test:integration, test:all
-- [ ] run-integration-tests.ts orchestrator
-- [ ] Fix findActiveOrders + locationId
+- [x] Mappers + api-client + constants + seed
+- [x] test-unit-order-mapper, test-unit-menu-mapper
+- [x] npm scripts test:unit, test:integration, test:all
+- [x] run-integration-tests.ts orchestrator
+- [x] Fix findActiveOrders + locationId
 
 ### Wave 1 — POS
-- [ ] Module 1: TablesView + PATCH table + tests T1.*
-- [ ] Module 2: POS + menu mapper + test-pos-order-flow
-- [ ] Module 3: /pay transaction + test-payment-transaction
-- [ ] Module 6: OrdersBoard + WS + tests T6.*
-- [ ] Module 35: Auth + tests T35.*
+- [x] Module 1: TablesView + PATCH table + tests T1.*
+- [x] Module 2: POS + menu mapper + test-pos-order-flow
+- [x] Module 3: /pay transaction + test-payment-transaction
+- [x] Module 6: OrdersBoard + WS + tests T6.*
+- [x] Module 35: Auth + tests T35.*
 
 ### Wave 2 — Data quick wins
-- [ ] Modules 20-23: CRM wire + test-points-adjustment
-- [ ] Module 28: gift card PATCH
-- [ ] Module 32: history API + test-orders-history
-- [ ] Module 4: fiscal/refund + tests T4.*
+- [x] Modules 20-23: CRM wire + test-points-adjustment
+- [x] Module 28: gift card PATCH
+- [x] Module 32: history API + test-orders-history
+- [x] Module 4: fiscal/refund + tests T4.*
 
 ### Wave 3 — Menu & inventory
-- [ ] Modules 13-14: MenusView + DishModal
-- [ ] Module 34: inventory read path
-- [ ] Module 5: eMenu
+- [x] Modules 13-14: MenusView + DishModal
+- [x] Module 15: ModifiersManagerModal
+- [x] Module 34: inventory read path
+- [x] Module 5: eMenu
 
 ### Wave 4 — Staff
-- [ ] Modules 16-17 fix
-- [ ] Schema 18-19 + test-timecard + test-schedule
+- [x] Modules 16-17 fix
+- [x] Schema 18-19 + test-timecard + test-schedule
 
 ### Wave 5 — Operations
-- [ ] Schema Task/Checklist/BoardConfig
-- [ ] Modules 7-12 + tests
+- [x] Schema Task/Checklist/BoardConfig
+- [x] Modules 7-12 + tests
 
 ### Wave 6 — Settings & analytics
-- [ ] Schema SystemSetting/TaxRate/Printer/Review
-- [ ] Modules 24-31
-- [ ] Module 33 reports
-- [ ] Module 15 modifiers
+- [x] Schema SystemSetting/TaxRate/Printer/Review
+- [x] Modules 24-31 (except external OAuth for Google reviews)
+- [x] Module 33 reports
+- [x] Module 15 modifiers
+- [x] Module 16–17 staff fix (PIN/role, search, archived, duplicate PIN toast)
+- [x] Module 18–19 time tracking + schedule (TimeCard, ShiftSchedule, clock-in/out, bulk save)
 
 ### Documentation
 - [ ] Update fe-be.md statuses per matrix above
@@ -1085,10 +1159,10 @@ jobs:
 
 | Пункт | Було | Має бути | Причина |
 |-------|------|----------|---------|
-| 16-17 | 🟢 | 🟡 | API partial, PIN/role broken |
-| 18-19 | 🟢 | 🔴 | No API, no schema |
-| 20-22 | 🟢 | 🔴 (BE ready) | UI uses localStorage |
-| 23 | 🟢 | 🟡 | by-qr API missing |
-| 28 | 🟢 | 🟡 | disable not via API |
-| 14 | 🟡 | 🔴 | DishModal not wired |
-| 1-3 | 🟢 | 🟡 | Dual-write, mapper bugs |
+| 16-17 | 🟢 | 🟡 | ~~API partial, PIN/role broken~~ → wired + tested |
+| 18-19 | 🟢 | 🟡 | ~~No API, no schema~~ → TimeCard + ShiftSchedule wired + tested |
+| 20-22 | 🟢 | 🟢 | CRM fully API-wired (no localStorage) |
+| 23 | 🟢 | 🟢 | by-qr API wired |
+| 28 | 🟢 | 🟢 | disable via API |
+| 14 | 🟢 | 🟢 | DishModal wired to menu API |
+| 1-3 | 🟢 | 🟢 | POS block wired + tested |

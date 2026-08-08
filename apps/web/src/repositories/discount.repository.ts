@@ -96,6 +96,17 @@ export class DiscountRepository {
     });
   }
 
+  async updateDiscountPreset(id: string, data: Partial<DiscountPresetData>) {
+    return prisma.discountPreset.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deleteDiscountPreset(id: string) {
+    return prisma.discountPreset.delete({ where: { id } });
+  }
+
   async createPromotion(data: PromotionData) {
     return prisma.promotion.create({
       data: {
@@ -107,6 +118,10 @@ export class DiscountRepository {
         targetItems: data.targetItems || [],
       },
     });
+  }
+
+  async deletePromotion(id: string) {
+    return prisma.promotion.delete({ where: { id } });
   }
 
   async calculateServerHappyHour(

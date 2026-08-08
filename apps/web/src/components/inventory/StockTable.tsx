@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PackageSearch, Download, Search, MapPin, ChevronDown, Check, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AddItemModal, { StockItemData } from './AddItemModal';
+import {
+  getInventoryAsync,
+  inferCategoryFromSku,
+  stockStatusFromQuantity,
+  type MerchItem,
+} from '@/lib/inventory';
 
 type StockStatus = 'healthy' | 'low' | 'out';
 type Category = 'merch' | 'kitchen' | 'bar';
@@ -22,41 +28,60 @@ interface StockItem {
   };
 }
 
-const MOCK_INVENTORY: StockItem[] = [
-  { id: '1', sku: 'M-MUG-01', name: 'Corgi Signature Mug', category: 'merch', totalStock: 45, minThreshold: 50, status: 'low', locations: { main: 20, gothic: 5, eixample: 10, sagrada: 10 } },
-  { id: '2', sku: 'M-TEE-02', name: 'Corgi Staff T-Shirt (M)', category: 'merch', totalStock: 120, minThreshold: 30, status: 'healthy', locations: { main: 100, gothic: 5, eixample: 10, sagrada: 5 } },
-  { id: '3', sku: 'K-MILK-01', name: 'Oat Milk (Barista Edition) 1L', category: 'kitchen', totalStock: 12, minThreshold: 24, status: 'out', locations: { main: 12, gothic: 0, eixample: 0, sagrada: 0 } },
-  { id: '4', sku: 'B-CFB-01', name: 'Corgi Blend Coffee Beans 1kg', category: 'bar', totalStock: 85, minThreshold: 20, status: 'healthy', locations: { main: 50, gothic: 10, eixample: 15, sagrada: 10 } },
-  { id: '5', sku: 'B-SYR-01', name: 'Vanilla Syrup 1L', category: 'bar', totalStock: 15, minThreshold: 10, status: 'healthy', locations: { main: 5, gothic: 3, eixample: 4, sagrada: 3 } },
-  { id: '6', sku: 'M-BAG-01', name: 'Corgi Tote Bag', category: 'merch', totalStock: 8, minThreshold: 15, status: 'low', locations: { main: 8, gothic: 0, eixample: 0, sagrada: 0 } },
-  { id: '7', sku: 'K-EGG-01', name: 'Free Range Eggs (Dozen)', category: 'kitchen', totalStock: 150, minThreshold: 50, status: 'healthy', locations: { main: 100, gothic: 20, eixample: 15, sagrada: 15 } },
-  { id: '8', sku: 'B-MTCH-01', name: 'Ceremonial Matcha 500g', category: 'bar', totalStock: 3, minThreshold: 5, status: 'low', locations: { main: 2, gothic: 1, eixample: 0, sagrada: 0 } },
-  { id: '9', sku: 'K-BREAD-01', name: 'Sourdough Loaf', category: 'kitchen', totalStock: 0, minThreshold: 10, status: 'out', locations: { main: 0, gothic: 0, eixample: 0, sagrada: 0 } },
-  { id: '10', sku: 'M-PIN-01', name: 'Enamel Corgi Pin', category: 'merch', totalStock: 250, minThreshold: 50, status: 'healthy', locations: { main: 150, gothic: 30, eixample: 40, sagrada: 30 } },
-  { id: '11', sku: 'B-CHAI-01', name: 'Spiced Chai Mix 1kg', category: 'bar', totalStock: 18, minThreshold: 15, status: 'healthy', locations: { main: 10, gothic: 2, eixample: 4, sagrada: 2 } },
-  { id: '12', sku: 'K-AVO-01', name: 'Hass Avocados (Box)', category: 'kitchen', totalStock: 5, minThreshold: 10, status: 'low', locations: { main: 5, gothic: 0, eixample: 0, sagrada: 0 } },
-  { id: '13', sku: 'B-CUP-01', name: 'Takeaway Cups 8oz', category: 'bar', totalStock: 5000, minThreshold: 1000, status: 'healthy', locations: { main: 3000, gothic: 500, eixample: 800, sagrada: 700 } },
-  { id: '14', sku: 'M-HAT-01', name: 'Corgi Dad Cap', category: 'merch', totalStock: 12, minThreshold: 20, status: 'low', locations: { main: 10, gothic: 0, eixample: 2, sagrada: 0 } },
-  { id: '15', sku: 'K-FLR-01', name: 'All-Purpose Flour 25kg', category: 'kitchen', totalStock: 8, minThreshold: 5, status: 'healthy', locations: { main: 8, gothic: 0, eixample: 0, sagrada: 0 } },
-  { id: '16', sku: 'B-LID-01', name: 'Cup Lids 8oz/12oz', category: 'bar', totalStock: 4500, minThreshold: 1000, status: 'healthy', locations: { main: 2500, gothic: 500, eixample: 800, sagrada: 700 } },
-  { id: '17', sku: 'M-SOCKS-01', name: 'Corgi Print Socks', category: 'merch', totalStock: 85, minThreshold: 30, status: 'healthy', locations: { main: 50, gothic: 10, eixample: 15, sagrada: 10 } },
-  { id: '18', sku: 'K-BUT-01', name: 'Unsalted Butter 1kg', category: 'kitchen', totalStock: 4, minThreshold: 10, status: 'low', locations: { main: 4, gothic: 0, eixample: 0, sagrada: 0 } },
-  { id: '19', sku: 'B-COCO-01', name: 'Hot Chocolate Powder 2kg', category: 'bar', totalStock: 22, minThreshold: 10, status: 'healthy', locations: { main: 12, gothic: 3, eixample: 4, sagrada: 3 } },
-  { id: '20', sku: 'K-BACON-01', name: 'Smoked Bacon 5kg', category: 'kitchen', totalStock: 0, minThreshold: 5, status: 'out', locations: { main: 0, gothic: 0, eixample: 0, sagrada: 0 } },
-  { id: '21', sku: 'B-STRAW-01', name: 'Paper Straws (Pack)', category: 'bar', totalStock: 150, minThreshold: 50, status: 'healthy', locations: { main: 100, gothic: 10, eixample: 20, sagrada: 20 } },
-  { id: '22', sku: 'M-HOOD-01', name: 'Corgi Hoodie (L)', category: 'merch', totalStock: 18, minThreshold: 20, status: 'low', locations: { main: 15, gothic: 1, eixample: 1, sagrada: 1 } },
-  { id: '23', sku: 'K-TOM-01', name: 'Cherry Tomatoes (Box)', category: 'kitchen', totalStock: 12, minThreshold: 15, status: 'low', locations: { main: 12, gothic: 0, eixample: 0, sagrada: 0 } },
-  { id: '24', sku: 'B-SMLK-01', name: 'Soy Milk 1L', category: 'bar', totalStock: 48, minThreshold: 24, status: 'healthy', locations: { main: 30, gothic: 5, eixample: 8, sagrada: 5 } },
-  { id: '25', sku: 'K-CHZ-01', name: 'Cheddar Cheese Block', category: 'kitchen', totalStock: 25, minThreshold: 10, status: 'healthy', locations: { main: 15, gothic: 3, eixample: 4, sagrada: 3 } },
-];
+function mapMerchToStock(item: MerchItem): StockItem {
+  const minThreshold = item.minStockLevel ?? 10;
+  const status = stockStatusFromQuantity(item.quantity, minThreshold);
+  const category = inferCategoryFromSku(item.sku);
+  return {
+    id: item.id,
+    sku: item.sku,
+    name: item.name,
+    category,
+    totalStock: item.quantity,
+    minThreshold,
+    status,
+    locations: {
+      main: item.quantity,
+      gothic: 0,
+      eixample: 0,
+      sagrada: 0,
+    },
+  };
+}
 
-export default function StockTable({ onAdd }: { onAdd?: () => void }) {
+export default function StockTable({
+  onAdd,
+  refreshKey = 0,
+}: {
+  onAdd?: () => void;
+  refreshKey?: number;
+}) {
+  const [items, setItems] = useState<StockItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Category | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<StockItemData | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [exportState, setExportState] = useState<'idle' | 'exporting' | 'done'>('idle');
+
+  const loadItems = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const data = await getInventoryAsync();
+      setItems(data.map(mapMerchToStock));
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load inventory');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadItems();
+  }, [loadItems, refreshKey]);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -67,7 +92,7 @@ export default function StockTable({ onAdd }: { onAdd?: () => void }) {
   };
 
   const sortedItems = React.useMemo(() => {
-    let sortableItems = [...MOCK_INVENTORY];
+    let sortableItems = [...items];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         let aValue: any = a[sortConfig.key as keyof StockItem];
@@ -94,7 +119,7 @@ export default function StockTable({ onAdd }: { onAdd?: () => void }) {
       });
     }
     return sortableItems;
-  }, [sortConfig]);
+  }, [sortConfig, items]);
 
   const filteredItems = sortedItems.filter(item => {
     const matchesFilter = filter === 'all' || item.category === filter;
@@ -171,7 +196,7 @@ export default function StockTable({ onAdd }: { onAdd?: () => void }) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-testid="inventory-stock-table">
       <div className="flex flex-col gap-4 mb-6">
         {/* Row 1: Search, Locations, Add Item */}
         <div className="flex flex-wrap sm:flex-nowrap justify-between items-start sm:items-center gap-4">
@@ -281,6 +306,16 @@ export default function StockTable({ onAdd }: { onAdd?: () => void }) {
       </div>
 
       <div className="flex-1 overflow-auto rounded-xl bg-white border border-gray-100">
+        {loading && (
+          <div className="flex items-center justify-center py-16 text-gray-500 gap-2">
+            <Loader2 size={18} className="animate-spin" />
+            <span className="text-sm font-medium">Loading inventory…</span>
+          </div>
+        )}
+        {!loading && loadError && (
+          <div className="px-6 py-12 text-center text-red-500 font-medium">{loadError}</div>
+        )}
+        {!loading && !loadError && (
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-white border-b border-gray-50 sticky top-0 z-10">
@@ -317,6 +352,7 @@ export default function StockTable({ onAdd }: { onAdd?: () => void }) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   key={item.id} 
+                  data-testid={`inventory-row-${item.sku}`}
                   onClick={() => setSelectedItem(item as unknown as StockItemData)}
                   className="hover:bg-gray-50/80 transition-colors group cursor-pointer"
                 >
@@ -354,12 +390,14 @@ export default function StockTable({ onAdd }: { onAdd?: () => void }) {
             )}
           </tbody>
         </table>
+        )}
       </div>
 
       <AddItemModal 
         isOpen={!!selectedItem} 
         onClose={() => setSelectedItem(null)} 
         initialItem={selectedItem}
+        onSaved={loadItems}
       />
     </div>
   );

@@ -1,124 +1,174 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { Camera, Check, ShieldAlert, Image as ImageIcon, Settings, MapPin, Sun, Moon, Plus, ChevronLeft, ChevronRight, Calendar, GripVertical } from 'lucide-react';
 import PhotoProofUpload from './PhotoProofUpload';
 import DatePicker from '../ui/DatePicker';
-
-type LocationKey = 'gotico' | 'sagrada' | 'eixample' | 'gracia' | 'arc' | 'main';
-
-const LOCALE_KEYS: LocationKey[] = ['gotico', 'sagrada', 'eixample', 'gracia', 'arc', 'main'];
-const LOCALE_NAMES: Record<LocationKey, string> = {
-  gotico: 'Gótico',
-  sagrada: 'Sagrada',
-  eixample: 'Eixample',
-  gracia: 'Gracia',
-  arc: 'Arc de Triumph',
-  main: 'Main WH'
-};
+import {
+  getChecklistsAsync,
+  saveChecklistCompletionAsync,
+  completionsToStateMap,
+  type ChecklistTemplate,
+} from '@/lib/checklists';
+import {
+  CHECKLIST_LOCATION_KEYS,
+  CHECKLIST_LOCATION_NAMES,
+  type LocationKey,
+  type ChecklistShiftType,
+} from '@/lib/checklist-locations';
+import { formatDateParam } from '@/lib/task-dates';
+import { getEmployeesAsync } from '@/lib/staff';
 
 type SOPMasterTask = {
   id: string;
   title: string;
   requiresPhoto: boolean;
-  category: 'opening' | 'closing';
+  category: ChecklistShiftType;
 };
 
-const INITIAL_MASTER_TASKS: SOPMasterTask[] = [
-  { id: 'o1', title: 'Turn on espresso machine and boiler', requiresPhoto: false, category: 'opening' },
-  { id: 'o2', title: 'Calibrate grinder for new espresso blend', requiresPhoto: true, category: 'opening' },
-  { id: 'o3', title: 'Count float in cash register', requiresPhoto: true, category: 'opening' },
-  { id: 'o4', title: 'Bake morning batch of croissants', requiresPhoto: false, category: 'opening' },
-  { id: 'o5', title: 'Set up pastry vitrine beautifully', requiresPhoto: true, category: 'opening' },
-  { id: 'o6', title: 'Check all fridge temperatures (Log 2-5°C)', requiresPhoto: false, category: 'opening' },
-  
-  { id: 'c1', title: 'Run Z-Report and count final cash', requiresPhoto: true, category: 'closing' },
-  { id: 'c2', title: 'Deep clean espresso machine & backflush', requiresPhoto: true, category: 'closing' },
-  { id: 'c3', title: 'Soak steam wands in Rinza overnight', requiresPhoto: false, category: 'closing' },
-  { id: 'c4', title: 'Restock milk fridges for tomorrow', requiresPhoto: false, category: 'closing' },
-  { id: 'c5', title: 'Empty all trash bins and take out garbage', requiresPhoto: false, category: 'closing' },
-  { id: 'c6', title: 'Lock back door and turn on security alarm', requiresPhoto: false, category: 'closing' },
-];
-
-// Map: Task ID -> (Map: LocationKey -> boolean)
 type SOPLocalePermissions = Record<string, Record<LocationKey, boolean>>;
 
-const generateInitialPermissions = (): SOPLocalePermissions => {
-  const perms: SOPLocalePermissions = {};
-  INITIAL_MASTER_TASKS.forEach(task => {
-    perms[task.id] = {
-      gotico: true,
-      sagrada: true,
-      eixample: true,
-      gracia: true,
-      arc: true,
-      main: task.id.startsWith('c') ? false : true, // Just to vary some data
-    };
-  });
-  return perms;
-};
-
-// Map: "locKey_taskId" -> { completed: boolean, photoUrl?: string }
-type SOPCompletionState = Record<string, { completed: boolean; photoUrl?: string }>;
+type CompletionEntry = { completed: boolean; photoUrl?: string; completionId?: string };
+type SOPCompletionState = Record<string, CompletionEntry>;
 
 type DailyChecklistsProps = {
   isSetupMode: boolean;
   setIsSetupMode: (val: boolean) => void;
+  onCompletionChanged?: () => void;
 };
 
-export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyChecklistsProps) {
-  const [masterTasks, setMasterTasks] = useState<SOPMasterTask[]>(INITIAL_MASTER_TASKS);
-  const [permissions, setPermissions] = useState<SOPLocalePermissions>(generateInitialPermissions());
-  const [completionState, setCompletionState] = useState<SOPCompletionState>({});
-  
-  const [selectedShift, setSelectedShift] = useState<'opening' | 'closing'>('opening');
-  const [uploadModalItem, setUploadModalItem] = useState<{ id: string, loc: LocationKey, title: string, photoUrl?: string } | null>(null);
+function templatesToMasterTasks(templates: ChecklistTemplate[]): SOPMasterTask[] {
+  return templates.map((t) => ({
+    id: t.taskKey,
+    title: t.title,
+    requiresPhoto: t.requiresPhoto,
+    category: t.category,
+  }));
+}
 
-  // Date selection state
+function templatesToPermissions(templates: ChecklistTemplate[]): SOPLocalePermissions {
+  const perms: SOPLocalePermissions = {};
+  for (const t of templates) {
+    perms[t.taskKey] = CHECKLIST_LOCATION_KEYS.reduce((acc, key) => {
+      acc[key] = t.permissions[key] ?? false;
+      return acc;
+    }, {} as Record<LocationKey, boolean>);
+  }
+  return perms;
+}
+
+export default function DailyChecklists({ isSetupMode, setIsSetupMode, onCompletionChanged }: DailyChecklistsProps) {
+  const [masterTasks, setMasterTasks] = useState<SOPMasterTask[]>([]);
+  const [permissions, setPermissions] = useState<SOPLocalePermissions>({});
+  const [completionState, setCompletionState] = useState<SOPCompletionState>({});
+  const [actorUserId, setActorUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [selectedShift, setSelectedShift] = useState<ChecklistShiftType>('opening');
+  const [uploadModalItem, setUploadModalItem] = useState<{ id: string, loc: LocationKey, title: string, photoUrl?: string } | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // Mock days with missed/overdue tasks
   const isMissed = (day: number, month: number) => month === 4 && (day === 1 || day === 2);
+
+  const loadChecklists = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setSaveError(null);
+      const data = await getChecklistsAsync(
+        selectedDate,
+        isSetupMode ? undefined : selectedShift
+      );
+      setMasterTasks(templatesToMasterTasks(data.templates));
+      setPermissions(templatesToPermissions(data.templates));
+      setCompletionState(completionsToStateMap(data.completions));
+    } catch (err) {
+      console.error('Failed to load checklists:', err);
+      setSaveError(err instanceof Error ? err.message : 'Failed to load checklists');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedDate, selectedShift, isSetupMode]);
+
+  useEffect(() => {
+    void loadChecklists();
+  }, [loadChecklists]);
+
+  useEffect(() => {
+    getEmployeesAsync()
+      .then((staff) => {
+        const active = staff.find((e) => e.status === 'active') ?? staff[0];
+        if (active) setActorUserId(active.id);
+      })
+      .catch((err) => console.error('Failed to load staff for checklist actor:', err));
+  }, []);
 
   const handlePrevDay = () => {
     const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1);
     setSelectedDate(newDate);
   };
-  
+
   const handleNextDay = () => {
     const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1);
     setSelectedDate(newDate);
   };
 
-  // Setup mode inline add task state
-  const [isAddingNew, setIsAddingNew] = useState<'opening' | 'closing' | null>(null);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskRequiresPhoto, setNewTaskRequiresPhoto] = useState(false);
+  const persistCompletion = async (
+    loc: LocationKey,
+    taskId: string,
+    completed: boolean,
+    photoUrl?: string
+  ) => {
+    if (!actorUserId) {
+      setSaveError('No active staff user available');
+      return;
+    }
+    const stateKey = `${loc}_${taskId}`;
+    try {
+      setSaveError(null);
+      const saved = await saveChecklistCompletionAsync({
+        shiftType: selectedShift,
+        date: formatDateParam(selectedDate),
+        locationKey: loc,
+        taskKey: taskId,
+        completed,
+        photoUrl: photoUrl ?? null,
+        userId: actorUserId,
+      });
+      setCompletionState((prev) => ({
+        ...prev,
+        [stateKey]: {
+          completed: saved.completed,
+          photoUrl: saved.photoUrl ?? undefined,
+          completionId: saved.id,
+        },
+      }));
+      onCompletionChanged?.();
+    } catch (err) {
+      console.error('Failed to save checklist item:', err);
+      setSaveError(err instanceof Error ? err.message : 'Failed to save checklist item');
+    }
+  };
 
-  // Normal view toggle item
   const toggleItem = (loc: LocationKey, taskId: string, requiresPhoto: boolean, title: string) => {
     const stateKey = `${loc}_${taskId}`;
     const isCompleted = completionState[stateKey]?.completed || false;
-    
+
     if (isCompleted) {
-      setCompletionState(prev => ({ ...prev, [stateKey]: { completed: false, photoUrl: undefined } }));
+      void persistCompletion(loc, taskId, false);
+    } else if (requiresPhoto) {
+      setUploadModalItem({ id: taskId, loc, title, photoUrl: completionState[stateKey]?.photoUrl });
     } else {
-      if (requiresPhoto) {
-        setUploadModalItem({ id: taskId, loc, title, photoUrl: completionState[stateKey]?.photoUrl });
-      } else {
-        setCompletionState(prev => ({ ...prev, [stateKey]: { completed: true } }));
-      }
+      void persistCompletion(loc, taskId, true);
     }
   };
 
   const handlePhotoUpload = (id: string, loc: LocationKey, photoUrl: string) => {
-    const stateKey = `${loc}_${id}`;
-    setCompletionState(prev => ({ ...prev, [stateKey]: { completed: true, photoUrl } }));
+    void persistCompletion(loc, id, true, photoUrl);
     setUploadModalItem(null);
   };
 
-  // Setup view toggle permission
   const togglePermission = (taskId: string, loc: LocationKey) => {
     setPermissions(prev => ({
       ...prev,
@@ -129,7 +179,16 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
     }));
   };
 
-  const saveNewTask = (category: 'opening' | 'closing') => {
+  const handleReorder = (category: ChecklistShiftType, newOrder: SOPMasterTask[]) => {
+    const other = masterTasks.filter((t) => t.category !== category);
+    setMasterTasks([...other, ...newOrder]);
+  };
+
+  const [isAddingNew, setIsAddingNew] = useState<ChecklistShiftType | null>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskRequiresPhoto, setNewTaskRequiresPhoto] = useState(false);
+
+  const saveNewTask = (category: ChecklistShiftType) => {
     if (!newTaskTitle.trim()) return;
     const newId = `new_${Date.now()}`;
     const newTask: SOPMasterTask = {
@@ -138,15 +197,14 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
       requiresPhoto: newTaskRequiresPhoto,
       category
     };
-    
+
     setMasterTasks([...masterTasks, newTask]);
-    
-    // By default apply to all locales when created from matrix
     setPermissions(prev => ({
       ...prev,
-      [newId]: {
-        gotico: true, sagrada: true, eixample: true, gracia: true, arc: true, main: true
-      }
+      [newId]: CHECKLIST_LOCATION_KEYS.reduce((acc, key) => {
+        acc[key] = true;
+        return acc;
+      }, {} as Record<LocationKey, boolean>),
     }));
 
     setIsAddingNew(null);
@@ -169,7 +227,7 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-gray-900 flex items-center gap-2">
               <MapPin size={16} className="text-corgi" />
-              {LOCALE_NAMES[loc]}
+              {CHECKLIST_LOCATION_NAMES[loc]}
             </h3>
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
               {selectedShift === 'opening' ? 'Morning Opening' : 'Evening Closing'}
@@ -209,7 +267,9 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
 
                 return (
                   <div 
-                    key={item.id} 
+                    key={item.id}
+                    data-testid={`checklist-task-${loc}-${item.id}`}
+                    data-completed={isCompleted ? 'true' : 'false'}
                     className="group flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-transparent hover:border-gray-100"
                     onClick={() => toggleItem(loc, item.id, item.requiresPhoto, item.title)}
                   >
@@ -230,7 +290,13 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
                           </span>
                         )}
                         {isCompleted && photoUrl && (
-                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <img
+                              src={photoUrl}
+                              alt=""
+                              data-testid={`checklist-thumb-${loc}-${item.id}`}
+                              className="w-6 h-6 rounded-md object-cover border border-gray-200 shrink-0"
+                            />
                             <ShieldAlert size={11} /> Verified
                             <button 
                               onClick={() => setUploadModalItem({ id: item.id, loc, title: item.title, photoUrl })}
@@ -267,7 +333,7 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
   // ----------------------------------------------------
   // MATRIX VIEW (Setup Mode)
   // ----------------------------------------------------
-  const renderPermissionsTable = (category: 'opening' | 'closing') => {
+  const renderPermissionsTable = (category: ChecklistShiftType) => {
     const tasks = masterTasks.filter(t => t.category === category);
     
     return (
@@ -279,13 +345,13 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
               <th className="px-6 py-4 text-[13px] font-bold text-gray-500 w-1/3">
                 {category === 'opening' ? 'Morning Opening SOPs' : 'Evening Closing SOPs'}
               </th>
-              {LOCALE_KEYS.map(loc => (
+              {CHECKLIST_LOCATION_KEYS.map(loc => (
                 <th key={loc} className="px-2 py-4 text-center bg-purple-50/50">
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-4 h-4 rounded-full border border-purple-600 bg-purple-600 flex items-center justify-center scale-125 transition-transform">
                       <div className="w-1.5 h-1.5 bg-white rounded-full" />
                     </div>
-                    <span className="text-[12px] font-bold text-purple-600">{LOCALE_NAMES[loc]}</span>
+                    <span className="text-[12px] font-bold text-purple-600">{CHECKLIST_LOCATION_NAMES[loc]}</span>
                   </div>
                 </th>
               ))}
@@ -320,7 +386,7 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
                     </div>
                   </div>
                 </td>
-                {LOCALE_KEYS.map(loc => {
+                {CHECKLIST_LOCATION_KEYS.map(loc => {
                   const isChecked = permissions[task.id]?.[loc] || false;
                   return (
                     <td key={loc} className="px-2 py-3 text-center group-hover:bg-purple-50/20 transition-colors">
@@ -415,8 +481,13 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button onClick={handlePrevDay} className="text-gray-500 hover:text-gray-900 transition-colors cursor-pointer px-1">
+            <div className="flex items-center gap-2" data-testid="checklist-date-nav">
+              <button
+                type="button"
+                data-testid="checklist-prev-day"
+                onClick={handlePrevDay}
+                className="text-gray-500 hover:text-gray-900 transition-colors cursor-pointer px-1"
+              >
                 <ChevronLeft size={18} strokeWidth={2.5} />
               </button>
               
@@ -424,9 +495,15 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
                 selectedDate={selectedDate} 
                 onChange={setSelectedDate} 
                 isMissed={isMissed}
+                testId="checklist-date-picker"
               />
 
-              <button onClick={handleNextDay} className="text-gray-500 hover:text-gray-900 transition-colors cursor-pointer px-1">
+              <button
+                type="button"
+                data-testid="checklist-next-day"
+                onClick={handleNextDay}
+                className="text-gray-500 hover:text-gray-900 transition-colors cursor-pointer px-1"
+              >
                 <ChevronRight size={18} strokeWidth={2.5} />
               </button>
             </div>
@@ -448,7 +525,14 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode }: DailyCh
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0">
-        {isSetupMode ? (
+        {saveError && (
+          <div role="alert" className="mb-4 bg-red-50 border border-red-100 text-red-700 text-[13px] font-medium rounded-xl px-3 py-2">
+            {saveError}
+          </div>
+        )}
+        {isLoading && !isSetupMode ? (
+          <div className="text-center py-16 text-gray-400 font-medium">Loading checklists…</div>
+        ) : isSetupMode ? (
           <div className="pb-10 w-full">
             {renderPermissionsTable('opening')}
             {renderPermissionsTable('closing')}

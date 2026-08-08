@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, MapPin, ShoppingBag, Bike, Store, Printer, CreditCard, Trash2, SplitSquareHorizontal, Banknote, CheckCircle2, ChevronLeft, Tag, Percent, Coins, Heart, Mail, Send, Download, AlertCircle, Users, Sparkles, Gift, UserPlus, MessageSquare, Receipt, ChefHat, AlertTriangle, Search, Minus, Plus, Check } from 'lucide-react';
-import { Order, OrderSource, OrderItem } from '@/lib/orders';
-import { getDiscountPresets, DiscountPreset } from '@/lib/discounts';
-import { getGuests, Guest, getTierCashbackRate, updateGuestPointsAndLTV, getGuestsAsync } from '@/lib/crm';
-import { updateTableStatus } from '@/lib/tables';
-import { logAuditEvent } from '@/lib/audit';
-import { calculateHappyHourDiscount } from '@/lib/promotions';
-import { getCurrentShift } from '@/lib/shifts';
-import { getGiftCards, redeemGiftCard, findCardByCodeAsync, redeemGiftCardAsync } from '@/lib/giftcards';
+import { X, Clock, MapPin, ShoppingBag, Bike, Store, Printer, CreditCard, Trash2, SplitSquareHorizontal, Banknote, CheckCircle2, ChevronLeft, Tag, Percent, Coins, Heart, Mail, Send, Download, AlertCircle, Users, Sparkles, Gift, UserPlus, MessageSquare, Receipt, ChefHat, AlertTriangle, Search, Minus, Plus, Check, RotateCcw } from 'lucide-react';
+import { Order, OrderSource, OrderItem, completePaymentAsync, PayPayload } from '@/lib/orders';
+import { getDiscountPresetsAsync, DiscountPreset } from '@/lib/discounts';
+import { Guest, getGuestsAsync, getTierCashbackRate, getLoyaltyConfigAsync, DEFAULT_LOYALTY_CONFIG, type LoyaltyConfig } from '@/lib/crm';
+import { updateTableStatusAsync } from '@/lib/tables';
+import { logAuditEventAsync } from '@/lib/audit';
+import { getCurrentShiftAsync } from '@/lib/shifts';
+import { findCardByCodeAsync } from '@/lib/giftcards';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
+import { refundOrderAsync, generateFiscalAsync, printOrderReceiptAsync } from '@/lib/fiscal';
+import { getDefaultReceiptPrinterIpAsync } from '@/lib/printers';
+import { mapApiOrderToUi } from '@/lib/mappers/order.mapper';
+import { calculateReceiptTaxes } from '@/lib/tax-calc';
+import { getTaxRatesAsync, taxRatesToMap, TAX_RATES_UPDATED_EVENT } from '@/lib/taxes';
+import { getPosSettingsAsync, DEFAULT_POS_SETTINGS, type PosSettings } from '@/lib/pos-settings';
 
 interface OrderDetailsModalProps {
   order: Order | null;
@@ -17,6 +23,7 @@ interface OrderDetailsModalProps {
   onClose: () => void;
   onUpdateStatus: (id: string, status: string) => void;
   onUpdateOrder: (updatedOrder: Order) => void;
+  onPaymentComplete?: (updatedOrder: Order) => void | Promise<void>;
 }
 
 const SourceBadge = ({ source }: { source: OrderSource }) => {
@@ -32,15 +39,16 @@ const SourceBadge = ({ source }: { source: OrderSource }) => {
   }
 };
 
-type ViewState = 'default' | 'checkout' | 'split_bill' | 'split_amount' | 'split_ways_list' | 'split_dishes' | 'checkout_split_dishes' | 'discount' | 'tip' | 'send_receipt' | 'cancel_order_confirm' | 'factura_form' | 'factura_a4';
+type ViewState = 'default' | 'checkout' | 'split_bill' | 'split_amount' | 'split_ways_list' | 'split_dishes' | 'checkout_split_dishes' | 'discount' | 'tip' | 'send_receipt' | 'cancel_order_confirm' | 'factura_form' | 'factura_a4' | 'refund_select' | 'refund_confirm';
 
-export default function OrderDetailsModal({ order, isOpen, initialView = 'default', onClose, onUpdateStatus, onUpdateOrder: parentOnUpdateOrder }: OrderDetailsModalProps) {
+export default function OrderDetailsModal({ order, isOpen, initialView = 'default', onClose, onUpdateStatus, onUpdateOrder: parentOnUpdateOrder, onPaymentComplete }: OrderDetailsModalProps) {
   const [view, setView] = useState<ViewState>(initialView);
   const [splitWays, setSplitWays] = useState(2);
   const [splitAmountType, setSplitAmountType] = useState<'ways' | 'custom'>('ways');
   const [customSplitAmount, setCustomSplitAmount] = useState('');
   const [customSplits, setCustomSplits] = useState<number[]>([]);
   const [discountPresets, setDiscountPresets] = useState<DiscountPreset[]>([]);
+  const [loyaltyConfig, setLoyaltyConfig] = useState<LoyaltyConfig>(DEFAULT_LOYALTY_CONFIG);
   const [manualDiscount, setManualDiscount] = useState('');
   
   const [manualTip, setManualTip] = useState('');
@@ -65,6 +73,16 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
   const [giftCardError, setGiftCardError] = useState<string | null>(null);
   const [giftCardSuccess, setGiftCardSuccess] = useState<string | null>(null);
   const [showGiftCardInput, setShowGiftCardInput] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [shiftOpen, setShiftOpen] = useState<boolean | null>(null);
+  const [shiftWarning, setShiftWarning] = useState(false);
+  const [refundSelections, setRefundSelections] = useState<Record<number, number>>({});
+  const [refundReason, setRefundReason] = useState('');
+  const [refundMethod, setRefundMethod] = useState<'cash' | 'card'>('card');
+  const [refundProcessing, setRefundProcessing] = useState(false);
+  const [refundError, setRefundError] = useState<string | null>(null);
+  const [fiscalInvoiceNumber, setFiscalInvoiceNumber] = useState('');
   
   // Factura Corporate Details
   const [companyName, setCompanyName] = useState('');
@@ -76,9 +94,38 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     barItems: string[];
     kitchenItems: string[];
   } | null>(null);
+  const [taxRates, setTaxRates] = useState({ food: 10, alcohol: 21 });
+  const [posSettings, setPosSettings] = useState<PosSettings>(DEFAULT_POS_SETTINGS);
 
-  const handleKitchenPrint = () => {
+  useEffect(() => {
+    let cancelled = false;
+    getTaxRatesAsync()
+      .then((rates) => {
+        if (!cancelled) setTaxRates(taxRatesToMap(rates));
+      })
+      .catch(console.error);
+
+    const onRatesUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (Array.isArray(detail)) setTaxRates(taxRatesToMap(detail));
+    };
+    window.addEventListener(TAX_RATES_UPDATED_EVENT, onRatesUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(TAX_RATES_UPDATED_EVENT, onRatesUpdated);
+    };
+  }, []);
+
+  const handleKitchenPrint = async () => {
     if (!order) return;
+    const ip = await getDefaultReceiptPrinterIpAsync(DEFAULT_LOCATION_ID);
+    if (ip) {
+      try {
+        await printOrderReceiptAsync(order.id, ip, 'kitchen');
+      } catch (e) {
+        console.warn('Kitchen printer unavailable, falling back to simulated print:', e);
+      }
+    }
     const barItems: string[] = [];
     const kitchenItems: string[] = [];
     
@@ -113,6 +160,46 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     }, 6000);
   };
 
+  const handleReceiptPrint = async () => {
+    if (!order) return;
+    if (order.tableId) {
+      updateTableStatusAsync(order.tableId, 'billed').catch(console.error);
+    }
+    const ip = getPrinterIp();
+    if (ip) {
+      try {
+        await printOrderReceiptAsync(order.id, ip, 'receipt');
+        return;
+      } catch (e) {
+        console.warn('Receipt printer unavailable, falling back to browser print:', e);
+      }
+    }
+    window.print();
+  };
+
+  const handleDownloadReceipt = async () => {
+    if (!order) return;
+    const lines: string[] = [];
+    if (order.paid) {
+      try {
+        const result = await generateFiscalAsync(order.id, {});
+        lines.push(`Invoice: ${result.record.invoiceNumber}`);
+        lines.push(`Hash: ${result.record.hash?.slice(0, 16) || 'N/A'}...`);
+        lines.push('');
+      } catch (e) {
+        console.warn('Could not attach fiscal data to export:', e);
+      }
+    }
+    lines.push(formatReceiptText(order));
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `receipt-${order.id}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Common utility to calculate total
   const calculateFinalTotal = (baseItems: OrderItem[], currentDiscount: Order['discount'], currentTip: Order['tip']) => {
     const rawTotal = baseItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -134,14 +221,52 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     return { rawTotal, amountDeducted, afterDiscount, amountAdded, finalTotal: parseFloat(Math.max(0, afterDiscount + amountAdded).toFixed(2)) };
   };
 
+  const paymentMethodLabel = (method: string) => {
+    switch (method) {
+      case 'card': return 'Card';
+      case 'cash': return 'Cash';
+      case 'points': return 'Loyalty Points';
+      case 'giftcard': return 'Gift Card';
+      default: return method;
+    }
+  };
+
+  const formatReceiptText = (o: Order) => {
+    const lines = [
+      `RECEIPT - Order ${o.id}`,
+      `Customer: ${o.customerName}`,
+      `Date: ${o.time.toLocaleString()}`,
+      '',
+      '--- Items ---',
+      ...o.items.map((item) => `${item.quantity}x ${item.name}  €${(item.price * item.quantity).toFixed(2)}`),
+      '',
+      `Subtotal: €${o.total.toFixed(2)}`,
+    ];
+    if (o.discount) lines.push(`Discount (${o.discount.name}): -€${o.discount.amountDeducted.toFixed(2)}`);
+    if (o.tip) lines.push(`Tip: +€${o.tip.amountAdded.toFixed(2)}`);
+    lines.push(`TOTAL: €${o.total.toFixed(2)}`);
+    if (o.payments && o.payments.length > 0) {
+      lines.push('', '--- Payments ---');
+      o.payments.forEach((p) => {
+        lines.push(`${paymentMethodLabel(p.method)}: €${p.amount.toFixed(2)}${p.code ? ` (${p.code})` : ''}`);
+      });
+      lines.push(`Paid: €${(o.amountPaid || 0).toFixed(2)}`);
+      if (!o.paid) lines.push(`Remaining: €${(o.total - (o.amountPaid || 0)).toFixed(2)}`);
+    }
+    return lines.join('\n');
+  };
+
   useEffect(() => {
     if (isOpen) {
       setView(initialView);
-      setDiscountPresets(getDiscountPresets());
+      setDiscountPresets([]);
+      getDiscountPresetsAsync().then(setDiscountPresets).catch(console.error);
+      getLoyaltyConfigAsync().then(setLoyaltyConfig).catch(console.error);
       getGuestsAsync().then(setAllGuests).catch(e => {
         console.error('Failed to load guests dynamically:', e);
-        setAllGuests(getGuests());
+        setAllGuests([]);
       });
+      getPosSettingsAsync().then(setPosSettings).catch(console.error);
       setManualDiscount('');
       setManualTip('');
       setManualTipType('percent');
@@ -162,6 +287,12 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       setTaxId('');
       setCompanyAddress('');
       setActiveInvoiceNumber('');
+      setPaymentError(null);
+      setShiftWarning(false);
+      setRefundSelections({});
+      setRefundReason('');
+      setRefundError(null);
+      setFiscalInvoiceNumber('');
 
       // Auto-apply Happy Hour discount on open if eligible
       if (order && !order.paid && !order.discount) {
@@ -186,27 +317,15 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     }
   }, [isOpen, initialView]);
 
-  const onUpdateOrder = (updatedOrder: Order) => {
-    if (updatedOrder.paid && order && !order.paid) {
-      if (updatedOrder.tableId) {
-        updateTableStatus(updatedOrder.tableId, 'dirty');
-      }
-      if (updatedOrder.customerId) {
-        const guest = allGuests.find(g => g.id === updatedOrder.customerId);
-        if (guest) {
-          const pointsSpent = updatedOrder.payments?.filter(p => p.method === 'points').reduce((sum, p) => sum + p.amount, 0) || 0;
-          const cashCardSpent = updatedOrder.total - pointsSpent;
-          const rate = getTierCashbackRate(guest.tier);
-          const pointsEarned = parseFloat((cashCardSpent * rate).toFixed(2));
-          
-          updateGuestPointsAndLTV(updatedOrder.customerId, pointsEarned, pointsSpent, cashCardSpent);
-          
-          updatedOrder.customerPointsEarned = pointsEarned;
-          updatedOrder.customerPointsPaid = pointsSpent;
-        }
-      }
-      logAuditEvent('order_completed', { orderId: updatedOrder.id, total: updatedOrder.total, payments: updatedOrder.payments });
+  useEffect(() => {
+    if (isOpen && (view === 'checkout' || view === 'checkout_split_dishes' || view === 'split_ways_list')) {
+      getCurrentShiftAsync(DEFAULT_LOCATION_ID)
+        .then((shift) => setShiftOpen(!!shift))
+        .catch(() => setShiftOpen(null));
     }
+  }, [isOpen, view]);
+
+  const onUpdateOrder = (updatedOrder: Order) => {
     parentOnUpdateOrder(updatedOrder);
   };
 
@@ -283,19 +402,85 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     }
   };
 
-  const handleCheckout = (method: 'cash' | 'card') => {
-    const newPayments = [...(order.payments || []), { method, amount: remainingBalance }];
-    const newAmountPaid = parseFloat(((order.amountPaid || 0) + remainingBalance).toFixed(2));
-    onUpdateOrder({ 
-      ...order, 
-      amountPaid: newAmountPaid, 
-      payments: newPayments, 
-      paid: true 
-    });
-    // Keep them on the checkout success screen for a moment, or just switch back to default
-    setTimeout(() => {
+  const handleCompletePayment = async (
+    payments: PayPayload['payments'],
+    options?: { paidItemIndexes?: number[]; onSuccess?: () => void }
+  ) => {
+    if (!order || paymentProcessing) return;
+    setPaymentProcessing(true);
+    setPaymentError(null);
+    setGiftCardError(null);
+    try {
+      const updated = await completePaymentAsync(order.id, {
+        payments,
+        customerId: order.customerId,
+        discount: order.discount ? { name: order.discount.name, value: order.discount.value } : undefined,
+        tip: order.tip ? { type: order.tip.type, value: order.tip.value } : undefined,
+        total: order.total,
+        paidItemIndexes: options?.paidItemIndexes,
+      });
+      if (updated.warnings?.includes('NO_OPEN_SHIFT')) {
+        setShiftWarning(true);
+      }
+      if (onPaymentComplete) {
+        await onPaymentComplete(updated);
+      } else {
+        parentOnUpdateOrder(updated);
+      }
+      getGuestsAsync().then(setAllGuests).catch(() => setAllGuests([]));
+      options?.onSuccess?.();
+      if (updated.paid) {
+        setTimeout(() => setView('default'), 600);
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Payment failed';
+      setPaymentError(msg);
+      setGiftCardError(msg);
+    } finally {
+      setPaymentProcessing(false);
+    }
+  };
+
+  const handleCheckout = async (method: 'cash' | 'card') => {
+    if (method === 'cash' && shiftOpen === false) {
+      setShiftWarning(true);
+    }
+    await handleCompletePayment([{ method, amount: remainingBalance }]);
+  };
+
+  const refundTotalSelected = Object.entries(refundSelections).reduce((sum, [idx, qty]) => {
+    const item = order?.items[Number(idx)];
+    return item ? sum + item.price * qty : sum;
+  }, 0);
+
+  const handleProcessRefund = async () => {
+    if (!order || refundProcessing || !refundReason.trim()) return;
+    const items = Object.entries(refundSelections)
+      .filter(([, qty]) => qty > 0)
+      .map(([idx, quantity]) => ({ itemIndex: Number(idx), quantity }));
+    if (items.length === 0) {
+      setRefundError('Select at least one item to refund');
+      return;
+    }
+    setRefundProcessing(true);
+    setRefundError(null);
+    try {
+      const result = await refundOrderAsync(order.id, {
+        items,
+        reason: refundReason.trim(),
+        method: refundMethod,
+      });
+      if (result.order) {
+        parentOnUpdateOrder(mapApiOrderToUi(result.order as any) as Order);
+      }
       setView('default');
-    }, 600);
+      setRefundSelections({});
+      setRefundReason('');
+    } catch (e: unknown) {
+      setRefundError(e instanceof Error ? e.message : 'Refund failed');
+    } finally {
+      setRefundProcessing(false);
+    }
   };
 
   const handleGiftCardRedeem = async (code: string) => {
@@ -324,44 +509,22 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       }
 
       const redeemAmount = parseFloat(Math.min(remainingBalance, card.balance).toFixed(2));
-      const res = await redeemGiftCardAsync(code, redeemAmount);
-      
-      if (!res.success) {
-        setGiftCardError(res.error || 'Failed to redeem gift card.');
-        setGiftCardSuccess(null);
-        return;
-      }
-
-      setGiftCardError(null);
-      setGiftCardSuccess(`Successfully applied €${redeemAmount.toFixed(2)} from Gift Card!`);
-
-      const newPayments = [...(order.payments || []), { method: 'giftcard' as const, amount: redeemAmount, code }];
-      const newAmountPaid = parseFloat(((order.amountPaid || 0) + redeemAmount).toFixed(2));
-      const isFullyPaid = newAmountPaid >= order.total - 0.01;
-
-      onUpdateOrder({
-        ...order,
-        amountPaid: newAmountPaid,
-        payments: newPayments,
-        paid: isFullyPaid
-      });
-
-      setGiftCardCode('');
-      
-      if (isFullyPaid) {
-        setTimeout(() => {
-          setGiftCardSuccess(null);
-          setView('default');
-          setShowGiftCardInput(false);
-        }, 1200);
-      } else {
-        setTimeout(() => {
-          setGiftCardSuccess(null);
-          setShowGiftCardInput(false);
-        }, 1200);
-      }
-    } catch (e: any) {
-      setGiftCardError(e.message || 'Gift Card not found or invalid.');
+      await handleCompletePayment(
+        [{ method: 'giftcard', amount: redeemAmount, code }],
+        {
+          onSuccess: () => {
+            setGiftCardError(null);
+            setGiftCardSuccess(`Successfully applied €${redeemAmount.toFixed(2)} from Gift Card!`);
+            setGiftCardCode('');
+            setTimeout(() => {
+              setGiftCardSuccess(null);
+              setShowGiftCardInput(false);
+            }, 1200);
+          },
+        }
+      );
+    } catch (e: unknown) {
+      setGiftCardError(e instanceof Error ? e.message : 'Gift Card not found or invalid.');
       setGiftCardSuccess(null);
     }
   };
@@ -476,7 +639,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
             (() => {
               const guest = allGuests.find(g => g.id === order.customerId);
               if (!guest) return <div className="text-xs text-gray-400 font-semibold">Guest not found</div>;
-              const cashbackRate = getTierCashbackRate(guest.tier);
+              const cashbackRate = getTierCashbackRate(guest.tier, loyaltyConfig);
               const estCashback = ((order.total - (order.customerPointsPaid || 0)) * cashbackRate).toFixed(2);
               
               return (
@@ -653,6 +816,24 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
           </div>
         )}
 
+        {order.payments && order.payments.length > 0 && (
+          <div className="pt-3 mt-3 border-t border-gray-100 space-y-1.5">
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Payment Methods</span>
+            {order.payments.map((p, i) => (
+              <div key={i} className="flex justify-between items-center text-sm">
+                <span className="font-bold text-gray-600 flex items-center gap-1.5">
+                  {p.method === 'card' && <CreditCard size={13} className="text-blue-500" />}
+                  {p.method === 'cash' && <Banknote size={13} className="text-green-600" />}
+                  {p.method === 'points' && <Coins size={13} className="text-amber-500" />}
+                  {p.method === 'giftcard' && <Gift size={13} className="text-purple-500" />}
+                  {paymentMethodLabel(p.method)}
+                </span>
+                <span className="font-black text-gray-900">€{p.amount.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
     </div>
   );
@@ -723,15 +904,19 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
           </button>
         )}
 
+        {order.paid && (order.refundedAmount ?? 0) < order.total - 0.01 && (
+          <button
+            onClick={() => { setRefundSelections({}); setView('refund_select'); }}
+            className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+          >
+            <RotateCcw size={16} /> Refund Items
+          </button>
+        )}
+
         {/* Utilities */}
         <div className="grid grid-cols-2 gap-3">
           <button 
-            onClick={() => {
-              if (order.tableId) {
-                updateTableStatus(order.tableId, 'billed');
-              }
-              window.print();
-            }}
+            onClick={handleReceiptPrint}
             className="flex flex-col items-center justify-center gap-1.5 py-3 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 rounded-xl font-bold transition-all active:scale-95 cursor-pointer"
           >
             <Printer size={18} className="text-gray-500" /> <span className="text-[13px]">Print Ticket</span>
@@ -756,16 +941,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
           </button>
 
           <button 
-            onClick={() => {
-              const content = `RECEIPT - Order ${order.id}\nCustomer: ${order.customerName}\nTotal: €${order.total.toFixed(2)}`;
-              const blob = new Blob([content], { type: 'text/plain' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `receipt-${order.id}.txt`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
+            onClick={handleDownloadReceipt}
             className="flex flex-col items-center justify-center gap-1.5 py-3 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 rounded-xl font-bold transition-all active:scale-95 cursor-pointer"
           >
             <Download size={18} className="text-gray-500" /> <span className="text-[13px]">PDF</span>
@@ -836,16 +1012,30 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         
         {/* Footer Actions for Checkout */}
         <div className="p-6 bg-white border-t border-gray-100 shrink-0 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)]">
-          {!getCurrentShift() ? (
-            <div className="mb-4 bg-red-50 border border-red-100 rounded-xl p-3 flex gap-2.5 items-start text-red-700 animate-in fade-in">
+          {shiftOpen === false && (
+            <div className="mb-4 bg-amber-50 border border-amber-100 rounded-xl p-3 flex gap-2.5 items-start text-amber-800 animate-in fade-in">
               <AlertTriangle size={18} className="shrink-0 mt-0.5" />
               <div className="text-left">
                 <span className="text-xs font-bold block">Cash Register Shift Closed</span>
-                <span className="text-[10px] text-red-500 font-semibold leading-normal">You must open a register shift to log cash transactions under Spanish VERI*FACTU regulations before you can complete this payment.</span>
+                <span className="text-[10px] text-amber-600 font-semibold leading-normal">Card, points, and gift cards are available. Cash payments will be logged with a compliance warning.</span>
               </div>
             </div>
-          ) : (
-            assignedGuest && assignedGuest.points > 0 && remainingBalance > 0.01 && (
+          )}
+          {shiftWarning && (
+            <div className="mb-4 bg-red-50 border border-red-100 rounded-xl p-3 flex gap-2.5 items-start text-red-700 animate-in fade-in">
+              <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+              <div className="text-left">
+                <span className="text-xs font-bold block">Cash logged without open shift</span>
+                <span className="text-[10px] text-red-500 font-semibold leading-normal">Open a register shift to stay compliant with VERI*FACTU cash tracking.</span>
+              </div>
+            </div>
+          )}
+          {paymentError && (
+            <div className="mb-4 bg-red-50 border border-red-100 rounded-xl p-3 text-red-700 text-xs font-bold flex items-center gap-2">
+              <AlertCircle size={16} /> {paymentError}
+            </div>
+          )}
+          {shiftOpen !== false && assignedGuest && assignedGuest.points > 0 && remainingBalance > 0.01 && (
               <div className="mb-4 bg-amber-50/50 border border-amber-100/50 rounded-xl p-3 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-2">
                   <Coins size={18} className="text-amber-500 shrink-0" />
@@ -878,21 +1068,11 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                     className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-1 text-right font-bold text-xs text-gray-955 focus:border-gray-900 outline-none"
                   />
                   <button
-                    disabled={!pointsToSpend || parseFloat(pointsToSpend) <= 0}
+                    disabled={!pointsToSpend || parseFloat(pointsToSpend) <= 0 || paymentProcessing}
                     onClick={() => {
                       const pointsAmount = parseFloat(pointsToSpend);
                       if (pointsAmount > 0) {
-                        const newPayments = [...(order.payments || []), { method: 'points' as const, amount: pointsAmount }];
-                        const newAmountPaid = parseFloat(((order.amountPaid || 0) + pointsAmount).toFixed(2));
-                        const isFullyPaid = newAmountPaid >= order.total - 0.01;
-                        
-                        onUpdateOrder({
-                          ...order,
-                          amountPaid: newAmountPaid,
-                          payments: newPayments,
-                          paid: isFullyPaid
-                        });
-                        
+                        handleCompletePayment([{ method: 'points', amount: pointsAmount }]);
                         setPointsToSpend('');
                       }
                     }}
@@ -903,12 +1083,12 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 </div>
               </div>
             )
-          )}
+          }
 
           <h3 className="text-[14px] font-bold text-gray-500 mb-3 text-center uppercase tracking-wider">Select Payment Method</h3>
           <div className="grid grid-cols-3 gap-2 w-full mb-3">
             <button 
-              disabled={!getCurrentShift()}
+              disabled={paymentProcessing || remainingBalance <= 0.01}
               onClick={() => handleCheckout('card')}
               className="flex flex-col items-center justify-center gap-1.5 py-3 bg-white border border-gray-200 hover:border-gray-900 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-gray-200 rounded-xl transition-all active:scale-95 cursor-pointer group"
             >
@@ -916,7 +1096,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               <span className="font-bold text-sm text-gray-900 group-disabled:text-gray-400">Card</span>
             </button>
             <button 
-              disabled={!getCurrentShift()}
+              disabled={paymentProcessing || remainingBalance <= 0.01}
               onClick={() => handleCheckout('cash')}
               className="flex flex-col items-center justify-center gap-1.5 py-3 bg-white border border-gray-200 hover:border-gray-900 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-gray-200 rounded-xl transition-all active:scale-95 cursor-pointer group"
             >
@@ -924,7 +1104,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               <span className="font-bold text-sm text-gray-900 group-disabled:text-gray-400">Cash</span>
             </button>
             <button 
-              disabled={!getCurrentShift()}
+              disabled={paymentProcessing || remainingBalance <= 0.01}
               onClick={() => {
                 setShowGiftCardInput(!showGiftCardInput);
                 setGiftCardError(null);
@@ -1181,21 +1361,20 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     );
   };
 
-  const handlePaySplit = (splitId: number, method: 'card' | 'cash') => {
+  const handlePaySplit = async (splitId: number, method: 'card' | 'cash') => {
     const split = generatedSplits.find(s => s.id === splitId);
-    if (!split || split.paid) return;
+    if (!split || split.paid || paymentProcessing) return;
 
-    const newAmountPaid = (order.amountPaid || 0) + split.amount;
-    const newPayments = [...(order.payments || []), { method, amount: split.amount }];
-    
-    if (newAmountPaid >= order.total - 0.01) {
-      onUpdateOrder({ ...order, amountPaid: newAmountPaid, payments: newPayments, paid: true });
-    } else {
-      onUpdateOrder({ ...order, amountPaid: newAmountPaid, payments: newPayments });
+    if (method === 'cash' && shiftOpen === false) {
+      setShiftWarning(true);
     }
 
-    const newSplits = generatedSplits.map(s => s.id === splitId ? { ...s, paid: true } : s);
-    setGeneratedSplits(newSplits);
+    await handleCompletePayment([{ method, amount: split.amount }], {
+      onSuccess: () => {
+        const newSplits = generatedSplits.map(s => s.id === splitId ? { ...s, paid: true } : s);
+        setGeneratedSplits(newSplits);
+      },
+    });
   };
 
   const renderSplitWaysListView = () => (
@@ -1357,18 +1536,18 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         <div className="grid grid-cols-2 gap-3 w-full mb-3">
           <button 
             onClick={() => {
-              const newItems = order.items.map((item, idx) => selectedDishes.has(idx) ? { ...item, paid: true } : item);
-              const newAmountPaid = (order.amountPaid || 0) + selectedTotal;
-              const newPayments = [...(order.payments || []), { method: 'card' as const, amount: selectedTotal }];
-              
-              if (newAmountPaid >= order.total - 0.01) {
-                onUpdateOrder({ ...order, items: newItems, amountPaid: newAmountPaid, payments: newPayments, paid: true });
-              } else {
-                onUpdateOrder({ ...order, items: newItems, amountPaid: newAmountPaid, payments: newPayments });
-              }
-              setSelectedDishes(new Set());
-              setView('default');
+              handleCompletePayment(
+                [{ method: 'card', amount: selectedTotal }],
+                {
+                  paidItemIndexes: Array.from(selectedDishes),
+                  onSuccess: () => {
+                    setSelectedDishes(new Set());
+                    setView('default');
+                  },
+                }
+              );
             }}
+            disabled={paymentProcessing}
             className="flex flex-col items-center justify-center gap-2 py-4 bg-white border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50 rounded-2xl transition-all active:scale-95 cursor-pointer"
           >
             <CreditCard size={24} className="text-blue-500" />
@@ -1376,18 +1555,19 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
           </button>
           <button 
             onClick={() => {
-              const newItems = order.items.map((item, idx) => selectedDishes.has(idx) ? { ...item, paid: true } : item);
-              const newAmountPaid = (order.amountPaid || 0) + selectedTotal;
-              const newPayments = [...(order.payments || []), { method: 'cash' as const, amount: selectedTotal }];
-              
-              if (newAmountPaid >= order.total - 0.01) {
-                onUpdateOrder({ ...order, items: newItems, amountPaid: newAmountPaid, payments: newPayments, paid: true });
-              } else {
-                onUpdateOrder({ ...order, items: newItems, amountPaid: newAmountPaid, payments: newPayments });
-              }
-              setSelectedDishes(new Set());
-              setView('default');
+              if (shiftOpen === false) setShiftWarning(true);
+              handleCompletePayment(
+                [{ method: 'cash', amount: selectedTotal }],
+                {
+                  paidItemIndexes: Array.from(selectedDishes),
+                  onSuccess: () => {
+                    setSelectedDishes(new Set());
+                    setView('default');
+                  },
+                }
+              );
             }}
+            disabled={paymentProcessing}
             className="flex flex-col items-center justify-center gap-2 py-4 bg-white border-2 border-gray-100 hover:border-green-500 hover:bg-green-50 rounded-2xl transition-all active:scale-95 cursor-pointer"
           >
             <Banknote size={24} className="text-green-500" />
@@ -1767,6 +1947,71 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     </motion.div>
   );
 
+  const renderRefundSelectView = () => (
+    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col h-full">
+      <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-white">
+        <button onClick={() => setView('default')} className="p-2 -ml-2 rounded-full hover:bg-gray-100"><ChevronLeft size={20}/></button>
+        <h3 className="text-xl font-black text-gray-900">Refund Items</h3>
+      </div>
+      <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-gray-50/50">
+        {order.items.map((item, idx) => {
+          const maxQty = item.quantity - ((item as OrderItem & { refundedQuantity?: number }).refundedQuantity || 0);
+          if (maxQty <= 0) return null;
+          const sel = refundSelections[idx] || 0;
+          return (
+            <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100">
+              <div>
+                <span className="font-bold text-gray-900">{item.name}</span>
+                <span className="text-xs text-gray-400 block">€{item.price.toFixed(2)} · max {maxQty}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setRefundSelections(s => ({ ...s, [idx]: Math.max(0, sel - 1) }))} className="w-8 h-8 rounded-lg bg-gray-100 font-bold">-</button>
+                <span className="w-6 text-center font-black">{sel}</span>
+                <button type="button" onClick={() => setRefundSelections(s => ({ ...s, [idx]: Math.min(maxQty, sel + 1) }))} className="w-8 h-8 rounded-lg bg-gray-100 font-bold">+</button>
+              </div>
+            </div>
+          );
+        })}
+        <div className="text-right font-black text-lg text-gray-900 pt-2">Refund total: €{refundTotalSelected.toFixed(2)}</div>
+      </div>
+      <div className="p-6 border-t border-gray-100 bg-white">
+        <button type="button" disabled={refundTotalSelected <= 0} onClick={() => setView('refund_confirm')} className="w-full py-4 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-bold">
+          Continue — €{refundTotalSelected.toFixed(2)}
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  const renderRefundConfirmView = () => (
+    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col h-full">
+      <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-white">
+        <button onClick={() => setView('refund_select')} className="p-2 -ml-2 rounded-full hover:bg-gray-100"><ChevronLeft size={20}/></button>
+        <h3 className="text-xl font-black text-gray-900">Confirm Refund</h3>
+      </div>
+      <div className="flex-1 p-6 space-y-4 bg-gray-50/50">
+        <div className="text-3xl font-black text-red-600 text-center">€{refundTotalSelected.toFixed(2)}</div>
+        <div>
+          <label className="label-corgi">Reason (required)</label>
+          <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} className="input-corgi resize-none" placeholder="Wrong item, customer complaint..." />
+        </div>
+        <div>
+          <label className="label-corgi">Refund method</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setRefundMethod('card')} className={`py-3 rounded-xl font-bold border-2 ${refundMethod === 'card' ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200'}`}>Card</button>
+            <button type="button" onClick={() => setRefundMethod('cash')} className={`py-3 rounded-xl font-bold border-2 ${refundMethod === 'cash' ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200'}`}>Cash</button>
+          </div>
+        </div>
+        {refundError && <div className="text-red-600 text-sm font-bold flex items-center gap-2"><AlertCircle size={16}/>{refundError}</div>}
+      </div>
+      <div className="p-6 border-t border-gray-100 bg-white grid grid-cols-2 gap-3">
+        <button type="button" onClick={() => setView('refund_select')} className="py-4 bg-gray-100 rounded-xl font-bold">Back</button>
+        <button type="button" disabled={refundProcessing || !refundReason.trim()} onClick={handleProcessRefund} className="py-4 bg-red-500 text-white rounded-xl font-bold disabled:opacity-50">
+          {refundProcessing ? 'Processing...' : 'Confirm Refund'}
+        </button>
+      </div>
+    </motion.div>
+  );
+
   const renderCancelOrderConfirmView = () => (
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
@@ -1852,15 +2097,25 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       </div>
 
       <button
-        onClick={() => {
+        onClick={async () => {
           if (!companyName.trim() || !taxId.trim()) return;
-          const nextSeq = Number(localStorage.getItem('corgi_invoice_seq') || '1000') + 1;
-          localStorage.setItem('corgi_invoice_seq', nextSeq.toString());
-          const num = `FAC-2026-${nextSeq}`;
-          
-          setActiveInvoiceNumber(num);
-          logAuditEvent('invoice_generated', { orderId: order.id, invoiceNumber: num, taxId });
-          setView('factura_a4');
+          try {
+            const result = await generateFiscalAsync(order.id, {
+              clientName: companyName.trim(),
+              clientNif: taxId.trim(),
+              clientAddress: companyAddress.trim(),
+            });
+            setFiscalInvoiceNumber(result.record.invoiceNumber);
+            setActiveInvoiceNumber(result.record.invoiceNumber);
+            logAuditEventAsync('invoice_generated', {
+              orderId: order.id,
+              invoiceNumber: result.record.invoiceNumber,
+              taxId,
+            }).catch(console.error);
+            setView('factura_a4');
+          } catch (e) {
+            console.error('Fiscal generation failed:', e);
+          }
         }}
         disabled={!companyName.trim() || !taxId.trim()}
         className="w-full py-3.5 bg-brown hover:bg-brown/90 disabled:opacity-55 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-2 mt-auto active:scale-95"
@@ -1871,60 +2126,25 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
   );
 
   const renderFacturaA4View = () => {
-    // Load config dynamically from localStorage
-    let receiptConfig = {
-      header: 'Welcome to Corgi Cafe!',
-      footer: 'Barcelona. Thank you for your visit!',
-      ivaFood: 10,
-      ivaAlcohol: 21,
+    const receiptConfig = {
+      header: posSettings.receiptHeader,
+      footer: posSettings.receiptFooter,
       veriFactuActive: true,
-      invoicePrefix: 'FAC-2026-'
+      invoicePrefix: 'FAC-2026-',
     };
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('corgi_receipt_config');
-      if (stored) {
-        try {
-          receiptConfig = JSON.parse(stored);
-        } catch (e) {}
-      }
-    }
 
-    // Dynamic tax base and VAT calculation
-    let totalNetBase = 0;
-    let foodNetBase = 0;
-    let foodVatAmount = 0;
-    let alcoholNetBase = 0;
-    let alcoholVatAmount = 0;
+    const breakdown = calculateReceiptTaxes(
+      order!.items.map((item) => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+      taxRates
+    );
 
-    order.items.forEach(item => {
-      const nameLower = item.name.toLowerCase();
-      const isAlcohol = nameLower.includes('beer') || 
-                        nameLower.includes('wine') || 
-                        nameLower.includes('cocktail') || 
-                        nameLower.includes('sangria') || 
-                        nameLower.includes('gin') || 
-                        nameLower.includes('cider') ||
-                        nameLower.includes('rum') || 
-                        nameLower.includes('whiskey') || 
-                        nameLower.includes('shot');
-      
-      const vatRate = isAlcohol ? receiptConfig.ivaAlcohol : receiptConfig.ivaFood;
-      const divisor = 1 + (vatRate / 100);
-      const itemTotal = item.price * item.quantity;
-      const itemNet = itemTotal / divisor;
-      const itemVat = itemTotal - itemNet;
-
-      if (isAlcohol) {
-        alcoholNetBase += itemNet;
-        alcoholVatAmount += itemVat;
-      } else {
-        foodNetBase += itemNet;
-        foodVatAmount += itemVat;
-      }
-    });
-
-    totalNetBase = foodNetBase + alcoholNetBase;
-    const formattedInvoiceNumber = activeInvoiceNumber.replace('FAC-2026-', receiptConfig.invoicePrefix);
+    const { foodNet: foodNetBase, foodTax: foodVatAmount, alcoholNet: alcoholNetBase, alcoholTax: alcoholVatAmount } = breakdown;
+    const totalNetBase = breakdown.totalNet;
+    const formattedInvoiceNumber = activeInvoiceNumber || receiptConfig.invoicePrefix;
 
     return (
       <motion.div 
@@ -2042,13 +2262,13 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                   </div>
                   {foodVatAmount > 0 && (
                     <div className="flex justify-between text-gray-500 font-medium">
-                      <span>I.V.A. Alimentos ({receiptConfig.ivaFood}%):</span>
+                      <span data-testid="receipt-food-vat-rate">I.V.A. Alimentos ({taxRates.food}%):</span>
                       <span>€{foodVatAmount.toFixed(2)}</span>
                     </div>
                   )}
                   {alcoholVatAmount > 0 && (
                     <div className="flex justify-between text-gray-500 font-medium">
-                      <span>I.V.A. Bebidas ({receiptConfig.ivaAlcohol}%):</span>
+                      <span data-testid="receipt-alcohol-vat-rate">I.V.A. Bebidas ({taxRates.alcohol}%):</span>
                       <span>€{alcoholVatAmount.toFixed(2)}</span>
                     </div>
                   )}
@@ -2151,6 +2371,8 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 {view === 'tip' && <div key="tip" className="h-full absolute inset-0">{renderTipView()}</div>}
                 {view === 'send_receipt' && <div key="send_receipt" className="h-full absolute inset-0">{renderSendReceiptView()}</div>}
                 {view === 'cancel_order_confirm' && <div key="cancel_order_confirm" className="h-full absolute inset-0">{renderCancelOrderConfirmView()}</div>}
+                {view === 'refund_select' && <div key="refund_select" className="h-full absolute inset-0">{renderRefundSelectView()}</div>}
+                {view === 'refund_confirm' && <div key="refund_confirm" className="h-full absolute inset-0">{renderRefundConfirmView()}</div>}
                 {view === 'factura_form' && <div key="factura_form" className="h-full absolute inset-0">{renderFacturaFormView()}</div>}
                 {view === 'factura_a4' && <div key="factura_a4" className="h-full absolute inset-0">{renderFacturaA4View()}</div>}
               </AnimatePresence>

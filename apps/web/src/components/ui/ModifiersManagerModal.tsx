@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Edit2, Sliders, Check, GripVertical, ChevronDown } from 'lucide-react';
 import { Reorder, motion, AnimatePresence } from 'framer-motion';
+import {
+  getModifierGroupsAsync,
+  linkModifierGroupCategoriesAsync,
+  addModifierOptionAsync,
+  updateModifierGroupAsync,
+  archiveModifierGroupAsync,
+} from '@/lib/modifiers';
 
 interface ModifierItem {
   id: string;
@@ -25,58 +32,38 @@ interface ModifiersManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
   dishes: any[];
+  categories?: Array<{ id: string; name: string }>;
 }
 
-export default function ModifiersManagerModal({ isOpen, onClose, dishes }: ModifiersManagerModalProps) {
-  const [categories, setCategories] = useState<ModifierCategory[]>([
-    {
-      id: 'mc1',
-      name: 'Milk options',
-      isMultiChoice: false,
-      isFreeSelection: true,
-      freeSelectionsCount: 2,
-      isActive: true,
-      selections: [
-        { id: 'ms1', name: 'Normal', price: 0, isActive: true, isDefault: true },
-        { id: 'ms2', name: 'Oat', price: 0.40, isActive: true, isDefault: false },
-        { id: 'ms3', name: 'Lactose-free', price: 0, isActive: true, isDefault: false },
-        { id: 'ms4', name: 'Almond', price: 0.35, isActive: true, isDefault: false },
-        { id: 'ms5', name: 'Coconut', price: 0.50, isActive: true, isDefault: false },
-        { id: 'ms6', name: 'Syrup', price: 0.50, isActive: true, isDefault: false },
-      ],
-      assignedDishIds: ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8']
-    },
-    {
-      id: 'mc2',
-      name: 'Ice',
-      isMultiChoice: false,
-      isFreeSelection: false,
-      freeSelectionsCount: 0,
-      isActive: true,
-      selections: [
-        { id: 'ms7', name: 'Regular Ice', price: 0, isActive: true, isDefault: true },
-        { id: 'ms8', name: 'Light Ice', price: 0, isActive: true, isDefault: false },
-        { id: 'ms9', name: 'No Ice', price: 0, isActive: true, isDefault: false },
-      ],
-      assignedDishIds: ['d21', 'd22', 'd23', 'd24']
-    },
-    {
-      id: 'mc3',
-      name: 'Extras',
-      isMultiChoice: true,
-      isFreeSelection: false,
-      freeSelectionsCount: 0,
-      isActive: true,
-      selections: [
-        { id: 'ms10', name: 'Chocolate drizzle', price: 0.50, isActive: true, isDefault: false },
-        { id: 'ms11', name: 'Whipped cream', price: 0.60, isActive: true, isDefault: false },
-        { id: 'ms12', name: 'Cinnamon powder', price: 0.20, isActive: true, isDefault: false },
-      ],
-      assignedDishIds: ['d5', 'd6', 'd7', 'd8']
-    }
-  ]);
+export default function ModifiersManagerModal({ isOpen, onClose, dishes, categories: menuCategories = [] }: ModifiersManagerModalProps) {
+  const [categories, setCategories] = useState<ModifierCategory[]>([]);
 
-  const [activeCategoryId, setActiveCategoryId] = useState<string>('mc1');
+  const [activeCategoryId, setActiveCategoryId] = useState<string>('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    void getModifierGroupsAsync().then((groups) => {
+      const mapped = groups.map((g) => ({
+        id: g.id,
+        name: g.name,
+        isMultiChoice: g.maxQty > 1,
+        isFreeSelection: g.minQty === 0,
+        freeSelectionsCount: g.maxQty,
+        isActive: !g.isArchived,
+        selections: g.options.map((o) => ({
+          id: o.id,
+          name: o.name,
+          price: o.price,
+          isActive: !o.isArchived,
+          isDefault: false,
+        })),
+        assignedDishIds: (g.categories ?? []).map((c) => c.id),
+      }));
+      setCategories(mapped);
+      if (mapped[0]) setActiveCategoryId(mapped[0].id);
+    });
+  }, [isOpen]);
+
   const [editingField, setEditingField] = useState<'name' | 'free_count' | null>(null);
   const [tempInputValue, setTempInputValue] = useState('');
   const [editingSelectionId, setEditingSelectionId] = useState<string | null>(null);
@@ -208,15 +195,16 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes }: Modif
     });
   };
 
-  const handleToggleDishAssignment = (dishId: string) => {
-    const isAssigned = activeCategory.assignedDishIds.includes(dishId);
+  const handleToggleDishAssignment = (categoryId: string) => {
+    const isAssigned = activeCategory.assignedDishIds.includes(categoryId);
     const newAssigned = isAssigned
-      ? activeCategory.assignedDishIds.filter(id => id !== dishId)
-      : [...activeCategory.assignedDishIds, dishId];
+      ? activeCategory.assignedDishIds.filter(id => id !== categoryId)
+      : [...activeCategory.assignedDishIds, categoryId];
     handleUpdateCategory({
       ...activeCategory,
       assignedDishIds: newAssigned
     });
+    void linkModifierGroupCategoriesAsync(activeCategory.id, newAssigned).catch(console.error);
   };
 
   return (
@@ -618,16 +606,39 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes }: Modif
                   </div>
                 </div>
 
-                {/* Section: Items / Assigned Dishes */}
-                <div className="space-y-3">
-                  <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider block">Dishes linked to this category</span>
+                {/* Section: Menu categories linked to this modifier group */}
+                <div className="space-y-3" data-testid="modifier-category-links">
+                  <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider block">Menu categories linked to this group</span>
+                  <div className="flex flex-wrap gap-2">
+                    {menuCategories.map((cat) => {
+                      const isLinked = activeCategory.assignedDishIds.includes(cat.id);
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          data-testid={`modifier-link-category-${cat.id}`}
+                          onClick={() => handleToggleDishAssignment(cat.id)}
+                          className={`px-3 py-2 rounded-xl text-[13px] font-bold border transition-all cursor-pointer ${
+                            isLinked
+                              ? 'border-corgi bg-corgi/10 text-corgi'
+                              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          {cat.name}
+                        </button>
+                      );
+                    })}
+                    {menuCategories.length === 0 && (
+                      <span className="text-sm text-gray-400 font-medium">No menu categories available.</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Legacy dish grid hidden — category M2M replaces per-dish assignment */}
+                <div className="hidden">
                   <div className="grid grid-cols-5 gap-3.5">
                     {dishes.map(dish => {
-                      const isLinked = activeCategory.id === 'mc1' || activeCategory.id === 'mc3'
-                        ? dish.categoryId === '1'
-                        : activeCategory.id === 'mc2'
-                        ? dish.categoryId === '4'
-                        : false;
+                      const isLinked = false;
                       return (
                         <div
                           key={dish.id}

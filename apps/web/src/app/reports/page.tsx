@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import GlobalFilters from '@/components/dashboard/GlobalFilters';
 import { RevenueLineChart } from '@/components/dashboard/SalesCharts';
@@ -8,12 +8,19 @@ import { RevenueTable } from '@/components/reports/RevenueTable';
 import { StaffPerformanceTables } from '@/components/reports/StaffPerformanceTables';
 import { DishPerformanceTables } from '@/components/reports/DishPerformanceTables';
 import { FinancialSummaries } from '@/components/reports/FinancialSummaries';
-import { Download, Check, ChevronDown } from 'lucide-react';
+import { Download, Check, ChevronDown, Loader2 } from 'lucide-react';
+import { getFinancialReportAsync, presetToDateRange } from '@/lib/reports';
+import type { DateRangeValue } from '@/components/dashboard/GlobalFilters';
+import { buildFinancialCsv } from '@/lib/reports-financial';
+import type { FinancialReport } from '@/repositories/reports.repository';
 
 export default function ReportsPage() {
   const [compare, setCompare] = useState(false);
   const [revenueView, setRevenueView] = useState<'chart'|'table'>('chart');
-  const [revenueViewMode, setRevenueViewMode] = useState<'total' | 'locations'>('total');
+  const [dateRange, setDateRange] = useState<DateRangeValue>(() => presetToDateRange('Last 7 days'));
+  const [report, setReport] = useState<FinancialReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   const [locationOpen, setLocationOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState('All Branches');
@@ -27,32 +34,34 @@ export default function ReportsPage() {
     'Gràcia'
   ];
 
+  const loadReport = useCallback(async (range: DateRangeValue) => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const data = await getFinancialReportAsync({
+        startDate: range.startDate,
+        endDate: range.endDate,
+      });
+      setReport(data);
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Failed to load report');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadReport(dateRange).catch(console.error);
+  }, [dateRange, loadReport]);
+
   const handleExportCSV = () => {
-    // Generate a comprehensive mock CSV
-    const headers = "Report Type,Location,Metric,Value,Date\n";
-    const rows = [
-      "Revenue,All Branches,Gross Sales,33244.00,2026-05-26",
-      "Revenue,All Branches,Net Sales,29540.00,2026-05-26",
-      "Revenue,All Branches,IVA Collection,3704.00,2026-05-26",
-      "Revenue,Eixample,Gross Sales,12450.00,2026-05-26",
-      "Revenue,Gótico,Gross Sales,9800.00,2026-05-26",
-      "Dishes,Eixample,Corgi Signature Latte (Sales),4200.00,2026-05-26",
-      "Dishes,Eixample,Avocado Toast (Sales),3000.00,2026-05-26",
-      "Staff,Eixample,Emma W. (Sales),4250.00,2026-05-26",
-      "Staff,Sagrada Família,Liam P. (Sales),4100.00,2026-05-26",
-      "Financial,All Branches,Total Receipts,1248,2026-05-26",
-      "Financial,All Branches,Void Transactions,14,2026-05-26",
-      "Financial,All Branches,Base Imponible,29540.00,2026-05-26",
-      "Financial,All Branches,IVA 10% (F&B),2850.00,2026-05-26",
-      "Ledger,Eixample,TKT-2605-0042 (Receipt),42.50,2026-05-26",
-      "Ledger,Arc de Triomf,TKT-2605-0044 (Void),-28.00,2026-05-26"
-    ].join("\n");
-    
-    const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
+    if (!report) return;
+    const csv = buildFinancialCsv(report);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `corgi_cafe_reports_${new Date().toISOString().split('T')[0]}.csv`);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `corgi_cafe_reports_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -60,13 +69,17 @@ export default function ReportsPage() {
 
   return (
     <DashboardLayout>
-      <div className="bg-white rounded-3xl p-5 md:p-8 shadow-sm flex-1 overflow-y-auto pb-10 flex flex-col gap-6">
-        
-        <GlobalFilters compare={compare} onCompareChange={setCompare} variant="reports">
-          {/* Export CSV Button */}
+      <div
+        data-testid="reports-page"
+        className="bg-white rounded-3xl p-5 md:p-8 shadow-sm flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden"
+      >
+        <div className="flex-shrink-0 mb-6 min-w-0">
+        <GlobalFilters compare={compare} onCompareChange={setCompare} variant="reports" onDateRangeChange={setDateRange}>
           <button 
+            data-testid="reports-export-csv"
             onClick={handleExportCSV}
-            className="flex items-center justify-center gap-2 bg-white border border-gray-100 hover:border-gray-200 text-gray-700 font-bold text-[13px] rounded-xl px-4 py-2 h-[40px] transition-colors cursor-pointer whitespace-nowrap"
+            disabled={!report}
+            className="flex items-center justify-center gap-2 bg-white border border-gray-100 hover:border-gray-200 text-gray-700 font-bold text-[13px] rounded-xl px-4 py-2 h-[40px] transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
           >
             <Download className="w-4 h-4 text-gray-400" />
             <span className="hidden sm:inline">Export CSV</span>
@@ -111,6 +124,22 @@ export default function ReportsPage() {
             )}
           </div>
         </GlobalFilters>
+        </div>
+
+        <div className="flex-1 overflow-y-auto overflow-x-hidden pb-10 min-h-0 min-w-0 flex flex-col gap-6">
+
+        {loadError && (
+          <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-medium">
+            {loadError}
+          </div>
+        )}
+
+        {loading && (
+          <div className="flex items-center justify-center py-8 text-gray-400">
+            <Loader2 className="animate-spin mr-2" size={20} />
+            Loading financial report…
+          </div>
+        )}
 
         {/* Revenue Comparison Widget */}
         <div className="border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white">
@@ -150,7 +179,12 @@ export default function ReportsPage() {
                   <span className="text-sm font-bold text-gray-500">Gross Volume</span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-gray-900 tracking-tight">€48,580</span>
+                  <span
+                    data-testid="reports-gross-volume"
+                    className="text-3xl font-black text-gray-900 tracking-tight"
+                  >
+                    €{(report?.summary.grossRevenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                   <span className="text-sm font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-md">↑ 3.12%</span>
                 </div>
               </div>
@@ -189,7 +223,7 @@ export default function ReportsPage() {
 
         {/* Dish Performance (Full Width Grouped Tables) */}
         <div className="w-full">
-          <DishPerformanceTables />
+          <DishPerformanceTables dishes={report?.dishes ?? []} />
         </div>
 
         {/* Staff Performance (Full Width Grouped Tables) */}
@@ -199,9 +233,10 @@ export default function ReportsPage() {
 
         {/* Financial Summaries & VERI*FACTU Ledger */}
         <div className="w-full">
-          <FinancialSummaries />
+          <FinancialSummaries report={report} />
         </div>
 
+        </div>
       </div>
     </DashboardLayout>
   );

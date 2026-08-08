@@ -1,101 +1,115 @@
+import type { AuditAction } from './audit-validation';
+
 export interface AuditEntry {
   id: string;
   timestamp: Date;
-  action: 'shift_open' | 'shift_close' | 'cash_adjustment' | 'order_completed' | 'order_cancelled' | 'invoice_generated';
-  details: any;
+  action: AuditAction | string;
+  details: Record<string, unknown> | null;
+  userId?: string | null;
   prevHash: string;
   hash: string;
 }
 
-const computeHash = (dataStr: string, prevHash: string): string => {
-  const combined = dataStr + prevHash;
-  let hash = 0;
-  for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash).toString(16);
+export type AuditLogsPage = {
+  items: AuditEntry[];
+  total: number;
+  limit: number;
+  offset: number;
 };
 
-export const getAuditLogs = (): AuditEntry[] => {
-  if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem('corgi_audit_trail');
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      return parsed.map((e: any) => ({
-        ...e,
-        timestamp: new Date(e.timestamp)
-      }));
-    } catch (e) {
-      console.error("Failed to parse audit trail", e);
-    }
-  }
-  return [];
+export type AuditLogFilters = {
+  action?: string;
+  userId?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+  offset?: number;
 };
 
-export const logAuditEvent = (
-  action: AuditEntry['action'],
-  details: any
-): AuditEntry => {
-  const logs = getAuditLogs();
-  const lastEntry = logs[logs.length - 1];
-  const prevHash = lastEntry ? lastEntry.hash : '0000000000000000';
-  
-  const timestamp = new Date();
-  const id = `AUD-${timestamp.getTime()}-${Math.floor(Math.random() * 1000)}`;
-  
-  const dataStr = JSON.stringify({ id, action, details, timestamp });
-  const hash = computeHash(dataStr, prevHash);
-  
-  const newEntry: AuditEntry = {
-    id,
-    timestamp,
-    action,
-    details,
-    prevHash,
-    hash
-  };
-  
-  const updatedLogs = [...logs, newEntry];
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('corgi_audit_trail', JSON.stringify(updatedLogs));
+export class AuditApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'AuditApiError';
+    this.status = status;
   }
-  
-  return newEntry;
-};
+}
 
-// --- Database Connected Async Operations ---
-
-export async function getAuditLogsAsync(): Promise<AuditEntry[]> {
-  const res = await fetch('/api/audit');
-  if (!res.ok) {
-    throw new Error('Failed to fetch audit trail logs from PostgreSQL');
-  }
-  const data = await res.json();
-  return data.map((log: any) => ({
-    ...log,
+function mapApiLog(log: {
+  id: string;
+  timestamp: string | Date;
+  action: string;
+  details: Record<string, unknown> | null;
+  userId?: string | null;
+  prevHash: string;
+  hash: string;
+}): AuditEntry {
+  return {
+    id: log.id,
     timestamp: new Date(log.timestamp),
-  }));
+    action: log.action,
+    details: log.details,
+    userId: log.userId ?? null,
+    prevHash: log.prevHash,
+    hash: log.hash,
+  };
+}
+
+export async function getAuditLogsAsync(filters: AuditLogFilters = {}): Promise<AuditLogsPage> {
+  const params = new URLSearchParams();
+  if (filters.action) params.set('action', filters.action);
+  if (filters.userId) params.set('userId', filters.userId);
+  if (filters.from) params.set('from', filters.from);
+  if (filters.to) params.set('to', filters.to);
+  if (filters.limit !== undefined) params.set('limit', String(filters.limit));
+  if (filters.offset !== undefined) params.set('offset', String(filters.offset));
+
+  const qs = params.toString();
+  const res = await fetch(`/api/audit${qs ? `?${qs}` : ''}`);
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new AuditApiError(body.error ?? 'Failed to fetch audit logs', res.status);
+  }
+
+  if (Array.isArray(body)) {
+    return {
+      items: body.map(mapApiLog),
+      total: body.length,
+      limit: body.length,
+      offset: 0,
+    };
+  }
+
+  return {
+    items: (body.items ?? []).map(mapApiLog),
+    total: body.total ?? 0,
+    limit: body.limit ?? 100,
+    offset: body.offset ?? 0,
+  };
 }
 
 export async function logAuditEventAsync(
-  action: AuditEntry['action'],
-  details: any
+  action: string,
+  details: Record<string, unknown> = {},
+  userId?: string
 ): Promise<AuditEntry> {
   const res = await fetch('/api/audit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, details }),
+    body: JSON.stringify({ action, details, userId }),
   });
+  const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error('Failed to create audit log entry in PostgreSQL');
+    throw new AuditApiError(body.error ?? 'Failed to create audit log entry', res.status);
   }
-  const log = await res.json();
-  return {
-    ...log,
-    timestamp: new Date(log.timestamp),
-  };
+  return mapApiLog(body);
 }
 
+/** Fire-and-forget DB audit write (sync call sites stay compatible). */
+export function logAuditEvent(
+  action: string,
+  details: Record<string, unknown> = {},
+  userId?: string
+): void {
+  logAuditEventAsync(action, details, userId).catch(console.error);
+}

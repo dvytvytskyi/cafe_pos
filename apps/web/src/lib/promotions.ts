@@ -31,24 +31,13 @@ export const PRESET_PROMOTIONS: Promotion[] = [
   }
 ];
 
+/** @deprecated Use getPromotionsAsync — promotions are stored in PostgreSQL. */
 export function getPromotions(): Promotion[] {
-  if (typeof window === 'undefined') return PRESET_PROMOTIONS;
-  const stored = localStorage.getItem('corgi_promotions');
-  if (!stored) {
-    localStorage.setItem('corgi_promotions', JSON.stringify(PRESET_PROMOTIONS));
-    return PRESET_PROMOTIONS;
-  }
-  try {
-    return JSON.parse(stored);
-  } catch (e) {
-    return PRESET_PROMOTIONS;
-  }
+  return PRESET_PROMOTIONS;
 }
 
-export function savePromotions(promos: Promotion[]) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('corgi_promotions', JSON.stringify(promos));
-}
+/** @deprecated Use createPromotionAsync / deletePromotionAsync — no local cache. */
+export function savePromotions(_promos: Promotion[]) {}
 
 export const getActivePromotion = (dateInput?: Date): Promotion | null => {
   const date = dateInput || new Date();
@@ -121,6 +110,13 @@ export async function createPromotionAsync(data: {
     throw new Error('Failed to create promotion rule in PostgreSQL');
   }
   return res.json();
+}
+
+export async function deletePromotionAsync(id: string): Promise<void> {
+  const res = await fetch(`/api/promotions/${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error(`Failed to delete promotion [${id}] in PostgreSQL`);
+  }
 }
 
 export async function calculateHappyHourDiscountAsync(

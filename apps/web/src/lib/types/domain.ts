@@ -31,4 +31,5 @@ export interface Order {
   source?: string;
   deliveryId?: string;
   paid?: boolean;
+  refundedAmount?: number;
 }

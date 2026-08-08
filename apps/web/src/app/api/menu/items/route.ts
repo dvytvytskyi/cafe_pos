@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { menuRepository } from '@/repositories/menu.repository';
+import { MenuValidationError } from '@/lib/menu-validation';
 
 export async function POST(req: Request) {
   try {
@@ -20,8 +21,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json(createdItem, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof MenuValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error('Error creating menu item:', error);
-    return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Internal Server Error', details: message }, { status: 500 });
   }
 }

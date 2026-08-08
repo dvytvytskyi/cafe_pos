@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { orderRepository } from '@/repositories/order.repository';
+import { taskRepository } from '@/repositories/task.repository';
 import { cache, redisClient } from '@/lib/cache';
 import { queue } from '@/lib/queue';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { orders = [], clientTime } = body;
+    const { orders = [], tasks = [], clientTime } = body;
 
     const serverTime = new Date();
     const anomalyThresholdMs = 5 * 60 * 1000; // 5 minutes
 
     const syncedIds: string[] = [];
+    const syncedTaskIds: string[] = [];
     const anomalies: Array<{ orderId: string; type: string; details: string }> = [];
 
     // 1. Time Sync Anomaly Check for client payload overall
@@ -95,7 +97,7 @@ export async function POST(req: Request) {
 
         // Trigger tax compliance (VERI*FACTU) if completed + paid and not already fiscalized
         if (finalOrder.status === 'completed' && finalOrder.paymentStatus === 'paid') {
-          const existingFiscal = await prisma.fiscalRecord.findUnique({
+          const existingFiscal = await prisma.fiscalRecord.findFirst({
             where: { orderId: finalOrder.id },
           });
           if (!existingFiscal) {
@@ -128,10 +130,25 @@ export async function POST(req: Request) {
       await cache.delete(`active_orders_${locId}`);
     }
 
+    for (const taskData of tasks) {
+      try {
+        const synced = await taskRepository.syncFromClient(taskData);
+        syncedTaskIds.push(synced.id);
+      } catch (taskError: any) {
+        console.error(`Failed to sync task [${taskData.id}]:`, taskError);
+        anomalies.push({
+          orderId: taskData.id,
+          type: 'task_sync_error',
+          details: taskError.message || String(taskError),
+        });
+      }
+    }
+
     return NextResponse.json(
       {
         success: true,
         syncedIds,
+        syncedTaskIds,
         clientClockSkewed: isClientClockSkewed,
         anomalies,
       },

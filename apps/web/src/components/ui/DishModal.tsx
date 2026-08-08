@@ -1,11 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { X, Globe2, Plus, Info, Image as ImageIcon, GripVertical, Trash2, Settings, Tag, Layers, AlertCircle, Check, AlertTriangle, MapPin, Castle, Church, Landmark, LayoutGrid, Coffee, Star, History, Clock, ArrowLeft, Edit2 } from 'lucide-react';
 import { Reorder } from 'framer-motion';
+import {
+  createMenuItemAsync,
+  updateMenuItemAsync,
+  archiveMenuItemAsync,
+  type MenuItem,
+} from '@/lib/menu';
+import {
+  validateDishName,
+  validateDishPrice,
+  validateAllergenIds,
+  validateVariantPrices,
+  MenuValidationError,
+} from '@/lib/menu-validation';
+
+export type DishEditData = {
+  id: string;
+  categoryId: string;
+  name: string;
+  description?: string;
+  price: number;
+  allergens: string[];
+  isArchived?: boolean;
+};
 
 type DishModalProps = {
   isOpen: boolean;
   onClose: () => void;
   mode?: 'create' | 'edit';
+  categoryId?: string;
+  dish?: DishEditData | null;
+  onSaved?: (item: MenuItem) => void;
 };
 
 type Section = 'general' | 'price' | 'modifiers' | 'allergens' | 'locations';
@@ -41,7 +67,14 @@ const AVAILABLE_MODIFIER_CATEGORIES = [
   }
 ];
 
-export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModalProps) {
+export default function DishModal({
+  isOpen,
+  onClose,
+  mode = 'create',
+  categoryId,
+  dish,
+  onSaved,
+}: DishModalProps) {
   const [activeSection, setActiveSection] = useState<Section>('general');
   const [activeLang, setActiveLang] = useState<Language>('en');
 
@@ -136,6 +169,8 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
   const [selectedLocations, setSelectedLocations] = useState<string[]>(availableLocations.map(l => l.id));
 
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isDishActive, setIsDishActive] = useState(true);
 
@@ -157,18 +192,96 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
   const [activePreviewCategoryName, setActivePreviewCategoryName] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setInitialStateHash(JSON.stringify({ name, description, notes, pricingType, singlePrice, variants, modifiers, allergens, customAllergens, photoPreview, isDishActive, selectedLocations, tags }));
-      setCloseConfirm(false);
-      setIsClosing(false);
-      setSaveConfirm(false);
-      if (mode === 'create') {
-        setSelectedLocations(availableLocations.map(l => l.id));
-      }
-    } else {
+    if (!isOpen) {
       setInitialStateHash(null);
+      return;
     }
-  }, [isOpen, mode]);
+
+    setSaveError(null);
+    setIsSaving(false);
+    setCloseConfirm(false);
+    setIsClosing(false);
+    setSaveConfirm(false);
+
+    if (mode === 'edit' && dish) {
+      const nextName = { en: dish.name, ru: '', es: '' };
+      const nextDesc = { en: dish.description || '', ru: '', es: '' };
+      const nextPrice = dish.price.toFixed(2);
+      const nextVariants = [{ id: '1', name: 'Standard', price: nextPrice, isActive: true }];
+      const nextAllergens = dish.allergens ?? [];
+      const nextActive = !dish.isArchived;
+
+      setName(nextName);
+      setDescription(nextDesc);
+      setNotes('');
+      setSinglePrice(nextPrice);
+      setPricingType('single');
+      setVariants(nextVariants);
+      setAllergens(nextAllergens);
+      setIsDishActive(nextActive);
+      setIsRecommended(false);
+      setTags([]);
+      setActiveSection('general');
+      setActiveLang('en');
+      setSelectedLocations(availableLocations.map((l) => l.id));
+
+      setInitialStateHash(
+        JSON.stringify({
+          name: nextName,
+          description: nextDesc,
+          notes: '',
+          pricingType: 'single',
+          singlePrice: nextPrice,
+          variants: nextVariants,
+          modifiers,
+          allergens: nextAllergens,
+          customAllergens,
+          photoPreview,
+          isDishActive: nextActive,
+          selectedLocations: availableLocations.map((l) => l.id),
+          tags: [],
+        })
+      );
+    } else {
+      const nextName = { en: '', ru: '', es: '' };
+      const nextDesc = { en: '', ru: '', es: '' };
+      const nextPrice = '0.00';
+      const nextVariants = [{ id: '1', name: 'Standard', price: '0.00', isActive: true }];
+      const nextAllergens: string[] = [];
+
+      setName(nextName);
+      setDescription(nextDesc);
+      setNotes('');
+      setSinglePrice(nextPrice);
+      setPricingType('single');
+      setVariants(nextVariants);
+      setAllergens(nextAllergens);
+      setIsDishActive(true);
+      setIsRecommended(false);
+      setTags([]);
+      setActiveSection('general');
+      setActiveLang('en');
+      setSelectedLocations(availableLocations.map((l) => l.id));
+
+      setInitialStateHash(
+        JSON.stringify({
+          name: nextName,
+          description: nextDesc,
+          notes: '',
+          pricingType: 'single',
+          singlePrice: nextPrice,
+          variants: nextVariants,
+          modifiers,
+          allergens: nextAllergens,
+          customAllergens,
+          photoPreview,
+          isDishActive: true,
+          selectedLocations: availableLocations.map((l) => l.id),
+          tags: [],
+        })
+      );
+    }
+  }, [isOpen, mode, dish?.id]);
 
   const hasUnsavedChanges = initialStateHash !== null && initialStateHash !== JSON.stringify({ name, description, notes, pricingType, singlePrice, variants, modifiers, allergens, customAllergens, photoPreview, isDishActive, selectedLocations, tags });
 
@@ -200,14 +313,84 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaveConfirm(false);
-    setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-      setInitialStateHash(JSON.stringify({ name, description, notes, pricingType, singlePrice, variants, modifiers, allergens, customAllergens, photoPreview, isDishActive, selectedLocations }));
-      handleCloseAnimation();
-    }, 1000);
+    setSaveError(null);
+
+    try {
+      const dishName = name.en.trim() || name.ru.trim() || name.es.trim();
+      validateDishName(dishName);
+
+      const price =
+        pricingType === 'single'
+          ? validateDishPrice(singlePrice)
+          : validateVariantPrices(
+              variants.map((v) => ({ price: v.price, isActive: v.isActive }))
+            );
+      const validAllergens = validateAllergenIds(allergens);
+      const desc = description.en.trim() || description.ru.trim() || description.es.trim();
+
+      setIsSaving(true);
+      let saved: MenuItem;
+
+      if (mode === 'edit' && dish) {
+        saved = await updateMenuItemAsync(dish.id, {
+          name: dishName,
+          description: desc || undefined,
+          price,
+          categoryId: dish.categoryId,
+          allergens: validAllergens,
+          isArchived: !isDishActive,
+        });
+      } else {
+        if (!categoryId) {
+          throw new MenuValidationError('Category is required to create a dish');
+        }
+        saved = await createMenuItemAsync({
+          name: dishName,
+          description: desc || undefined,
+          price,
+          categoryId,
+          allergens: validAllergens,
+        });
+        if (!isDishActive) {
+          saved = await archiveMenuItemAsync(saved.id);
+        }
+      }
+
+      onSaved?.(saved);
+      setIsSaved(true);
+      setTimeout(() => {
+        setIsSaved(false);
+        setInitialStateHash(
+          JSON.stringify({
+            name,
+            description,
+            notes,
+            pricingType,
+            singlePrice,
+            variants,
+            modifiers,
+            allergens,
+            customAllergens,
+            photoPreview,
+            isDishActive,
+            selectedLocations,
+          })
+        );
+        handleCloseAnimation();
+      }, 800);
+    } catch (error) {
+      const message =
+        error instanceof MenuValidationError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : 'Failed to save dish';
+      setSaveError(message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -239,7 +422,10 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
       />
 
       {/* Modal Container */}
-      <div className={`relative w-full max-w-5xl h-[85vh] bg-white rounded-[32px] shadow-2xl flex flex-col overflow-hidden duration-200 ${isClosing ? 'animate-out fade-out zoom-out-95' : 'animate-in fade-in zoom-in-95'}`}>
+      <div
+        data-testid="dish-modal"
+        className={`relative w-full max-w-5xl h-[85vh] bg-white rounded-[32px] shadow-2xl flex flex-col overflow-hidden duration-200 ${isClosing ? 'animate-out fade-out zoom-out-95' : 'animate-in fade-in zoom-in-95'}`}
+      >
         
         {/* Header */}
         <div className="flex justify-between items-center px-8 py-5 border-b border-gray-100 bg-white z-10 shrink-0">
@@ -343,6 +529,7 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
             {sections.map(section => (
               <button
                 key={section.id}
+                data-testid={`dish-section-${section.id}`}
                 onClick={() => setActiveSection(section.id)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer text-left text-[13px] font-semibold ${activeSection === section.id ? 'bg-white shadow-sm border border-gray-200/60 text-corgi' : 'text-gray-500 hover:bg-gray-100/80 hover:text-gray-900 border border-transparent'}`}
               >
@@ -388,6 +575,7 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
                         </div>
                         <input 
                           type="text" 
+                          data-testid="dish-name-input"
                           placeholder="e.g. Avocado Toast" 
                           value={name[activeLang]}
                           onChange={(e) => setName({ ...name, [activeLang]: e.target.value })}
@@ -554,6 +742,7 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">€</span>
                         <input 
                           type="number" 
+                          data-testid="dish-price-input"
                           value={singlePrice}
                           onChange={(e) => setSinglePrice(e.target.value)}
                           className="w-48 bg-white border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi"
@@ -823,6 +1012,7 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
                       return (
                         <button
                           key={allergen}
+                          data-testid={`dish-allergen-${allergen.toLowerCase()}`}
                           onClick={() => setAllergens(isSelected ? allergens.filter(a => a !== allergen) : [...allergens, allergen])}
                           className={`px-3 py-1.5 rounded-xl text-[13px] font-semibold border-2 transition-all cursor-pointer ${isSelected ? 'border-corgi bg-corgi/10 text-corgi' : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
@@ -896,7 +1086,13 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-5 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 shrink-0">
+        <div className="px-8 py-5 border-t border-gray-100 bg-gray-50/50 flex flex-col gap-2 shrink-0">
+          {saveError && (
+            <p data-testid="dish-save-error" className="text-[13px] font-semibold text-red-500 text-right">
+              {saveError}
+            </p>
+          )}
+          <div className="flex justify-end gap-3">
           <button 
             onClick={handleCloseRequest}
             className="px-6 py-2.5 rounded-xl text-[13px] font-bold text-gray-600 hover:bg-gray-200/50 transition-colors cursor-pointer"
@@ -904,18 +1100,23 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
             Cancel
           </button>
           <button 
+            data-testid="dish-save-btn"
             onClick={handleSaveClick}
-            className={`py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 w-32 ${isSaved ? 'bg-green-500 text-white pointer-events-none' : 'bg-black text-white hover:bg-gray-800 active:scale-95'}`}
+            disabled={isSaving}
+            className={`py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 w-32 disabled:opacity-60 disabled:cursor-not-allowed ${isSaved ? 'bg-green-500 text-white pointer-events-none' : 'bg-black text-white hover:bg-gray-800 active:scale-95'}`}
           >
             {isSaved ? (
               <>
                 <Check size={16} className="animate-in zoom-in duration-300" />
                 <span>Saved!</span>
               </>
+            ) : isSaving ? (
+              <span>Saving…</span>
             ) : (
               <span>Save Dish</span>
             )}
           </button>
+          </div>
         </div>
 
         {/* Delete Confirmation Overlay */}
@@ -1088,7 +1289,8 @@ export default function DishModal({ isOpen, onClose, mode = 'create' }: DishModa
                   Cancel
                 </button>
                 <button 
-                  onClick={handleSave} 
+                  data-testid="dish-save-confirm-btn"
+                  onClick={() => void handleSave()} 
                   disabled={!saveSelectedLocations.includes('all') && saveSelectedLocations.length === 0}
                   className="px-5 py-2.5 text-[13px] font-bold text-white bg-black hover:bg-gray-800 rounded-xl transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >

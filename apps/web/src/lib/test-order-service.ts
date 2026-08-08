@@ -14,9 +14,15 @@ async function main() {
   try {
     // 0. Setup a test location in DB first to satisfy foreign key constraints
     console.log('Setting up mock location in DB...');
-    testLocation = await prisma.location.create({
-      data: {
+    await prisma.order.deleteMany({ where: { locationId } }).catch(() => {});
+    testLocation = await prisma.location.upsert({
+      where: { id: locationId },
+      create: {
         id: locationId,
+        name: 'OrderService Test Location',
+        address: 'Test Street 404',
+      },
+      update: {
         name: 'OrderService Test Location',
         address: 'Test Street 404',
       },
@@ -112,8 +118,10 @@ async function main() {
     const receivedJobs: any[] = [];
     const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null });
     const worker = new Worker('verifactu-sync', async (job) => {
-      console.log('BullMQ Worker intercepted job:', job.name, job.data);
-      receivedJobs.push(job.data);
+      if (job.data?.orderId === orderId) {
+        console.log('BullMQ Worker intercepted job:', job.name, job.data);
+        receivedJobs.push(job.data);
+      }
     }, { connection });
 
     // Call update status to trigger sync job and cache invalidation
@@ -146,10 +154,8 @@ async function main() {
 
     // 5. Clean up DB records
     console.log('Cleaning up DB test records...');
-    // We must delete the order first. But wait, is it protected by trigger?
-    // No, trigger only blocks deleting FiscalRecord! Order doesn't have a FiscalRecord yet, so we can delete the Order!
-    await prisma.order.delete({ where: { id: orderId } });
-    await prisma.location.delete({ where: { id: locationId } });
+    await prisma.order.delete({ where: { id: orderId } }).catch(() => {});
+    await prisma.location.delete({ where: { id: locationId } }).catch(() => {});
     console.log('✅ Success: DB test records cleaned up.');
 
     console.log('--- OrderService Test Completed Successfully ---');

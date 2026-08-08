@@ -1,7 +1,7 @@
-import { GET as shiftsGET, POST as shiftsPOST } from '../app/api/shifts/route';
-import { POST as closePOST } from '../app/api/shifts/[id]/close/route';
-import { POST as adjustPOST } from '../app/api/shifts/[id]/adjust/route';
-import { prisma } from './db';
+import { GET as shiftsGET, POST as shiftsPOST } from '../app/api/shifts/route.ts';
+import { POST as closePOST } from '../app/api/shifts/[id]/close/route.ts';
+import { POST as adjustPOST } from '../app/api/shifts/[id]/adjust/route.ts';
+import { prisma } from './db.ts';
 
 async function main() {
   console.log('--- Starting Cash Shifts Integration Test ---');

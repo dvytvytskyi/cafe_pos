@@ -1,4 +1,4 @@
-import { prisma } from '../lib/db';
+import { prisma } from '../lib/db.ts';
 
 export interface CashAdjustment {
   type: 'in' | 'out';

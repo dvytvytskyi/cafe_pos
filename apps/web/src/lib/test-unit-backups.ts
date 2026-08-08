@@ -1,28 +1,37 @@
+/**
+ * Module 30 — backup validation unit tests
+ */
 import assert from 'assert';
-
-interface BackupFile {
-  name: string;
-  createdAt: Date;
-}
-
-function getExpiredBackups(files: BackupFile[], retentionDays: number = 30, now: Date = new Date()): BackupFile[] {
-  const cutoffTime = now.getTime() - retentionDays * 24 * 60 * 60 * 1000;
-  return files.filter(f => f.createdAt.getTime() < cutoffTime);
-}
+import {
+  formatBackupFilename,
+  getExpiredBackups,
+  isValidBackupFilename,
+} from './backup-validation.ts';
 
 export async function run() {
-  console.log('Running test-unit-backups...');
+  console.log('--- Module 30 Backups Unit Tests ---');
+
+  const name = formatBackupFilename(new Date('2026-08-08T14:30:00'));
+  console.log('✅ T30.1 filename format backup_YYYY-MM-DD_HH-mm-ss');
+  assert.match(name, /^backup_2026-08-08_14-30-00\.dump$/);
+  assert.strictEqual(isValidBackupFilename(name), true);
+  assert.strictEqual(isValidBackupFilename('backup_bad_name.dump'), false);
+  assert.strictEqual(isValidBackupFilename('corgi_pos_backup_2026.dump'), true);
 
   const now = new Date('2026-08-04T00:00:00Z');
-  const files: BackupFile[] = [
-    { name: 'backup-recent.sql', createdAt: new Date('2026-08-02T00:00:00Z') }, // 2 days old (keep)
-    { name: 'backup-old.sql', createdAt: new Date('2026-06-01T00:00:00Z') }    // ~64 days old (delete)
+  const files = [
+    { filename: 'backup-recent.dump', createdAt: new Date('2026-08-02T00:00:00Z') },
+    { filename: 'backup-old.dump', createdAt: new Date('2026-06-01T00:00:00Z') },
   ];
-
   const expired = getExpiredBackups(files, 30, now);
+  assert.strictEqual(expired.length, 1);
+  assert.strictEqual(expired[0]!.filename, 'backup-old.dump');
+  console.log('✅ retention expiry helper');
 
-  assert.strictEqual(expired.length, 1, 'Expired backups count should be 1');
-  assert.strictEqual(expired[0].name, 'backup-old.sql', 'Should mark the 64-day-old backup for deletion');
-
-  console.log('✅ test-unit-backups passed.');
+  console.log('--- Module 30 Unit Tests Passed ---');
 }
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

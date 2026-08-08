@@ -1,308 +1,138 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Clock, CheckSquare, Paperclip, Plus, MoreVertical, Search, ChevronLeft, ChevronRight, Calendar, Users, MapPin, Filter, ChevronDown, ArrowLeft, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DatePicker from '../ui/DatePicker';
 import NewTaskModal, { MOCK_USERS } from './NewTaskModal';
 import BoardSettingsModal, { Stage } from './BoardSettingsModal';
+import {
+  Task,
+  getTasksAsync,
+  createTaskAsync,
+  updateTaskAsync,
+  deleteTaskAsync,
+  migrateTaskStatusAsync,
+  formatDateParam,
+  syncTasksFromOffline,
+} from '@/lib/tasks';
+import { getEmployeesAsync, Employee } from '@/lib/staff';
+import { CapacitorBridge } from '@/lib/capacitor-bridge';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
+import {
+  getBoardSettingsAsync,
+  saveBoardSettingsAsync,
+  DEFAULT_TASK_STAGES,
+} from '@/lib/board-settings';
 
-const INITIAL_STAGES: Stage[] = [
-  { id: 'todo', label: 'To Do', color: 'bg-blue-500' },
-  { id: 'in_progress', label: 'In Progress', color: 'bg-orange-500' },
-  { id: 'in_review', label: 'In Review', color: 'bg-purple-500' },
-  { id: 'blocked', label: 'Blocked', color: 'bg-red-500' },
-  { id: 'completed', label: 'Completed', color: 'bg-green-500' },
-  { id: 'archived', label: 'Archived', color: 'bg-gray-400' },
-];
+const INITIAL_STAGES = DEFAULT_TASK_STAGES;
 
-export type Task = {
-  id: string;
-  title: string;
-  branch: string;
-  tags: { label: string; bg: string; text: string }[];
-  comments: number;
-  attachments: number;
-  progress: number;
-  deadline: string;
-  assignees: string[];
-  status: string;
-};
+export type { Task };
 
-const INITIAL_TASKS: Task[] = [
-  {
-    id: 'T-1001',
-    title: 'Deep clean espresso machine & grinders',
-    branch: 'Gothic',
-    tags: [{ label: 'Bar', bg: 'bg-blue-50', text: 'text-blue-600' }, { label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
-    comments: 4,
-    attachments: 2,
-    progress: 50,
-    deadline: '2d',
-    assignees: ['1', '2'],
-    status: 'todo',
-  },
-  {
-    id: 'T-1002',
-    title: 'Redesign seasonal menu',
-    branch: 'All Branches',
-    tags: [{ label: 'Marketing', bg: 'bg-purple-50', text: 'text-purple-600' }],
-    comments: 12,
-    attachments: 5,
-    progress: 0,
-    deadline: '4d',
-    assignees: ['3'],
-    status: 'in_progress',
-  },
-  {
-    id: 'T-1003',
-    title: 'Inventory count (Merch only)',
-    branch: 'Sagrada',
-    tags: [{ label: 'Inventory', bg: 'bg-green-50', text: 'text-green-600' }],
-    comments: 0,
-    attachments: 0,
-    progress: 100,
-    deadline: '1d',
-    assignees: ['4'],
-    status: 'in_review',
-  },
-  {
-    id: 'T-1004',
-    title: 'Update WiFi passwords',
-    branch: 'Gracia',
-    tags: [{ label: 'IT', bg: 'bg-gray-100', text: 'text-gray-600' }],
-    comments: 1,
-    attachments: 0,
-    progress: 0,
-    deadline: '5d',
-    assignees: ['5'],
-    status: 'todo',
-  },
-  {
-    id: 'T-1005',
-    title: 'Interview new barista candidates',
-    branch: 'Arc de Triumph',
-    tags: [{ label: 'HR', bg: 'bg-pink-50', text: 'text-pink-600' }],
-    comments: 8,
-    attachments: 3,
-    progress: 80,
-    deadline: '0d',
-    assignees: ['1'],
-    status: 'in_progress',
-  },
-  {
-    id: 'T-1006',
-    title: 'Fix AC unit in main hall',
-    branch: 'Eixample',
-    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
-    comments: 2,
-    attachments: 1,
-    progress: 10,
-    deadline: 'Overdue',
-    assignees: ['6'],
-    status: 'blocked',
-  },
-  {
-    id: 'T-1007',
-    title: 'Send monthly tax reports',
-    branch: 'HQ',
-    tags: [{ label: 'Finance', bg: 'bg-emerald-50', text: 'text-emerald-600' }],
-    comments: 0,
-    attachments: 4,
-    progress: 100,
-    deadline: 'Done',
-    assignees: ['2'],
-    status: 'completed',
-  },
-  {
-    id: 'T-1008',
-    title: 'Update barista training manual',
-    branch: 'HQ',
-    tags: [{ label: 'HR', bg: 'bg-pink-50', text: 'text-pink-600' }],
-    comments: 3,
-    attachments: 1,
-    progress: 0,
-    deadline: '7d',
-    assignees: ['1'],
-    status: 'todo',
-  },
-  {
-    id: 'T-1009',
-    title: 'Order new syrups for Fall',
-    branch: 'All Branches',
-    tags: [{ label: 'Inventory', bg: 'bg-green-50', text: 'text-green-600' }],
-    comments: 5,
-    attachments: 0,
-    progress: 30,
-    deadline: '2d',
-    assignees: ['4'],
-    status: 'in_progress',
-  },
-  {
-    id: 'T-1010',
-    title: 'Fix broken chair in patio',
-    branch: 'Sagrada',
-    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
-    comments: 0,
-    attachments: 1,
-    progress: 0,
-    deadline: '3d',
-    assignees: ['6'],
-    status: 'todo',
-  },
-  {
-    id: 'T-1011',
-    title: 'Approve new pastry supplier',
-    branch: 'HQ',
-    tags: [{ label: 'Management', bg: 'bg-purple-50', text: 'text-purple-600' }],
-    comments: 14,
-    attachments: 3,
-    progress: 90,
-    deadline: '1d',
-    assignees: ['2', '3'],
-    status: 'in_review',
-  },
-  {
-    id: 'T-1012',
-    title: 'Health inspection prep',
-    branch: 'Gothic',
-    tags: [{ label: 'Compliance', bg: 'bg-red-50', text: 'text-red-600' }],
-    comments: 7,
-    attachments: 0,
-    progress: 65,
-    deadline: '5d',
-    assignees: ['1', '5'],
-    status: 'in_progress',
-  },
-  {
-    id: 'T-1013',
-    title: 'Draft holiday promotions',
-    branch: 'HQ',
-    tags: [{ label: 'Marketing', bg: 'bg-purple-50', text: 'text-purple-600' }],
-    comments: 2,
-    attachments: 1,
-    progress: 0,
-    deadline: '14d',
-    assignees: ['3'],
-    status: 'todo',
-  },
-  {
-    id: 'T-1014',
-    title: 'Check plumbing issue',
-    branch: 'Arc de Triumph',
-    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
-    comments: 6,
-    attachments: 2,
-    progress: 20,
-    deadline: 'Overdue',
-    assignees: ['6'],
-    status: 'blocked',
-  },
-  {
-    id: 'T-1015',
-    title: 'Onboard new cashier',
-    branch: 'Gracia',
-    tags: [{ label: 'HR', bg: 'bg-pink-50', text: 'text-pink-600' }],
-    comments: 0,
-    attachments: 2,
-    progress: 100,
-    deadline: 'Done',
-    assignees: ['1'],
-    status: 'completed',
-  },
-  {
-    id: 'T-1016',
-    title: 'Update POS system software',
-    branch: 'All Branches',
-    tags: [{ label: 'IT', bg: 'bg-gray-100', text: 'text-gray-600' }],
-    comments: 1,
-    attachments: 0,
-    progress: 100,
-    deadline: 'Done',
-    assignees: ['5'],
-    status: 'archived',
-  },
-  {
-    id: 'T-1017',
-    title: 'Negotiate rent for Eixample',
-    branch: 'Eixample',
-    tags: [{ label: 'Finance', bg: 'bg-emerald-50', text: 'text-emerald-600' }],
-    comments: 22,
-    attachments: 8,
-    progress: 40,
-    deadline: '30d',
-    assignees: ['2', '4'],
-    status: 'in_progress',
-  },
-  {
-    id: 'T-1018',
-    title: 'Design new loyalty cards',
-    branch: 'All Branches',
-    tags: [{ label: 'Marketing', bg: 'bg-purple-50', text: 'text-purple-600' }],
-    comments: 11,
-    attachments: 4,
-    progress: 95,
-    deadline: '0d',
-    assignees: ['3', '1'],
-    status: 'in_review',
-  },
-  {
-    id: 'T-1019',
-    title: 'Review weekend sales metrics',
-    branch: 'HQ',
-    tags: [{ label: 'Finance', bg: 'bg-emerald-50', text: 'text-emerald-600' }],
-    comments: 4,
-    attachments: 1,
-    progress: 100,
-    deadline: 'Done',
-    assignees: ['2'],
-    status: 'completed',
-  },
-  {
-    id: 'T-1020',
-    title: 'Clean out storage room',
-    branch: 'Gothic',
-    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
-    comments: 0,
-    attachments: 0,
-    progress: 0,
-    deadline: '10d',
-    assignees: ['4'],
-    status: 'todo',
-  },
-  {
-    id: 'T-1021',
-    title: 'Fix lighting above counter',
-    branch: 'Sagrada',
-    tags: [{ label: 'Maintenance', bg: 'bg-orange-50', text: 'text-orange-600' }],
-    comments: 9,
-    attachments: 1,
-    progress: 15,
-    deadline: 'Overdue',
-    assignees: ['6'],
-    status: 'blocked',
-  }
-];
-
-export default function TaskManager({ onBack }: { onBack?: () => void }) {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+export default function TaskManager({
+  onBack,
+  onTasksChanged,
+}: {
+  onBack?: () => void;
+  onTasksChanged?: () => void;
+}) {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [stages, setStages] = useState<Stage[]>(INITIAL_STAGES);
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [assigneeFilter, setAssigneeFilter] = useState('All');
   const [isAssigneeFilterOpen, setIsAssigneeFilterOpen] = useState(false);
   const [locationFilter, setLocationFilter] = useState('All');
   const [isLocationFilterOpen, setIsLocationFilterOpen] = useState(false);
   const [tagFilter, setTagFilter] = useState('All');
   const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<any>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isDraftTask, setIsDraftTask] = useState(false);
+  const [isClientMounted, setIsClientMounted] = useState(false);
+
+  useEffect(() => {
+    setSelectedDate(new Date());
+    setIsClientMounted(true);
+  }, []);
+
+  const fetchTasks = useCallback(async () => {
+    if (!selectedDate) return;
+    try {
+      setIsLoading(true);
+      const filters: { date?: string; assigneeId?: string } = {
+        date: formatDateParam(selectedDate),
+      };
+      if (assigneeFilter !== 'All') {
+        filters.assigneeId = assigneeFilter;
+      }
+      const data = await getTasksAsync(filters);
+      setTasks(data);
+    } catch (err) {
+      console.error('Failed to fetch tasks:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedDate, assigneeFilter]);
+
+  const fetchTasksRef = useRef(fetchTasks);
+  fetchTasksRef.current = fetchTasks;
+
+  useEffect(() => {
+    void fetchTasks();
+  }, [fetchTasks]);
+
+  useEffect(() => {
+    getEmployeesAsync()
+      .then(setEmployees)
+      .catch((err) => console.error('Failed to load staff for task filters:', err));
+  }, []);
+
+  useEffect(() => {
+    getBoardSettingsAsync('tasks', DEFAULT_LOCATION_ID)
+      .then(setStages)
+      .catch((err) => console.error('Failed to load task board settings:', err));
+  }, []);
+
+  useEffect(() => {
+    if (!isClientMounted) return;
+
+    let removeNetworkListener = () => {};
+
+    const syncAndRefresh = async () => {
+      try {
+        const synced = await syncTasksFromOffline(DEFAULT_LOCATION_ID);
+        if (synced > 0) {
+          await fetchTasksRef.current();
+        }
+      } catch (err) {
+        console.error('Failed to sync offline tasks:', err);
+      }
+    };
+
+    void syncAndRefresh();
+
+    CapacitorBridge.startNetworkListener((connected) => {
+      if (connected) void syncAndRefresh();
+    }).then(({ remove }) => {
+      removeNetworkListener = remove;
+    });
+
+    return () => removeNetworkListener();
+  }, [isClientMounted]);
+
+  const resolveAssigneeName = (id: string) => {
+    return employees.find((e) => e.id === id)?.name
+      || MOCK_USERS.find((u) => u.id === id)?.name
+      || 'Unknown';
+  };
 
   const openNewTaskModal = (status = 'todo') => {
-    const draftId = `T-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    const draftTask = {
-      id: draftId,
+    const draftTask: Task = {
+      id: `T-DRAFT-${Date.now()}`,
       title: 'Untitled Task',
       branch: 'All Branches',
       tags: [{ label: 'Management', bg: 'bg-purple-50', text: 'text-purple-600' }],
@@ -310,35 +140,72 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
       attachments: 0,
       progress: 0,
       deadline: 'No deadline',
-      assignees: [uniqueAssignees[0] || ''],
-      status: status,
+      assignees: employees[0]?.id ? [employees[0].id] : [],
+      status,
+      scheduledDate: selectedDate ? formatDateParam(selectedDate) : formatDateParam(new Date()),
     };
-    
-    setTasks(prev => [draftTask, ...prev]);
+
     setEditingTask(draftTask);
+    setIsDraftTask(true);
     setIsNewTaskModalOpen(true);
   };
 
-  const editTask = (task: any) => {
+  const editTask = (task: Task) => {
     setEditingTask(task);
+    setIsDraftTask(false);
     setIsNewTaskModalOpen(true);
   };
 
-  const handleUpdateTask = (updatedTask: any) => {
-    setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
-    setIsNewTaskModalOpen(false);
-    setEditingTask(null);
+  const handleUpdateTask = async (updatedTask: Task) => {
+    try {
+      const payload = {
+        ...updatedTask,
+        scheduledDate: updatedTask.scheduledDate || formatDateParam(selectedDate!),
+      };
+
+      if (isDraftTask || !tasks.some((t) => t.id === updatedTask.id)) {
+        const { id: _draftId, ...createPayload } = payload;
+        const created = await createTaskAsync(createPayload);
+        setTasks((prev) => [created, ...prev]);
+      } else {
+        const saved = await updateTaskAsync(updatedTask.id, payload);
+        setTasks((prev) => prev.map((t) => (t.id === saved.id ? saved : t)));
+      }
+      setIsNewTaskModalOpen(false);
+      setEditingTask(null);
+      setIsDraftTask(false);
+      onTasksChanged?.();
+    } catch (err) {
+      console.error('Failed to save task:', err);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      if (!isDraftTask) {
+        await deleteTaskAsync(taskId);
+      }
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      setIsNewTaskModalOpen(false);
+      setEditingTask(null);
+      setIsDraftTask(false);
+      onTasksChanged?.();
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+    }
   };
 
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesAssignee = assigneeFilter === 'All' || (t.assignees && t.assignees.some(a => a === assigneeFilter));
     const matchesLocation = locationFilter === 'All' || t.branch === locationFilter;
     const matchesTag = tagFilter === 'All' || (t.tags && t.tags.some(tag => tag.label === tagFilter));
-    return matchesSearch && matchesAssignee && matchesLocation && matchesTag;
+    return matchesSearch && matchesLocation && matchesTag;
   });
 
-  const uniqueAssignees = Array.from(new Set(tasks.flatMap(t => t.assignees || [])));
+  const uniqueAssignees = Array.from(new Set([
+    ...tasks.flatMap(t => t.assignees || []),
+    ...employees.map(e => e.id),
+  ]));
   const uniqueLocations = Array.from(new Set(tasks.map(t => t.branch).filter(Boolean)));
   
   const tagCounts = React.useMemo(() => {
@@ -400,10 +267,12 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
           <div className="hidden lg:block w-px h-6 bg-gray-200 mx-1" />
 
           {/* Date Selector */}
-          <DatePicker 
-            selectedDate={selectedDate}
-            onChange={setSelectedDate}
-          />
+          {selectedDate && (
+            <DatePicker 
+              selectedDate={selectedDate}
+              onChange={setSelectedDate}
+            />
+          )}
 
           <div className="hidden lg:block w-px h-6 bg-gray-200 mx-1" />
 
@@ -416,7 +285,9 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
               }`}
             >
               <Users size={14} />
-              {assigneeFilter === 'All' ? 'All Assignees' : MOCK_USERS.find(u => u.id === assigneeFilter)?.name || 'Unknown'}
+              {assigneeFilter === 'All'
+                ? 'All Assignees'
+                : (isClientMounted ? resolveAssigneeName(assigneeFilter) : '…')}
               {assigneeFilter !== 'All' ? (
                  <div onClick={(e) => { e.stopPropagation(); setAssigneeFilter('All'); }} className="ml-1 hover:text-red-400 p-0.5 rounded-full"><Plus size={14} className="rotate-45" /></div>
               ) : (
@@ -442,8 +313,10 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
                       {assigneeFilter === 'All' && <CheckSquare size={14} className="text-corgi" />}
                     </button>
                     {uniqueAssignees.map(a => {
-                      const user = MOCK_USERS.find(u => u.id === a);
-                      if (!user) return null;
+                      const name = resolveAssigneeName(a);
+                      const mock = MOCK_USERS.find(u => u.id === a);
+                      const initials = mock?.initials || name.slice(0, 2).toUpperCase();
+                      const bg = mock?.bg || 'bg-corgi';
                       return (
                         <button 
                           key={a}
@@ -451,10 +324,10 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
                           className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between group cursor-pointer"
                         >
                           <div className="flex items-center gap-2">
-                            <div className={`w-5 h-5 rounded-full text-white text-[9px] font-bold flex items-center justify-center shrink-0 ${user.bg}`}>
-                              {user.initials}
+                            <div className={`w-5 h-5 rounded-full text-white text-[9px] font-bold flex items-center justify-center shrink-0 ${bg}`}>
+                              {initials}
                             </div>
-                            <span className="truncate max-w-[130px]">{user.name}</span>
+                            <span className="truncate max-w-[130px]">{name}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             {assigneeFilter === a && <CheckSquare size={14} className="text-corgi" />}
@@ -577,7 +450,13 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
 
           {/* Settings Button */}
           <button 
-             onClick={() => setIsSettingsModalOpen(true)}
+             data-testid="task-board-settings-btn"
+             onClick={() => {
+               setIsAssigneeFilterOpen(false);
+               setIsLocationFilterOpen(false);
+               setIsTagFilterOpen(false);
+               setIsSettingsModalOpen(true);
+             }}
              className="w-[32px] h-[32px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-900 rounded-xl border border-gray-200 transition-colors cursor-pointer"
           >
              <Settings size={16} />
@@ -648,36 +527,40 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
         onClose={() => {
           setIsNewTaskModalOpen(false);
           setEditingTask(null);
+          setIsDraftTask(false);
         }} 
         onSave={handleUpdateTask} 
         uniqueLocations={uniqueLocations} 
         uniqueAssignees={uniqueAssignees} 
         uniqueTags={tagCounts}
+        employees={employees}
         editingTask={editingTask}
-        onDelete={(taskId) => {
-          setTasks(prev => prev.filter(t => t.id !== taskId));
-          setIsNewTaskModalOpen(false);
-          setEditingTask(null);
-        }}
+        onDelete={(taskId) => { void handleDeleteTask(taskId); }}
       />
 
       <BoardSettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
         stages={stages}
+        boardType="tasks"
         tasksWithStatus={tasksWithStatus}
-        onSave={(newStages, taskMigrations) => {
-          setStages(newStages);
-          if (taskMigrations.length > 0) {
-            setTasks(prev => prev.map(t => {
-              const migration = taskMigrations.find(m => m.from === t.status);
-              if (migration) {
-                return { ...t, status: migration.to };
+        onSave={async (newStages, taskMigrations) => {
+          try {
+            const saved = await saveBoardSettingsAsync('tasks', newStages, DEFAULT_LOCATION_ID);
+            setStages(saved);
+
+            if (taskMigrations.length > 0) {
+              for (const migration of taskMigrations) {
+                await migrateTaskStatusAsync(migration.from, migration.to);
               }
-              return t;
-            }));
+              await fetchTasks();
+              onTasksChanged?.();
+            }
+            setIsSettingsModalOpen(false);
+          } catch (err) {
+            console.error('Failed to save task board settings:', err);
+            throw err;
           }
-          setIsSettingsModalOpen(false);
         }}
       />
     </div>
@@ -710,10 +593,11 @@ export default function TaskManager({ onBack }: { onBack?: () => void }) {
           <div className="flex items-center -space-x-2">
             {task.assignees?.map((userId, i) => {
               const u = MOCK_USERS.find(user => user.id === userId);
-              if (!u) return null;
+              const initials = u?.initials || resolveAssigneeName(userId).slice(0, 2).toUpperCase();
+              const bg = u?.bg || 'bg-corgi';
               return (
-                <div key={i} className={`w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 border-2 border-white ${u.bg}`}>
-                  {u.initials}
+                <div key={i} className={`w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 border-2 border-white ${bg}`}>
+                  {initials}
                 </div>
               );
             })}

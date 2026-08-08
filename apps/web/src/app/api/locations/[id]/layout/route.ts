@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { tableRepository } from '@/repositories/table.repository';
+import { LayoutValidationError } from '@/lib/tables-validation';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,6 +27,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {
+    if (error instanceof LayoutValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error(`Error saving room layouts:`, error);
     return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
   }

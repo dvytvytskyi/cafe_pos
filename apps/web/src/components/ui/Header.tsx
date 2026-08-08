@@ -5,6 +5,7 @@ import { Search, Bell, Info, ChevronDown, Menu } from 'lucide-react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import SearchModal from './SearchModal';
 import NotificationsPopover from './NotificationsPopover';
+import { getProfileAsync, PROFILE_UPDATED_EVENT, type Profile } from '@/lib/profile';
 
 function NavItems() {
   const router = useRouter();
@@ -52,6 +53,29 @@ function NavItems() {
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const data = await getProfileAsync();
+        if (!cancelled) setProfile(data);
+      } catch {
+        /* profile optional until auth */
+      }
+    };
+    load();
+    const onUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<Profile>).detail;
+      if (detail) setProfile(detail);
+    };
+    window.addEventListener(PROFILE_UPDATED_EVENT, onUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(PROFILE_UPDATED_EVENT, onUpdated);
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -138,8 +162,12 @@ export default function Header() {
             />
           </div>
           <div className="flex flex-col hidden xl:flex">
-            <span className="text-sm font-bold text-black leading-tight">Sajib Rahman</span>
-            <span className="text-xs text-gray-500 leading-tight">sajib.rahman@gm...</span>
+            <span className="text-sm font-bold text-black leading-tight" data-testid="header-profile-name">
+              {profile?.name ?? 'Staff User'}
+            </span>
+            <span className="text-xs text-gray-500 leading-tight" data-testid="header-profile-email">
+              {profile?.email ? `${profile.email.slice(0, 16)}${profile.email.length > 16 ? '…' : ''}` : '—'}
+            </span>
           </div>
           <ChevronDown size={18} className="text-gray-400 ml-1 hidden xl:block" />
         </div>

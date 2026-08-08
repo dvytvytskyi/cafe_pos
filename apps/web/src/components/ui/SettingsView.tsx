@@ -1,13 +1,20 @@
  'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Users, Settings, CheckSquare, Bell, Smartphone, Monitor, Mail, Shield, CreditCard, LayoutTemplate, Map, FileText, Component, ChevronDown, Check, Printer, QrCode, MoreHorizontal, Search, Plus, Edit2, Key, Trash2, X, ArrowLeft, Copy, Phone, Calendar, Briefcase, Clock, Lock, TrendingUp, Receipt, DollarSign, AlertTriangle, Star, Tag, Gift, Coins } from 'lucide-react';
+import { User, Users, Settings, CheckSquare, Bell, Smartphone, Monitor, Mail, Shield, CreditCard, LayoutTemplate, Map, FileText, Component, ChevronDown, Check, Printer, QrCode, MoreHorizontal, Search, Plus, Edit2, Key, Trash2, X, ArrowLeft, Copy, Phone, Calendar, Briefcase, Clock, Lock, TrendingUp, Receipt, DollarSign, AlertTriangle, Star, Tag, Gift, Coins, HardDrive } from 'lucide-react';
 import TablesView from './TablesView';
 import ReputationView from './ReputationView';
-import { getDiscountPresets, saveDiscountPresets, DiscountPreset } from '@/lib/discounts';
-import { getPromotions, savePromotions, Promotion } from '@/lib/promotions';
-import { getGiftCards, saveGiftCards, createGiftCard, GiftCard, getGiftCardsAsync, createGiftCardAsync } from '@/lib/giftcards';
-import { getGuests, getLoyaltyConfig, saveLoyaltyConfig, LoyaltyConfig } from '@/lib/crm';
+import ProfileSettingsPanel from '@/components/settings/ProfileSettingsPanel';
+import PosSettingsPanel from '@/components/settings/PosSettingsPanel';
+import PrintersPanel from '@/components/settings/PrintersPanel';
+import TaxesPanel from '@/components/settings/TaxesPanel';
+import AuditPanel from '@/components/settings/AuditPanel';
+import BackupsPanel from '@/components/settings/BackupsPanel';
+import { getDiscountPresetsAsync, createDiscountPresetAsync, updateDiscountPresetAsync, deleteDiscountPresetAsync, DiscountPreset } from '@/lib/discounts';
+import { getPromotionsAsync, createPromotionAsync, deletePromotionAsync, Promotion } from '@/lib/promotions';
+import { getPosSettingsAsync, savePosSettingsAsync, type PosSettings } from '@/lib/pos-settings';
+import { GiftCard, getGiftCardsAsync, createGiftCardAsync, setGiftCardStatusAsync } from '@/lib/giftcards';
+import { getGuestsAsync, getLoyaltyConfigAsync, saveLoyaltyConfigAsync, type Guest, type LoyaltyConfig } from '@/lib/crm';
 
 export default function SettingsView() {
   const [activeMenu, setActiveMenu] = useState('profile');
@@ -29,7 +36,7 @@ export default function SettingsView() {
   });
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
-  const [guests, setGuests] = useState<any[]>([]);
+  const [guests, setGuests] = useState<Guest[]>([]);
 
   // Add Promo States
   const [isAddingPromo, setIsAddingPromo] = useState(false);
@@ -46,61 +53,45 @@ export default function SettingsView() {
   const [giftCardGuestId, setGiftCardGuestId] = useState('');
   const [newlyCreatedGiftCard, setNewlyCreatedGiftCard] = useState<GiftCard | null>(null);
 
-  // Printer & Device States
-  const [printers, setPrinters] = useState<any[]>([]);
-  const [devices, setDevices] = useState<any[]>([]);
-  const [receiptConfig, setReceiptConfig] = useState<any>({
-    header: 'Welcome to Corgi Cafe!',
-    footer: 'Barcelona. Thank you for your visit!',
-    ivaFood: 10,
-    ivaAlcohol: 21,
-    veriFactuActive: true,
-    invoicePrefix: 'FAC-2026-'
-  });
+  // Receipt header/footer via POS settings API (taxes via TaxesPanel)
+  const [posSettings, setPosSettings] = useState<PosSettings | null>(null);
+  const [receiptSaving, setReceiptSaving] = useState(false);
   const [giftCardSearchQuery, setGiftCardSearchQuery] = useState('');
 
   useEffect(() => {
-    setDiscountPresets(getDiscountPresets());
-    setPromotions(getPromotions());
+    getDiscountPresetsAsync().then(setDiscountPresets).catch(console.error);
+    getPromotionsAsync().then(setPromotions).catch(console.error);
     getGiftCardsAsync().then(setGiftCards).catch(console.error);
-    setGuests(getGuests());
-    setLoyaltyConfig(getLoyaltyConfig());
-
-    const storedPrinters = localStorage.getItem('corgi_printers');
-    if (storedPrinters) {
-      setPrinters(JSON.parse(storedPrinters));
-    } else {
-      const defaultPrinters = [
-        { id: 'pr-1', name: 'Bar Printer', ip: '192.168.1.151', type: 'bar', status: 'online' },
-        { id: 'pr-2', name: 'Kitchen Printer', ip: '192.168.1.150', type: 'kitchen', status: 'online' },
-        { id: 'pr-3', name: 'Cash Register Printer', ip: '192.168.1.152', type: 'receipt', status: 'online' }
-      ];
-      localStorage.setItem('corgi_printers', JSON.stringify(defaultPrinters));
-      setPrinters(defaultPrinters);
-    }
-
-    const storedDevices = localStorage.getItem('corgi_devices');
-    if (storedDevices) {
-      setDevices(JSON.parse(storedDevices));
-    } else {
-      const defaultDevices = [
-        { id: 'dev-1', name: 'POS Main Terminal', model: 'iPad Pro 12.9', location: 'Main Counter', status: 'active' },
-        { id: 'dev-2', name: 'Waiter Tablet A', model: 'Samsung Galaxy Tab S8', location: 'Terrace', status: 'active' }
-      ];
-      localStorage.setItem('corgi_devices', JSON.stringify(defaultDevices));
-      setDevices(defaultDevices);
-    }
-
-    const storedReceipt = localStorage.getItem('corgi_receipt_config');
-    if (storedReceipt) {
-      setReceiptConfig(JSON.parse(storedReceipt));
-    }
+    getGuestsAsync().then(setGuests).catch(console.error);
+    getLoyaltyConfigAsync().then(setLoyaltyConfig).catch(console.error);
+    getPosSettingsAsync().then(setPosSettings).catch(console.error);
 
     const savedMenu = localStorage.getItem('corgi_active_menu');
     if (savedMenu) {
       setActiveMenu(savedMenu);
     }
   }, []);
+
+  const reloadDiscountPresets = () => {
+    getDiscountPresetsAsync().then(setDiscountPresets).catch(console.error);
+  };
+
+  const reloadPromotions = () => {
+    getPromotionsAsync().then(setPromotions).catch(console.error);
+  };
+
+  const saveReceiptLayout = async (patch: Partial<PosSettings>) => {
+    if (!posSettings) return;
+    setReceiptSaving(true);
+    try {
+      const saved = await savePosSettingsAsync({ ...posSettings, ...patch });
+      setPosSettings(saved);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setReceiptSaving(false);
+    }
+  };
 
   const handleMenuChange = (id: string) => {
     if (activeMenu === 'tables' && isTablesDirty) {
@@ -399,6 +390,8 @@ export default function SettingsView() {
       items: [
         { id: 'profile', icon: User, label: 'My Profile' },
         { id: 'general', icon: Settings, label: 'General' },
+        { id: 'audit', icon: Shield, label: 'Audit Trail' },
+        { id: 'backups', icon: HardDrive, label: 'Backups' },
       ]
     },
     {
@@ -462,190 +455,17 @@ export default function SettingsView() {
       <div className="flex-1 overflow-y-auto px-10 pb-10">
 
         {/* --- PROFILE VIEW --- */}
-        {activeMenu === 'profile' && (
-          <div className="max-w-3xl flex flex-col gap-10 mt-2">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-8 pb-4 border-b border-gray-100">My Profile</h2>
-              
-              {/* Avatar Section */}
-              <div className="flex items-center gap-6 mb-10 pb-8 border-b border-gray-100">
-                <div className="relative group cursor-pointer" onClick={handleUploadClick}>
-                  <div className="w-20 h-20 rounded-full bg-orange-100 border-4 border-white shadow-sm flex items-center justify-center overflow-hidden">
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="User Avatar" className="w-full h-full object-cover group-hover:opacity-30 transition-opacity" />
-                    ) : (
-                      <User size={32} className="text-gray-400 group-hover:opacity-0 transition-opacity" />
-                    )}
-                  </div>
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white text-[11px] font-bold tracking-wider">CHANGE</span>
-                  </div>
-                  <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="text-lg font-bold text-gray-800">New User</h3>
-                  <p className="text-[13px] font-medium text-gray-500">No role assigned • No location</p>
-                  <div className="flex gap-3 mt-3">
-                    <button 
-                      onClick={handleUploadClick}
-                      className="px-5 py-2 bg-corgi text-white text-[13px] font-semibold rounded-full hover:bg-orange-600 transition-colors shadow-sm cursor-pointer"
-                    >
-                      Upload New
-                    </button>
-                    <button 
-                      onClick={handleRemoveAvatar}
-                      className="px-5 py-2 bg-gray-100 text-gray-600 text-[13px] font-semibold rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
+        {activeMenu === 'profile' && <ProfileSettingsPanel />}
 
-              {/* Form Fields */}
-              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-medium text-gray-800">First Name</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. John" 
-                    onChange={(e) => {
-                      setHasChanges(true);
-                      // Allow only English letters (A-Z, a-z), no spaces or special chars
-                      e.target.value = e.target.value.replace(/[^A-Za-z]/g, '');
-                    }}
-                    className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-[14px] font-medium text-gray-800 outline-none focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all" 
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-medium text-gray-800">Last Name</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Doe" 
-                    onChange={() => setHasChanges(true)}
-                    className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-[14px] font-medium text-gray-800 outline-none focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all" 
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-medium text-gray-800">Email Address</label>
-                  <div className="relative">
-                    <input 
-                      type="email" 
-                      value={email}
-                      onChange={(e) => {
-                        setHasChanges(true);
-                        const val = e.target.value.replace(/\s/g, ''); // Prevent spaces completely
-                        setEmail(val);
-                        if (emailError) {
-                          const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-                          setEmailError(!isValid);
-                        }
-                      }}
-                      onBlur={(e) => validateEmail(e.target.value)}
-                      placeholder="e.g. name@example.com" 
-                      className={`w-full bg-gray-50 border rounded-2xl px-4 py-3.5 text-[14px] font-medium text-gray-800 outline-none focus:ring-4 transition-all ${
-                        emailError 
-                          ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20 text-red-900' 
-                          : 'border-gray-100 focus:border-corgi focus:ring-corgi/10'
-                      }`} 
-                    />
-                  </div>
-                  {emailError && (
-                    <span className="text-[12px] font-medium text-red-500 ml-1">Please enter a valid email address with an @ sign.</span>
-                  )}
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-medium text-gray-800">Phone Number</label>
-                  <div className="flex bg-gray-50 border border-gray-100 rounded-2xl focus-within:ring-4 focus-within:ring-corgi/10 focus-within:border-corgi transition-all overflow-hidden">
-                    <div className="flex items-center px-2 border-r border-gray-200 bg-gray-100/50 relative">
-                      <select 
-                        value={phoneCountry}
-                        onChange={(e) => {
-                          setHasChanges(true);
-                          setPhoneCountry(e.target.value);
-                        }}
-                        className="bg-transparent pl-2 pr-6 py-3.5 text-[14px] font-medium text-gray-800 outline-none cursor-pointer appearance-none z-10"
-                      >
-                        <option value="+380">🇺🇦 +380</option>
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+34">🇪🇸 +34</option>
-                      </select>
-                      <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                    </div>
-                    <input 
-                      type="tel" 
-                      placeholder={phoneCountry === '+380' || phoneCountry === '+34' ? "XX XXX XXXX" : "XXX XXX XXXX"}
-                      onChange={(e) => {
-                        setHasChanges(true);
-                        let val = e.target.value.replace(/\D/g, '');
-                        const maxDigits = phoneCountry === '+380' || phoneCountry === '+34' ? 9 : 10;
-                        val = val.slice(0, maxDigits);
-                        
-                        if (val.length > 0) {
-                          if (maxDigits === 9) {
-                            const match = val.match(/^(\d{0,2})(\d{0,3})(\d{0,4})$/);
-                            if (match) {
-                              val = !match[2] ? match[1] : `${match[1]} ${match[2]}${match[3] ? ` ${match[3]}` : ''}`;
-                            }
-                          } else {
-                            const match = val.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
-                            if (match) {
-                              val = !match[2] ? match[1] : `${match[1]} ${match[2]}${match[3] ? ` ${match[3]}` : ''}`;
-                            }
-                          }
-                        }
-                        e.target.value = val;
-                      }}
-                      className="bg-transparent flex-1 px-4 py-3.5 text-[14px] font-medium text-gray-800 outline-none" 
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 col-span-2">
-                  <label className="text-[14px] font-medium text-gray-800">Bio / Notes</label>
-                  <textarea 
-                    rows={3} 
-                    placeholder="Add some notes about this user..." 
-                    onChange={() => setHasChanges(true)}
-                    className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-[14px] font-medium text-gray-800 outline-none focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all resize-none leading-relaxed" 
-                  />
-                </div>
-              </div>
+        {activeMenu === 'audit' && (
+          <div className="max-w-5xl mt-2">
+            <AuditPanel />
+          </div>
+        )}
 
-              <div 
-                className={`flex justify-end gap-3 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-                  hasChanges 
-                    ? 'max-h-24 opacity-100 mt-8 pt-6 border-t border-gray-100 translate-y-0 pointer-events-auto' 
-                    : 'max-h-0 opacity-0 mt-0 pt-0 border-transparent translate-y-4 pointer-events-none'
-                }`}
-              >
-                <button 
-                  onClick={() => setHasChanges(false)}
-                  disabled={isSaved}
-                  className="px-6 py-3 bg-white border border-gray-200 text-gray-600 text-[14px] font-bold rounded-full hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleSave}
-                  disabled={isSaved}
-                  className={`px-6 py-3 text-white text-[14px] font-bold rounded-full transition-all flex items-center justify-center gap-2 ${
-                    isSaved 
-                      ? 'bg-green-500 hover:bg-green-600 w-32 shadow-sm' 
-                      : 'bg-black hover:bg-gray-800 shadow-md hover:shadow-lg w-[140px]'
-                  } cursor-pointer disabled:cursor-default`}
-                >
-                  {isSaved ? (
-                    <>
-                      <Check size={16} strokeWidth={3} /> Saved!
-                    </>
-                  ) : (
-                    'Save Changes'
-                  )}
-                </button>
-              </div>
-            </div>
+        {activeMenu === 'backups' && (
+          <div className="max-w-5xl mt-2">
+            <BackupsPanel />
           </div>
         )}
 
@@ -743,57 +563,7 @@ export default function SettingsView() {
               </div>
             </div>
 
-            {/* Section: My Settings */}
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-8 pb-4 border-b border-gray-100 mt-4">My Settings</h2>
-              
-              <div className="flex flex-col gap-8">
-                
-                <div className="flex justify-between items-center py-1">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[15px] font-medium text-gray-800">Appearance</span>
-                    <span className="text-[13px] text-gray-400">Customize how Corgi POS looks on your device.</span>
-                  </div>
-                  <div className="relative shrink-0">
-                    <select className="bg-gray-50 border border-gray-100 text-gray-600 text-[13px] font-medium rounded-lg pl-4 pr-9 py-2 cursor-pointer outline-none hover:bg-gray-100 transition-colors appearance-none w-full">
-                      <option>Light</option>
-                      <option>Dark</option>
-                      <option>System</option>
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center py-1">
-                  <div className="flex flex-col gap-1 pr-10">
-                    <span className="text-[15px] font-medium text-gray-800">Two-factor authentication</span>
-                    <span className="text-[13px] text-gray-400">Keep your account secure by enabling 2FA via SMS or using a temporary one-time passcode (TOTP).</span>
-                  </div>
-                  <button 
-                    onClick={() => toggleSwitch('twoFactor')}
-                    className={`w-11 h-6 rounded-full p-1 transition-colors cursor-pointer relative flex items-center shrink-0 ${toggles.twoFactor ? 'bg-corgi' : 'bg-gray-200'}`}
-                  >
-                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${toggles.twoFactor ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-
-                <div className="flex justify-between items-center py-1">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[15px] font-medium text-gray-800">Language</span>
-                    <span className="text-[13px] text-gray-400">Customize how Corgi POS looks on your device.</span>
-                  </div>
-                  <div className="relative shrink-0">
-                    <select className="bg-gray-50 border border-gray-100 text-gray-600 text-[13px] font-medium rounded-lg pl-4 pr-9 py-2 cursor-pointer outline-none hover:bg-gray-100 transition-colors appearance-none w-full">
-                      <option>English</option>
-                      <option>Ukrainian</option>
-                      <option>Spanish</option>
-                    </select>
-                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-
-              </div>
-            </div>
+            <PosSettingsPanel />
 
           </div>
         )}
@@ -1319,7 +1089,7 @@ export default function SettingsView() {
         )}
 
         {/* Placeholder for other views */}
-        {!['profile', 'general', 'team', 'tables', 'reputation', 'discounts', 'devices', 'receipts'].includes(activeMenu) && (
+        {!['profile', 'general', 'team', 'tables', 'reputation', 'discounts', 'devices', 'receipts', 'audit', 'backups'].includes(activeMenu) && (
           <div className="max-w-3xl flex flex-col items-center justify-center gap-4 mt-20 text-center">
             <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center">
               <Settings size={32} className="text-gray-300" />
@@ -1331,151 +1101,12 @@ export default function SettingsView() {
 
         {/* DEVICES VIEW */}
         {activeMenu === 'devices' && (
-          <div className="max-w-4xl flex flex-col gap-8 mt-2">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Devices & Printers</h2>
-              <p className="text-xs text-gray-400 font-semibold mt-1">Manage physical hardware connections, touch terminals, and receipt routing printers.</p>
+          <>
+            <PrintersPanel />
+            <div className="max-w-4xl mt-4 p-6 border border-gray-100 rounded-3xl bg-gray-50/40 text-sm text-gray-600 font-medium">
+              POS terminals register automatically when staff sign in with PIN on each device. Printer and receipt routing is configured above.
             </div>
-
-            {/* Printers Section */}
-            <div className="border border-gray-100 rounded-3xl p-6 bg-white shadow-sm space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-bold text-gray-900 text-base">Network IP Printers</h3>
-                  <p className="text-[11px] text-gray-400 font-semibold">Configured printers for kitchen, bar, and receipt print jobs.</p>
-                </div>
-                <button 
-                  onClick={() => {
-                    const name = prompt('Enter Printer Name:');
-                    if (!name) return;
-                    const ip = prompt('Enter IP Address (e.g. 192.168.1.160):', '192.168.1.');
-                    if (!ip) return;
-                    const type = prompt('Enter Type (kitchen, bar, receipt):', 'kitchen') || 'kitchen';
-                    
-                    const newPrinters = [...printers, { id: 'pr-' + Date.now(), name, ip, type, status: 'online' }];
-                    setPrinters(newPrinters);
-                    localStorage.setItem('corgi_printers', JSON.stringify(newPrinters));
-                  }}
-                  className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus size={14} /> Add Printer
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {printers.map(printer => (
-                  <div key={printer.id} className="border border-gray-100 rounded-2xl p-4 bg-gray-50/30 flex flex-col justify-between min-h-[140px] relative overflow-hidden">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                          printer.type === 'kitchen' ? 'bg-orange-50 text-orange-700' :
-                          printer.type === 'bar' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-700'
-                        }`}>
-                          {printer.type}
-                        </span>
-                        <span className="w-2 h-2 rounded-full bg-green-500" title="Online"></span>
-                      </div>
-                      <h4 className="font-bold text-gray-900 text-sm truncate">{printer.name}</h4>
-                      <p className="text-[11px] text-gray-400 font-mono mt-1">{printer.ip}</p>
-                    </div>
-
-                    <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100/60">
-                      <button 
-                        onClick={async () => {
-                          try {
-                            const res = await fetch('/api/printers/test', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ ip: printer.ip })
-                            });
-                            const data = await res.json();
-                            if (res.ok) {
-                              alert(`Test print job successfully sent to ${printer.name} at ${printer.ip}!`);
-                            } else {
-                              alert(`Failed to print to ${printer.name}: ${data.error || 'Unknown error'} ${data.details ? '(' + data.details + ')' : ''}`);
-                            }
-                          } catch (e: any) {
-                            alert(`Error connecting to printer test API: ${e.message}`);
-                          }
-                        }}
-                        className="flex-1 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
-                      >
-                        Test Print
-                      </button>
-                      <button 
-                        onClick={() => {
-                          if (confirm(`Remove printer ${printer.name}?`)) {
-                            const newPrinters = printers.filter(p => p.id !== printer.id);
-                            setPrinters(newPrinters);
-                            localStorage.setItem('corgi_printers', JSON.stringify(newPrinters));
-                          }
-                        }}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Registered POS Terminals Section */}
-            <div className="border border-gray-100 rounded-3xl p-6 bg-white shadow-sm space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-bold text-gray-900 text-base">POS Terminals (App Instances)</h3>
-                  <p className="text-[11px] text-gray-400 font-semibold">Registered active touchscreen tablets, POS stations, or handheld devices.</p>
-                </div>
-                <button 
-                  onClick={() => {
-                    const name = prompt('Enter Terminal Name:');
-                    if (!name) return;
-                    const model = prompt('Enter Model (e.g. iPad Air):', 'iPad');
-                    if (!model) return;
-                    const location = prompt('Enter Location (e.g. Bar Counter):', 'Main Hall');
-                    if (!location) return;
-
-                    const newDevices = [...devices, { id: 'dev-' + Date.now(), name, model, location, status: 'active' }];
-                    setDevices(newDevices);
-                    localStorage.setItem('corgi_devices', JSON.stringify(newDevices));
-                  }}
-                  className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus size={14} /> Add Device
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {devices.map(device => (
-                  <div key={device.id} className="border border-gray-100 rounded-2xl p-4 bg-gray-50/30 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 text-gray-650 flex items-center justify-center shrink-0">
-                        <Smartphone size={20} />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 text-sm">{device.name}</h4>
-                        <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{device.model} • {device.location}</p>
-                      </div>
-                    </div>
-
-                    <button 
-                      onClick={() => {
-                        if (confirm(`Unregister terminal ${device.name}?`)) {
-                          const newDevices = devices.filter(d => d.id !== device.id);
-                          setDevices(newDevices);
-                          localStorage.setItem('corgi_devices', JSON.stringify(newDevices));
-                        }
-                      }}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          </>
         )}
 
         {/* RECEIPTS VIEW */}
@@ -1496,11 +1127,14 @@ export default function SettingsView() {
                     <label className="text-xs font-bold text-gray-500 uppercase">Receipt Header Text</label>
                     <input 
                       type="text" 
-                      value={receiptConfig.header}
+                      value={posSettings?.receiptHeader ?? ''}
+                      disabled={!posSettings || receiptSaving}
                       onChange={(e) => {
-                        const newConfig = { ...receiptConfig, header: e.target.value };
-                        setReceiptConfig(newConfig);
-                        localStorage.setItem('corgi_receipt_config', JSON.stringify(newConfig));
+                        const header = e.target.value;
+                        setPosSettings((prev) => (prev ? { ...prev, receiptHeader: header } : prev));
+                      }}
+                      onBlur={() => {
+                        if (posSettings) saveReceiptLayout({ receiptHeader: posSettings.receiptHeader });
                       }}
                       className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                     />
@@ -1510,58 +1144,20 @@ export default function SettingsView() {
                     <label className="text-xs font-bold text-gray-500 uppercase">Receipt Footer Text</label>
                     <input 
                       type="text" 
-                      value={receiptConfig.footer}
+                      value={posSettings?.receiptFooter ?? ''}
+                      disabled={!posSettings || receiptSaving}
                       onChange={(e) => {
-                        const newConfig = { ...receiptConfig, footer: e.target.value };
-                        setReceiptConfig(newConfig);
-                        localStorage.setItem('corgi_receipt_config', JSON.stringify(newConfig));
+                        const footer = e.target.value;
+                        setPosSettings((prev) => (prev ? { ...prev, receiptFooter: footer } : prev));
+                      }}
+                      onBlur={() => {
+                        if (posSettings) saveReceiptLayout({ receiptFooter: posSettings.receiptFooter });
                       }}
                       className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-gray-500 uppercase">IVA / VAT rate Food (%)</label>
-                      <input 
-                        type="number" 
-                        value={receiptConfig.ivaFood}
-                        onChange={(e) => {
-                          const newConfig = { ...receiptConfig, ivaFood: parseInt(e.target.value) || 0 };
-                          setReceiptConfig(newConfig);
-                          localStorage.setItem('corgi_receipt_config', JSON.stringify(newConfig));
-                        }}
-                        className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-gray-500 uppercase">IVA / VAT rate Alcohol (%)</label>
-                      <input 
-                        type="number" 
-                        value={receiptConfig.ivaAlcohol}
-                        onChange={(e) => {
-                          const newConfig = { ...receiptConfig, ivaAlcohol: parseInt(e.target.value) || 0 };
-                          setReceiptConfig(newConfig);
-                          localStorage.setItem('corgi_receipt_config', JSON.stringify(newConfig));
-                        }}
-                        className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-gray-500 uppercase">Factura Invoice Prefix</label>
-                    <input 
-                      type="text" 
-                      value={receiptConfig.invoicePrefix}
-                      onChange={(e) => {
-                        const newConfig = { ...receiptConfig, invoicePrefix: e.target.value };
-                        setReceiptConfig(newConfig);
-                        localStorage.setItem('corgi_receipt_config', JSON.stringify(newConfig));
-                      }}
-                      className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
-                    />
-                  </div>
+                  <TaxesPanel />
                 </div>
               </div>
 
@@ -1573,19 +1169,9 @@ export default function SettingsView() {
                   <div className="flex items-center justify-between p-3 bg-red-50/30 border border-red-100/50 rounded-2xl">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-xs font-bold text-gray-900">VERI*FACTU (Spain)</span>
-                      <span className="text-[10px] text-gray-400 font-semibold">Agencia Tributaria compliance.</span>
+                      <span className="text-[10px] text-gray-400 font-semibold">Enabled via immutable fiscal ledger.</span>
                     </div>
-                    
-                    <button 
-                      onClick={() => {
-                        const newConfig = { ...receiptConfig, veriFactuActive: !receiptConfig.veriFactuActive };
-                        setReceiptConfig(newConfig);
-                        localStorage.setItem('corgi_receipt_config', JSON.stringify(newConfig));
-                      }}
-                      className={`w-11 h-6 rounded-full transition-all duration-300 relative ${receiptConfig.veriFactuActive ? 'bg-corgi' : 'bg-gray-200'}`}
-                    >
-                      <div className={`absolute w-5 h-5 rounded-full bg-white top-0.5 transition-all shadow-md ${receiptConfig.veriFactuActive ? 'right-0.5' : 'left-0.5'}`}></div>
-                    </button>
+                    <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase border border-emerald-200">Active</span>
                   </div>
 
                   <div className="text-[11px] text-gray-400 font-medium leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100">
@@ -1615,6 +1201,7 @@ export default function SettingsView() {
                 return (
                   <button
                     key={subTab.id}
+                    data-testid={`discounts-subtab-${subTab.id}`}
                     onClick={() => setDiscountsSubTab(subTab.id as any)}
                     className={`flex items-center gap-2 pb-4 text-[14px] font-bold transition-all relative border-b-2 cursor-pointer ${
                       isSubActive 
@@ -1638,11 +1225,13 @@ export default function SettingsView() {
                     <p className="text-xs text-gray-400 font-semibold mt-1">Manage fixed or percent discount presets applicable to any order checkout.</p>
                   </div>
                   <button 
-                    onClick={() => {
-                      const newPreset = { id: Date.now().toString(), name: 'New Discount', value: 10, color: 'bg-gray-100 text-gray-700' };
-                      const newPresets = [...discountPresets, newPreset];
-                      setDiscountPresets(newPresets);
-                      saveDiscountPresets(newPresets);
+                    onClick={async () => {
+                      try {
+                        await createDiscountPresetAsync('New Discount', 10);
+                        reloadDiscountPresets();
+                      } catch (e) {
+                        console.error(e);
+                      }
                     }}
                     className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-800 transition-colors flex items-center gap-2 cursor-pointer active:scale-95"
                   >
@@ -1659,20 +1248,27 @@ export default function SettingsView() {
                           <input 
                             type="text" 
                             value={preset.name}
-                            onChange={(e) => {
-                              const newPresets = [...discountPresets];
-                              newPresets[idx].name = e.target.value;
-                              setDiscountPresets(newPresets);
-                              saveDiscountPresets(newPresets);
+                            onChange={async (e) => {
+                              const name = e.target.value;
+                              setDiscountPresets((prev) => prev.map((p, i) => (i === idx ? { ...p, name } : p)));
+                              try {
+                                await updateDiscountPresetAsync(preset.id, { name });
+                              } catch (err) {
+                                console.error(err);
+                                reloadDiscountPresets();
+                              }
                             }}
                             className="w-full bg-gray-50 border border-transparent rounded-xl px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
                         </div>
                         <button 
-                          onClick={() => {
-                            const newPresets = discountPresets.filter(p => p.id !== preset.id);
-                            setDiscountPresets(newPresets);
-                            saveDiscountPresets(newPresets);
+                          onClick={async () => {
+                            try {
+                              await deleteDiscountPresetAsync(preset.id);
+                              reloadDiscountPresets();
+                            } catch (err) {
+                              console.error(err);
+                            }
                           }}
                           className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         >
@@ -1687,11 +1283,15 @@ export default function SettingsView() {
                             type="number"
                             min="1" max="100"
                             value={preset.value}
-                            onChange={(e) => {
-                              const newPresets = [...discountPresets];
-                              newPresets[idx].value = parseInt(e.target.value) || 0;
-                              setDiscountPresets(newPresets);
-                              saveDiscountPresets(newPresets);
+                            onChange={async (e) => {
+                              const value = parseInt(e.target.value, 10) || 0;
+                              setDiscountPresets((prev) => prev.map((p, i) => (i === idx ? { ...p, value } : p)));
+                              try {
+                                await updateDiscountPresetAsync(preset.id, { value });
+                              } catch (err) {
+                                console.error(err);
+                                reloadDiscountPresets();
+                              }
                             }}
                             className="w-full bg-gray-50 border border-transparent rounded-xl px-3 py-2 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
@@ -1702,10 +1302,9 @@ export default function SettingsView() {
                           <select
                             value={preset.color}
                             onChange={(e) => {
-                              const newPresets = [...discountPresets];
-                              newPresets[idx].color = e.target.value;
-                              setDiscountPresets(newPresets);
-                              saveDiscountPresets(newPresets);
+                              setDiscountPresets((prev) =>
+                                prev.map((p, i) => (i === idx ? { ...p, color: e.target.value } : p))
+                              );
                             }}
                             className="w-full bg-gray-50 border border-transparent rounded-xl px-3 py-2 text-sm font-bold text-gray-700 outline-none focus:bg-white focus:border-gray-200 transition-all appearance-none cursor-pointer"
                           >
@@ -1846,21 +1445,22 @@ export default function SettingsView() {
                         Cancel
                       </button>
                       <button 
-                        onClick={() => {
+                        onClick={async () => {
                           if (!promoName.trim()) return;
-                          const newPromo: Promotion = {
-                            id: `promo-${Date.now()}`,
-                            name: promoName.trim(),
-                            discountPercent: promoPercent,
-                            activeDays: promoDays,
-                            startHour: promoStartHour,
-                            endHour: promoEndHour,
-                            targetItems: promoItems.trim() ? promoItems.split(',').map(s => s.trim()).filter(Boolean) : undefined
-                          };
-                          const updated = [...promotions, newPromo];
-                          setPromotions(updated);
-                          savePromotions(updated);
-                          setIsAddingPromo(false);
+                          try {
+                            await createPromotionAsync({
+                              name: promoName.trim(),
+                              discountPercent: promoPercent,
+                              activeDays: promoDays,
+                              startHour: promoStartHour,
+                              endHour: promoEndHour,
+                              targetItems: promoItems.trim() ? promoItems.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+                            });
+                            reloadPromotions();
+                            setIsAddingPromo(false);
+                          } catch (err) {
+                            console.error(err);
+                          }
                         }}
                         className="px-4 py-2 text-xs font-bold text-white bg-black hover:bg-gray-800 rounded-xl cursor-pointer"
                       >
@@ -1886,10 +1486,13 @@ export default function SettingsView() {
                             <h3 className="font-bold text-base text-gray-950 mt-1.5">{promo.name}</h3>
                           </div>
                           <button 
-                            onClick={() => {
-                              const updated = promotions.filter(p => p.id !== promo.id);
-                              setPromotions(updated);
-                              savePromotions(updated);
+                            onClick={async () => {
+                              try {
+                                await deletePromotionAsync(promo.id);
+                                reloadPromotions();
+                              } catch (err) {
+                                console.error(err);
+                              }
                             }}
                             className="p-1.5 text-gray-450 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                           >
@@ -1922,13 +1525,14 @@ export default function SettingsView() {
 
             {/* GIFT CARDS SUB-TAB */}
             {discountsSubTab === 'giftcards' && (
-              <div>
+              <div data-testid="giftcards-panel">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">Gift Cards</h2>
                     <p className="text-xs text-gray-400 font-semibold mt-1">Issue, check balances, and deactivate digital gift cards for customers.</p>
                   </div>
                   <button 
+                    data-testid="giftcards-issue-btn"
                     onClick={() => {
                       setGiftCardBalance(50);
                       setGiftCardGuestId('');
@@ -1984,6 +1588,7 @@ export default function SettingsView() {
                             Cancel
                           </button>
                           <button
+                            data-testid="giftcards-generate-btn"
                             onClick={() => {
                               if (giftCardBalance <= 0) return;
                               createGiftCardAsync(giftCardBalance, giftCardGuestId || undefined).then(newCard => {
@@ -2064,7 +1669,7 @@ export default function SettingsView() {
                           const linkedGuest = guests.find(g => g.id === gc.customerId);
                           return (
                             <tr key={gc.id} className="hover:bg-gray-50/30 transition-colors">
-                              <td className="px-6 py-4 font-black text-gray-900 tracking-wide">{gc.code}</td>
+                              <td className="px-6 py-4 font-black text-gray-900 tracking-wide" data-testid={`giftcard-code-${gc.id}`}>{gc.code}</td>
                               <td className="px-6 py-4">
                                 <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${
                                   gc.status === 'active' 
@@ -2094,15 +1699,13 @@ export default function SettingsView() {
                               </td>
                               <td className="px-6 py-4">
                                 <button
+                                  data-testid={`giftcard-toggle-${gc.id}`}
                                   onClick={() => {
-                                    const updated = giftCards.map(c => {
-                                      if (c.id === gc.id) {
-                                        return { ...c, status: c.status === 'active' ? 'disabled' as const : 'active' as const };
-                                      }
-                                      return c;
-                                    });
-                                    setGiftCards(updated);
-                                    saveGiftCards(updated);
+                                    if (gc.status !== 'active' && gc.status !== 'disabled') return;
+                                    const next = gc.status === 'active' ? 'disabled' : 'active';
+                                    setGiftCardStatusAsync(gc.id, next)
+                                      .then(() => getGiftCardsAsync().then(setGiftCards))
+                                      .catch(console.error);
                                   }}
                                   className={`text-xs font-bold transition-colors cursor-pointer hover:underline ${gc.status === 'active' ? 'text-red-500' : 'text-green-600'}`}
                                 >
@@ -2204,9 +1807,15 @@ export default function SettingsView() {
                     <p className="text-xs text-gray-400 font-semibold mt-1">Configure cashback percentage rates and LTV (Lifetime Value) thresholds for customer loyalty tiers.</p>
                   </div>
                   <button 
-                    onClick={() => {
-                      saveLoyaltyConfig(loyaltyConfig);
-                      alert('Loyalty configuration saved successfully!');
+                    onClick={async () => {
+                      try {
+                        const saved = await saveLoyaltyConfigAsync(loyaltyConfig);
+                        setLoyaltyConfig(saved);
+                        alert('Loyalty configuration saved successfully!');
+                      } catch (err) {
+                        console.error(err);
+                        alert('Failed to save loyalty configuration.');
+                      }
                     }}
                     className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-800 transition-colors flex items-center gap-2 cursor-pointer active:scale-95"
                   >

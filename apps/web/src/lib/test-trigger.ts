@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma, disconnectDb } from './db.ts';
 
 async function main() {
-  const prisma = new PrismaClient();
   console.log('--- Starting Database Immutability Trigger Test ---');
 
   try {
@@ -93,7 +92,7 @@ async function main() {
     console.error('Unexpected error during test execution:', error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await disconnectDb();
   }
 }
 

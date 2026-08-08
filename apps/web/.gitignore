@@ -10,8 +10,8 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# local database backups
+/backups
 
 # next.js
 /.next/
@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploaded photo proofs (local dev)
+/public/uploads/*
+!/public/uploads/.gitkeep

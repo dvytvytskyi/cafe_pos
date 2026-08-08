@@ -32,6 +32,11 @@ import {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
   // Map paths to active item IDs
   const activeItem = pathname.startsWith('/orders') || pathname.startsWith('/pos')
     ? 'orders' 
@@ -158,12 +163,13 @@ export default function Sidebar() {
       <div className="bg-white rounded-full flex flex-col items-center p-1.5 shadow-sm gap-2 mb-auto w-14">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeItem === item.id;
+          const isActive = isMounted && activeItem === item.id;
           return (
             <div key={item.id} className="relative group/btn w-full flex justify-center">
               {item.href ? (
                 <Link
                   href={item.href}
+                  suppressHydrationWarning
                   className={`p-3 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center ${
                     isActive 
                       ? 'bg-black text-white shadow-md' 
@@ -196,12 +202,13 @@ export default function Sidebar() {
         {bottomActions.map((item) => {
           const Icon = item.icon;
           const isLogout = item.id === 'logout';
-          const isActive = activeItem === item.id;
+          const isActive = isMounted && activeItem === item.id;
           return (
             <div key={item.id} className="relative group/btn w-full flex justify-center">
               {item.href ? (
                 <Link
                   href={item.href}
+                  suppressHydrationWarning
                   className={`p-3 rounded-full text-gray-400 transition-colors cursor-pointer flex items-center justify-center ${
                     isActive ? 'bg-black text-white shadow-md' : (isLogout ? 'hover:text-corgi hover:bg-red-50' : 'hover:text-black hover:bg-gray-100')
                   }`}

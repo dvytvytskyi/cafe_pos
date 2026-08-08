@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Edit3, Share, MoreHorizontal, Users, Clock, Filter, Paperclip, MessageSquare, Reply, Link as LinkIcon, FileText, Check, UserPlus, ThumbsUp, Maximize2, ChevronRight, ChevronDown, UserX, User, Plus, Undo2, Redo2, Bold, Italic, Underline, Highlighter, Strikethrough, List, ListOrdered, Indent, Code, Sparkles, CheckCircle2, Link2, Download, Trash2 } from 'lucide-react';
 import DateTimePicker from '../ui/DateTimePicker';
+import { validateTaskTitle, filterActiveEmployees, TASK_TITLE_MAX } from '@/lib/task-validation';
+import { DEFAULT_TASK_STAGES } from '@/lib/board-settings';
 
 interface NewTaskModalProps {
   isOpen: boolean;
@@ -10,6 +12,7 @@ interface NewTaskModalProps {
   uniqueLocations: string[];
   uniqueAssignees: string[];
   uniqueTags: { label: string; bg: string; text: string; count: number }[];
+  employees?: { id: string; name: string; email?: string; avatarInitials?: string; status?: string }[];
   editingTask: any | null;
   onDelete?: (id: string) => void;
 }
@@ -27,8 +30,9 @@ export const MOCK_USERS = [
   { id: '10', initials: 'ck', name: 'Charlie King', email: 'charlie.king@example.com', bg: 'bg-amber-600' },
 ];
 
-export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations, uniqueAssignees, uniqueTags, editingTask }: NewTaskModalProps) {
+export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations, uniqueAssignees, uniqueTags, employees = [], editingTask, onDelete }: NewTaskModalProps) {
   const [title, setTitle] = useState('');
+  const [titleError, setTitleError] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [assignee, setAssignee] = useState(uniqueAssignees[0] || '');
@@ -59,7 +63,21 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState('');
 
-  const toggleUser = (user: typeof MOCK_USERS[0]) => {
+  const assigneeOptions = React.useMemo(() => {
+    const activeEmployees = filterActiveEmployees(employees);
+    if (activeEmployees.length > 0) {
+      return activeEmployees.map((e) => ({
+        id: e.id,
+        name: e.name,
+        email: e.email || '',
+        initials: e.avatarInitials || e.name.slice(0, 2).toUpperCase(),
+        bg: 'bg-corgi',
+      }));
+    }
+    return MOCK_USERS;
+  }, [employees]);
+
+  const toggleUser = (user: { id: string; name: string; email?: string; initials?: string; bg?: string }) => {
     if (selectedAssignees.find(u => u.id === user.id)) {
       setSelectedAssignees(selectedAssignees.filter(u => u.id !== user.id));
     } else {
@@ -102,7 +120,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
         setSelectedLocations(editingTask.branch === 'All Branches' ? [] : editingTask.branch.split(', '));
         
         const assigneeIds = (editingTask.assignees || []).map((id: string) => id.includes('u=') ? id.split('u=')[1] : id);
-        const mappedAssignees = MOCK_USERS.filter(u => assigneeIds.includes(u.id));
+        const mappedAssignees = assigneeOptions.filter(u => assigneeIds.includes(u.id));
         setSelectedAssignees(mappedAssignees.length > 0 ? mappedAssignees : []);
         
         if (editingTask.tags && editingTask.tags.length > 0) {
@@ -120,16 +138,19 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
         } else {
           setSelectedDate(null);
         }
+        setStatus(editingTask.status || 'todo');
       } else {
         setTitle('');
+        setTitleError(null);
         setDescription('');
         setSelectedLocations([]);
         setSelectedAssignees([]);
         setSelectedTags([]);
         setSelectedDate(new Date());
+        setStatus('todo');
       }
     }
-  }, [isOpen, editingTask]);
+  }, [isOpen, editingTask, assigneeOptions]);
 
 
   const priorities = [
@@ -142,22 +163,35 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
   const [priority, setPriority] = useState('Lowest');
   const [isPriorityDropdownOpen, setIsPriorityDropdownOpen] = useState(false);
   const currentPriority = priorities.find(p => p.label === priority) || priorities[4];
+  const [status, setStatus] = useState('todo');
 
   const handleSave = () => {
+    const trimmedTitle = title.trim();
+    const validation = validateTaskTitle(trimmedTitle);
+    if (!validation.valid) {
+      setTitleError(validation.error ?? 'Invalid title');
+      return;
+    }
+    setTitleError(null);
+
     const newTask = {
       id: editingTask?.id || `T-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-      title: title.trim() ? title : 'Untitled Task',
+      title: trimmedTitle,
+      description: description.trim() || null,
       branch: selectedLocations.length > 0 ? selectedLocations.join(', ') : 'All Branches',
       tags: selectedTags,
       comments: editingTask?.comments || 0,
       attachments: files.length,
       progress: editingTask?.progress || 0,
       deadline: selectedDate ? `${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]} ${selectedDate.getFullYear()} at ${selectedDate.getHours().toString().padStart(2, '0')}:${selectedDate.getMinutes().toString().padStart(2, '0')}` : 'No deadline',
-      assignees: selectedAssignees.length > 0 ? selectedAssignees.map(u => u.id) : [],
-      status: editingTask?.status || 'todo',
+      assignees: selectedAssignees.length > 0 ? selectedAssignees.map(u => u.id) : (editingTask?.assignees || []),
+      status,
+      scheduledDate: editingTask?.scheduledDate,
+      dueAt: editingTask?.dueAt,
     };
     onSave(newTask);
     setTitle('');
+    setTitleError(null);
     setDescription('');
     setFiles([]);
   };
@@ -184,7 +218,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             className="absolute inset-0 bg-black/20 backdrop-blur-[1px]"
-            onClick={handleSave}
+            onClick={onClose}
           />
           
           <motion.div 
@@ -219,7 +253,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                 <button onClick={handleArchive} className="w-8 h-8 rounded-full bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500 border border-transparent hover:border-red-200 transition-all cursor-pointer"><Trash2 size={15} /></button>
                 
                 {/* Close Sidebar */}
-                <button onClick={handleSave} className="w-8 h-8 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-gray-100 hover:text-gray-800 border border-transparent hover:border-gray-200 transition-all cursor-pointer ml-1">
+                <button data-testid="task-save-btn" onClick={handleSave} className="w-8 h-8 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-gray-100 hover:text-gray-800 border border-transparent hover:border-gray-200 transition-all cursor-pointer ml-1">
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -279,6 +313,21 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                     )}
                   </AnimatePresence>
                 </div>
+
+                {editingTask && (
+                  <select
+                    data-testid="task-status-select"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl bg-gray-50/50 border border-gray-150 text-gray-700 text-[12px] font-bold cursor-pointer"
+                  >
+                    {DEFAULT_TASK_STAGES.map((stage) => (
+                      <option key={stage.id} value={stage.id}>
+                        {stage.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
 
                 <div className="relative">
                   <button 
@@ -353,17 +402,28 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
               <input 
                 type="text" 
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value.slice(0, TASK_TITLE_MAX));
+                  if (titleError) setTitleError(null);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     handleSave();
                   }
                 }}
-                className="w-full bg-transparent border-0 px-0 py-2 text-[26px] font-black text-gray-900 focus:outline-none focus:ring-0 placeholder:text-gray-300 mb-5 tracking-tight"
+                className={`w-full bg-transparent border-0 px-0 py-2 text-[26px] font-black text-gray-900 focus:outline-none focus:ring-0 placeholder:text-gray-300 mb-1 tracking-tight ${titleError ? 'text-red-600' : ''}`}
                 placeholder="Task Title..."
                 autoFocus
+                maxLength={TASK_TITLE_MAX}
+                aria-invalid={!!titleError}
               />
+              {titleError && (
+                <p className="text-[12px] font-semibold text-red-500 mb-4" role="alert">
+                  {titleError}
+                </p>
+              )}
+              {!titleError && <div className="mb-4" />}
 
               {/* Fields List */}
               <div className="space-y-3 mb-8">
@@ -383,7 +443,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                     ) : (
                        selectedAssignees.map(user => (
                           <div key={user.id} className="flex items-center gap-1.5 group cursor-pointer" onClick={() => setIsAssigneeDropdownOpen(!isAssigneeDropdownOpen)}>
-                             <div className={`w-6 h-6 rounded-full ${user.bg} text-white flex items-center justify-center text-[10px] font-bold`}>{user.initials}</div>
+                             <div className={`w-6 h-6 rounded-full ${user.bg || 'bg-corgi'} text-white flex items-center justify-center text-[10px] font-bold`}>{('initials' in user ? user.initials : (user as typeof MOCK_USERS[0]).initials)}</div>
                              <span className="text-[14px] font-bold text-gray-900">{user.name}</span>
                              <button className="text-gray-400 hover:text-gray-900 transition-colors cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleUser(user); }}>
                                <X size={14} strokeWidth={2.5} />
@@ -413,13 +473,15 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                            </div>
                         </div>
                         <div className="flex-1 overflow-y-auto max-h-[250px] py-1 custom-scrollbar">
-                            {MOCK_USERS
+                            {assigneeOptions
                               .filter(user => user.name.toLowerCase().includes(assigneeSearch.toLowerCase()) || user.email.toLowerCase().includes(assigneeSearch.toLowerCase()))
                               .map(user => {
                                 const isSelected = selectedAssignees.some(selected => selected.id === user.id);
+                                const initials = 'initials' in user ? user.initials : (user as typeof MOCK_USERS[0]).initials;
+                                const bg = user.bg || 'bg-corgi';
                                 return (
                                <div key={user.id} onClick={() => toggleUser(user)} className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors">
-                                  <div className={`w-7 h-7 rounded-full ${user.bg} text-white flex items-center justify-center text-[11px] font-bold mr-3 shrink-0`}>{user.initials}</div>
+                                  <div className={`w-7 h-7 rounded-full ${bg} text-white flex items-center justify-center text-[11px] font-bold mr-3 shrink-0`}>{initials}</div>
                                   <div className="flex-1 min-w-0 flex items-center">
                                       <span className="text-gray-900 text-[13px] font-bold truncate mr-2">{user.name}</span>
                                       <span className="text-gray-400 text-[12px] font-medium truncate">{user.email}</span>
