@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const roles = await prisma.role.findMany({
       orderBy: { name: 'asc' },
-      select: { id: true, name: true },
+      select: { id: true, name: true, permissions: true },
     });
     return NextResponse.json(roles, { status: 200 });
   } catch (error: unknown) {

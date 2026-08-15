@@ -3,18 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Edit3, Share, MoreHorizontal, Users, Clock, Filter, Paperclip, MessageSquare, Reply, Link as LinkIcon, FileText, Check, UserPlus, ThumbsUp, Maximize2, ChevronRight, ChevronDown, UserX, User, Plus, Undo2, Redo2, Bold, Italic, Underline, Highlighter, Strikethrough, List, ListOrdered, Indent, Code, Sparkles, CheckCircle2, Link2, Download, Trash2 } from 'lucide-react';
 import DateTimePicker from '../ui/DateTimePicker';
 import { validateTaskTitle, filterActiveEmployees, TASK_TITLE_MAX } from '@/lib/task-validation';
-import { DEFAULT_TASK_STAGES } from '@/lib/board-settings';
+import { uploadPhotoAsync } from '@/lib/upload';
+import { toggleTaskLikeAsync } from '@/lib/tasks';
+
+type TaskStage = { id: string; label: string; color: string };
 
 interface NewTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (task: any) => void;
+  onSave: (task: any) => void | Promise<void>;
   uniqueLocations: string[];
   uniqueAssignees: string[];
   uniqueTags: { label: string; bg: string; text: string; count: number }[];
   employees?: { id: string; name: string; email?: string; avatarInitials?: string; status?: string }[];
   editingTask: any | null;
   onDelete?: (id: string) => void;
+  stages?: TaskStage[];
+  isDraftTask?: boolean;
+  currentUserId?: string | null;
+  onTaskUpdated?: (task: any) => void;
 }
 
 export const MOCK_USERS = [
@@ -30,10 +37,15 @@ export const MOCK_USERS = [
   { id: '10', initials: 'ck', name: 'Charlie King', email: 'charlie.king@example.com', bg: 'bg-amber-600' },
 ];
 
-export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations, uniqueAssignees, uniqueTags, employees = [], editingTask, onDelete }: NewTaskModalProps) {
+export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations, uniqueAssignees, uniqueTags, employees = [], editingTask, onDelete, stages = [], isDraftTask = false, currentUserId = null, onTaskUpdated }: NewTaskModalProps) {
   const [title, setTitle] = useState('');
   const [titleError, setTitleError] = useState<string | null>(null);
   const [description, setDescription] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [likedBy, setLikedBy] = useState<string[]>([]);
+  const [isTogglingLike, setIsTogglingLike] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [assignee, setAssignee] = useState(uniqueAssignees[0] || '');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
@@ -139,6 +151,8 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
           setSelectedDate(null);
         }
         setStatus(editingTask.status || 'todo');
+        setPriority(editingTask.priority || 'Lowest');
+        setLikedBy(editingTask.likedBy ?? []);
       } else {
         setTitle('');
         setTitleError(null);
@@ -148,9 +162,30 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
         setSelectedTags([]);
         setSelectedDate(new Date());
         setStatus('todo');
+        setPriority('Lowest');
+        setLikedBy([]);
       }
+      setShareCopied(false);
+      setSaveError(null);
     }
   }, [isOpen, editingTask, assigneeOptions]);
+
+  useEffect(() => {
+    if (!isOpen || !assigneeOptions.length) return;
+    setSelectedAssignees((prev) => prev.filter((u) => assigneeOptions.some((o) => o.id === u.id)));
+  }, [isOpen, assigneeOptions]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    requestAnimationFrame(() => {
+      const editor = document.getElementById('description-editor');
+      if (editor) {
+        const html = editingTask?.description || '';
+        editor.innerHTML = html;
+        setDescription(html);
+      }
+    });
+  }, [isOpen, editingTask?.id, editingTask?.description]);
 
 
   const priorities = [
@@ -165,7 +200,57 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
   const currentPriority = priorities.find(p => p.label === priority) || priorities[4];
   const [status, setStatus] = useState('todo');
 
-  const handleSave = () => {
+  const handleMarkComplete = () => {
+    const completedStage =
+      stages.find((s) => s.id === 'completed') ??
+      stages.find((s) => s.label.toLowerCase().includes('done')) ??
+      stages[stages.length - 1];
+    if (completedStage) {
+      setStatus(completedStage.id);
+    }
+  };
+
+  const isLiked = currentUserId ? likedBy.includes(currentUserId) : false;
+
+  const handleToggleLike = async () => {
+    if (!editingTask?.id || isDraftTask) return;
+    if (!currentUserId) {
+      setSaveError('No active user available to like this task');
+      return;
+    }
+    try {
+      setIsTogglingLike(true);
+      setSaveError(null);
+      const updated = await toggleTaskLikeAsync(editingTask.id, currentUserId);
+      setLikedBy(updated.likedBy ?? []);
+      onTaskUpdated?.(updated);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to update like');
+    } finally {
+      setIsTogglingLike(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!editingTask?.id) return;
+    const taskTitle = title.trim() || editingTask.title || 'Task';
+    const url = `${window.location.origin}${window.location.pathname}?task=${editingTask.id}`;
+    const text = `${taskTitle}\n${url}`;
+    try {
+      if (navigator.share && !isDraftTask) {
+        await navigator.share({ title: taskTitle, text: taskTitle, url });
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      setShareCopied(true);
+      window.setTimeout(() => setShareCopied(false), 2000);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setSaveError(err instanceof Error ? err.message : 'Failed to share task');
+    }
+  };
+
+  const handleSave = async () => {
     const trimmedTitle = title.trim();
     const validation = validateTaskTitle(trimmedTitle);
     if (!validation.valid) {
@@ -173,27 +258,63 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
       return;
     }
     setTitleError(null);
+    setSaveError(null);
+
+    const editor = document.getElementById('description-editor');
+    const descHtml = editor?.innerHTML?.trim() || description.trim() || null;
+
+    let attachmentCount = editingTask?.attachments || 0;
+    if (files.length > 0) {
+      try {
+        setIsSaving(true);
+        for (const file of files) {
+          await uploadPhotoAsync(file);
+          attachmentCount += 1;
+        }
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : 'Failed to upload attachments');
+        setIsSaving(false);
+        return;
+      }
+    }
+
+    const validAssigneeIds = new Set(assigneeOptions.map((u) => u.id));
+    const rawAssignees =
+      selectedAssignees.length > 0
+        ? selectedAssignees.map((u) => u.id)
+        : (editingTask?.assignees || []);
+    const assignees = rawAssignees.filter((id) => validAssigneeIds.has(id));
 
     const newTask = {
       id: editingTask?.id || `T-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
       title: trimmedTitle,
-      description: description.trim() || null,
+      description: descHtml,
       branch: selectedLocations.length > 0 ? selectedLocations.join(', ') : 'All Branches',
       tags: selectedTags,
       comments: editingTask?.comments || 0,
-      attachments: files.length,
+      attachments: attachmentCount,
       progress: editingTask?.progress || 0,
+      priority,
       deadline: selectedDate ? `${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]} ${selectedDate.getFullYear()} at ${selectedDate.getHours().toString().padStart(2, '0')}:${selectedDate.getMinutes().toString().padStart(2, '0')}` : 'No deadline',
-      assignees: selectedAssignees.length > 0 ? selectedAssignees.map(u => u.id) : (editingTask?.assignees || []),
+      assignees,
+      likedBy,
       status,
       scheduledDate: editingTask?.scheduledDate,
-      dueAt: editingTask?.dueAt,
+      dueAt: selectedDate ? selectedDate.toISOString() : editingTask?.dueAt ?? null,
     };
-    onSave(newTask);
-    setTitle('');
-    setTitleError(null);
-    setDescription('');
-    setFiles([]);
+
+    try {
+      setIsSaving(true);
+      await onSave(newTask);
+      setTitle('');
+      setTitleError(null);
+      setDescription('');
+      setFiles([]);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save task');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleArchive = () => {
@@ -231,7 +352,11 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 shrink-0">
               {/* Left: Mark Complete */}
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:border-corgi hover:text-corgi bg-white transition-all active:scale-[0.98] cursor-pointer text-xs font-black group">
+              <button
+                type="button"
+                onClick={handleMarkComplete}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:border-corgi hover:text-corgi bg-white transition-all active:scale-[0.98] cursor-pointer text-xs font-black group"
+              >
                 <Check size={14} className="text-gray-400 group-hover:text-corgi transition-colors stroke-[2.5px]" />
                 <span>Mark complete</span>
               </button>
@@ -239,21 +364,39 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
               {/* Right: Actions */}
               <div className="flex items-center gap-1.5 text-gray-500">
                 {/* Share Button */}
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:border-corgi hover:text-corgi bg-white transition-all active:scale-[0.98] cursor-pointer text-xs font-black mr-1">
+                <button
+                  type="button"
+                  onClick={() => void handleShare()}
+                  disabled={isDraftTask}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:border-corgi hover:text-corgi bg-white transition-all active:scale-[0.98] cursor-pointer text-xs font-black mr-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <Share size={13} />
-                  <span>Share</span>
+                  <span>{shareCopied ? 'Copied!' : 'Share'}</span>
                 </button>
                 
                 {/* Divider */}
                 <div className="w-px h-5 bg-gray-200 mx-1" />
                 
                 {/* Icons */}
-                <button className="w-8 h-8 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-gray-100 hover:text-gray-800 border border-transparent hover:border-gray-200 transition-all cursor-pointer"><ThumbsUp size={15} /></button>
+                <button
+                  type="button"
+                  data-testid="task-like-btn"
+                  onClick={() => void handleToggleLike()}
+                  disabled={isDraftTask || isTogglingLike}
+                  title={likedBy.length > 0 ? `${likedBy.length} like${likedBy.length === 1 ? '' : 's'}` : 'Like task'}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isLiked
+                      ? 'bg-corgi/10 text-corgi border-corgi/30 hover:bg-corgi/20'
+                      : 'bg-gray-50 text-gray-500 border-transparent hover:bg-gray-100 hover:text-gray-800 hover:border-gray-200'
+                  }`}
+                >
+                  <ThumbsUp size={15} className={isLiked ? 'fill-current' : ''} />
+                </button>
                 <button className="w-8 h-8 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-gray-100 hover:text-gray-800 border border-transparent hover:border-gray-200 transition-all cursor-pointer"><LinkIcon size={15} /></button>
                 <button onClick={handleArchive} className="w-8 h-8 rounded-full bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500 border border-transparent hover:border-red-200 transition-all cursor-pointer"><Trash2 size={15} /></button>
                 
                 {/* Close Sidebar */}
-                <button data-testid="task-save-btn" onClick={handleSave} className="w-8 h-8 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-gray-100 hover:text-gray-800 border border-transparent hover:border-gray-200 transition-all cursor-pointer ml-1">
+                <button data-testid="task-save-btn" onClick={() => void handleSave()} disabled={isSaving} className="w-8 h-8 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-gray-100 hover:text-gray-800 border border-transparent hover:border-gray-200 transition-all cursor-pointer ml-1 disabled:opacity-60">
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -261,6 +404,11 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
 
             {/* Scrollable Form Content */}
             <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              {saveError && (
+                <div role="alert" className="mb-4 bg-red-50 border border-red-100 text-red-700 text-[13px] font-medium rounded-xl px-3 py-2">
+                  {saveError}
+                </div>
+              )}
               
               {/* Top Tags */}
               <div className="flex items-center gap-3 mb-5 relative z-10">
@@ -321,7 +469,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                     onChange={(e) => setStatus(e.target.value)}
                     className="px-3 py-1.5 rounded-xl bg-gray-50/50 border border-gray-150 text-gray-700 text-[12px] font-bold cursor-pointer"
                   >
-                    {DEFAULT_TASK_STAGES.map((stage) => (
+                    {stages.map((stage) => (
                       <option key={stage.id} value={stage.id}>
                         {stage.label}
                       </option>

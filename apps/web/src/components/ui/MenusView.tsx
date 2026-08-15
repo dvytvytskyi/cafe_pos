@@ -13,18 +13,8 @@ import {
   archiveModifierGroupAsync,
   type ModifierGroup,
 } from '@/lib/modifiers';
-
-const IMG_URL = 'https://images.pexels.com/photos/37417630/pexels-photo-37417630.jpeg';
-
-const ALLERGEN_ICONS: Record<string, string> = {
-  Dairy: '🥛',
-  Nuts: '🥜',
-  Gluten: '🌾',
-  Soy: '🫘',
-  Eggs: '🥚',
-  Fish: '🐟',
-  Shellfish: '🦐',
-};
+import { ALLERGEN_ICONS, EU_ALLERGENS, globalAllergenCatalog } from '@/lib/allergens';
+import { formatPriceDisplay } from '@/lib/format-price';
 
 type Category = { id: string; name: string; count: number; icon: React.ElementType; sortOrder?: number };
 type Dish = {
@@ -32,7 +22,7 @@ type Dish = {
   categoryId: string;
   name: string;
   description: string;
-  image: string;
+  image: string | null;
   basePrice: number;
   allergens: string[];
   isActive?: boolean;
@@ -89,7 +79,7 @@ export default function MenusView() {
           categoryId: item.categoryId,
           name: item.name,
           description: item.description || '',
-          image: IMG_URL,
+          image: null,
           basePrice: item.price,
           allergens: item.allergens ?? [],
           isArchived: item.isArchived,
@@ -145,19 +135,15 @@ export default function MenusView() {
     void loadModifierGroups();
   }, []);
   
-  const [newAllergenName, setNewAllergenName] = useState('');
-  const [isAddingAllergen, setIsAddingAllergen] = useState(false);
   const [highlightedAllergenId, setHighlightedAllergenId] = useState<string | null>(null);
   
   const [globalModifiers, setGlobalModifiers] = useState<
     Array<{ id: string; groupId: string; optionId: string; name: string; price: string; minQty: string; maxQty: string; isActive: boolean }>
   >([]);
   
-  const [globalAllergens, setGlobalAllergens] = useState([
-    { id: '1', name: 'Dairy', isActive: true },
-    { id: '2', name: 'Nuts', isActive: true },
-    { id: '3', name: 'Gluten', isActive: true }
-  ]);
+  const [globalAllergens, setGlobalAllergens] = useState(() =>
+    globalAllergenCatalog().map((a) => ({ id: a.id, name: a.name, isActive: a.isActive }))
+  );
 
   const handleSaveCategoryName = async (id: string) => {
     const trimmed = editingCategoryName.trim();
@@ -788,62 +774,36 @@ export default function MenusView() {
         {/* Allergens Content */}
         {mainView === 'allergens' && (
           <div className="flex-1 overflow-y-auto pb-10 pr-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm mb-8">
-              <h3 className="text-[16px] font-bold text-gray-900 mb-5">Create New Allergen</h3>
-              <div className="flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1 w-full">
-                  <label className="block text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-2">Allergen Name</label>
-                  <input 
-                    type="text" 
-                    value={newAllergenName}
-                    onChange={(e) => setNewAllergenName(e.target.value)}
-                    placeholder="e.g. Peanuts"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newAllergenName.trim()) {
-                        setGlobalAllergens([{ id: Date.now().toString(), name: newAllergenName.trim(), isActive: true }, ...globalAllergens]);
-                        setNewAllergenName('');
-                      }
-                    }}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-bold text-gray-900 outline-none focus:border-corgi transition-all"
-                  />
-                </div>
-                <button 
-                  disabled={isAddingAllergen}
-                  onClick={() => {
-                    if (newAllergenName.trim() && !isAddingAllergen) {
-                      setIsAddingAllergen(true);
-                      setTimeout(() => {
-                        const newId = Date.now().toString();
-                        setGlobalAllergens([{ id: newId, name: newAllergenName.trim(), isActive: true }, ...globalAllergens]);
-                        setNewAllergenName('');
-                        setIsAddingAllergen(false);
-                        
-                        setHighlightedAllergenId(newId);
-                        setTimeout(() => setHighlightedAllergenId(null), 800);
-                      }, 500);
-                    }
-                  }}
-                  className={`h-[46px] px-6 text-white text-[14px] font-bold rounded-xl transition-colors cursor-pointer active:scale-95 shadow-sm whitespace-nowrap w-full sm:w-auto flex items-center justify-center ${isAddingAllergen ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-gray-800'}`}
-                >
-                  {isAddingAllergen ? 'Adding...' : 'Add Allergen'}
-                </button>
-              </div>
+            <div className="bg-orange-50/60 border border-orange-100 rounded-2xl p-4 mb-6">
+              <p className="text-[13px] font-semibold text-gray-800">
+                EU mandatory allergens (Regulation EU 1169/2011, Annex II) — 14 substances for food labelling in the EU.
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <AnimatePresence>
-                {globalAllergens.map(allergen => (
-                  <motion.div 
+                {globalAllergens.map((allergen) => {
+                  const meta = EU_ALLERGENS.find((a) => a.id === allergen.name);
+                  return (
+                  <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.3 }}
-                    key={allergen.id} 
+                    key={allergen.id}
                     className={`flex items-center justify-between bg-white rounded-2xl p-5 transition-all duration-500 group border ${highlightedAllergenId === allergen.id ? 'border-corgi shadow-md shadow-corgi/20' : 'border-gray-100 hover:border-gray-200 hover:shadow-sm'}`}
                   >
-                    <span className="text-[15px] font-bold text-gray-900">{allergen.name}</span>
-                  <div className="flex items-center gap-4">
-                    <button 
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-xl shrink-0">{meta?.icon ?? ALLERGEN_ICONS[allergen.name] ?? '⚠️'}</span>
+                      <div className="min-w-0">
+                        <span className="text-[15px] font-bold text-gray-900 block">{allergen.name}</span>
+                        {meta && (
+                          <span className="text-[11px] font-medium text-gray-400 truncate block">{meta.annexName}</span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
                       onClick={() => {
                         if (hideToggleConfirm) {
                           setGlobalAllergens(globalAllergens.map(a => a.id === allergen.id ? { ...a, isActive: !a.isActive } : a));
@@ -852,24 +812,15 @@ export default function MenusView() {
                           setDontShowAgainCheck(false);
                         }
                       }}
-                      className={`relative w-10 h-5.5 rounded-full transition-colors cursor-pointer ${allergen.isActive ? 'bg-corgi' : 'bg-gray-200'}`}
+                      className={`relative w-10 h-5.5 rounded-full transition-colors cursor-pointer shrink-0 ${allergen.isActive ? 'bg-corgi' : 'bg-gray-200'}`}
                     >
                       <div className={`absolute top-[2px] left-[2px] bg-white w-4.5 h-4.5 rounded-full transition-transform ${allergen.isActive ? 'translate-x-4.5 shadow-sm' : 'translate-x-0'}`} />
                     </button>
-                    <button 
-                      onClick={() => setGlobalAllergens(globalAllergens.filter(a => a.id !== allergen.id))}
-                      className="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-xl hover:bg-red-50 cursor-pointer"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </motion.div>
-                ))}
+                  </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </div>
-            {globalAllergens.length === 0 && (
-              <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 border-dashed text-gray-400 text-[14px] font-medium mt-4">No allergens added yet.</div>
-            )}
           </div>
         )}
 
@@ -887,7 +838,13 @@ export default function MenusView() {
                     className={`bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-gray-200 hover:shadow-lg hover:shadow-gray-100/50 transition-all duration-300 group flex flex-col cursor-pointer ${dish.isActive === false ? 'opacity-60 grayscale-[0.8]' : ''}`}
                   >
                     <div className="aspect-square w-full relative bg-gray-100 overflow-hidden">
-                      <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      {dish.image ? (
+                        <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                          <ImageIcon size={32} strokeWidth={1.5} />
+                        </div>
+                      )}
                       {/* Recommend Toggle Button */}
                       <button 
                         onClick={(e) => {
@@ -920,7 +877,7 @@ export default function MenusView() {
                     <div className="p-5 flex flex-col flex-1">
                       <div className="flex justify-between items-start gap-4 mb-2">
                         <h3 className="text-[17px] font-bold text-gray-900 leading-tight group-hover:text-corgi transition-colors">{dish.name}</h3>
-                        <span className="text-[16px] font-extrabold text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg shrink-0">€{dish.basePrice.toFixed(2)}</span>
+                        <span className="text-[16px] font-extrabold text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg shrink-0">€{formatPriceDisplay(dish.basePrice)}</span>
                       </div>
                       <p className="text-[14px] text-gray-500 font-medium line-clamp-2 leading-relaxed flex-1">{dish.description}</p>
                       {dish.allergens.length > 0 && (
@@ -957,7 +914,13 @@ export default function MenusView() {
                     className={`flex items-center gap-4 bg-white border border-gray-100 rounded-2xl p-3 hover:border-gray-200 hover:shadow-sm transition-all duration-300 cursor-pointer ${dish.isActive === false ? 'opacity-60 grayscale-[0.8]' : ''}`}
                   >
                     <div className="w-14 h-14 rounded-xl relative bg-gray-100 overflow-hidden shrink-0">
-                      <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" />
+                      {dish.image ? (
+                        <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                          <ImageIcon size={20} strokeWidth={1.5} />
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -974,7 +937,7 @@ export default function MenusView() {
                     </div>
 
                     <div className="flex items-center gap-5 shrink-0 pl-2">
-                      <span className="text-[15px] font-extrabold text-gray-900 bg-gray-50 px-3 py-1.5 rounded-xl">€{dish.basePrice.toFixed(2)}</span>
+                      <span className="text-[15px] font-extrabold text-gray-900 bg-gray-50 px-3 py-1.5 rounded-xl">€{formatPriceDisplay(dish.basePrice)}</span>
                       
                       <div className="w-px h-8 bg-gray-100 mx-1"></div>
 

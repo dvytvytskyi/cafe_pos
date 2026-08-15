@@ -63,10 +63,23 @@ export async function run() {
       tableId: 't1',
     },
   ];
-  assert.strictEqual(resolveTableDisplayStatus('available', orders, 't1'), 'occupied');
+  assert.strictEqual(resolveTableDisplayStatus('available', orders, 't1'), 'preparing');
   assert.strictEqual(resolveTableDisplayStatus('billed', orders, 't1'), 'billed');
-  assert.strictEqual(resolveTableDisplayStatus('dirty', orders, 't1'), 'dirty');
-  assert.strictEqual(resolveTableDisplayStatus('occupied', [], 't1'), 'available');
+  assert.strictEqual(resolveTableDisplayStatus('dirty', orders, 't1'), 'preparing');
+  assert.strictEqual(resolveTableDisplayStatus('dirty', [], 't1'), 'available');
+  assert.strictEqual(resolveTableDisplayStatus('occupied', [], 't1'), 'occupied');
+  assert.strictEqual(resolveTableDisplayStatus('billed', [], 't9'), 'billed');
+  assert.strictEqual(resolveTableDisplayStatus('available', [], 't1'), 'available');
+
+  const servedOrders: Order[] = [
+    {
+      ...orders[0],
+      id: 'ORD-2',
+      status: 'served',
+      tableId: 't2',
+    },
+  ];
+  assert.strictEqual(resolveTableDisplayStatus('available', servedOrders, 't2'), 'served');
 
   console.log('✅ test-unit-tables-layout passed.');
 }

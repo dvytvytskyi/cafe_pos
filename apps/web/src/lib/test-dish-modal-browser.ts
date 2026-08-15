@@ -83,10 +83,10 @@ async function run() {
     await page.waitForSelector('[data-testid="dish-modal"]', { timeout: 15000 });
     await page.click('[data-testid="dish-section-price"]');
     await page.waitForSelector('[data-testid="dish-price-input"]', { timeout: 10000 });
-    await setReactInput(page, '[data-testid="dish-price-input"]', '6.75');
+    await setReactInput(page, '[data-testid="dish-price-input"]', '6,75');
 
     const inputVal = await page.$eval('[data-testid="dish-price-input"]', (el) => (el as HTMLInputElement).value);
-    if (inputVal !== '6.75') {
+    if (inputVal !== '6,75') {
       record('T14.6', false, `input not updated: ${inputVal}`);
     } else {
       await saveEditModal(page, dishId);
@@ -96,7 +96,7 @@ async function run() {
 
       const cardPrice = await page.evaluate((id) => {
         const card = document.querySelector(`[data-testid="dish-card-${id}"]`);
-        return card?.textContent?.includes('6.75') ?? false;
+        return card?.textContent?.includes('6,75') ?? false;
       }, dishId);
 
       const apiPrice = await page.evaluate(async (id) => {

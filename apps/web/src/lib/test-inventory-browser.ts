@@ -58,7 +58,7 @@ async function run() {
     console.log('✅ seeded coffee item visible in stock table');
 
     await page.click('[data-testid="inventory-tab-logistics"]');
-    await page.waitForSelector('[data-testid="inventory-transfers-table"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="inventory-logistics-table"]', { timeout: 10000 });
     await page.click('[data-testid="new-transfer-open-btn"]');
     await page.waitForSelector('[data-testid="new-transfer-modal"]', { timeout: 10000 });
 
@@ -114,9 +114,12 @@ async function run() {
 
     await page.click('[data-testid="inventory-tab-logistics"]');
     await page.waitForFunction(
-      (sku) => !!document.querySelector(`[data-testid="transfer-row-${sku}"]`),
+      (name) => {
+        const table = document.querySelector('[data-testid="inventory-logistics-table"]');
+        return table?.textContent?.includes(name);
+      },
       { timeout: 15000 },
-      COFFEE_SKU
+      COFFEE_NAME
     );
     console.log('✅ transfer row visible in logistics tab');
 

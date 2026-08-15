@@ -41,6 +41,7 @@ model User {
   scheduleEnd    String?
   daysPerWeek    Int?        @default(5)
   avatarInitials String?
+  avatarUrl      String?
   status         String?     @default("active") // "active" | "inactive"
 
   createdAt      DateTime    @default(now())
@@ -48,17 +49,18 @@ model User {
 }
 
 model Location {
-  id             String      @id @default(uuid())
+  id             String                  @id @default(uuid())
   name           String
   address        String?
-  users          User[]      @relation("UserLocations")
+  users          User[]                  @relation("UserLocations")
   tables         Table[]
   orders         Order[]
   shifts         CashShift[]
   tasks          Task[]
-  layoutMetadata Json?       // Room zones and obstacles details
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  layoutMetadata Json?                   // Room zones and obstacles details
+  inventoryStock InventoryLocationStock[]
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
 }
 
 model Table {
@@ -121,17 +123,36 @@ model ModifierOption {
 }
 
 model MenuItem {
-  id           String       @id @default(uuid())
+  id           String                @id @default(uuid())
   name         String
   description  String?
   price        Float
   categoryId   String
-  category     MenuCategory @relation(fields: [categoryId], references: [id])
-  allergens    String[]     // Масив алергенів: ["nuts", "dairy"]
-  isArchived   Boolean      @default(false)
-  priceHistory Json?        // Історія цін
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  category     MenuCategory          @relation(fields: [categoryId], references: [id])
+  allergens    String[]              // Масив алергенів: ["nuts", "dairy"]
+  tags         String[]              @default([])
+  imageUrl     String?
+  isVisible    Boolean               @default(true)
+  locationIds  String[]              @default([])
+  isArchived   Boolean               @default(false)
+  priceHistory Json?                 // Історія цін
+  translations MenuItemTranslation[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+}
+
+model MenuItemTranslation {
+  id          String   @id @default(uuid())
+  itemId      String
+  item        MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  locale      String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([itemId, locale])
+  @@index([locale])
 }
 
 model Order {
@@ -140,6 +161,7 @@ model Order {
   source        String         // "dine_in" | "takeaway" | "glovo" | "ubereats"
   customerName  String?
   customerId    String?
+  loyaltyGuestIds String[]     @default([])
   tableId       String?
   table         Table?         @relation(fields: [tableId], references: [id])
   locationId    String
@@ -150,6 +172,7 @@ model Order {
   discountValue Float          @default(0)
   tipType       String?        // "percent" | "fixed"
   tipValue      Float          @default(0)
+  pointsToSpend Float          @default(0)
   paid          Boolean        @default(false)
   amountPaid    Float          @default(0)
   refundedAmount Float         @default(0)
@@ -165,16 +188,20 @@ model Order {
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  name      String
-  price     Float
-  quantity  Int
-  paid      Boolean  @default(false)
-  comments  String?  // Коментарі для кухні
-  refundedQuantity Int @default(0)
-  createdAt DateTime @default(now())
+  id               String   @id @default(uuid())
+  orderId          String
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  name             String
+  price            Float
+  quantity         Int
+  itemType         String   @default("food") // food | merch
+  menuItemId       String?
+  merchSkuId       String?
+  modifierSnapshot Json?
+  paid             Boolean  @default(false)
+  comments         String?
+  refundedQuantity Int      @default(0)
+  createdAt        DateTime @default(now())
 }
 
 model Transaction {
@@ -252,16 +279,36 @@ model AuditLog {
 }
 
 model MerchInventory {
-  id             String              @id @default(uuid())
-  sku            String              @unique
+  id             String                   @id @default(uuid())
+  sku            String                   @unique
   name           String
   price          Float
-  quantity       Int                 @default(0)
-  minStockLevel  Int                 @default(10)
+  quantity       Int                      @default(0)
+  minStockLevel  Int                      @default(10)
+  category       String                   @default("merch") // merch | kitchen | bar
+  unit           String                   @default("pcs")
+  guestVisible   Boolean                  @default(false)
+  guestImageUrl  String?
+  guestDescription String?
   transfers      InventoryTransfer[]
   stockTransfers StockTransfer[]
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  locationStock  InventoryLocationStock[]
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+}
+
+model InventoryLocationStock {
+  id         String         @id @default(uuid())
+  itemId     String
+  item       MerchInventory @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  locationId String
+  location   Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  quantity   Int            @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([itemId, locationId])
+  @@index([locationId])
 }
 
 model StockTransfer {
@@ -291,24 +338,51 @@ model InventoryTransfer {
 }
 
 model Customer {
-  id             String               @id @default(uuid())
-  name           String
-  phone          String               @unique
-  email          String
-  birthday       String?
-  tier           String               @default("Bronze") // "Bronze" | "Silver" | "Gold" | "VIP"
-  points         Float                @default(0.0)
-  ltv            Float                @default(0.0)      // Lifetime value
-  visitCount     Int                  @default(0)
-  lastVisitDate  String?
-  favoriteDishes String[]             // Array of favorites
-  allergyNotes   String?
-  notes          String?
-  joinedDate     String?
-  transactions   LoyaltyTransaction[]
-  giftCards      GiftCard[]
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  id                String               @id @default(uuid())
+  name              String
+  phone             String               @unique
+  email             String
+  birthday          String?
+  tier              String               @default("Bronze") // "Bronze" | "Silver" | "Gold" | "VIP"
+  points            Float                @default(0.0)
+  ltv               Float                @default(0.0)      // Lifetime value
+  visitCount        Int                  @default(0)
+  lastVisitDate     String?
+  favoriteDishes    String[]             // Array of favorites
+  allergyNotes      String?
+  notes             String?
+  joinedDate        String?
+  phoneVerified     Boolean              @default(false)
+  guestRegisteredAt DateTime?
+  transactions      LoyaltyTransaction[]
+  giftCards         GiftCard[]
+  guestSessions     GuestSession[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+}
+
+model GuestSession {
+  id         String   @id @default(uuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([customerId])
+  @@index([expiresAt])
+}
+
+model GuestOtpChallenge {
+  id        String   @id @default(uuid())
+  phone     String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@index([expiresAt])
 }
 
 model LoyaltyConfig {
@@ -338,6 +412,7 @@ model DiscountPreset {
   id        String   @id @default(uuid())
   name      String
   value     Float    // percentage (e.g., 50 for Staff Meal)
+  colorTag  String?  @default("bg-gray-100 text-gray-700")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -376,9 +451,11 @@ model Task {
   commentsCount    Int       @default(0)
   attachmentsCount Int       @default(0)
   progress         Int       @default(0)
+  priority         String    @default("Lowest")
   dueAt            DateTime?
   scheduledDate    DateTime  @db.Date
   assigneeIds      String[]
+  likedByIds       String[]  @default([])
   status           String    @default("todo")
   locationId       String?
   location         Location? @relation(fields: [locationId], references: [id])

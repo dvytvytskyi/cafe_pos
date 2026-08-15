@@ -16,8 +16,7 @@ export interface EMenuCategory {
   name: string;
 }
 
-export const ALLERGEN_FILTER_OPTIONS = ['Nuts', 'Gluten', 'Dairy'] as const;
-export type AllergenFilterOption = (typeof ALLERGEN_FILTER_OPTIONS)[number];
+export { ALLERGEN_FILTER_OPTIONS, type AllergenFilterOption } from './allergens';
 
 export const DEFAULT_EMENU_IMAGE =
   'https://images.pexels.com/photos/37417630/pexels-photo-37417630.jpeg';
@@ -53,11 +52,12 @@ export function searchDishesByName(dishes: EMenuDish[], query: string): EMenuDis
   );
 }
 
+import { allergensMatch } from './allergens';
+
 export function filterDishesByAllergens(dishes: EMenuDish[], excludedAllergens: string[]): EMenuDish[] {
   if (!excludedAllergens.length) return dishes;
-  const excluded = new Set(excludedAllergens.map((a) => a.toLowerCase()));
   return dishes.filter(
-    (d) => !d.allergens.some((a) => excluded.has(a.toLowerCase()))
+    (d) => !d.allergens.some((a) => excludedAllergens.some((ex) => allergensMatch(a, ex)))
   );
 }
 

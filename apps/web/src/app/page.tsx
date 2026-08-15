@@ -11,7 +11,7 @@ import HourlySalesWidget from '@/components/dashboard/HourlySalesWidget';
 import GlobalFilters from '@/components/dashboard/GlobalFilters';
 import { getDashboardReportAsync, presetToDateRange } from '@/lib/reports';
 import type { DateRangeValue } from '@/components/dashboard/GlobalFilters';
-import type { DashboardReport } from '@/lib/dashboard';
+import type { DashboardPaymentFilter, DashboardReport } from '@/lib/dashboard';
 
 function formatEuro(value: number): string {
   return `€${value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -26,6 +26,7 @@ function growthText(growth: number | null): string | null {
 export default function Home() {
   const [compare, setCompare] = useState(false);
   const [dateRange, setDateRange] = useState<DateRangeValue>(() => presetToDateRange('Last 7 days'));
+  const [paymentMethod, setPaymentMethod] = useState<DashboardPaymentFilter>('all');
   const [report, setReport] = useState<DashboardReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [revenueViewMode, setRevenueViewMode] = useState<'total' | 'locations'>('total');
@@ -33,25 +34,29 @@ export default function Home() {
   const [ticketViewMode, setTicketViewMode] = useState<'total' | 'locations'>('total');
   const [signupsViewMode, setSignupsViewMode] = useState<'total' | 'locations'>('total');
 
-  const loadReport = useCallback(async (range: DateRangeValue, withCompare: boolean) => {
-    setLoading(true);
-    try {
-      const data = await getDashboardReportAsync({
-        startDate: range.startDate,
-        endDate: range.endDate,
-        compare: withCompare,
-      });
-      setReport(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadReport = useCallback(
+    async (range: DateRangeValue, withCompare: boolean, payment: DashboardPaymentFilter) => {
+      setLoading(true);
+      try {
+        const data = await getDashboardReportAsync({
+          startDate: range.startDate,
+          endDate: range.endDate,
+          compare: withCompare,
+          paymentMethod: payment,
+        });
+        setReport(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    loadReport(dateRange, compare).catch(console.error);
-  }, [dateRange, compare, loadReport]);
+    loadReport(dateRange, compare, paymentMethod).catch(console.error);
+  }, [dateRange, compare, paymentMethod, loadReport]);
 
   const smoothTransition = { type: 'spring', bounce: 0.05, duration: 0.5 } as const;
   const grossRevenue = report?.summary.grossRevenue ?? 0;
@@ -69,7 +74,12 @@ export default function Home() {
         className="bg-white rounded-3xl p-5 md:p-8 shadow-sm flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden"
       >
         <div className="flex-shrink-0 min-w-0">
-          <GlobalFilters compare={compare} onCompareChange={setCompare} onDateRangeChange={setDateRange} />
+          <GlobalFilters
+            compare={compare}
+            onCompareChange={setCompare}
+            onDateRangeChange={setDateRange}
+            onPaymentMethodChange={setPaymentMethod}
+          />
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden pb-10 min-h-0 min-w-0">

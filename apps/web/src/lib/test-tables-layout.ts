@@ -42,7 +42,7 @@ async function main() {
         name: 'Outdoor Terrace',
         tables: [
           { id: 'tab-4', name: 'Terrace 1', x: 500, y: 500, width: 60, height: 60, type: 'rect' as const, seats: 2, status: 'available' as const },
-          { id: 'tab-5', name: 'Terrace 2', x: 600, y: 500, width: 60, height: 60, type: 'rect' as const, seats: 2, status: 'dirty' as const },
+          { id: 'tab-5', name: 'Terrace 2', x: 600, y: 500, width: 60, height: 60, type: 'rect' as const, seats: 2, status: 'available' as const },
         ],
         zones: [],
         obstacles: [],

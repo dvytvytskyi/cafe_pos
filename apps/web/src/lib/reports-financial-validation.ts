@@ -41,7 +41,11 @@ export function parseFinancialReportFilters(searchParams: URLSearchParams): Fina
   }
 
   const startDate = startOfDay(parseIsoDate(startRaw, 'startDate'));
-  const endDate = endOfDay(parseIsoDate(endRaw, 'endDate'));
+  let endDate = endOfDay(parseIsoDate(endRaw, 'endDate'));
+  const todayEnd = endOfDay(new Date());
+  if (endDate.getTime() > todayEnd.getTime()) {
+    endDate = todayEnd;
+  }
 
   if (startDate.getTime() > endDate.getTime()) {
     throw new ReportsFinancialValidationError('startDate must be before or equal to endDate');

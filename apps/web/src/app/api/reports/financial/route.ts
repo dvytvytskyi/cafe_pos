@@ -4,12 +4,15 @@ import {
   ReportsFinancialValidationError,
   parseFinancialReportFilters,
 } from '@/lib/reports-financial-validation';
+import { parseDashboardPaymentFilter } from '@/lib/dashboard';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const filters = parseFinancialReportFilters(searchParams);
-    const report = await reportsRepository.getFinancialReport(filters);
+    const compare = searchParams.get('compare') === 'true';
+    const paymentFilter = parseDashboardPaymentFilter(searchParams.get('paymentMethod'));
+    const report = await reportsRepository.getFinancialReport(filters, compare, paymentFilter);
     return NextResponse.json(report, { status: 200 });
   } catch (error: unknown) {
     if (error instanceof ReportsFinancialValidationError) {

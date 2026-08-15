@@ -64,12 +64,13 @@ export async function getScheduleAsync(weekStart: string): Promise<{
 
 export async function saveScheduleBulkAsync(
   weekStart: string,
-  shifts: Array<{ userId: string; dayOfWeek: number; startTime: string; endTime: string }>
+  shifts: Array<{ userId: string; dayOfWeek: number; startTime: string; endTime: string }>,
+  clearedUserIds: string[] = []
 ): Promise<{ weekStart: string; count: number; shifts: ScheduleShift[] }> {
   const res = await fetch('/api/staff/schedule/bulk', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ weekStart, shifts }),
+    body: JSON.stringify({ weekStart, shifts, clearedUserIds }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

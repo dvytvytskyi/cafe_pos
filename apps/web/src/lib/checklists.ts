@@ -104,3 +104,19 @@ export function completionsToStateMap(
   }
   return map;
 }
+
+export async function saveChecklistTemplatesAsync(
+  templates: Omit<ChecklistTemplate, 'id'>[]
+): Promise<ChecklistTemplate[]> {
+  const res = await fetch('/api/checklists/templates', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ templates }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to save checklist templates');
+  }
+  const data = await res.json();
+  return data.templates;
+}

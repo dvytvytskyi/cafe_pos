@@ -1,3 +1,8 @@
+import { getLocationsCachedAsync, type LocationSummary } from './locations';
+import { MAIN_WAREHOUSE_LOCATION_ID } from './inventory-constants';
+
+export { MAIN_WAREHOUSE_LOCATION_ID };
+
 export interface InventoryTransfer {
   id: string;
   itemId: string;
@@ -7,6 +12,13 @@ export interface InventoryTransfer {
   createdAt: string;
 }
 
+export interface InventoryLocationStockRow {
+  id: string;
+  locationId: string;
+  quantity: number;
+  location: { id: string; name: string };
+}
+
 export interface MerchItem {
   id: string;
   sku: string;
@@ -14,6 +26,9 @@ export interface MerchItem {
   price: number;
   quantity: number;
   minStockLevel: number;
+  category: 'merch' | 'kitchen' | 'bar';
+  unit: string;
+  locationStock: InventoryLocationStockRow[];
   transfers: InventoryTransfer[];
   createdAt: string;
   updatedAt: string;
@@ -35,7 +50,38 @@ export interface StockTransferRecord {
     name: string;
     quantity: number;
     minStockLevel: number;
+    category?: string;
+    unit?: string;
   };
+}
+
+export function locationStocksToMap(item: MerchItem): Record<string, number> {
+  const map: Record<string, number> = {};
+  for (const row of item.locationStock ?? []) {
+    map[row.locationId] = row.quantity;
+  }
+  return map;
+}
+
+export function sortInventoryLocations(locations: LocationSummary[]): LocationSummary[] {
+  return [...locations].sort((a, b) => {
+    if (a.id === MAIN_WAREHOUSE_LOCATION_ID) return -1;
+    if (b.id === MAIN_WAREHOUSE_LOCATION_ID) return 1;
+    return a.name.localeCompare(b.name, 'uk');
+  });
+}
+
+export async function getInventoryLocationsAsync(): Promise<LocationSummary[]> {
+  const locations = await getLocationsCachedAsync();
+  return sortInventoryLocations(locations);
+}
+
+export function buildLocationLabelMap(locations: LocationSummary[]): Record<string, string> {
+  return Object.fromEntries(locations.map((l) => [l.id, l.name]));
+}
+
+export function locationLabelFromId(id: string, labels: Record<string, string>): string {
+  return labels[id] ?? id;
 }
 
 export async function getInventoryAsync(): Promise<MerchItem[]> {
@@ -52,6 +98,9 @@ export async function createInventoryItemAsync(data: {
   price: number;
   initialStock?: number;
   minStockLevel?: number;
+  category?: 'merch' | 'kitchen' | 'bar';
+  unit?: string;
+  locationStocks?: Record<string, number>;
 }): Promise<MerchItem> {
   const res = await fetch('/api/inventory', {
     method: 'POST',
@@ -61,6 +110,30 @@ export async function createInventoryItemAsync(data: {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? 'Failed to create inventory item in PostgreSQL');
+  }
+  return res.json();
+}
+
+export async function updateInventoryItemAsync(
+  id: string,
+  data: {
+    name: string;
+    sku?: string;
+    price: number;
+    minStockLevel: number;
+    category: 'merch' | 'kitchen' | 'bar';
+    unit: string;
+    locationStocks: Record<string, number>;
+  }
+): Promise<MerchItem> {
+  const res = await fetch(`/api/inventory/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? 'Failed to update inventory item');
   }
   return res.json();
 }
@@ -94,7 +167,7 @@ export async function getStockTransfersAsync(): Promise<StockTransferRecord[]> {
 export async function createStockTransferAsync(data: {
   itemId: string;
   quantity: number;
-  sourceLocationId?: string;
+  sourceLocationId: string;
   targetLocationId: string;
   createdByName?: string;
 }): Promise<StockTransferRecord> {
@@ -121,22 +194,6 @@ export async function completeStockTransferAsync(id: string): Promise<StockTrans
     throw new Error(body.error ?? 'Failed to complete stock transfer');
   }
   return res.json();
-}
-
-export const LOCATION_LABELS: Record<string, string> = {
-  main: 'Main WH',
-  gothic: 'Gótico',
-  eixample: 'Eixample',
-  sagrada: 'Sagrada',
-};
-
-export function locationIdFromLabel(label: string): string {
-  const entry = Object.entries(LOCATION_LABELS).find(([, v]) => v === label);
-  return entry?.[0] ?? label.toLowerCase().replace(/\s+/g, '_');
-}
-
-export function locationLabelFromId(id: string): string {
-  return LOCATION_LABELS[id] ?? id;
 }
 
 export function inferCategoryFromSku(sku: string): 'merch' | 'kitchen' | 'bar' {

@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState, Suspense, useRef } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckSquare, ListTodo } from 'lucide-react';
 import DailyChecklists from './DailyChecklists';
 import TaskManager from './TaskManager';
-import OperationsKpiBar, { type OperationsKpiBarHandle } from './OperationsKpiBar';
 
 function OperationsDashboardInner() {
   const searchParams = useSearchParams();
@@ -16,11 +15,6 @@ function OperationsDashboardInner() {
 
   const [activeTab, setActiveTab] = useState<'checklists' | 'tasks'>(initialTab);
   const [isSetupMode, setIsSetupMode] = useState(false);
-  const kpiRef = useRef<OperationsKpiBarHandle>(null);
-
-  const refreshKpi = () => {
-    void kpiRef.current?.refresh();
-  };
 
   return (
     <div className="bg-white rounded-3xl p-5 md:px-8 md:pb-8 pt-6 md:pt-6 shadow-sm flex-1 overflow-hidden flex flex-col">
@@ -47,8 +41,6 @@ function OperationsDashboardInner() {
         </div>
       </div>
 
-      <OperationsKpiBar ref={kpiRef} />
-
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         <AnimatePresence mode="wait">
           {activeTab === 'checklists' ? (
@@ -63,7 +55,6 @@ function OperationsDashboardInner() {
               <DailyChecklists
                 isSetupMode={isSetupMode}
                 setIsSetupMode={setIsSetupMode}
-                onCompletionChanged={refreshKpi}
               />
             </motion.div>
           ) : (
@@ -75,7 +66,7 @@ function OperationsDashboardInner() {
               transition={{ duration: 0.2 }}
               className="flex-1 overflow-hidden flex flex-col"
             >
-              <TaskManager onBack={() => setActiveTab('checklists')} onTasksChanged={refreshKpi} />
+              <TaskManager onBack={() => setActiveTab('checklists')} />
             </motion.div>
           )}
         </AnimatePresence>

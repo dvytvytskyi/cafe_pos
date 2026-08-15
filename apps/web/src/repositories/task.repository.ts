@@ -25,8 +25,6 @@ export interface TaskQueryFilters {
 
 export class TaskRepository {
   async ensureSeedTasks(): Promise<void> {
-    const count = await prisma.task.count();
-
     const assignee = await prisma.user.findFirst({ where: { status: 'active' } });
     if (assignee) {
       await prisma.task.updateMany({
@@ -35,9 +33,9 @@ export class TaskRepository {
       });
     }
 
-    if (count > 0) return;
-
     const today = startOfDay(new Date());
+    const todayCount = await prisma.task.count({ where: { scheduledDate: today } });
+    if (todayCount > 0) return;
 
     const seeds = [
       {
@@ -75,12 +73,13 @@ export class TaskRepository {
     for (const seed of seeds) {
       await prisma.task.create({
         data: {
-          id: seed.id,
+          id: `T-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
           title: seed.title,
           branch: seed.branch,
           tags: seed.tags,
           progress: seed.progress,
           status: seed.status,
+          priority: 'Medium',
           dueAt: seed.dueAt,
           scheduledDate: today,
           assigneeIds: assignee ? [assignee.id] : [],
@@ -150,6 +149,7 @@ export class TaskRepository {
           commentsCount: payload.commentsCount,
           attachmentsCount: payload.attachmentsCount,
           progress: payload.progress,
+          priority: payload.priority,
           dueAt: payload.dueAt,
           scheduledDate: payload.scheduledDate,
           assigneeIds: payload.assigneeIds,
@@ -182,6 +182,7 @@ export class TaskRepository {
           commentsCount: payload.commentsCount,
           attachmentsCount: payload.attachmentsCount,
           progress: payload.progress,
+          priority: payload.priority,
           dueAt: payload.dueAt,
           scheduledDate: payload.scheduledDate,
           assigneeIds: payload.assigneeIds,
@@ -203,12 +204,33 @@ export class TaskRepository {
     }
   }
 
-  async migrateStatus(fromStatus: string, toStatus: string): Promise<number> {
+  async migrateStatus(fromStatus: string, toStatus: string, scheduledDate?: string): Promise<number> {
+    const where: { status: string; scheduledDate?: Date } = { status: fromStatus };
+    if (scheduledDate) {
+      where.scheduledDate = parseDateParam(scheduledDate);
+    }
     const result = await prisma.task.updateMany({
-      where: { status: fromStatus },
+      where,
       data: { status: toStatus },
     });
     return result.count;
+  }
+
+  async toggleLike(id: string, userId: string): Promise<TaskRecord> {
+    const existing = await prisma.task.findUnique({ where: { id } });
+    if (!existing) throw new Error(`Task ${id} not found`);
+
+    const current = existing.likedByIds ?? [];
+    const likedByIds = current.includes(userId)
+      ? current.filter((uid) => uid !== userId)
+      : [...current, userId];
+
+    const row = await prisma.task.update({
+      where: { id },
+      data: { likedByIds },
+    });
+
+    return mapDbTaskToRecord(row);
   }
 
   async syncFromClient(taskData: any): Promise<TaskRecord> {

@@ -1,5 +1,30 @@
+import { CapacitorBridge } from './capacitor-bridge';
+import { DEFAULT_LOCATION_ID } from './constants';
+import {
+  offlineGetRooms,
+  offlineReplaceLayoutSnapshot,
+  offlineSaveRooms,
+  offlineUpdateTableStatus,
+} from './tables-offline';
+import { startPosOfflineSync } from './pos-offline-sync';
+
 export interface Point { x: number; y: number }
 export interface Zone { id: string; points: Point[]; name: string; closed?: boolean }
+
+function isPosOfflineMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    CapacitorBridge.isNative() || process.env.NEXT_PUBLIC_POS_OFFLINE === 'true'
+  );
+}
+
+let offlineSyncLocation: string | null = null;
+
+function ensureOfflineSync(locationId: string): void {
+  if (!isPosOfflineMode() || offlineSyncLocation === locationId) return;
+  offlineSyncLocation = locationId;
+  startPosOfflineSync(locationId).catch(console.error);
+}
 export interface Table { 
   id: string; x: number; y: number; width: number; height: number; 
   type: 'rect' | 'circle' | 'custom'; name: string; seats?: number; 
@@ -26,7 +51,7 @@ export const DEFAULT_ROOMS: Room[] = [
       { id: 't1', x: 1400, y: 1450, width: 60, height: 60, type: 'rect', name: '1', seats: 4, status: 'available' },
       { id: 't2', x: 1520, y: 1450, width: 60, height: 60, type: 'rect', name: '2', seats: 4, status: 'occupied' },
       { id: 't3', x: 1640, y: 1450, width: 60, height: 60, type: 'rect', name: '3', seats: 4, status: 'billed' },
-      { id: 't4', x: 1400, y: 1580, width: 80, height: 80, type: 'circle', name: '4', seats: 6, status: 'dirty' },
+      { id: 't4', x: 1400, y: 1580, width: 80, height: 80, type: 'circle', name: '4', seats: 6, status: 'available' },
       { id: 't5', x: 1560, y: 1580, width: 80, height: 80, type: 'circle', name: '5', seats: 6, status: 'available' },
     ],
     zones: [
@@ -76,8 +101,27 @@ export const saveRooms = (_rooms: Room[]) => {};
 
 export async function updateTableStatusAsync(
   tableId: string,
-  newStatus: NonNullable<Table['status']>
+  newStatus: NonNullable<Table['status']>,
+  locationId: string = DEFAULT_LOCATION_ID
 ): Promise<Table> {
+  if (isPosOfflineMode()) {
+    ensureOfflineSync(locationId);
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return offlineUpdateTableStatus(locationId, tableId, newStatus);
+    }
+    try {
+      const res = await fetch(`/api/tables/${tableId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error('table status failed');
+      return res.json();
+    } catch {
+      return offlineUpdateTableStatus(locationId, tableId, newStatus);
+    }
+  }
+
   const res = await fetch(`/api/tables/${tableId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -105,6 +149,22 @@ export async function seedDefaultLayoutAsync(locationId: string): Promise<Room[]
 }
 
 export async function getRoomsAsync(locationId: string): Promise<Room[]> {
+  if (isPosOfflineMode()) {
+    ensureOfflineSync(locationId);
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return offlineGetRooms(locationId);
+    }
+    try {
+      const res = await fetch(`/api/locations/${locationId}/layout`);
+      if (!res.ok) throw new Error('layout fetch failed');
+      const rooms = await res.json();
+      await offlineReplaceLayoutSnapshot(locationId, rooms);
+      return rooms;
+    } catch {
+      return offlineGetRooms(locationId);
+    }
+  }
+
   const res = await fetch(`/api/locations/${locationId}/layout`);
   if (!res.ok) {
     throw new Error('Failed to fetch rooms and tables layout from PostgreSQL');
@@ -113,6 +173,26 @@ export async function getRoomsAsync(locationId: string): Promise<Room[]> {
 }
 
 export async function saveRoomsAsync(locationId: string, rooms: Room[]): Promise<boolean> {
+  if (isPosOfflineMode()) {
+    ensureOfflineSync(locationId);
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return offlineSaveRooms(locationId, rooms);
+    }
+    try {
+      const res = await fetch(`/api/locations/${locationId}/layout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rooms }),
+      });
+      if (!res.ok) throw new Error('layout save failed');
+      const result = await res.json();
+      await offlineReplaceLayoutSnapshot(locationId, rooms);
+      return result.success;
+    } catch {
+      return offlineSaveRooms(locationId, rooms);
+    }
+  }
+
   const res = await fetch(`/api/locations/${locationId}/layout`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

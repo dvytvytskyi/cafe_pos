@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MousePointer2, Square, Plus, Map, Move, Trash2, Maximize2, SplitSquareHorizontal, ZoomIn, ZoomOut, Focus, Hexagon, QrCode, Download, RefreshCw, Layers, Copy, Play, Settings2, Check, ChevronRight } from 'lucide-react';
 import OrderTerminalModal from '@/components/pos/OrderTerminalModal';
 import OrderDetailsModal from '@/components/operations/OrderDetailsModal';
-import { getOrdersAsync, createOrderAsync, updateOrderAsync, updateOrderStatusAsync, Order } from '@/lib/orders';
+import { getOrdersAsync, createOrderAsync, updateOrderAsync, updateOrderStatusAsync, completePaymentAsync, Order } from '@/lib/orders';
 import { getGuestsAsync, Guest } from '@/lib/crm';
 import {
   DEFAULT_ROOMS,
@@ -20,9 +20,11 @@ import {
   updateTableStatusAsync,
 } from '@/lib/tables';
 import { DEFAULT_LOCATION_ID } from '@/lib/constants';
+import { getPrimaryStaffLocationId } from '@/lib/staff-location';
 import { buildEmenuQrUrl } from '@/lib/emenu';
 import { logAuditEvent } from '@/lib/audit';
-import { resolveTableDisplayStatus } from '@/lib/table-status-sync';
+import { resolveTableDisplayStatus, getOpenOrderForTable } from '@/lib/table-status-sync';
+import { getTableDisplayStyle, shouldShowOrderSidebar, type TableDisplayStatus } from '@/lib/table-display-status';
 import { calculateOrderTotals } from '@/lib/order-totals';
 
 const GRID_SIZE = 40; // 40px = 1m
@@ -64,14 +66,15 @@ export default function TablesView({
   const [initialRooms, setInitialRooms] = useState<Room[]>([]);
   const [crmGuests, setCrmGuests] = useState<Guest[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [staffLocationId, setStaffLocationId] = useState(DEFAULT_LOCATION_ID);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const fetchActiveOrders = async () => {
+  const fetchActiveOrders = async (locationId = staffLocationId) => {
     try {
-      const dbOrders = await getOrdersAsync(DEFAULT_LOCATION_ID);
+      const dbOrders = await getOrdersAsync(locationId);
       setActiveOrders(dbOrders);
     } catch (error) {
       console.error('Failed to fetch active orders from DB:', error);
@@ -85,13 +88,16 @@ export default function TablesView({
       setIsLoadingLayout(true);
       setLayoutError(null);
       try {
-        let dbRooms = await getRoomsAsync(DEFAULT_LOCATION_ID);
+        const locationId = await getPrimaryStaffLocationId();
+        setStaffLocationId(locationId);
+        let dbRooms = await getRoomsAsync(locationId);
         if (!dbRooms || dbRooms.length === 0) {
-          dbRooms = await seedDefaultLayoutAsync(DEFAULT_LOCATION_ID);
+          dbRooms = await seedDefaultLayoutAsync(locationId);
         }
         setRooms(dbRooms);
         setInitialRooms(dbRooms);
-        setActiveRoomId(prev => dbRooms.some(r => r.id === prev) ? prev : dbRooms[0].id);
+        setActiveRoomId((prev) => (dbRooms.some((r) => r.id === prev) ? prev : dbRooms[0]!.id));
+        await fetchActiveOrders(locationId);
       } catch (error) {
         console.error('Failed to load layout from DB:', error);
         setLayoutError('Could not load floor plan from server. Please retry.');
@@ -100,7 +106,6 @@ export default function TablesView({
       }
     }
     loadLayout();
-    fetchActiveOrders();
     getGuestsAsync()
       .then(setCrmGuests)
       .catch((err) => console.error('Failed to load CRM guests:', err));
@@ -108,10 +113,10 @@ export default function TablesView({
 
   useEffect(() => {
     if (!mounted || !isLiveView) return;
-    fetchActiveOrders();
-    const intervalId = window.setInterval(fetchActiveOrders, 30000);
+    fetchActiveOrders(staffLocationId);
+    const intervalId = window.setInterval(() => fetchActiveOrders(staffLocationId), 30000);
     return () => window.clearInterval(intervalId);
-  }, [isLiveView, mounted]);
+  }, [isLiveView, mounted, staffLocationId]);
 
   const saveDefaultView = () => {
     const currentZoom = zoom;
@@ -126,7 +131,7 @@ export default function TablesView({
     } : r);
 
     setRooms(updatedRooms);
-    saveRoomsAsync(DEFAULT_LOCATION_ID, updatedRooms).catch(err => {
+    saveRoomsAsync(staffLocationId, updatedRooms).catch(err => {
       console.error('Failed to save default view:', err);
       setLayoutError('Failed to save default view');
     });
@@ -144,8 +149,12 @@ export default function TablesView({
   const zones = activeRoom?.zones ?? [];
   const obstacles = activeRoom?.obstacles ?? [];
 
-  const displayStatus = (table: Table) =>
-    isLiveView ? resolveTableDisplayStatus(table.status, activeOrders, table.id) : (table.status || 'available');
+  const displayStatus = (table: Table): TableDisplayStatus => {
+    const dbStatus = table.status === 'dirty' ? 'available' : (table.status || 'available');
+    return isLiveView
+      ? resolveTableDisplayStatus(dbStatus, activeOrders, table.id)
+      : dbStatus;
+  };
 
   const setTables = (newTables: Table[] | ((prev: Table[]) => Table[])) => {
     setRooms(rooms.map(r => r.id === activeRoomId ? { 
@@ -174,6 +183,7 @@ export default function TablesView({
   const [selectedItem, setSelectedItem] = useState<{ type: 'table' | 'zone' | 'obstacle', id: string } | null>(null);
   const [qrModalTable, setQrModalTable] = useState<string | null>(null);
   const [confirmRegenerate, setConfirmRegenerate] = useState(false);
+  const [qrCacheKey, setQrCacheKey] = useState(0);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -566,7 +576,7 @@ export default function TablesView({
             onClick={async () => {
               if (saveStatus !== 'idle') return;
               try {
-                await saveRoomsAsync(DEFAULT_LOCATION_ID, rooms);
+                await saveRoomsAsync(staffLocationId, rooms);
                 setSaveStatus('saved');
                 setTimeout(() => {
                   setIsExiting(true);
@@ -747,7 +757,24 @@ export default function TablesView({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {isLiveView && (
+            <div className="hidden lg:flex items-center gap-1.5 mr-2 flex-wrap max-w-xl">
+              {(['incoming', 'preparing', 'ready', 'served', 'occupied', 'billed'] as TableDisplayStatus[]).map((key) => {
+                const s = getTableDisplayStyle(key);
+                return (
+                  <span
+                    key={key}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                    style={{ backgroundColor: s.badgeFill, borderColor: s.badgeStroke, color: s.badgeText }}
+                  >
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.stroke }} />
+                    {s.label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
           {!readonly && (
             <button 
               onClick={() => {
@@ -950,14 +977,22 @@ export default function TablesView({
             const cx = table.type === 'custom' && table.points ? table.points.reduce((sum, p) => sum + p.x, 0) / table.points.length : table.width / 2;
             const cy = table.type === 'custom' && table.points ? table.points.reduce((sum, p) => sum + p.y, 0) / table.points.length : table.height / 2;
             
+            const liveStatus: TableDisplayStatus = isLiveView
+              ? displayStatus(table)
+              : 'available';
+            const liveStyle = getTableDisplayStyle(liveStatus);
+
             const getTableColors = () => {
               if (isSelected) {
-                return 'fill-amber-100 stroke-corgi stroke-[3px]';
+                return { fill: '#fef3c7', stroke: '#fdbd38', strokeWidth: 3 };
               }
-              return 'fill-amber-50/40 stroke-corgi group-hover:fill-amber-100/40 transition-colors';
+              if (isLiveView && liveStatus !== 'available') {
+                return { fill: liveStyle.fill, stroke: liveStyle.stroke, strokeWidth: 3 };
+              }
+              return { fill: '#fffbeb66', stroke: '#fdbd38', strokeWidth: 3 };
             };
-            
-            const colors = getTableColors();
+
+            const tableColors = getTableColors();
 
             return (
               <g
@@ -967,7 +1002,15 @@ export default function TablesView({
                 className={`group ${mode === 'select' && !isLiveView ? 'cursor-move' : isLiveView ? 'cursor-pointer' : ''}`}
                 onPointerDown={(e) => {
                   if (isLiveView) {
-                    setActiveOrderTableId(table.id);
+                    const liveStatus = displayStatus(table);
+                    const openOrder = getOpenOrderForTable(activeOrders, table.id);
+                    if (shouldShowOrderSidebar(liveStatus) && openOrder) {
+                      setActiveOrderTableId(null);
+                      setSelectedOrderForSidebar(openOrder);
+                    } else {
+                      setSelectedOrderForSidebar(null);
+                      setActiveOrderTableId(table.id);
+                    }
                   } else {
                     handleItemPointerDown(e, 'table', table.id, { x: table.x, y: table.y });
                   }
@@ -977,20 +1020,29 @@ export default function TablesView({
                 {table.type === 'custom' && table.points ? (
                   <polygon 
                     points={table.points.map(p => `${p.x},${p.y}`).join(' ')}
-                    className={`transition-all duration-300 stroke-[3px] drop-shadow-sm group-hover:drop-shadow-md ${colors}`}
+                    fill={tableColors.fill}
+                    stroke={tableColors.stroke}
+                    strokeWidth={tableColors.strokeWidth}
+                    className="transition-all duration-300 drop-shadow-sm group-hover:drop-shadow-md"
                   />
-                ) : table.type === 'rect' ? (
+                ) : table.type === 'rect' || (table as { type?: string }).type === 'square' ? (
                   <rect 
                     x={0} y={0} 
                     width={table.width} height={table.height} 
                     rx="8"
-                    className={`transition-all duration-300 stroke-[3px] drop-shadow-sm group-hover:drop-shadow-md ${colors}`}
+                    fill={tableColors.fill}
+                    stroke={tableColors.stroke}
+                    strokeWidth={tableColors.strokeWidth}
+                    className="transition-all duration-300 drop-shadow-sm group-hover:drop-shadow-md"
                   />
                 ) : (
                   <circle 
                     cx={table.width / 2} cy={table.height / 2} 
                     r={table.width / 2} 
-                    className={`transition-all duration-300 stroke-[3px] drop-shadow-sm group-hover:drop-shadow-md ${colors}`}
+                    fill={tableColors.fill}
+                    stroke={tableColors.stroke}
+                    strokeWidth={tableColors.strokeWidth}
+                    className="transition-all duration-300 drop-shadow-sm group-hover:drop-shadow-md"
                   />
                 )}
                 
@@ -1009,13 +1061,16 @@ export default function TablesView({
 
                 {/* Table Status Badge Plate - Centered top overlapping pill */}
                 {(() => {
-                  const status = displayStatus(table);
+                  const status = liveStatus;
                   if (!status || status === 'available') return null;
+                  const style = liveStyle;
+                  const badgeLabel = style.label;
+                  const badgeWidth = Math.max(50, badgeLabel.length * 5.5 + 14);
                   let badgeX = 0;
-                  let badgeY = -6; // slightly overlapping top edge
-                  if (table.type === 'rect') {
+                  let badgeY = -6;
+                  if (table.type === 'rect' || (table as { type?: string }).type === 'square') {
                     badgeX = table.width / 2;
-                  } else if (table.type === 'circle') {
+                  } else if (table.type === 'circle' || (table as { type?: string }).type === 'round') {
                     badgeX = table.width / 2;
                   } else if (table.type === 'custom' && table.points) {
                     const minX = Math.min(...table.points.map(p => p.x));
@@ -1028,38 +1083,25 @@ export default function TablesView({
                   return (
                     <g className="pointer-events-none select-none">
                       <rect
-                        x={badgeX - 25}
+                        x={badgeX - badgeWidth / 2}
                         y={badgeY}
-                        width="50"
+                        width={badgeWidth}
                         height="12"
                         rx="6"
-                        fill={
-                          status === 'occupied' ? '#fee2e2' :
-                          status === 'billed' ? '#fef3c7' :
-                          status === 'dirty' ? '#ffedd5' : '#f3f4f6'
-                        }
-                        stroke={
-                          status === 'occupied' ? '#ef4444' :
-                          status === 'billed' ? '#d97706' :
-                          status === 'dirty' ? '#ea580c' : '#9ca3af'
-                        }
+                        fill={style.badgeFill}
+                        stroke={style.badgeStroke}
                         strokeWidth="1.5"
                       />
                       <text
                         x={badgeX}
                         y={badgeY + 8.5}
-                        fill={
-                          status === 'occupied' ? '#991b1b' :
-                          status === 'billed' ? '#92400e' :
-                          status === 'dirty' ? '#c2410c' : '#374151'
-                        }
+                        fill={style.badgeText}
                         fontSize="6.5"
                         fontWeight="black"
                         textAnchor="middle"
-                        letterSpacing="0.5"
-                        className="uppercase"
+                        letterSpacing="0.3"
                       >
-                        {status}
+                        {badgeLabel}
                       </text>
                     </g>
                   );
@@ -1419,10 +1461,10 @@ export default function TablesView({
               
               const emenuUrl = buildEmenuQrUrl(
                 modalTable.id,
-                DEFAULT_LOCATION_ID,
+                staffLocationId,
                 typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
               );
-              const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(emenuUrl)}&color=1f2937&margin=0`;
+              const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(emenuUrl)}&color=1f2937&margin=0&cache=${qrCacheKey}`;
 
               const downloadQR = async () => {
                 try {
@@ -1458,7 +1500,37 @@ export default function TablesView({
                       >
                         <Download size={18} /> Download
                       </button>
+                      <button
+                        onClick={() => setConfirmRegenerate(true)}
+                        className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
+                        Regenerate
+                      </button>
                     </div>
+
+                    {confirmRegenerate && (
+                      <div className="w-full p-4 border border-orange-200 bg-orange-50/40 rounded-xl text-left">
+                        <p className="text-sm font-bold text-gray-800 mb-2">Regenerate QR code?</p>
+                        <p className="text-xs text-gray-500 mb-3">Existing printed codes will still work unless you change the table URL. This refreshes the preview image.</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setQrCacheKey(Date.now());
+                              setConfirmRegenerate(false);
+                            }}
+                            className="px-3 py-1.5 bg-black text-white rounded-lg text-xs font-bold"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => setConfirmRegenerate(false)}
+                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <button 
@@ -1526,18 +1598,15 @@ export default function TablesView({
               currentStatus={tableDisplayStatus}
               initialOrder={activeOrder}
               guests={crmGuests}
-              locationId={DEFAULT_LOCATION_ID}
+              locationId={staffLocationId}
               onClose={() => setActiveOrderTableId(null)}
               onAction={async (action, items, discountPercent, customerId, keepOpen) => {
                 let newStatus = table.status;
-                if (action === 'send_to_kitchen') newStatus = 'occupied';
+                if (action === 'send_to_kitchen' || action === 'takeaway' || action === 'checkout') newStatus = 'occupied';
                 else if (action === 'print_check') newStatus = 'billed';
-                else if (action === 'pay') newStatus = 'occupied';
                 else if (action === 'clean') newStatus = 'available';
 
-                let orderToOpen: Order | null = null;
-
-                if (action !== 'clean') {
+                if (action !== 'clean' && action !== 'print_check') {
                   const formattedItems = items.map((i) => ({
                     name: i.name,
                     price: i.price,
@@ -1562,7 +1631,10 @@ export default function TablesView({
                         }
                       : undefined;
 
+                  const source = action === 'takeaway' || action === 'checkout' ? 'takeaway' : 'dine_in';
+
                   try {
+                    let orderToOpen: Order;
                     if (activeOrder) {
                       orderToOpen = await updateOrderAsync(activeOrder.id, {
                         items: formattedItems,
@@ -1572,13 +1644,14 @@ export default function TablesView({
                         tableId: table.id,
                         discount,
                         status: 'preparing',
+                        source,
                       });
                     } else {
                       orderToOpen = await createOrderAsync({
-                        source: 'dine_in',
+                        source,
                         status: 'preparing',
                         tableId: table.id,
-                        locationId: DEFAULT_LOCATION_ID,
+                        locationId: staffLocationId,
                         items: formattedItems,
                         total: finalTotal,
                         customerId: finalCustomerId,
@@ -1588,21 +1661,29 @@ export default function TablesView({
                         discount,
                       });
                     }
+
+                    if (action === 'checkout') {
+                      await completePaymentAsync(orderToOpen.id, {
+                        payments: [{ method: 'card', amount: finalTotal }],
+                        total: finalTotal,
+                        customerId: finalCustomerId,
+                        markCompleted: false,
+                      });
+                    }
+
                     await fetchActiveOrders();
                   } catch (err) {
                     console.error('Failed to save order:', err);
                     setLayoutError('Failed to save order');
                     return;
                   }
+                } else if (action === 'print_check') {
+                  // print_check — table status only for now
                 }
 
                 updateTable(activeOrderTableId, { status: newStatus });
                 if (!keepOpen) {
                   setActiveOrderTableId(null);
-                }
-
-                if (action === 'pay' && orderToOpen) {
-                  setSelectedOrderForSidebar(orderToOpen);
                 }
               }}
             />
@@ -1611,10 +1692,26 @@ export default function TablesView({
       )}
 
       {/* Existing Order details sidebar modal */}
+      {(() => {
+        const sidebarTable = selectedOrderForSidebar?.tableId
+          ? tables.find((t) => t.id === selectedOrderForSidebar.tableId)
+          : undefined;
+
+        return (
       <OrderDetailsModal
         order={selectedOrderForSidebar}
         isOpen={!!selectedOrderForSidebar}
+        tableStatus={sidebarTable?.status}
+        tableName={sidebarTable?.name}
         onClose={() => setSelectedOrderForSidebar(null)}
+        onTableReleased={async () => {
+          const tableId = selectedOrderForSidebar?.tableId;
+          if (tableId) {
+            const table = tables.find((t) => t.id === tableId);
+            if (table) updateTable(table.id, { status: 'available' });
+          }
+          await fetchActiveOrders();
+        }}
         onUpdateStatus={async (orderId, status) => {
           try {
             const updated = await updateOrderStatusAsync(orderId, status);
@@ -1625,8 +1722,7 @@ export default function TablesView({
             const table = tables.find(t => t.id === updated.tableId);
             if (table) {
               let newStatus = table.status;
-              if (status === 'completed') newStatus = 'dirty';
-              else if (status === 'cancelled') newStatus = 'available';
+              if (status === 'completed' || status === 'cancelled') newStatus = 'available';
               if (newStatus !== table.status) {
                 updateTable(table.id, { status: newStatus });
               }
@@ -1648,14 +1744,16 @@ export default function TablesView({
           setSelectedOrderForSidebar(updated.paid ? null : updated);
           await fetchActiveOrders();
           if (updated.paid && updated.tableId) {
-            await updateTableStatusAsync(updated.tableId, 'dirty');
+            await updateTableStatusAsync(updated.tableId, 'available');
             const table = tables.find(t => t.id === updated.tableId);
             if (table) {
-              updateTable(table.id, { status: 'dirty' });
+              updateTable(table.id, { status: 'available' });
             }
           }
         }}
       />
+        );
+      })()}
 
     </div>
   );

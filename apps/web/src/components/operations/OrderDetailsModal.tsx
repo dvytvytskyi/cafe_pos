@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, MapPin, ShoppingBag, Bike, Store, Printer, CreditCard, Trash2, SplitSquareHorizontal, Banknote, CheckCircle2, ChevronLeft, Tag, Percent, Coins, Heart, Mail, Send, Download, AlertCircle, Users, Sparkles, Gift, UserPlus, MessageSquare, Receipt, ChefHat, AlertTriangle, Search, Minus, Plus, Check, RotateCcw } from 'lucide-react';
-import { Order, OrderSource, OrderItem, completePaymentAsync, PayPayload } from '@/lib/orders';
+import { Order, OrderSource, OrderItem, completePaymentAsync, PayPayload, getOrderLoyaltyGuestIds, withAddedLoyaltyGuest, withRemovedLoyaltyGuest, detachOrderFromTableAsync } from '@/lib/orders';
+import { getStatusAfterPreparing } from '@/lib/orders-board';
 import { getDiscountPresetsAsync, DiscountPreset } from '@/lib/discounts';
-import { Guest, getGuestsAsync, getTierCashbackRate, getLoyaltyConfigAsync, DEFAULT_LOYALTY_CONFIG, type LoyaltyConfig } from '@/lib/crm';
-import { updateTableStatusAsync } from '@/lib/tables';
+import { Guest, getGuestsAsync, getTierCashbackRate, getLoyaltyConfigAsync, DEFAULT_LOYALTY_CONFIG, formatLoyaltyPoints, type LoyaltyConfig } from '@/lib/crm';
+import { updateTableStatusAsync, type Table } from '@/lib/tables';
 import { logAuditEventAsync } from '@/lib/audit';
 import { getCurrentShiftAsync } from '@/lib/shifts';
 import { findCardByCodeAsync } from '@/lib/giftcards';
@@ -15,6 +16,7 @@ import { mapApiOrderToUi } from '@/lib/mappers/order.mapper';
 import { calculateReceiptTaxes } from '@/lib/tax-calc';
 import { getTaxRatesAsync, taxRatesToMap, TAX_RATES_UPDATED_EVENT } from '@/lib/taxes';
 import { getPosSettingsAsync, DEFAULT_POS_SETTINGS, type PosSettings } from '@/lib/pos-settings';
+import { getOrderDisplayLabel } from '@/lib/orders-board';
 
 interface OrderDetailsModalProps {
   order: Order | null;
@@ -24,14 +26,18 @@ interface OrderDetailsModalProps {
   onUpdateStatus: (id: string, status: string) => void;
   onUpdateOrder: (updatedOrder: Order) => void;
   onPaymentComplete?: (updatedOrder: Order) => void | Promise<void>;
+  /** Persisted table status — enables "Free table" in floor-plan sidebar */
+  tableStatus?: Table['status'];
+  tableName?: string;
+  onTableReleased?: () => void | Promise<void>;
 }
 
 const SourceBadge = ({ source }: { source: OrderSource }) => {
   switch (source) {
     case 'glovo':
-      return <img src="https://upload.wikimedia.org/wikipedia/commons/d/d9/Logotip_de_Glovo.png" alt="Glovo" className="h-6 object-contain" />;
+      return <img src="https://upload.wikimedia.org/wikipedia/commons/d/d9/Logotip_de_Glovo.png" alt="Glovo" width={64} height={24} className="h-6 w-auto object-contain" />;
     case 'ubereats':
-      return <img src="https://1000logos.net/wp-content/uploads/2021/04/Uber-Eats-logo.png" alt="Uber Eats" className="h-[26px] object-contain" />;
+      return <img src="https://1000logos.net/wp-content/uploads/2021/04/Uber-Eats-logo.png" alt="Uber Eats" width={64} height={26} className="h-[26px] w-auto object-contain" />;
     case 'dine_in':
       return <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 font-black text-[13px] rounded-xl"><Store size={16} /> DINE-IN</div>;
     case 'takeaway':
@@ -39,9 +45,9 @@ const SourceBadge = ({ source }: { source: OrderSource }) => {
   }
 };
 
-type ViewState = 'default' | 'checkout' | 'split_bill' | 'split_amount' | 'split_ways_list' | 'split_dishes' | 'checkout_split_dishes' | 'discount' | 'tip' | 'send_receipt' | 'cancel_order_confirm' | 'factura_form' | 'factura_a4' | 'refund_select' | 'refund_confirm';
+type ViewState = 'default' | 'checkout' | 'split_bill' | 'split_amount' | 'split_ways_list' | 'split_dishes' | 'checkout_split_dishes' | 'discount' | 'tip' | 'send_receipt' | 'cancel_order_confirm' | 'free_table_confirm' | 'factura_form' | 'factura_a4' | 'refund_select' | 'refund_confirm';
 
-export default function OrderDetailsModal({ order, isOpen, initialView = 'default', onClose, onUpdateStatus, onUpdateOrder: parentOnUpdateOrder, onPaymentComplete }: OrderDetailsModalProps) {
+export default function OrderDetailsModal({ order, isOpen, initialView = 'default', onClose, onUpdateStatus, onUpdateOrder: parentOnUpdateOrder, onPaymentComplete, tableStatus, tableName, onTableReleased }: OrderDetailsModalProps) {
   const [view, setView] = useState<ViewState>(initialView);
   const [splitWays, setSplitWays] = useState(2);
   const [splitAmountType, setSplitAmountType] = useState<'ways' | 'custom'>('ways');
@@ -83,6 +89,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
   const [refundProcessing, setRefundProcessing] = useState(false);
   const [refundError, setRefundError] = useState<string | null>(null);
   const [fiscalInvoiceNumber, setFiscalInvoiceNumber] = useState('');
+  const [freeTableProcessing, setFreeTableProcessing] = useState(false);
   
   // Factura Corporate Details
   const [companyName, setCompanyName] = useState('');
@@ -165,7 +172,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     if (order.tableId) {
       updateTableStatusAsync(order.tableId, 'billed').catch(console.error);
     }
-    const ip = getPrinterIp();
+    const ip = await getDefaultReceiptPrinterIpAsync(DEFAULT_LOCATION_ID);
     if (ip) {
       try {
         await printOrderReceiptAsync(order.id, ip, 'receipt');
@@ -430,7 +437,8 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       getGuestsAsync().then(setAllGuests).catch(() => setAllGuests([]));
       options?.onSuccess?.();
       if (updated.paid) {
-        setTimeout(() => setView('default'), 600);
+        setView('default');
+        setTimeout(() => onClose(), 800);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Payment failed';
@@ -509,17 +517,23 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       }
 
       const redeemAmount = parseFloat(Math.min(remainingBalance, card.balance).toFixed(2));
+      const remainingAfterRedeem = parseFloat((remainingBalance - redeemAmount).toFixed(2));
       await handleCompletePayment(
         [{ method: 'giftcard', amount: redeemAmount, code }],
         {
           onSuccess: () => {
             setGiftCardError(null);
-            setGiftCardSuccess(`Successfully applied €${redeemAmount.toFixed(2)} from Gift Card!`);
+            setGiftCardSuccess(
+              remainingAfterRedeem <= 0.01
+                ? 'Gift card applied — order fully paid!'
+                : `Applied €${redeemAmount.toFixed(2)} from gift card. Remaining: €${remainingAfterRedeem.toFixed(2)}`
+            );
             setGiftCardCode('');
-            setTimeout(() => {
-              setGiftCardSuccess(null);
-              setShowGiftCardInput(false);
-            }, 1200);
+            if (remainingAfterRedeem <= 0.01) {
+              setTimeout(() => setShowGiftCardInput(false), 1200);
+            } else {
+              setTimeout(() => setGiftCardSuccess(null), 4000);
+            }
           },
         }
       );
@@ -528,6 +542,34 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       setGiftCardSuccess(null);
     }
   };
+
+  const handleFreeTable = async () => {
+    if (!order?.tableId || freeTableProcessing) return;
+    setFreeTableProcessing(true);
+    try {
+      await updateTableStatusAsync(order.tableId, 'available');
+      await detachOrderFromTableAsync(order.id);
+      logAuditEventAsync('table_released', {
+        tableId: order.tableId,
+        orderId: order.id,
+        billed: tableStatus === 'billed',
+      }).catch(console.error);
+      if (onTableReleased) {
+        await onTableReleased();
+      }
+      onClose();
+    } catch (e) {
+      console.error('Failed to free table:', e);
+    } finally {
+      setFreeTableProcessing(false);
+    }
+  };
+
+  const canFreeTable =
+    !!order?.tableId &&
+    order.source === 'dine_in' &&
+    tableStatus !== undefined &&
+    tableStatus !== 'available';
 
   const renderOrderBody = () => (
     <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
@@ -573,131 +615,6 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         )}
       </AnimatePresence>
 
-      {/* Customer Info */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-2">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-gray-500 font-medium text-sm">Customer</span>
-          <span className="text-gray-900 font-bold">{order.customerName}</span>
-        </div>
-        {order.deliveryId && (
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500 font-medium text-sm">Courier ID</span>
-            <span className="text-gray-900 font-bold flex items-center gap-1.5">
-              <MapPin size={14} className="text-gray-400" />
-              {order.deliveryId}
-            </span>
-          </div>
-        )}
-        <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-          <span className="text-gray-500 font-medium text-sm">Ordered via</span>
-          <span className="text-gray-900 font-bold capitalize">{order.orderedBy}</span>
-        </div>
-      </div>
-
-      {/* Timing Info */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500 font-medium text-sm">Order Time</span>
-          <span className="text-gray-900 font-bold flex items-center gap-1.5">
-            <Clock size={14} className="text-gray-400" />
-            {order.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-        </div>
-        {order.readyByTime && (
-          <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-            <span className="text-orange-600 font-medium text-sm">Target Ready Time</span>
-            <span className="text-orange-600 font-black">{order.readyByTime}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Loyalty & Guest Info */}
-      {order.orderedBy !== 'app' && (
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-900 font-black text-sm flex items-center gap-1.5">
-              <Users size={16} className="text-gray-400" />
-              CRM & Loyalty
-            </span>
-            {order.customerId && !order.paid && (
-              <button 
-                onClick={() => {
-                  onUpdateOrder({
-                    ...order,
-                    customerId: undefined,
-                    customerPointsPaid: undefined
-                  });
-                }}
-                className="text-xs text-red-500 font-bold hover:underline cursor-pointer"
-              >
-                Remove
-              </button>
-            )}
-          </div>
-
-          {order.customerId ? (
-            (() => {
-              const guest = allGuests.find(g => g.id === order.customerId);
-              if (!guest) return <div className="text-xs text-gray-400 font-semibold">Guest not found</div>;
-              const cashbackRate = getTierCashbackRate(guest.tier, loyaltyConfig);
-              const estCashback = ((order.total - (order.customerPointsPaid || 0)) * cashbackRate).toFixed(2);
-              
-              return (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs text-gray-600">
-                        {guest.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <span className="font-bold text-sm text-gray-900 block">{guest.name}</span>
-                        <span className="text-[10px] text-gray-400 font-semibold">{guest.phone}</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-900 text-white border border-gray-900">
-                      {guest.tier}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100 text-xs">
-                    <div className="bg-gray-50 p-2 rounded-lg">
-                      <span className="text-gray-400 font-semibold block text-[10px]">Points Balance</span>
-                      <span className="font-black text-gray-900 flex items-center gap-0.5 mt-0.5">
-                        <Coins size={12} className="text-amber-500" />
-                        {guest.points.toFixed(1)}
-                      </span>
-                    </div>
-                    <div className="bg-gray-50 p-2 rounded-lg">
-                      <span className="text-gray-400 font-semibold block text-[10px]">Est. Cashback</span>
-                      <span className="font-black text-green-600 flex items-center gap-0.5 mt-0.5">
-                        <Sparkles size={12} className="text-green-500" />
-                        +€{estCashback}
-                      </span>
-                    </div>
-                  </div>
-                  {guest.allergyNotes && (
-                    <div className="bg-amber-50 border border-amber-100 text-amber-900 px-3 py-2 rounded-lg flex gap-2 items-start text-xs font-semibold">
-                      <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={14} />
-                      <span>Allergies: {guest.allergyNotes}</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })()
-          ) : (
-            !order.paid && (
-              <button
-                onClick={() => setShowAssignGuest(true)}
-                className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 border-dashed rounded-xl text-xs font-bold text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <UserPlus size={14} />
-                Assign Guest to Order
-              </button>
-            )
-          )}
-        </div>
-      )}
-
       {/* Order Items */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100">
         <h3 className="text-gray-900 font-black mb-3">Order Summary</h3>
@@ -727,7 +644,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                         >
                           {deleteConfirmIdx === idx ? <Trash2 size={12} /> : <Minus size={12} />}
                         </button>
-                        <span className="font-extrabold w-4 text-center text-gray-950 text-xs select-none">{item.quantity}</span>
+                        <span className="font-extrabold w-4 text-center text-gray-900 text-xs select-none">{item.quantity}</span>
                         <button 
                           onClick={() => handlePlusClick(idx)} 
                           className="w-7 h-7 flex items-center justify-center rounded-lg bg-white text-gray-600 border border-gray-200/50 hover:text-corgi cursor-pointer"
@@ -835,10 +752,160 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         )}
 
       </div>
+
+      {/* Customer Info */}
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-2">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-gray-500 font-medium text-sm">Customer</span>
+          <span className="text-gray-900 font-bold">{order.customerName}</span>
+        </div>
+        {order.deliveryId && (
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500 font-medium text-sm">Courier ID</span>
+            <span className="text-gray-900 font-bold flex items-center gap-1.5">
+              <MapPin size={14} className="text-gray-400" />
+              {order.deliveryId}
+            </span>
+          </div>
+        )}
+        <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+          <span className="text-gray-500 font-medium text-sm">Ordered via</span>
+          <span className="text-gray-900 font-bold capitalize">{order.orderedBy}</span>
+        </div>
+      </div>
+
+      {/* Timing Info */}
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-500 font-medium text-sm">Order Time</span>
+          <span className="text-gray-900 font-bold flex items-center gap-1.5">
+            <Clock size={14} className="text-gray-400" />
+            {order.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+        {order.readyByTime && (
+          <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+            <span className="text-orange-600 font-medium text-sm">Target Ready Time</span>
+            <span className="text-orange-600 font-black">{order.readyByTime}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Loyalty & Guest Info */}
+      {order.orderedBy !== 'app' && (
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-900 font-black text-sm flex items-center gap-1.5">
+              <Users size={16} className="text-gray-400" />
+              CRM & Loyalty
+            </span>
+          </div>
+
+          {getOrderLoyaltyGuestIds(order).map((guestId, index) => {
+            const guest = allGuests.find((g) => g.id === guestId);
+            if (!guest) {
+              return (
+                <div key={guestId} className="text-xs text-gray-400 font-semibold">
+                  Guest not found
+                </div>
+              );
+            }
+            const isPrimary = index === 0;
+            const cashbackRate = getTierCashbackRate(guest.tier, loyaltyConfig);
+            const estCashback = isPrimary
+              ? ((order.total - (order.customerPointsPaid || 0)) * cashbackRate).toFixed(2)
+              : null;
+
+            return (
+              <div
+                key={guestId}
+                className={`space-y-3 ${index > 0 ? 'pt-3 border-t border-gray-100' : ''}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs text-gray-600">
+                      {guest.name.split(' ').map((n) => n[0]).join('')}
+                    </div>
+                    <div>
+                      <span className="font-bold text-sm text-gray-900 block">{guest.name}</span>
+                      <span className="text-[10px] text-gray-400 font-semibold">{guest.phone}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isPrimary && getOrderLoyaltyGuestIds(order).length > 1 && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-corgi/10 text-corgi uppercase tracking-wide">
+                        Primary
+                      </span>
+                    )}
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-900 text-white border border-gray-900">
+                      {guest.tier}
+                    </span>
+                    {!order.paid && (
+                      <button
+                        onClick={() => onUpdateOrder(withRemovedLoyaltyGuest(order, guestId, guest.name))}
+                        className="text-[10px] text-red-500 font-bold hover:underline cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-gray-50 p-2 rounded-lg">
+                    <span className="text-gray-400 font-semibold block text-[10px]">Points Balance</span>
+                    <span className="font-black text-gray-900 flex items-center gap-0.5 mt-0.5">
+                      <Coins size={12} className="text-amber-500" />
+                      {formatLoyaltyPoints(guest.points)}
+                    </span>
+                  </div>
+                  {isPrimary ? (
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <span className="text-gray-400 font-semibold block text-[10px]">Est. Cashback</span>
+                      <span className="font-black text-green-600 flex items-center gap-0.5 mt-0.5">
+                        <Sparkles size={12} className="text-green-500" />
+                        +€{estCashback}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <span className="text-gray-400 font-semibold block text-[10px]">Linked Guest</span>
+                      <span className="font-black text-gray-500 flex items-center gap-0.5 mt-0.5 text-[10px]">
+                        Loyalty on checkout
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {guest.allergyNotes && (
+                  <div className="bg-amber-50 border border-amber-100 text-amber-900 px-3 py-2 rounded-lg flex gap-2 items-start text-xs font-semibold">
+                    <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={14} />
+                    <span>Allergies: {guest.allergyNotes}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {!order.paid && (
+            <button
+              onClick={() => setShowAssignGuest(true)}
+              className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 border-dashed rounded-xl text-xs font-bold text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <UserPlus size={14} />
+              Add loyalty guest
+            </button>
+          )}
+        </div>
+      )}
+
     </div>
   );
 
-  const renderDefaultView = () => (
+  const renderDefaultView = () => {
+    const rawTotals = calculateFinalTotal(order.items, undefined, undefined);
+    const afterDiscountTotals = calculateFinalTotal(order.items, order.discount, undefined);
+
+    return (
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
@@ -853,9 +920,29 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         
         {/* Fixed Total Area */}
         <div className="flex justify-between items-end">
-          <div className="flex flex-col">
-            <span className="font-bold text-gray-500 text-sm mb-1">Total</span>
-            <span className="font-black text-gray-900 text-3xl leading-none">€{order.total.toFixed(2)}</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-bold text-gray-500 text-sm mb-0.5">Total</span>
+            {order.discount && (
+              <span className="text-base font-bold text-gray-400 line-through leading-none">
+                €{rawTotals.rawTotal.toFixed(2)}
+              </span>
+            )}
+            {order.discount && (
+              <span className="text-xs font-bold text-corgi leading-tight">
+                {order.discount.name} (-{order.discount.value}%) · -€{order.discount.amountDeducted.toFixed(2)}
+              </span>
+            )}
+            {order.tip && !order.discount && (
+              <span className="text-base font-bold text-gray-400 line-through leading-none">
+                €{afterDiscountTotals.finalTotal.toFixed(2)}
+              </span>
+            )}
+            {order.tip && (
+              <span className="text-xs font-bold text-green-600 leading-tight">
+                Tip{order.tip.type === 'percent' ? ` (${order.tip.value}%)` : ''} · +€{order.tip.amountAdded.toFixed(2)}
+              </span>
+            )}
+            <span className="font-black text-gray-900 text-3xl leading-none pt-0.5">€{order.total.toFixed(2)}</span>
           </div>
           {(order.amountPaid || 0) > 0 && (
             <div className="flex flex-col items-end">
@@ -960,13 +1047,12 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         {order.status === 'preparing' && (
           <button 
             onClick={() => { 
-              const nextStatus = (order.source === 'glovo' || order.source === 'ubereats') ? 'ready' : (order.source === 'takeaway' ? 'completed' : 'served');
-              onUpdateStatus(order.id, nextStatus); 
+              onUpdateStatus(order.id, getStatusAfterPreparing(order.source)); 
               onClose(); 
             }}
             className="w-full py-4 bg-gray-900 text-white rounded-xl font-black text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
           >
-            <ShoppingBag size={20} /> {(order.source === 'glovo' || order.source === 'ubereats') ? 'Mark as Ready' : 'Mark as Served'}
+            <ShoppingBag size={20} /> {(order.source === 'glovo' || order.source === 'ubereats') ? 'Mark as Ready' : order.source === 'takeaway' ? 'Complete Order' : 'Mark as Served'}
           </button>
         )}
         {order.status === 'ready' && (
@@ -985,6 +1071,16 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
             <CheckCircle2 size={20} /> Complete Order
           </button>
         )}
+        {canFreeTable && (
+          <button
+            onClick={() => (tableStatus === 'billed' ? handleFreeTable() : setView('free_table_confirm'))}
+            disabled={freeTableProcessing}
+            className="w-full py-3.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl font-bold transition-all cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+          >
+            <CheckCircle2 size={18} />
+            {freeTableProcessing ? 'Freeing table…' : 'Free Table'}
+          </button>
+        )}
         {order.status !== 'cancelled' && order.status !== 'served' && order.status !== 'completed' && (
           <button 
             onClick={() => setView('cancel_order_confirm')}
@@ -995,7 +1091,8 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         )}
       </div>
     </motion.div>
-  );
+    );
+  };
 
   const renderCheckoutView = () => {
     const assignedGuest = order.customerId ? allGuests.find(g => g.id === order.customerId) : null;
@@ -1035,13 +1132,45 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               <AlertCircle size={16} /> {paymentError}
             </div>
           )}
+          {(order.amountPaid || 0) > 0.01 && !order.paid && (
+            <div className="mb-4 bg-blue-50 border border-blue-100 rounded-xl p-4 animate-in fade-in">
+              <span className="text-xs font-bold text-blue-800 block mb-1">Partial payment received</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-black text-blue-900">
+                  Paid €{(order.amountPaid || 0).toFixed(2)} · Remaining €{remainingBalance.toFixed(2)}
+                </span>
+              </div>
+              {order.payments && order.payments.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {order.payments.map((p, i) => (
+                    <div key={i} className="text-[10px] font-bold text-blue-700/80 flex justify-between">
+                      <span>{paymentMethodLabel(p.method)}</span>
+                      <span>€{p.amount.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-[10px] text-blue-600 font-semibold mt-2">
+                Complete the remaining balance to mark this order as paid.
+              </p>
+            </div>
+          )}
+          {order.paid && (
+            <div className="mb-4 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 size={20} className="text-green-600 shrink-0" />
+              <div>
+                <span className="text-sm font-black text-green-800 block">Payment complete</span>
+                <span className="text-xs font-semibold text-green-700">Total paid: €{order.total.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
           {shiftOpen !== false && assignedGuest && assignedGuest.points > 0 && remainingBalance > 0.01 && (
               <div className="mb-4 bg-amber-50/50 border border-amber-100/50 rounded-xl p-3 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-2">
                   <Coins size={18} className="text-amber-500 shrink-0" />
                   <div>
                     <span className="text-xs font-bold text-gray-700 block">Redeem Points</span>
-                    <span className="text-[10px] text-gray-400 font-semibold">Balance: {assignedGuest.points.toFixed(1)} pts (€{assignedGuest.points.toFixed(1)})</span>
+                    <span className="text-[10px] text-gray-400 font-semibold">Balance: {formatLoyaltyPoints(assignedGuest.points)} pts (€{formatLoyaltyPoints(assignedGuest.points)})</span>
                   </div>
                 </div>
                 
@@ -1049,28 +1178,24 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                   <input
                     type="text"
                     inputMode="numeric"
-                    value={pointsToSpend ? pointsToSpend.replace('.', ',') : ''}
+                    value={pointsToSpend}
                     onChange={e => {
                       const val = e.target.value.replace(/\D/g, '');
                       if (val === '') {
                         setPointsToSpend('');
                       } else {
-                        const num = parseInt(val, 10) / 100;
-                        const maxRedeem = Math.min(assignedGuest.points, remainingBalance);
-                        if (num > maxRedeem) {
-                          setPointsToSpend(maxRedeem.toFixed(2));
-                        } else {
-                          setPointsToSpend(num.toFixed(2));
-                        }
+                        const num = parseInt(val, 10);
+                        const maxRedeem = Math.min(Math.round(assignedGuest.points), Math.floor(remainingBalance));
+                        setPointsToSpend(String(Math.min(num, maxRedeem)));
                       }
                     }}
-                    placeholder="0,00"
-                    className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-1 text-right font-bold text-xs text-gray-955 focus:border-gray-900 outline-none"
+                    placeholder="0"
+                    className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-1 text-right font-bold text-xs text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-900"
                   />
                   <button
-                    disabled={!pointsToSpend || parseFloat(pointsToSpend) <= 0 || paymentProcessing}
+                    disabled={!pointsToSpend || parseInt(pointsToSpend, 10) <= 0 || paymentProcessing}
                     onClick={() => {
-                      const pointsAmount = parseFloat(pointsToSpend);
+                      const pointsAmount = parseInt(pointsToSpend, 10);
                       if (pointsAmount > 0) {
                         handleCompletePayment([{ method: 'points', amount: pointsAmount }]);
                         setPointsToSpend('');
@@ -1116,8 +1241,8 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                   : 'bg-white border-gray-200 hover:border-gray-900 hover:bg-gray-50'
               }`}
             >
-              <Gift size={20} className={showGiftCardInput ? 'text-purple-650' : 'text-gray-500 group-hover:text-gray-900 group-disabled:text-gray-300 transition-colors'} />
-              <span className={`font-bold text-sm ${showGiftCardInput ? 'text-purple-750' : 'text-gray-900 group-disabled:text-gray-400'}`}>Gift Card</span>
+              <Gift size={20} className={showGiftCardInput ? 'text-purple-600' : 'text-gray-500 group-hover:text-gray-900 group-disabled:text-gray-300 transition-colors'} />
+              <span className={`font-bold text-sm ${showGiftCardInput ? 'text-purple-700' : 'text-gray-900 group-disabled:text-gray-400'}`}>Gift Card</span>
             </button>
           </div>
 
@@ -1127,10 +1252,10 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="e.g. CORGI-50-GIFT"
+                  placeholder="e.g. CORGI-ABCD-EFGH"
                   value={giftCardCode}
-                  onChange={e => setGiftCardCode(e.target.value)}
-                  className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-955 outline-none focus:border-purple-500"
+                  onChange={e => setGiftCardCode(e.target.value.toUpperCase())}
+                  className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-gray-900 placeholder:text-gray-400 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                 />
                 <button
                   type="button"
@@ -2012,6 +2137,40 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     </motion.div>
   );
 
+  const renderFreeTableConfirmView = () => (
+    <motion.div 
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="flex flex-col h-full bg-white p-6"
+    >
+      <div className="flex items-center gap-3 text-amber-600 mb-6">
+        <AlertTriangle size={32} />
+        <h3 className="text-2xl font-black text-gray-900">Free Table?</h3>
+      </div>
+      <p className="text-gray-500 font-medium mb-6 text-[15px] leading-relaxed">
+        Release table <span className="font-bold text-gray-900">{tableName || order.customerName || 'this table'}</span> and mark it as available?
+        The order will stay open on the board but will no longer be linked to this table.
+      </p>
+      
+      <div className="mt-auto pt-4 flex gap-3">
+        <button 
+          onClick={() => setView('default')}
+          className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-colors cursor-pointer active:scale-95 text-[15px]"
+        >
+          No, Keep Occupied
+        </button>
+        <button 
+          onClick={handleFreeTable}
+          disabled={freeTableProcessing}
+          className="flex-1 py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl transition-colors cursor-pointer active:scale-95 text-[15px] disabled:opacity-50"
+        >
+          {freeTableProcessing ? 'Freeing…' : 'Yes, Free Table'}
+        </button>
+      </div>
+    </motion.div>
+  );
+
   const renderCancelOrderConfirmView = () => (
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
@@ -2024,7 +2183,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         <h3 className="text-2xl font-black text-gray-900">Cancel Order?</h3>
       </div>
       <p className="text-gray-500 font-medium mb-6 text-[15px] leading-relaxed">
-        Are you sure you want to cancel order <span className="font-bold text-gray-900">{order.id}</span>? 
+        Are you sure you want to cancel order <span className="font-bold text-gray-900">{getOrderDisplayLabel(order)}</span>? 
         This action cannot be undone and will stop any active preparation in the kitchen.
       </p>
       
@@ -2038,7 +2197,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         <button 
           onClick={() => {
             onUpdateStatus(order.id, 'cancelled');
-            logAuditEvent('order_cancelled', { orderId: order.id });
+            logAuditEventAsync('order_cancelled', { orderId: order.id });
             onClose();
           }}
           className="flex-1 py-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-2xl transition-colors cursor-pointer active:scale-95 text-[15px]"
@@ -2341,7 +2500,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10">
               <div>
-                <h2 className="text-2xl font-black text-gray-900 tracking-tight">{order.id}</h2>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">{getOrderDisplayLabel(order)}</h2>
                 <div className="flex items-center gap-3 mt-2">
                   <SourceBadge source={order.source} />
                   <span className={`px-2 py-1 rounded-lg text-xs font-bold ${order.paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -2371,6 +2530,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 {view === 'tip' && <div key="tip" className="h-full absolute inset-0">{renderTipView()}</div>}
                 {view === 'send_receipt' && <div key="send_receipt" className="h-full absolute inset-0">{renderSendReceiptView()}</div>}
                 {view === 'cancel_order_confirm' && <div key="cancel_order_confirm" className="h-full absolute inset-0">{renderCancelOrderConfirmView()}</div>}
+                {view === 'free_table_confirm' && <div key="free_table_confirm" className="h-full absolute inset-0">{renderFreeTableConfirmView()}</div>}
                 {view === 'refund_select' && <div key="refund_select" className="h-full absolute inset-0">{renderRefundSelectView()}</div>}
                 {view === 'refund_confirm' && <div key="refund_confirm" className="h-full absolute inset-0">{renderRefundConfirmView()}</div>}
                 {view === 'factura_form' && <div key="factura_form" className="h-full absolute inset-0">{renderFacturaFormView()}</div>}
@@ -2392,8 +2552,8 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 >
                   <div className="flex justify-between items-center mb-4 shrink-0">
                     <div>
-                      <h3 className="text-lg font-black text-gray-900">Assign Guest</h3>
-                      <p className="text-xs font-semibold text-gray-500">Link a guest profile to apply loyalty rewards and track LTV</p>
+                      <h3 className="text-lg font-black text-gray-900">Add loyalty guest</h3>
+                      <p className="text-xs font-semibold text-gray-500">Link guest profiles for loyalty tracking. You can add multiple guests.</p>
                     </div>
                     <button 
                       onClick={() => setShowAssignGuest(false)} 
@@ -2438,7 +2598,9 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                   {/* 3-Column Scrollable Grid */}
                   <div className="flex-1 overflow-y-auto pr-1">
                     {(() => {
+                      const assignedIds = new Set(getOrderLoyaltyGuestIds(order));
                       const filteredGuests = allGuests.filter(g => {
+                        if (assignedIds.has(g.id)) return false;
                         const matchesSearch = g.name.toLowerCase().includes(crmSearchQuery.toLowerCase()) || g.phone.includes(crmSearchQuery);
                         const matchesTier = selectedTierFilter === 'all' || g.tier === selectedTierFilter;
                         return matchesSearch && matchesTier;
@@ -2458,11 +2620,9 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                             <div
                               key={guest.id}
                               onClick={() => {
-                                onUpdateOrder({
-                                  ...order,
-                                  customerId: guest.id
-                                });
+                                onUpdateOrder(withAddedLoyaltyGuest(order, guest.id, guest.name));
                                 setShowAssignGuest(false);
+                                setCrmSearchQuery('');
                               }}
                               className="p-3.5 bg-white border border-gray-200/80 hover:border-corgi hover:shadow-md rounded-2xl flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5"
                             >

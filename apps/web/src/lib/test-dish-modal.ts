@@ -38,11 +38,24 @@ export async function run() {
         name: `${TEST_PREFIX}-BadAllergen`,
         price: 3.5,
         categoryId: cat.id,
-        allergens: ['Peanuts'],
+        allergens: ['UnknownAllergen'],
       }),
     });
     assert.strictEqual(badAllergenRes.status, 400);
     console.log('✅ T14.2 API rejects invalid allergen');
+
+    const peanutsRes = await fetch(`${BASE}/api/menu/items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: `${TEST_PREFIX}-PeanutsOk`,
+        price: 3.5,
+        categoryId: cat.id,
+        allergens: ['Peanuts'],
+      }),
+    });
+    assert.strictEqual(peanutsRes.status, 201);
+    console.log('✅ T14.2 API accepts EU allergen Peanuts');
 
     // T14.4 — create MenuItem + allergens
     const createRes = await fetch(`${BASE}/api/menu/items`, {
@@ -53,15 +66,15 @@ export async function run() {
         description: 'Integration dish',
         price: 5.25,
         categoryId: cat.id,
-        allergens: ['Gluten', 'Dairy'],
+        allergens: ['Gluten', 'Milk'],
       }),
     });
     assert.strictEqual(createRes.status, 201);
     const created = await createRes.json();
-    assert.deepStrictEqual(created.allergens.sort(), ['Dairy', 'Gluten']);
+    assert.deepStrictEqual(created.allergens.sort(), ['Gluten', 'Milk']);
     const dbItem = await prisma.menuItem.findUnique({ where: { id: created.id } });
     assert.ok(dbItem);
-    assert.deepStrictEqual([...(dbItem!.allergens)].sort(), ['Dairy', 'Gluten']);
+    assert.deepStrictEqual([...(dbItem!.allergens)].sort(), ['Gluten', 'Milk']);
     console.log('✅ T14.4 create dish with allergens');
 
     // T14.5 — soft archive excluded from default menu

@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const pin = normalizePinInput(body.pin);
 
     const user = await userRepository.findByPin(pin);
-    if (!user || user.status === 'archived') {
+    if (!user || user.status !== 'active') {
       const failures = await recordPinFailure(clientKey);
       if (failures >= MAX_PIN_FAILURES) {
         return NextResponse.json(

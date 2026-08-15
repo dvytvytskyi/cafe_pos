@@ -36,7 +36,7 @@ async function main() {
         description: 'Mint flavored double mocha shot',
         price: 3.5,
         categoryId,
-        allergens: ['Dairy', 'Gluten'],
+        allergens: ['Milk', 'Gluten'],
       }),
     });
     const createdItem = await itemRes.json();

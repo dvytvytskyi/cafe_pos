@@ -12,6 +12,7 @@ export async function run() {
 
   // T14.1 — price positive decimal; abc rejected
   assert.strictEqual(validateDishPrice('4.50'), 4.5);
+  assert.strictEqual(validateDishPrice('4,50'), 4.5);
   assert.strictEqual(validateDishPrice(3), 3);
   assert.throws(() => validateDishPrice('abc'), MenuValidationError);
   assert.throws(() => validateDishPrice('-1'), MenuValidationError);
@@ -19,8 +20,9 @@ export async function run() {
   console.log('✅ T14.1 price validation');
 
   // T14.2 — allergen IDs valid
-  assert.deepStrictEqual(validateAllergenIds(['gluten', 'Dairy']), ['Gluten', 'Dairy']);
-  assert.throws(() => validateAllergenIds(['Peanuts']), MenuValidationError);
+  assert.deepStrictEqual(validateAllergenIds(['gluten', 'Dairy']), ['Gluten', 'Milk']);
+  assert.deepStrictEqual(validateAllergenIds(['Peanuts', 'shellfish']), ['Peanuts', 'Crustaceans']);
+  assert.throws(() => validateAllergenIds(['UnknownAllergen']), MenuValidationError);
   assert.throws(() => validateAllergenIds('Gluten'), MenuValidationError);
   console.log('✅ T14.2 allergen validation');
 

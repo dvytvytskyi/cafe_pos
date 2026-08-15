@@ -43,6 +43,7 @@ function formatHistoryOrder(order: {
     waiterName: order.waiterName ?? null,
     locationId: order.locationId,
     customerId: order.customerId,
+    customerPointsEarned: (order as { customerPointsEarned?: number }).customerPointsEarned,
     items: order.items,
     transactions: order.payments ?? [],
     discountName: order.discountName,

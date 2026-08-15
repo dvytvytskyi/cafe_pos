@@ -26,10 +26,13 @@ export interface UiOrder {
   payments?: { method: 'card' | 'cash' | 'points' | 'giftcard'; amount: number; code?: string }[];
   orderedBy: 'waiter' | 'app';
   customerId?: string;
+  loyaltyGuestIds?: string[];
   tableId?: string;
   orderNumber?: string;
   tableNumber?: string | null;
   waiterName?: string | null;
+  updatedAt?: Date;
+  customerPointsEarned?: number;
 }
 
 export interface ApiOrder {
@@ -60,6 +63,7 @@ export interface ApiOrder {
   time?: string | Date;
   customerName?: string;
   customerId?: string;
+  loyaltyGuestIds?: string[];
   orderNumber?: string;
   tableNumber?: string | null;
   waiterName?: string | null;
@@ -67,14 +71,24 @@ export interface ApiOrder {
   discountValue?: number;
   tipType?: string;
   tipValue?: number;
+  updatedAt?: string | Date;
   warnings?: string[];
+  customerPointsEarned?: number;
 }
 
 export function mapApiOrderToUi(api: ApiOrder): UiOrder {
   const paid = api.paymentStatus === 'paid' || api.paid === true;
   const discountValue = api.discountValue ?? 0;
-  const subtotal = api.total / (discountValue > 0 ? 1 - discountValue / 100 : 1);
-  const afterDiscount = discountValue > 0 ? subtotal - (subtotal - api.total) : api.total;
+  const itemsSubtotal = (api.items || []).reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const rawSubtotal = itemsSubtotal > 0 ? itemsSubtotal : api.total;
+  const amountDeducted =
+    api.discountName && discountValue > 0
+      ? parseFloat((rawSubtotal * (discountValue / 100)).toFixed(2))
+      : 0;
+  const afterDiscount = parseFloat(Math.max(0, rawSubtotal - amountDeducted).toFixed(2));
   const tipValue = api.tipValue ?? 0;
   let tipAmountAdded = 0;
   if (api.tipType && tipValue > 0) {
@@ -89,6 +103,12 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
     source: (api.source || 'dine_in') as UiOrderSource,
     customerName: api.customerName || 'Walk-in',
     customerId: api.customerId,
+    loyaltyGuestIds:
+      api.loyaltyGuestIds && api.loyaltyGuestIds.length > 0
+        ? api.loyaltyGuestIds
+        : api.customerId
+          ? [api.customerId]
+          : [],
     tableId: api.tableId,
     orderNumber: api.orderNumber,
     tableNumber: api.tableNumber ?? null,
@@ -108,7 +128,7 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
         ? {
             name: api.discountName,
             value: discountValue,
-            amountDeducted: parseFloat((subtotal - afterDiscount).toFixed(2)),
+            amountDeducted,
           }
         : undefined,
     tip:
@@ -121,6 +141,7 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
         : undefined,
     status: api.status as UiOrderStatus,
     time: new Date(api.createdAt || api.time || Date.now()),
+    updatedAt: api.updatedAt ? new Date(api.updatedAt) : undefined,
     paid,
     amountPaid: api.amountPaid ?? (paid ? api.total : 0),
     payments: (api.transactions || []).map((t) => ({
@@ -129,6 +150,7 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
       code: t.code || undefined,
     })),
     orderedBy: api.source === 'dine_in' || api.source === 'takeaway' ? 'waiter' : 'app',
+    customerPointsEarned: api.customerPointsEarned,
   };
 }
 
@@ -136,7 +158,7 @@ export function mapUiOrderToApi(
   ui: Partial<UiOrder> & {
     locationId?: string;
     tableId?: string;
-    items: UiOrderItem[];
+    items?: UiOrderItem[];
   }
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {
@@ -148,19 +170,34 @@ export function mapUiOrderToApi(
     customerName: ui.customerName,
     customerId: ui.customerId,
     tableId: ui.tableId,
-    items: ui.items.map((item) => ({
+  };
+
+  if (ui.items && ui.items.length > 0) {
+    payload.items = ui.items.map((item) => ({
       name: item.name,
       price: item.price,
       quantity: item.quantity,
       comments: item.comments,
-    })),
-  };
+    }));
+  }
 
   if (ui.id) payload.id = ui.id;
-  if (ui.discount?.name) payload.discountName = ui.discount.name;
-  if (ui.discount?.value !== undefined) payload.discountValue = ui.discount.value;
-  if (ui.tip?.type) payload.tipType = ui.tip.type;
-  if (ui.tip?.value !== undefined) payload.tipValue = ui.tip.value;
+  if (ui.discount?.name) {
+    payload.discountName = ui.discount.name;
+    payload.discountValue = ui.discount.value;
+  } else if ('discount' in ui && ui.discount === undefined) {
+    payload.discountName = null;
+    payload.discountValue = 0;
+  }
+  if (ui.tip?.type) {
+    payload.tipType = ui.tip.type;
+    payload.tipValue = ui.tip.value;
+  } else if ('tip' in ui && ui.tip === undefined) {
+    payload.tipType = null;
+    payload.tipValue = 0;
+  }
+  if ('customerId' in ui) payload.customerId = ui.customerId ?? null;
+  if (ui.loyaltyGuestIds !== undefined) payload.loyaltyGuestIds = ui.loyaltyGuestIds;
 
   return payload;
 }

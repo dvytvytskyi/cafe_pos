@@ -16,26 +16,35 @@ import {
   filterEmployeesByArchived,
   EMPTY_STAFF_LIST_MESSAGE,
 } from '@/lib/staff-validation';
+import { exportEmployeesToCsv } from '@/lib/staff-export';
 import EmployeeModal, { RoleOption } from '@/components/operations/EmployeeModal';
 import Link from 'next/link';
 
 export default function StaffAdminPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [roles, setRoles] = useState<RoleOption[]>([]);
-  const [activeTab, setActiveTab] = useState<'All' | 'Floor' | 'Kitchen'>('All');
+  const [activeTab, setActiveTab] = useState<'All' | 'Floor' | 'Kitchen' | 'Bar'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    setIsLoading(true);
+    setLoadError(null);
     Promise.all([getEmployeesAsync(), getRolesAsync()])
       .then(([staff, roleList]) => {
         setEmployees(staff);
         setRoles(roleList);
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        setLoadError(err instanceof Error ? err.message : 'Failed to load staff');
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -52,7 +61,7 @@ export default function StaffAdminPage() {
           name: emp.name,
           roleId: emp.roleId,
           position: emp.position,
-          section: emp.section as 'Floor' | 'Kitchen',
+          section: emp.section as 'Floor' | 'Kitchen' | 'Bar',
           nie: emp.nie,
           phone: emp.phone,
           email: emp.email,
@@ -77,7 +86,7 @@ export default function StaffAdminPage() {
           pin: emp.pin,
           roleId: emp.roleId,
           position: emp.position,
-          section: emp.section as 'Floor' | 'Kitchen',
+          section: emp.section as 'Floor' | 'Kitchen' | 'Bar',
           nie: emp.nie,
           phone: emp.phone,
           email: emp.email,
@@ -114,7 +123,16 @@ export default function StaffAdminPage() {
   const activeCount = employees.filter((e) => e.status === 'active').length;
   const salaCount = employees.filter((e) => e.section === 'Floor' && e.status === 'active').length;
   const cocinaCount = employees.filter((e) => e.section === 'Kitchen' && e.status === 'active').length;
+  const barCount = employees.filter((e) => e.section === 'Bar' && e.status === 'active').length;
   const totalCount = employees.length;
+
+  const handleExport = () => {
+    if (filteredEmployees.length === 0) {
+      setToast('No employees to export.');
+      return;
+    }
+    exportEmployeesToCsv(filteredEmployees);
+  };
 
   return (
     <DashboardLayout>
@@ -163,8 +181,16 @@ export default function StaffAdminPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-8">
+          {loadError && (
+            <div role="alert" className="mb-4 bg-red-50 border border-red-100 text-red-700 text-sm font-medium rounded-xl px-4 py-3">
+              {loadError}
+            </div>
+          )}
+          {isLoading ? (
+            <div className="py-16 text-center text-gray-400 text-sm font-medium">Loading staff…</div>
+          ) : (
           <div className="w-full space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="bg-white p-6 rounded-2xl border border-gray-100 relative overflow-hidden">
                 <div className="absolute -right-4 -bottom-4 opacity-5 text-gray-900">
                   <User size={80} />
@@ -180,6 +206,10 @@ export default function StaffAdminPage() {
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Kitchen</p>
                 <p className="text-3xl font-black text-gray-900">{cocinaCount}</p>
               </div>
+              <div className="bg-white p-6 rounded-2xl border border-gray-100">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Bar</p>
+                <p className="text-3xl font-black text-gray-900">{barCount}</p>
+              </div>
               <div className="bg-white p-6 rounded-2xl border border-gray-100 relative overflow-hidden bg-gray-50/50">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Total Staff</p>
                 <p className="text-3xl font-black text-gray-500">{totalCount}</p>
@@ -190,7 +220,7 @@ export default function StaffAdminPage() {
               <div className="p-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-3 bg-white">
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-0.5 h-9 bg-gray-50/80 p-1 rounded-xl border border-gray-200/60 shrink-0">
-                    {(['All', 'Floor', 'Kitchen'] as const).map((tab) => (
+                    {(['All', 'Floor', 'Kitchen', 'Bar'] as const).map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -225,7 +255,12 @@ export default function StaffAdminPage() {
                   </label>
                 </div>
 
-                <button className="flex items-center gap-2 px-4 py-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl transition-colors cursor-pointer shrink-0">
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  data-testid="staff-export-btn"
+                  className="flex items-center gap-2 px-4 py-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl transition-colors cursor-pointer shrink-0"
+                >
                   <Download size={16} />
                   <span className="text-[13px] font-bold">Export Excel</span>
                 </button>
@@ -321,6 +356,7 @@ export default function StaffAdminPage() {
               </div>
             </div>
           </div>
+          )}
         </div>
 
         <EmployeeModal

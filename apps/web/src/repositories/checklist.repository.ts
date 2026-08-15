@@ -124,6 +124,38 @@ export class ChecklistRepository {
     return rows.map((r) => this.mapTemplate(r));
   }
 
+  async replaceTemplates(
+    templates: Omit<ChecklistTemplateRecord, 'id'>[]
+  ): Promise<ChecklistTemplateRecord[]> {
+    await prisma.$transaction(async (tx) => {
+      const keys = templates.map((t) => t.taskKey);
+      await tx.checklistTemplate.deleteMany({
+        where: keys.length > 0 ? { taskKey: { notIn: keys } } : undefined,
+      });
+      for (const template of templates) {
+        await tx.checklistTemplate.upsert({
+          where: { taskKey: template.taskKey },
+          create: {
+            taskKey: template.taskKey,
+            title: template.title,
+            requiresPhoto: template.requiresPhoto,
+            category: template.category,
+            sortOrder: template.sortOrder,
+            permissions: template.permissions,
+          },
+          update: {
+            title: template.title,
+            requiresPhoto: template.requiresPhoto,
+            category: template.category,
+            sortOrder: template.sortOrder,
+            permissions: template.permissions,
+          },
+        });
+      }
+    });
+    return this.getTemplates();
+  }
+
   async getCompletions(date: string, shiftType: ChecklistShiftType): Promise<DailyChecklistRecord[]> {
     const rows = await prisma.dailyChecklist.findMany({
       where: {

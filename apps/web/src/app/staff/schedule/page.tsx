@@ -28,21 +28,33 @@ export default function StaffSchedulePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [touchedUserIds, setTouchedUserIds] = useState<Set<string>>(new Set());
 
   const loadSchedule = useCallback(async () => {
-    const [staff, data] = await Promise.all([
-      getEmployeesAsync(),
-      getScheduleAsync(weekStart),
-    ]);
-    setEmployees(staff.filter((e) => e.status === 'active'));
-    setShifts(data.shifts);
-    setWarnings(data.warnings);
-    setDirty(false);
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [staff, data] = await Promise.all([
+        getEmployeesAsync(),
+        getScheduleAsync(weekStart),
+      ]);
+      setEmployees(staff.filter((e) => e.status === 'active'));
+      setShifts(data.shifts);
+      setWarnings(data.warnings);
+      setTouchedUserIds(new Set());
+      setDirty(false);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load schedule');
+    } finally {
+      setLoading(false);
+    }
   }, [weekStart]);
 
   useEffect(() => {
-    loadSchedule().catch(console.error);
+    void loadSchedule();
   }, [loadSchedule]);
 
   useEffect(() => {
@@ -58,6 +70,11 @@ export default function StaffSchedulePage() {
     }
     return map;
   }, [shifts]);
+
+  const markTouched = (userId: string) => {
+    setTouchedUserIds((prev) => new Set(prev).add(userId));
+    setDirty(true);
+  };
 
   const toggleDayShift = (emp: Employee, dayOfWeek: number) => {
     const key = `${emp.id}:${dayOfWeek}`;
@@ -75,7 +92,36 @@ export default function StaffSchedulePage() {
         },
       ]);
     }
-    setDirty(true);
+    markTouched(emp.id);
+  };
+
+  const updateShiftTime = (empId: string, dayOfWeek: number, field: 'startTime' | 'endTime', value: string) => {
+    setShifts((prev) =>
+      prev.map((s) =>
+        s.userId === empId && s.dayOfWeek === dayOfWeek ? { ...s, [field]: value } : s
+      )
+    );
+    markTouched(empId);
+  };
+
+  const applyDefaultWeek = (emp: Employee) => {
+    const workDays = Math.min(Math.max(emp.daysPerWeek || 5, 1), 7);
+    const next = shifts.filter((s) => s.userId !== emp.id);
+    for (let dow = 0; dow < workDays; dow++) {
+      next.push({
+        userId: emp.id,
+        dayOfWeek: dow,
+        startTime: emp.scheduleStart || '09:00',
+        endTime: emp.scheduleEnd || '17:00',
+      });
+    }
+    setShifts(next);
+    markTouched(emp.id);
+  };
+
+  const clearWeekForEmployee = (empId: string) => {
+    setShifts((prev) => prev.filter((s) => s.userId !== empId));
+    markTouched(empId);
   };
 
   const handleSave = async () => {
@@ -87,12 +133,15 @@ export default function StaffSchedulePage() {
         startTime: s.startTime,
         endTime: s.endTime,
       }));
-      await saveScheduleBulkAsync(weekStart, payload);
+      const clearedUserIds = [...touchedUserIds].filter(
+        (userId) => !payload.some((s) => s.userId === userId)
+      );
+      await saveScheduleBulkAsync(weekStart, payload, clearedUserIds);
       await loadSchedule();
       setToast('Schedule saved successfully.');
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Save failed';
-      setToast(msg);
+      setToast(msg === 'Unauthorized' ? 'Please log in to save schedules.' : msg);
     } finally {
       setSaving(false);
     }
@@ -100,10 +149,12 @@ export default function StaffSchedulePage() {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 w-full h-[calc(100vh-2rem)] bg-white rounded-[2rem] border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+      <div className="flex-1 w-full h-[calc(100vh-2rem)] bg-white rounded-[2rem] border border-gray-100 shadow-sm flex flex-col overflow-hidden relative">
         {toast && (
           <div
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl shadow-lg"
+            className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 text-sm font-semibold rounded-xl shadow-lg ${
+              toast.includes('success') ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'
+            }`}
             data-testid="schedule-toast"
           >
             {toast}
@@ -136,7 +187,7 @@ export default function StaffSchedulePage() {
               </button>
             </div>
             <button
-              onClick={handleSave}
+              onClick={() => void handleSave()}
               disabled={!dirty || saving}
               data-testid="schedule-save-btn"
               className="px-4 h-9 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white rounded-xl text-[13px] font-bold"
@@ -167,10 +218,20 @@ export default function StaffSchedulePage() {
           </div>
         )}
 
+        {loadError && (
+          <div role="alert" className="mx-6 mt-4 p-3 bg-red-50 border border-red-100 text-red-700 text-sm font-medium rounded-xl">
+            {loadError}
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50/30" data-testid="schedule-page">
+          {loading ? (
+            <div className="py-16 text-center text-gray-400 text-sm font-medium">Loading schedules…</div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
             {employees.map((emp) => {
               const hasWarning = warnings.some((w) => w.userId === emp.id);
+              const empShifts = shifts.filter((s) => s.userId === emp.id).sort((a, b) => a.dayOfWeek - b.dayOfWeek);
               return (
                 <div
                   key={emp.id}
@@ -215,7 +276,10 @@ export default function StaffSchedulePage() {
 
                   {expandedId === emp.id && (
                     <div className="border-t border-gray-100 p-5 bg-gray-50/30 relative z-10">
-                      <div className="grid grid-cols-7 gap-1">
+                      <p className="text-[10px] font-bold text-gray-500 mb-2">
+                        Tap a day to toggle shift or time off
+                      </p>
+                      <div className="grid grid-cols-7 gap-1 mb-4">
                         {DAY_LABELS.map((day, idx) => {
                           const shift = shiftsByUserDay.get(`${emp.id}:${idx}`);
                           return (
@@ -247,12 +311,58 @@ export default function StaffSchedulePage() {
                           );
                         })}
                       </div>
+
+                      {empShifts.length > 0 && (
+                        <div className="space-y-2 mb-4" onClick={(e) => e.stopPropagation()}>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Shift times</p>
+                          {empShifts.map((shift) => (
+                            <div key={shift.dayOfWeek} className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-gray-600 w-8">{DAY_LABELS[shift.dayOfWeek]}</span>
+                              <input
+                                type="time"
+                                value={shift.startTime}
+                                onChange={(e) => updateShiftTime(emp.id, shift.dayOfWeek, 'startTime', e.target.value)}
+                                className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded-lg"
+                                data-testid={`schedule-start-${emp.id}-${shift.dayOfWeek}`}
+                              />
+                              <span className="text-gray-400 text-xs">–</span>
+                              <input
+                                type="time"
+                                value={shift.endTime}
+                                onChange={(e) => updateShiftTime(emp.id, shift.dayOfWeek, 'endTime', e.target.value)}
+                                className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded-lg"
+                                data-testid={`schedule-end-${emp.id}-${shift.dayOfWeek}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => applyDefaultWeek(emp)}
+                          className="px-3 py-1.5 text-xs font-bold bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                          data-testid={`schedule-apply-default-${emp.id}`}
+                        >
+                          Apply {emp.daysPerWeek}d default
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => clearWeekForEmployee(emp.id)}
+                          className="px-3 py-1.5 text-xs font-bold bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50"
+                          data-testid={`schedule-clear-week-${emp.id}`}
+                        >
+                          Clear week (time off)
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

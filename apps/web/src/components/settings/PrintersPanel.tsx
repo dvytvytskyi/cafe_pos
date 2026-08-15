@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, Trash2, Printer as PrinterIcon } from 'lucide-react';
+import { Plus, Trash2, Printer as PrinterIcon, Pencil } from 'lucide-react';
 import {
   createPrinterAsync,
   deletePrinterAsync,
   getPrintersAsync,
   testPrintAsync,
+  updatePrinterAsync,
   type Printer,
   PrinterApiError,
 } from '@/lib/printers';
@@ -37,6 +38,7 @@ export default function PrintersPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [editingPrinter, setEditingPrinter] = useState<Printer | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -86,6 +88,42 @@ export default function PrintersPanel() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleUpdate = async () => {
+    if (!editingPrinter) return;
+    setFormError(null);
+    setSaving(true);
+    try {
+      const port = Number.parseInt(form.port, 10);
+      const updated = await updatePrinterAsync(editingPrinter.id, {
+        name: form.name,
+        ipAddress: form.ipAddress,
+        port,
+        type: form.type,
+      });
+      setPrinters((prev) =>
+        prev.map((p) => (p.id === updated.id ? updated : p)).sort((a, b) => a.name.localeCompare(b.name))
+      );
+      setEditingPrinter(null);
+      setForm(emptyForm());
+      setToast(`Printer "${updated.name}" updated`);
+    } catch (e) {
+      setFormError(e instanceof PrinterApiError ? e.message : 'Failed to update printer');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEdit = (printer: Printer) => {
+    setEditingPrinter(printer);
+    setForm({
+      name: printer.name,
+      ipAddress: printer.ipAddress,
+      port: String(printer.port),
+      type: printer.type,
+    });
+    setFormError(null);
   };
 
   const handleDelete = async (printer: Printer) => {
@@ -199,6 +237,14 @@ export default function PrintersPanel() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => openEdit(printer)}
+                  data-testid={`printer-edit-${printer.id}`}
+                  className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleDelete(printer)}
                   data-testid={`printer-delete-${printer.id}`}
                   className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
@@ -211,13 +257,13 @@ export default function PrintersPanel() {
         </div>
       </div>
 
-      {formOpen && (
+      {(formOpen || editingPrinter) && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           data-testid="printer-form-modal"
         >
           <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl space-y-4">
-            <h3 className="text-lg font-bold text-gray-900">Add Printer</h3>
+            <h3 className="text-lg font-bold text-gray-900">{editingPrinter ? 'Edit Printer' : 'Add Printer'}</h3>
             {formError && (
               <p className="text-sm text-red-600" role="alert">
                 {formError}
@@ -270,7 +316,7 @@ export default function PrintersPanel() {
               <button
                 type="button"
                 disabled={saving}
-                onClick={() => handleAdd()}
+                onClick={() => (editingPrinter ? handleUpdate() : handleAdd())}
                 data-testid="printer-form-save"
                 className="flex-1 h-10 bg-gray-900 text-white rounded-xl text-sm font-bold disabled:opacity-50"
               >
@@ -278,7 +324,11 @@ export default function PrintersPanel() {
               </button>
               <button
                 type="button"
-                onClick={() => setFormOpen(false)}
+                onClick={() => {
+                  setFormOpen(false);
+                  setEditingPrinter(null);
+                  setForm(emptyForm());
+                }}
                 data-testid="printer-form-cancel"
                 className="flex-1 h-10 border border-gray-200 rounded-xl text-sm font-bold"
               >

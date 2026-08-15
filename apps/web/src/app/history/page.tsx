@@ -1,18 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Calendar, Filter, Eye, AlertCircle, ShoppingBag, Bike, Store, Tablet, ChevronDown, X, RefreshCw, BarChart3, TrendingUp, Coins, DollarSign, Percent, ReceiptText, CheckCircle2, Split, Printer } from 'lucide-react';
+import { Search, Calendar, Filter, Eye, AlertCircle, ShoppingBag, Bike, Store, Tablet, ChevronDown, X, BarChart3, TrendingUp, Coins, DollarSign, Percent, ReceiptText, CheckCircle2, Split, Printer } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ClientDateTime from '@/components/ui/ClientDateTime';
 import { Order, getOrderHistoryAsync, updateOrderAsync } from '@/lib/orders';
 import OrderDetailsModal from '@/components/operations/OrderDetailsModal';
+
+const HISTORY_REFRESH_INTERVAL_MS = 30_000;
 
 function HistoryPageContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'cancelled' | 'active'>('all');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'dine_in' | 'takeaway' | 'glovo' | 'ubereats'>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -25,8 +28,15 @@ function HistoryPageContent() {
     setIsClient(true);
   }, []);
 
-  const loadHistory = async () => {
-    setLoading(true);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  const loadHistory = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) {
+      setLoading(true);
+    }
     setLoadError(null);
     try {
       const end = new Date();
@@ -34,7 +44,7 @@ function HistoryPageContent() {
       start.setDate(start.getDate() - 90);
       const data = await getOrderHistoryAsync({
         source: sourceFilter === 'all' ? undefined : sourceFilter,
-        query: searchQuery.trim() || undefined,
+        query: debouncedSearch.trim() || undefined,
         startDate: start.toISOString().slice(0, 10),
         endDate: end.toISOString().slice(0, 10),
         limit: 100,
@@ -42,19 +52,38 @@ function HistoryPageContent() {
       setOrders(data.orders);
     } catch (e) {
       console.error('Failed to load order history:', e);
-      setLoadError(e instanceof Error ? e.message : 'Failed to load history');
+      if (!options?.silent) {
+        setLoadError(e instanceof Error ? e.message : 'Failed to load history');
+      }
     } finally {
-      setLoading(false);
+      if (!options?.silent) {
+        setLoading(false);
+      }
     }
-  };
+  }, [sourceFilter, debouncedSearch]);
 
   useEffect(() => {
-    loadHistory();
-  }, [sourceFilter, searchQuery]);
+    void loadHistory();
+  }, [loadHistory]);
 
-  const refreshOrders = () => {
-    loadHistory();
-  };
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void loadHistory({ silent: true });
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [loadHistory]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void loadHistory({ silent: true });
+      }
+    }, HISTORY_REFRESH_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [loadHistory]);
 
   // Stats Calculations based on filtered list (or all list)
   const completedOrders = orders.filter(o => o.paid || o.status === 'completed');
@@ -174,14 +203,6 @@ function HistoryPageContent() {
             <p className="text-sm font-medium text-gray-500 mt-1.5 leading-relaxed">Review, inspect, print and manage past cafe transactions.</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto shrink-0 mt-1 sm:mt-0">
-            <button
-              onClick={refreshOrders}
-              disabled={loading}
-              className="w-full sm:w-auto justify-center px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 bg-white text-gray-700 border-gray-200 hover:bg-gray-50 disabled:opacity-50"
-            >
-              <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-              <span>Refresh</span>
-            </button>
             <button 
               onClick={() => setShowAnalytics(!showAnalytics)}
               className={`w-full sm:w-auto justify-center px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${

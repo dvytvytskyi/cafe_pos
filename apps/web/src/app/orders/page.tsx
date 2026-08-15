@@ -7,14 +7,16 @@ import OrdersBoard from '@/components/operations/OrdersBoard';
 import TablesView from '@/components/ui/TablesView';
 import { ShoppingBag, Tablet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePosShellMode } from '@/lib/use-pos-shell-mode';
 
 function OrdersPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const posShell = usePosShellMode();
   const activeTab = searchParams.get('tab') || 'delivery';
 
   // Premium Toggle Switches (Matching style from screenshot #2, icons only)
-  const toggleElement = (
+  const toggleElement = posShell ? null : (
     <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200/60 items-center h-[38px] shrink-0">
       <button
         onClick={() => router.push('/orders?tab=delivery')}

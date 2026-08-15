@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Minus, Plus, Search, MessageSquare, CreditCard, Receipt, ChefHat, Check, UserMinus, Users, Star, Trash2 } from 'lucide-react';
+import { X, Minus, Plus, Search, MessageSquare, CreditCard, Receipt, ChefHat, Check, UserMinus, Users, Star, Trash2, ShoppingBag } from 'lucide-react';
 import { Order, getOrdersAsync } from '@/lib/orders';
-import { Guest, getGuestsAsync, saveGuestAsync, getGuestByQrAsync, isCustomerQrCode } from '@/lib/crm';
+import { Guest, getGuestsAsync, getGuestsPageAsync, saveGuestAsync, getGuestByQrAsync, isCustomerQrCode, CrmApiError, formatLoyaltyPoints } from '@/lib/crm';
+import { buildQuickGuestContact } from '@/lib/crm-validation';
 import { getMenuCategoriesAsync } from '@/lib/menu';
 import { mapCategoriesToPosMenu, PosMenuCategory, PosMenuItem, PosModifierGroup } from '@/lib/mappers/menu.mapper';
 import { DEFAULT_LOCATION_ID } from '@/lib/constants';
@@ -12,6 +13,8 @@ import {
   type PosSettings,
 } from '@/lib/pos-settings';
 import { calculateOrderTotals, DEFAULT_FOOD_TAX_RATE } from '@/lib/order-totals';
+import { allergenIcon } from '@/lib/allergens';
+import type { TableDisplayStatus } from '@/lib/table-display-status';
 
 export interface OrderItem {
   id: string;
@@ -25,8 +28,14 @@ interface OrderTerminalModalProps {
   tableId: string;
   tableName: string;
   onClose: () => void;
-  onAction: (action: 'send_to_kitchen' | 'print_check' | 'pay' | 'clean', items: OrderItem[], discountPercent: number, customerId?: string, keepOpen?: boolean) => void;
-  currentStatus: 'available' | 'occupied' | 'billed' | 'dirty';
+  onAction: (
+    action: 'send_to_kitchen' | 'takeaway' | 'checkout' | 'print_check' | 'clean',
+    items: OrderItem[],
+    discountPercent: number,
+    customerId?: string,
+    keepOpen?: boolean
+  ) => void;
+  currentStatus: TableDisplayStatus;
   initialOrder?: Order | null;
   guests?: Guest[];
   locationId?: string;
@@ -183,32 +192,93 @@ export default function OrderTerminalModal({
   }, [initialOrder, locationId]);
   
   const [crmGuests, setCrmGuests] = useState<Guest[]>(guestsProp || []);
-  const loadCrmGuests = async () => {
-    if (guestsProp && guestsProp.length > 0) {
+  const [guestSearchResults, setGuestSearchResults] = useState<Guest[]>([]);
+  const [guestsLoading, setGuestsLoading] = useState(false);
+  const [guestSearchLoading, setGuestSearchLoading] = useState(false);
+  const [guestSearchQuery, setGuestSearchQuery] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Guest | null>(null);
+  const [qrLookupError, setQrLookupError] = useState<string | null>(null);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [quickAddName, setQuickAddName] = useState('');
+  const [quickAddPhone, setQuickAddPhone] = useState('');
+  const [quickAddError, setQuickAddError] = useState<string | null>(null);
+  const guestsLoadedRef = useRef(guestsProp && guestsProp.length > 0);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const loadCrmGuests = async (force = false) => {
+    if (!force && guestsLoadedRef.current && crmGuests.length > 0) return;
+    if (!force && guestsProp && guestsProp.length > 0) {
       setCrmGuests(guestsProp);
+      guestsLoadedRef.current = true;
       return;
     }
+    setGuestsLoading(true);
     try {
       const guests = await getGuestsAsync();
       setCrmGuests(guests);
+      guestsLoadedRef.current = true;
     } catch (e) {
       console.error(e);
       setCrmGuests([]);
+    } finally {
+      setGuestsLoading(false);
     }
   };
+
   useEffect(() => {
-    loadCrmGuests();
+    const query = guestSearchQuery.trim();
+    if (!query) {
+      setGuestSearchResults([]);
+      setGuestSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setGuestSearchLoading(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const { items } = await getGuestsPageAsync({ search: query, limit: 20 });
+        if (!cancelled) setGuestSearchResults(items);
+      } catch (e) {
+        console.error('Guest search failed:', e);
+        if (!cancelled) setGuestSearchResults([]);
+      } finally {
+        if (!cancelled) setGuestSearchLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [guestSearchQuery]);
+
+  useEffect(() => {
+    if (guestsProp && guestsProp.length > 0) {
+      setCrmGuests(guestsProp);
+      guestsLoadedRef.current = true;
+    }
   }, [guestsProp]);
 
-  const [selectedCustomer, setSelectedCustomer] = useState<Guest | null>(null);
   useEffect(() => {
     if (!initialOrder?.customerId) return;
     const source = guestsProp && guestsProp.length > 0 ? guestsProp : crmGuests;
     const found = source.find((g) => g.id === initialOrder.customerId);
     if (found) setSelectedCustomer(found);
   }, [initialOrder, guestsProp, crmGuests]);
-  const [guestSearchQuery, setGuestSearchQuery] = useState('');
-  const [qrLookupError, setQrLookupError] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowSearchDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleGuestSearchChange = async (value: string) => {
     setGuestSearchQuery(value);
@@ -226,26 +296,6 @@ export default function OrderTerminalModal({
       }
     }
   };
-  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
-  
-  // Quick Add Customer States
-  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
-  const [quickAddName, setQuickAddName] = useState('');
-  const [quickAddPhone, setQuickAddPhone] = useState('');
-
-  // Dropdown click outside handling
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowSearchDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const getCategoryModifierGroups = (categoryId: string): PosModifierGroup[] => {
     const cat = menuList.find((c) => c.id === categoryId);
@@ -502,19 +552,28 @@ export default function OrderTerminalModal({
                 onSubmit={async (e) => {
                   e.preventDefault();
                   if (!quickAddName.trim()) return;
+                  setQuickAddError(null);
                   try {
+                    const contact = buildQuickGuestContact(quickAddName, quickAddPhone);
                     const saved = await saveGuestAsync({
                       name: quickAddName.trim(),
-                      phone: quickAddPhone.trim() || '00000000',
-                      email: quickAddName.trim().toLowerCase().replace(/[^a-z0-9]/g, '') + '@placeholder.com'
+                      phone: contact.phone,
+                      email: contact.email,
                     });
                     setSelectedCustomer(saved);
-                    await loadCrmGuests();
+                    setCrmGuests((prev) => [saved, ...prev.filter((g) => g.id !== saved.id)]);
+                    setGuestSearchResults((prev) => [saved, ...prev.filter((g) => g.id !== saved.id)]);
                     setIsQuickAddOpen(false);
                     setQuickAddName('');
                     setQuickAddPhone('');
                   } catch (err) {
-                    console.error('Failed to quick register guest:', err);
+                    if (err instanceof CrmApiError && err.code === 'PHONE_DUPLICATE') {
+                      setQuickAddError('This phone number is already linked to another guest.');
+                    } else if (err instanceof CrmApiError && err.status === 400) {
+                      setQuickAddError(err.message);
+                    } else {
+                      setQuickAddError(err instanceof Error ? err.message : 'Failed to register guest');
+                    }
                   }
                 }}
                 className="bg-orange-50/30 border border-orange-100/60 rounded-2xl p-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-200 shadow-sm"
@@ -533,9 +592,14 @@ export default function OrderTerminalModal({
                   type="text"
                   placeholder="Phone number..."
                   value={quickAddPhone}
-                  onChange={(e) => setQuickAddPhone(e.target.value)}
+                  onChange={(e) => { setQuickAddPhone(e.target.value); setQuickAddError(null); }}
                   className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-corgi focus:ring-1 focus:ring-corgi/20 transition-all"
                 />
+                {quickAddError && (
+                  <p className="text-[10px] font-semibold text-red-500" data-testid="pos-quick-add-error">
+                    {quickAddError}
+                  </p>
+                )}
                 <div className="flex gap-2 justify-end mt-1">
                   <button 
                     type="button"
@@ -565,7 +629,10 @@ export default function OrderTerminalModal({
                     placeholder="Link customer (Name, Phone, QR)..."
                     value={guestSearchQuery}
                     onChange={(e) => { void handleGuestSearchChange(e.target.value); }}
-                    onFocus={() => setShowSearchDropdown(true)}
+                    onFocus={() => {
+                      setShowSearchDropdown(true);
+                      void loadCrmGuests();
+                    }}
                     className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all placeholder:font-medium placeholder:text-gray-400"
                   />
                   <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -594,16 +661,15 @@ export default function OrderTerminalModal({
                     )}
                     
                     {(() => {
-                      const list = guestSearchQuery
-                        ? crmGuests.filter(g => 
-                            g.name.toLowerCase().includes(guestSearchQuery.toLowerCase()) || 
-                            g.phone.includes(guestSearchQuery) ||
-                            (g.email && g.email.toLowerCase().includes(guestSearchQuery.toLowerCase()))
-                          )
+                      const list = guestSearchQuery.trim()
+                        ? guestSearchResults
                         : crmGuests.filter(g => g.tier === 'VIP' || g.tier === 'Gold').slice(0, 4);
 
                       return (
                         <>
+                          {guestSearchLoading && guestSearchQuery.trim() && (
+                            <div className="px-4 py-3 text-xs font-bold text-gray-400 text-center">Searching…</div>
+                          )}
                           {list.map(guest => (
                             <button
                               key={guest.id}
@@ -621,7 +687,7 @@ export default function OrderTerminalModal({
                             </button>
                           ))}
                           
-                          {guestSearchQuery !== '' && list.length === 0 && (
+                          {guestSearchQuery.trim() !== '' && !guestSearchLoading && list.length === 0 && (
                             <div className="px-4 py-4 text-xs font-bold text-gray-400 text-center">No customers found</div>
                           )}
                         </>
@@ -630,6 +696,7 @@ export default function OrderTerminalModal({
                     
                     <button
                       onClick={() => {
+                        setQuickAddName(guestSearchQuery.trim());
                         setIsQuickAddOpen(true);
                         setShowSearchDropdown(false);
                       }}
@@ -649,7 +716,7 @@ export default function OrderTerminalModal({
                   <div className="flex items-center gap-2 mt-1.5 text-[11px] text-gray-500 font-bold">
                     <span className="flex items-center gap-0.5 text-amber-600">
                       <Star size={11} fill="currentColor" className="animate-pulse" />
-                      {selectedCustomer.points.toFixed(2)} pts
+                      {formatLoyaltyPoints(selectedCustomer.points)} pts
                     </span>
                     <span>•</span>
                     <span>{selectedCustomer.phone}</span>
@@ -686,26 +753,16 @@ export default function OrderTerminalModal({
                     const size = sizeMatch ? sizeMatch[1] : null;
                     const baseName = sizeMatch ? fullName.replace(/\s*\((S|M|L)\)$/, '').trim() : fullName;
 
-                    const ALLERGEN_MAP: Record<string, string> = {
-                      'dairy': '🥛',
-                      'gluten': '🌾',
-                      'gluten-free': '🌱',
-                      'nuts': '🥜',
-                      'egg': '🥚',
-                      'fish': '🐟',
-                      'soy': '🫘',
-                    };
-
                     let allergens: string[] = [];
                     for (const cat of menuList) {
-                      const dish = cat.items.find((d: any) => d.name === baseName || d.name.startsWith(baseName));
-                      if (dish && dish.allergens) {
+                      const dish = cat.items.find((d: PosMenuItem) => d.name === baseName || d.name.startsWith(baseName));
+                      if (dish?.allergens) {
                         allergens = dish.allergens;
                         break;
                       }
                     }
 
-                    return { baseName, size, allergenIcons: allergens.map(a => ALLERGEN_MAP[a] || '⚠️') };
+                    return { baseName, size, allergenIcons: allergens.map((a) => allergenIcon(a)) };
                   };
 
                   const { baseName, size, allergenIcons } = parseItemDetails(item.name);
@@ -840,43 +897,54 @@ export default function OrderTerminalModal({
               <span className="text-3xl font-black text-gray-900" data-testid="pos-order-total">{money(total)}</span>
             </div>
 
-            {currentStatus === 'dirty' ? (
-              <button 
-                onClick={() => onAction('clean', [], 0)}
-                className="w-full py-4 rounded-2xl font-black text-sm bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-              >
-                Mark as Clean
-              </button>
-            ) : (
-              <div className="flex gap-3">
+            <div className="flex gap-2">
                 <button 
                   onClick={() => {
-                    if (!isReady) {
+                    if (!isReady && !isSentToKitchen) {
                       onAction('send_to_kitchen', orderItems, discount, selectedCustomer?.id, true);
                       setIsSentToKitchen(true);
                     }
                   }}
-                  disabled={orderItems.length === 0}
-                  className={`flex-1 py-4 rounded-2xl font-black text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 ${
+                  disabled={orderItems.length === 0 || isSentToKitchen || isReady}
+                  className={`flex-1 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] ${
                     isReady
-                      ? 'bg-green-50 text-green-750 border border-green-200/80 cursor-default pointer-events-none'
-                      : isSentToKitchen 
+                      ? 'bg-green-50 text-green-700 border border-green-200/80 cursor-default pointer-events-none'
+                      : isSentToKitchen
                         ? 'bg-gray-100 text-gray-500 border border-gray-200 cursor-default pointer-events-none'
                         : 'bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-40 disabled:cursor-not-allowed'
                   }`}
                 >
-                  <ChefHat size={20} /> {isReady ? 'Ready' : isSentToKitchen ? 'Preparing' : 'Kitchen'}
+                  <ChefHat size={20} />
+                  {isReady ? 'Ready' : isSentToKitchen ? 'Preparing' : 'Kitchen'}
                 </button>
-                
-                <button 
-                  onClick={() => onAction('pay', orderItems, discount, selectedCustomer?.id, true)}
-                  disabled={orderItems.length === 0 && currentStatus !== 'billed'}
-                  className="flex-[1.5] py-4 bg-corgi hover:brightness-105 text-white rounded-2xl font-black transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 text-lg disabled:opacity-40 disabled:cursor-not-allowed"
+
+                <button
+                  onClick={() => {
+                    if (!isReady && !isSentToKitchen) {
+                      onAction('takeaway', orderItems, discount, selectedCustomer?.id, true);
+                      setIsSentToKitchen(true);
+                    }
+                  }}
+                  disabled={orderItems.length === 0 || isSentToKitchen || isReady}
+                  className="flex-1 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] bg-white border-2 border-gray-200 hover:border-gray-900 text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <CreditCard size={20} /> Pay {money(total)}
+                  <ShoppingBag size={20} />
+                  Takeaway
+                </button>
+
+                <button 
+                  onClick={() => {
+                    onAction('checkout', orderItems, discount, selectedCustomer?.id, true);
+                    setIsSentToKitchen(true);
+                  }}
+                  disabled={orderItems.length === 0 || isSentToKitchen || isReady || !!initialOrder?.paid}
+                  className="flex-1 py-3.5 bg-corgi hover:brightness-105 text-white rounded-2xl font-black transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] text-xs sm:text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <CreditCard size={20} />
+                  <span>Checkout</span>
+                  <span className="text-[11px] font-bold opacity-90">{money(total)}</span>
                 </button>
               </div>
-            )}
           </div>
         </div>
       </div>

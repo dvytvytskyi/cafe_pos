@@ -34,8 +34,10 @@ function buildOfflineTask(
     comments: data.comments ?? 0,
     attachments: data.attachments ?? 0,
     progress: data.progress ?? 0,
+    priority: data.priority ?? 'Lowest',
     deadline: data.deadline ?? 'No deadline',
     assignees: data.assignees ?? [],
+    likedBy: data.likedBy ?? [],
     status: data.status ?? 'todo',
     scheduledDate: data.scheduledDate ?? formatDateParam(new Date()),
     dueAt: data.dueAt ?? null,
@@ -122,11 +124,28 @@ export async function deleteTaskAsync(id: string): Promise<boolean> {
   return result.success === true;
 }
 
-export async function migrateTaskStatusAsync(from: string, to: string): Promise<number> {
+export async function toggleTaskLikeAsync(id: string, userId: string): Promise<Task> {
+  const res = await fetch(`/api/tasks/${id}/like`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Failed to toggle like on task [${id}]`);
+  }
+  return res.json();
+}
+
+export async function migrateTaskStatusAsync(
+  from: string,
+  to: string,
+  scheduledDate?: string
+): Promise<number> {
   const res = await fetch('/api/tasks/migrate-status', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to }),
+    body: JSON.stringify({ from, to, scheduledDate }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

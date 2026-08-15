@@ -16,8 +16,9 @@ export class GiftCardValidationError extends Error {
 
 export function isValidGiftCardCode(code: string): boolean {
   const normalized = code.trim().toUpperCase();
-  const re = /^CORGI-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/;
-  return re.test(normalized);
+  const modern = /^CORGI-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/;
+  const legacy = /^CORGI-\d{3,6}$/;
+  return modern.test(normalized) || legacy.test(normalized);
 }
 
 export function generateGiftCodeSegment(length = GIFT_CODE_SEGMENT_LENGTH): string {

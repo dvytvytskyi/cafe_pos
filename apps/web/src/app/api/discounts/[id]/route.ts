@@ -3,18 +3,31 @@ import { discountRepository } from '@/repositories/discount.repository';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+function mapPreset(preset: { id: string; name: string; value: number; colorTag?: string | null }) {
+  return {
+    id: preset.id,
+    name: preset.name,
+    value: preset.value,
+    color: preset.colorTag ?? 'bg-gray-100 text-gray-700',
+  };
+}
+
 export async function PUT(req: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
     const body = await req.json();
-    const { name, value } = body;
+    const { name, value, color } = body;
 
-    if (name === undefined && value === undefined) {
-      return NextResponse.json({ error: 'Provide name and/or value to update' }, { status: 400 });
+    if (name === undefined && value === undefined && color === undefined) {
+      return NextResponse.json({ error: 'Provide name, value, and/or color to update' }, { status: 400 });
     }
 
-    const updated = await discountRepository.updateDiscountPreset(id, { name, value });
-    return NextResponse.json(updated, { status: 200 });
+    const updated = await discountRepository.updateDiscountPreset(id, {
+      name,
+      value,
+      colorTag: color,
+    });
+    return NextResponse.json(mapPreset(updated), { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error updating discount preset:', error);

@@ -1,9 +1,13 @@
+import { ALLOWED_ALLERGENS, validateAllergenIds as validateEuAllergenIds } from './allergens.ts';
+
 export class MenuValidationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'MenuValidationError';
   }
 }
+
+export { ALLOWED_ALLERGENS };
 
 export type SortableCategory = { id: string; sortOrder: number };
 
@@ -50,21 +54,6 @@ export function filterDishesBySearch<T extends SearchableDish>(dishes: T[], quer
   );
 }
 
-/** Canonical allergen IDs for dish validation (T14.2) */
-export const ALLOWED_ALLERGENS = [
-  'Dairy',
-  'Nuts',
-  'Gluten',
-  'Soy',
-  'Eggs',
-  'Fish',
-  'Shellfish',
-] as const;
-
-const ALLERGEN_LOOKUP = new Map(
-  ALLOWED_ALLERGENS.map((a) => [a.toLowerCase(), a])
-);
-
 /** T14.1 — price must be a positive decimal; rejects abc etc. */
 export function validateDishPrice(price: unknown): number {
   if (typeof price === 'number') {
@@ -75,10 +64,13 @@ export function validateDishPrice(price: unknown): number {
   }
   if (typeof price === 'string') {
     const trimmed = price.trim();
-    if (!trimmed || !/^\d+(\.\d{1,2})?$/.test(trimmed)) {
+    const normalized = trimmed.includes(',')
+      ? trimmed.replace(/\./g, '').replace(',', '.')
+      : trimmed;
+    if (!normalized || !/^\d+(\.\d{1,2})?$/.test(normalized)) {
       throw new MenuValidationError('Price must be a positive decimal');
     }
-    const num = parseFloat(trimmed);
+    const num = parseFloat(normalized);
     if (num <= 0) {
       throw new MenuValidationError('Price must be greater than zero');
     }
@@ -87,24 +79,13 @@ export function validateDishPrice(price: unknown): number {
   throw new MenuValidationError('Price must be a positive decimal');
 }
 
-/** T14.2 — allergen IDs must be from the allowed list */
+/** T14.2 — allergen IDs must be from the EU Annex II list (Reg. 1169/2011) */
 export function validateAllergenIds(allergens: unknown): string[] {
-  if (allergens === undefined || allergens === null) return [];
-  if (!Array.isArray(allergens)) {
-    throw new MenuValidationError('Allergens must be an array');
+  try {
+    return validateEuAllergenIds(allergens);
+  } catch (e) {
+    throw new MenuValidationError(e instanceof Error ? e.message : 'Invalid allergen');
   }
-  const result: string[] = [];
-  for (const raw of allergens) {
-    if (typeof raw !== 'string') {
-      throw new MenuValidationError('Invalid allergen');
-    }
-    const match = ALLERGEN_LOOKUP.get(raw.trim().toLowerCase());
-    if (!match) {
-      throw new MenuValidationError(`Invalid allergen: ${raw}`);
-    }
-    if (!result.includes(match)) result.push(match);
-  }
-  return result;
 }
 
 export type VariantPriceInput = { price: unknown; isActive?: boolean };

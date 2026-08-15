@@ -1,7 +1,7 @@
  'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { User, Users, Settings, CheckSquare, Bell, Smartphone, Monitor, Mail, Shield, CreditCard, LayoutTemplate, Map, FileText, Component, ChevronDown, Check, Printer, QrCode, MoreHorizontal, Search, Plus, Edit2, Key, Trash2, X, ArrowLeft, Copy, Phone, Calendar, Briefcase, Clock, Lock, TrendingUp, Receipt, DollarSign, AlertTriangle, Star, Tag, Gift, Coins, HardDrive } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Users, Settings, Shield, Map, FileText, Check, Printer, Plus, Edit2, Trash2, X, Copy, Clock, AlertTriangle, Star, Tag, Gift, Coins, HardDrive, Search } from 'lucide-react';
 import TablesView from './TablesView';
 import ReputationView from './ReputationView';
 import ProfileSettingsPanel from '@/components/settings/ProfileSettingsPanel';
@@ -10,8 +10,10 @@ import PrintersPanel from '@/components/settings/PrintersPanel';
 import TaxesPanel from '@/components/settings/TaxesPanel';
 import AuditPanel from '@/components/settings/AuditPanel';
 import BackupsPanel from '@/components/settings/BackupsPanel';
+import TeamSettingsPanel from '@/components/settings/TeamSettingsPanel';
+import GeneralNotificationsPanel from '@/components/settings/GeneralNotificationsPanel';
 import { getDiscountPresetsAsync, createDiscountPresetAsync, updateDiscountPresetAsync, deleteDiscountPresetAsync, DiscountPreset } from '@/lib/discounts';
-import { getPromotionsAsync, createPromotionAsync, deletePromotionAsync, Promotion } from '@/lib/promotions';
+import { getPromotionsAsync, createPromotionAsync, updatePromotionAsync, deletePromotionAsync, Promotion } from '@/lib/promotions';
 import { getPosSettingsAsync, savePosSettingsAsync, type PosSettings } from '@/lib/pos-settings';
 import { GiftCard, getGiftCardsAsync, createGiftCardAsync, setGiftCardStatusAsync } from '@/lib/giftcards';
 import { getGuestsAsync, getLoyaltyConfigAsync, saveLoyaltyConfigAsync, type Guest, type LoyaltyConfig } from '@/lib/crm';
@@ -40,6 +42,7 @@ export default function SettingsView() {
 
   // Add Promo States
   const [isAddingPromo, setIsAddingPromo] = useState(false);
+  const [editingPromoId, setEditingPromoId] = useState<string | null>(null);
   const [promoName, setPromoName] = useState('');
   const [promoPercent, setPromoPercent] = useState(20);
   const [promoDays, setPromoDays] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -100,288 +103,6 @@ export default function SettingsView() {
       setActiveMenu(id);
       localStorage.setItem('corgi_active_menu', id);
     }
-  };
-  
-  // Toggles state
-  const [toggles, setToggles] = useState({
-    mobilePush: true,
-    desktopPush: true,
-    email: false,
-    twoFactor: true,
-  });
-
-  // Checkboxes state
-  const [checkboxes, setCheckboxes] = useState({
-    productivity: true,
-    newEvent: true,
-    newTeam: true,
-  });
-
-  const [phoneCountry, setPhoneCountry] = useState('+380');
-
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState(false);
-
-  const [hasChanges, setHasChanges] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>("https://i.pravatar.cc/150?u=corgi");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
-  const [isInviteView, setIsInviteView] = useState(false);
-  const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
-  const [memberViewTab, setMemberViewTab] = useState<'general' | 'permissions' | 'activity'>('general');
-  const [inviteRole, setInviteRole] = useState('Manager');
-  const [accessDuration, setAccessDuration] = useState('No limit');
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteEmailError, setInviteEmailError] = useState('');
-  
-  const [resetModalMemberId, setResetModalMemberId] = useState<number | null>(null);
-  const [resetLink, setResetLink] = useState<string | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
-  
-  const [teamMembers, setTeamMembers] = useState([
-    { id: 1, name: "Alexander Vytvytskyi", email: "alex@corgipos.com", role: "Super Admin", location: "All Locations", status: "Active", avatar: "https://i.pravatar.cc/150?u=corgi" },
-    { id: 2, name: "Maria Garcia", email: "maria@corgipos.com", role: "Manager", location: "Downtown Cafe", status: "Active", avatar: "https://i.pravatar.cc/150?u=maria" },
-    { id: 3, name: "John Smith", email: "john@corgipos.com", role: "Waiter", location: "Downtown Cafe", status: "Active", avatar: "https://i.pravatar.cc/150?u=john" },
-    { id: 4, name: "Sarah Lee", email: "sarah@corgipos.com", role: "Cashier", location: "Uptown Branch", status: "Active", avatar: "https://i.pravatar.cc/150?u=sarah" },
-  ]);
-
-  // Permissions state
-  const [isRoleSetupMode, setIsRoleSetupMode] = useState(false);
-  const [hasRoleChanges, setHasRoleChanges] = useState(false);
-  const [roleDefaults, setRoleDefaults] = useState<Record<string, string[]>>({
-    "Take new orders": ['Waiter', 'Manager', 'Franchise', 'Admin', 'Super Admin'],
-    "Accept payments": ['Manager', 'Franchise', 'Admin', 'Super Admin'],
-    "Apply discounts": ['Manager', 'Franchise', 'Admin', 'Super Admin'],
-    "Refunds & Voids": ['Manager', 'Franchise', 'Admin', 'Super Admin'],
-    "View Kitchen Display": ['Kitchen', 'Manager', 'Franchise', 'Admin', 'Super Admin'],
-    "Edit menu items": ['Manager', 'Franchise', 'Admin', 'Super Admin'],
-    "Manage inventory": ['Kitchen', 'Manager', 'Franchise', 'Admin', 'Super Admin'],
-    "View financial reports": ['Franchise', 'Admin', 'Super Admin'],
-    "Manage team & roles": ['Franchise', 'Admin', 'Super Admin'],
-    "Manage marketing & CRM": ['Marketing', 'Franchise', 'Admin', 'Super Admin'],
-    "Global system settings": ['Super Admin'],
-  });
-  const [userPermissions, setUserPermissions] = useState<Record<string, boolean>>({});
-
-  // Close action menu on click outside
-  useEffect(() => {
-    const handleClickOutside = () => {
-      if (openActionMenuId !== null) {
-        setOpenActionMenuId(null);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [openActionMenuId]);
-
-  const handleSave = () => {
-    setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-      setHasChanges(false);
-    }, 1500);
-  };
-
-  const handleSendInvitation = () => {
-    if (!inviteEmail) {
-      setInviteEmailError('Email is required');
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(inviteEmail)) {
-      setInviteEmailError('Please enter a valid email address');
-      return;
-    }
-
-    const newMember = {
-      id: Date.now(),
-      name: "Pending Invitation",
-      email: inviteEmail,
-      role: inviteRole,
-      location: "All Locations",
-      status: "Pending",
-      avatar: "https://i.pravatar.cc/150?u=" + inviteEmail
-    };
-
-    setTeamMembers([newMember, ...teamMembers]);
-    setIsInviteView(false);
-    setInviteEmail('');
-    setInviteEmailError('');
-  };
-
-  const handleConfirmReset = () => {
-    const link = `https://corgipos.com/reset/${Math.random().toString(36).substring(2, 10)}`;
-    setResetLink(link);
-    navigator.clipboard.writeText(link);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-  };
-
-  const renderPermissionsTable = () => (
-    <div className="border border-gray-100 rounded-2xl bg-white overflow-hidden shadow-sm">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="bg-gray-50/50 border-b border-gray-100">
-            <th className="px-6 py-4 text-[13px] font-bold text-gray-400 w-[22%]">Access Rights</th>
-            {['Waiter', 'Kitchen', 'Manager', 'Franchise', 'Marketing', 'Admin', 'Super Admin'].map(role => {
-              const isColActive = isRoleSetupMode || inviteRole === role;
-              const highlightBg = isRoleSetupMode ? 'bg-purple-50/50' : 'bg-orange-50/50';
-              const highlightColor = isRoleSetupMode ? 'bg-purple-600 border-purple-600' : 'bg-corgi border-corgi';
-              const highlightText = isRoleSetupMode ? 'text-purple-600' : 'text-corgi';
-
-              return (
-                <th 
-                  key={role}
-                  onClick={() => !isRoleSetupMode && setInviteRole(role)}
-                  className={`px-2 py-4 text-center transition-all duration-500 ease-out ${!isRoleSetupMode && 'cursor-pointer hover:bg-gray-50'} ${isColActive && !isRoleSetupMode ? highlightBg : ''}`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all duration-500 ${isColActive ? `${highlightColor} scale-125` : 'border-gray-300 scale-100'}`}>
-                      {isColActive && <div className="w-1.5 h-1.5 bg-white rounded-full animate-in zoom-in spin-in-12 duration-300" />}
-                    </div>
-                    <span className={`text-[12px] font-bold transition-all duration-500 ${isColActive ? `${highlightText} scale-105` : 'text-gray-600'}`}>{role}</span>
-                  </div>
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-50 text-[14px]">
-          {/* POS & Orders */}
-          <tr className="bg-gray-50/30">
-            <td colSpan={8} className="px-6 py-3 text-[12px] font-bold text-gray-500 uppercase tracking-wider">
-              <div className="flex items-center gap-2"><LayoutTemplate size={14}/> POS & Orders</div>
-            </td>
-          </tr>
-          {[
-            "Take new orders",
-            "Accept payments",
-            "Apply discounts",
-            "Refunds & Voids",
-            "View Kitchen Display",
-          ].map((permName, i) => (
-            <tr key={i} className="hover:bg-gray-50/30 transition-colors group">
-              <td className="px-6 py-4 font-medium text-gray-700">{permName}</td>
-              {['Waiter', 'Kitchen', 'Manager', 'Franchise', 'Marketing', 'Admin', 'Super Admin'].map(role => {
-                const isColActive = isRoleSetupMode || inviteRole === role;
-                const isPermChecked = isRoleSetupMode ? (roleDefaults[permName] || []).includes(role) : (role === inviteRole ? userPermissions[permName] : (roleDefaults[permName] || []).includes(role));
-                
-                const highlightBgRow = isRoleSetupMode ? 'group-hover:bg-purple-50/20' : (inviteRole === role ? 'bg-orange-50/20' : '');
-                const activeHighlight = isRoleSetupMode ? 'bg-purple-600' : 'bg-corgi';
-                const checkedBg = isColActive ? activeHighlight : 'bg-gray-300';
-
-                return (
-                  <td key={role} className={`px-2 py-3 text-center transition-all duration-500 ease-out ${highlightBgRow}`}>
-                    <button 
-                      disabled={!isColActive}
-                      onClick={() => {
-                        if (isRoleSetupMode) {
-                          setRoleDefaults(prev => {
-                            const roles = prev[permName] || [];
-                            return { ...prev, [permName]: roles.includes(role) ? roles.filter(r => r !== role) : [...roles, role] };
-                          });
-                          setHasRoleChanges(true);
-                        } else if (role === inviteRole) {
-                          setUserPermissions(prev => ({ ...prev, [permName]: !prev[permName] }));
-                        }
-                      }}
-                      className={`mx-auto w-5 h-5 rounded flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isColActive ? 'cursor-pointer hover:scale-110 active:scale-95' : 'cursor-default'} ${isPermChecked ? `${checkedBg} text-white shadow-sm ${isColActive ? 'scale-110' : 'scale-90 opacity-60'}` : `border border-gray-200 bg-gray-50 ${isColActive ? 'hover:border-gray-300 scale-100' : 'scale-90 opacity-40'}`}`}
-                    >
-                      {isPermChecked && <Check size={12} strokeWidth={3} className="transition-all duration-300" />}
-                    </button>
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-
-          {/* Management */}
-          <tr className="bg-gray-50/30">
-            <td colSpan={8} className="px-6 py-3 text-[12px] font-bold text-gray-500 uppercase tracking-wider">
-              <div className="flex items-center gap-2"><Shield size={14}/> Management</div>
-            </td>
-          </tr>
-          {[
-            "Access settings",
-            "Manage menu items",
-            "View sales reports",
-            "Export data",
-            "Manage team & roles",
-          ].map((permName, i) => (
-            <tr key={i} className="hover:bg-gray-50/30 transition-colors group">
-              <td className="px-6 py-4 font-medium text-gray-700">{permName}</td>
-              {['Waiter', 'Kitchen', 'Manager', 'Franchise', 'Marketing', 'Admin', 'Super Admin'].map(role => {
-                const isColActive = isRoleSetupMode || inviteRole === role;
-                const isPermChecked = isRoleSetupMode ? (roleDefaults[permName] || []).includes(role) : (role === inviteRole ? userPermissions[permName] : (roleDefaults[permName] || []).includes(role));
-                
-                const highlightBgRow = isRoleSetupMode ? 'group-hover:bg-purple-50/20' : (inviteRole === role ? 'bg-orange-50/20' : '');
-                const activeHighlight = isRoleSetupMode ? 'bg-purple-600' : 'bg-corgi';
-                const checkedBg = isColActive ? activeHighlight : 'bg-gray-300';
-
-                return (
-                  <td key={role} className={`px-2 py-3 text-center transition-all duration-500 ease-out ${highlightBgRow}`}>
-                    <button 
-                      disabled={!isColActive}
-                      onClick={() => {
-                        if (isRoleSetupMode) {
-                          setRoleDefaults(prev => {
-                            const roles = prev[permName] || [];
-                            return { ...prev, [permName]: roles.includes(role) ? roles.filter(r => r !== role) : [...roles, role] };
-                          });
-                          setHasRoleChanges(true);
-                        } else if (role === inviteRole) {
-                          setUserPermissions(prev => ({ ...prev, [permName]: !prev[permName] }));
-                        }
-                      }}
-                      className={`mx-auto w-5 h-5 rounded flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isColActive ? 'cursor-pointer hover:scale-110 active:scale-95' : 'cursor-default'} ${isPermChecked ? `${checkedBg} text-white shadow-sm ${isColActive ? 'scale-110' : 'scale-90 opacity-60'}` : `border border-gray-200 bg-gray-50 ${isColActive ? 'hover:border-gray-300 scale-100' : 'scale-90 opacity-40'}`}`}
-                    >
-                      {isPermChecked && <Check size={12} strokeWidth={3} className="transition-all duration-300" />}
-                    </button>
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setHasChanges(true);
-      const url = URL.createObjectURL(e.target.files[0]);
-      setAvatarUrl(url);
-    }
-  };
-
-  const handleRemoveAvatar = () => {
-    if (avatarUrl) {
-      setHasChanges(true);
-      setAvatarUrl(null);
-    }
-  };
-
-  const validateEmail = (val: string) => {
-    if (!val) {
-      setEmailError(false);
-      return;
-    }
-    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-    setEmailError(!isValid);
-  };
-
-  const toggleSwitch = (key: keyof typeof toggles) => {
-    setToggles(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const toggleCheck = (key: keyof typeof checkboxes) => {
-    setCheckboxes(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const menuSections = [
@@ -473,610 +194,17 @@ export default function SettingsView() {
         {activeMenu === 'general' && (
           <div className="max-w-3xl flex flex-col gap-10 mt-2">
             
-            {/* Section: My Notifications */}
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-8 pb-4 border-b border-gray-100">My Notifications</h2>
-              
-              <div className="flex flex-col gap-8">
-                
-                {/* Checkboxes Row */}
-                <div className="flex justify-between items-start">
-                  <div className="flex flex-col gap-3">
-                    <span className="text-[15px] font-medium text-gray-800">Notify me when...</span>
-                    
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <div 
-                        onClick={() => toggleCheck('productivity')}
-                        className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${checkboxes.productivity ? 'bg-corgi' : 'bg-gray-200 group-hover:bg-gray-300'}`}
-                      >
-                        {checkboxes.productivity && <CheckSquare size={14} className="text-white" strokeWidth={3} />}
-                      </div>
-                      <span className="text-[14px] text-gray-500 group-hover:text-gray-800 transition-colors">Daily productivity update</span>
-                    </label>
-
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <div 
-                        onClick={() => toggleCheck('newEvent')}
-                        className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${checkboxes.newEvent ? 'bg-corgi' : 'bg-gray-200 group-hover:bg-gray-300'}`}
-                      >
-                        {checkboxes.newEvent && <CheckSquare size={14} className="text-white" strokeWidth={3} />}
-                      </div>
-                      <span className="text-[14px] text-gray-500 group-hover:text-gray-800 transition-colors">New event created</span>
-                    </label>
-
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <div 
-                        onClick={() => toggleCheck('newTeam')}
-                        className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${checkboxes.newTeam ? 'bg-corgi' : 'bg-gray-200 group-hover:bg-gray-300'}`}
-                      >
-                        {checkboxes.newTeam && <CheckSquare size={14} className="text-white" strokeWidth={3} />}
-                      </div>
-                      <span className="text-[14px] text-gray-500 group-hover:text-gray-800 transition-colors">When added on new team</span>
-                    </label>
-                  </div>
-                  
-                  <button className="text-[13px] font-medium text-blue-600 hover:text-blue-800 transition-colors cursor-pointer pt-1">
-                    About notifications?
-                  </button>
-                </div>
-
-                {/* Toggle Rows */}
-                <div className="flex justify-between items-center py-1">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[15px] font-medium text-gray-800">Mobile push notifications</span>
-                    <span className="text-[13px] text-gray-400">Receive push notification whenever your organisation requires your attentions</span>
-                  </div>
-                  <button 
-                    onClick={() => toggleSwitch('mobilePush')}
-                    className={`w-11 h-6 rounded-full p-1 transition-colors cursor-pointer relative flex items-center ${toggles.mobilePush ? 'bg-corgi' : 'bg-gray-200'}`}
-                  >
-                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${toggles.mobilePush ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-
-                <div className="flex justify-between items-center py-1">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[15px] font-medium text-gray-800">Desktop Notification</span>
-                    <span className="text-[13px] text-gray-400">Receive desktop notification whenever your organisation requires your attentions</span>
-                  </div>
-                  <button 
-                    onClick={() => toggleSwitch('desktopPush')}
-                    className={`w-11 h-6 rounded-full p-1 transition-colors cursor-pointer relative flex items-center ${toggles.desktopPush ? 'bg-corgi' : 'bg-gray-200'}`}
-                  >
-                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${toggles.desktopPush ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-
-                <div className="flex justify-between items-center py-1">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[15px] font-medium text-gray-800">Email Notification</span>
-                    <span className="text-[13px] text-gray-400">Receive email whenever your organisation requires your attentions</span>
-                  </div>
-                  <button 
-                    onClick={() => toggleSwitch('email')}
-                    className={`w-11 h-6 rounded-full p-1 transition-colors cursor-pointer relative flex items-center ${toggles.email ? 'bg-corgi' : 'bg-gray-200'}`}
-                  >
-                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${toggles.email ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-
-              </div>
-            </div>
+            <GeneralNotificationsPanel />
 
             <PosSettingsPanel />
 
           </div>
         )}
 
-        {/* --- TEAM & ROLES VIEW --- */}
         {activeMenu === 'team' && (
-          <div className="w-full max-w-full flex flex-col gap-8 mt-2 animate-in fade-in slide-in-from-right-4 duration-500">
-            {!isInviteView && !editingMemberId ? (
-              <>
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                  <h2 className="text-xl font-bold text-gray-900">Team & Roles</h2>
-                  <button 
-                    onClick={() => setIsInviteView(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-[13px] font-bold rounded-full hover:bg-gray-800 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-                  >
-                    <Plus size={16} />
-                    Invite Member
-                  </button>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="relative flex-1">
-                    <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                    <input 
-                      type="text" 
-                      placeholder="Search by name or email..." 
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-11 pr-4 py-3 text-[14px] font-medium text-gray-800 outline-none hover:border-gray-200 hover:bg-white focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all cursor-text"
-                    />
-                  </div>
-                  <div className="relative shrink-0 group">
-                    <select className="bg-gray-50 border border-gray-100 text-gray-600 text-[14px] font-medium rounded-xl pl-4 pr-10 py-3 cursor-pointer outline-none hover:border-gray-200 hover:bg-white focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all appearance-none">
-                      <option>All Roles</option>
-                      <option>Admin</option>
-                      <option>Manager</option>
-                      <option>Waiter</option>
-                      <option>Cashier</option>
-                    </select>
-                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-transform group-hover:text-gray-600" />
-                  </div>
-                </div>
-
-                <div className="border border-gray-100 rounded-2xl bg-white relative">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50/50 border-b border-gray-100">
-                        <th className="px-6 py-4 text-[12px] font-bold text-gray-400 tracking-wider uppercase">Member</th>
-                        <th className="px-6 py-4 text-[12px] font-bold text-gray-400 tracking-wider uppercase">Role</th>
-                        <th className="px-6 py-4 text-[12px] font-bold text-gray-400 tracking-wider uppercase">Status</th>
-                        <th className="px-6 py-4 text-[12px] font-bold text-gray-400 tracking-wider uppercase">Location</th>
-                        <th className="px-6 py-4 text-[12px] font-bold text-gray-400 tracking-wider uppercase text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {teamMembers.map((member) => (
-                        <tr 
-                          key={member.id} 
-                          onClick={() => {
-                            setEditingMemberId(member.id);
-                            setInviteRole(member.role);
-                            setMemberViewTab('general');
-                          }}
-                          className="hover:bg-gray-50/70 transition-all duration-200 group cursor-pointer"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full border border-gray-100 object-cover" />
-                              <div className="flex flex-col">
-                                <span className={`text-[14px] font-bold ${member.status === 'Pending' ? 'text-gray-500 italic' : 'text-gray-900'}`}>{member.name}</span>
-                                <span className="text-[13px] text-gray-500">{member.email}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-bold ${
-                              member.role === 'Super Admin' ? 'bg-purple-100 text-purple-700' :
-                              member.role === 'Manager' ? 'bg-blue-100 text-blue-700' :
-                              member.role === 'Waiter' ? 'bg-orange-100 text-orange-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {member.role}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-bold ${
-                              member.status === 'Active' ? 'bg-green-50 text-green-700 border border-green-200/50' :
-                              member.status === 'Pending' ? 'bg-orange-50 text-corgi border border-orange-200/50 border-dashed' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {member.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-[14px] text-gray-600 font-medium">
-                            {member.location}
-                          </td>
-                          <td className="px-6 py-4 text-right relative">
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenActionMenuId(openActionMenuId === member.id ? null : member.id);
-                              }}
-                              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ml-auto active:scale-95 ${
-                                openActionMenuId === member.id 
-                                  ? 'bg-white border-gray-200 shadow-sm text-gray-800 opacity-100 border' 
-                                  : 'text-gray-400 hover:text-gray-800 hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-sm opacity-0 group-hover:opacity-100'
-                              }`}
-                            >
-                              <MoreHorizontal size={16} />
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            {openActionMenuId === member.id && (
-                              <div 
-                                onClick={(e) => e.stopPropagation()}
-                                className="absolute right-12 top-10 w-48 bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-200 text-left"
-                              >
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingMemberId(member.id);
-                                    setInviteRole(member.role);
-                                    setMemberViewTab('general');
-                                    setOpenActionMenuId(null);
-                                  }}
-                                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors cursor-pointer"
-                                >
-                                  <Edit2 size={14} className="text-gray-400" />
-                                  Edit Member
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    setResetModalMemberId(member.id);
-                                    setResetLink(null);
-                                    setOpenActionMenuId(null);
-                                  }}
-                                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors cursor-pointer"
-                                >
-                                  <Key size={14} className="text-gray-400" />
-                                  Reset Password
-                                </button>
-                                <div className="h-px bg-gray-100 my-1 mx-2"></div>
-                                <button className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer">
-                                  <Trash2 size={14} className="text-red-400" />
-                                  Deactivate User
-                                </button>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            ) : isInviteView ? (
-              <div className="flex flex-col gap-8 w-full animate-in fade-in slide-in-from-right-4 duration-500">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <button 
-                      onClick={() => setIsInviteView(false)}
-                      className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-800 hover:bg-gray-100 transition-colors cursor-pointer"
-                    >
-                      <ArrowLeft size={20} />
-                    </button>
-                    <h2 className="text-xl font-bold text-gray-900">
-                      {isRoleSetupMode ? 'Default Role Settings' : 'Invite New Member'}
-                    </h2>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button 
-                      onClick={() => {
-                        setIsRoleSetupMode(!isRoleSetupMode);
-                        if (isRoleSetupMode) setHasRoleChanges(false);
-                      }}
-                      className={`flex items-center gap-2 px-4 py-2 text-[13px] font-bold rounded-xl transition-all cursor-pointer ${
-                        isRoleSetupMode 
-                          ? 'bg-purple-100 text-purple-700 hover:bg-purple-200 shadow-sm' 
-                          : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <Settings size={16} />
-                      {isRoleSetupMode ? (hasRoleChanges ? 'Save & Exit Setup Mode' : 'Exit Setup Mode') : 'Setup Default Roles'}
-                    </button>
-
-                    {!isRoleSetupMode && (
-                      <>
-                        <button 
-                          onClick={() => setIsInviteView(false)}
-                          className="px-4 py-2 text-[13px] font-bold text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                        <button 
-                          onClick={handleSendInvitation}
-                          className={`px-5 py-2 text-[13px] font-bold rounded-xl transition-colors duration-500 ease-in-out shadow-sm hover:shadow-md cursor-pointer flex items-center gap-2 ${
-                            inviteEmail && !inviteEmailError && inviteRole
-                              ? 'bg-[#FFB800] text-black hover:bg-[#E5A600]'
-                              : 'bg-black text-white hover:bg-gray-800'
-                          }`}
-                        >
-                          <Mail size={16} />
-                          Send Invitation
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex flex-col gap-8 w-full">
-                  {!isRoleSetupMode && (
-                    <div className="flex items-end gap-6 max-w-4xl">
-                      <div className="flex flex-col gap-2 flex-1 relative">
-                        <label className="text-[13px] font-bold text-gray-700">Email Address</label>
-                        <input 
-                          type="email" 
-                          value={inviteEmail}
-                          onChange={(e) => {
-                            setInviteEmail(e.target.value);
-                            if (e.target.value && !e.target.value.includes('@')) {
-                              setInviteEmailError('Please enter a valid email address with an @ sign.');
-                            } else {
-                              setInviteEmailError('');
-                            }
-                          }}
-                          placeholder="e.g., alex@corgipos.com" 
-                          className={`w-full border rounded-xl px-4 py-3 text-[14px] font-medium outline-none transition-all ${
-                            inviteEmailError 
-                              ? 'border-red-500 bg-red-50/30 text-red-900 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' 
-                              : 'bg-gray-50 border-gray-100 hover:border-gray-200 hover:bg-white focus:bg-white focus:border-corgi focus:ring-4 focus:ring-corgi/10 text-gray-800'
-                          }`}
-                        />
-                        {inviteEmailError && (
-                          <span className="text-[13px] text-red-500 absolute -bottom-6 left-1">
-                            {inviteEmailError}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2 flex-[0.7]">
-                        <label className="text-[13px] font-bold text-gray-700">Select Role</label>
-                        <div className="relative group">
-                          <select 
-                            value={inviteRole}
-                            onChange={(e) => setInviteRole(e.target.value)}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-4 pr-10 py-3 text-[14px] font-medium text-gray-800 outline-none hover:border-gray-200 hover:bg-white focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all appearance-none cursor-pointer"
-                          >
-                            {['Waiter', 'Kitchen', 'Manager', 'Franchise', 'Marketing', 'Admin', 'Super Admin'].map(role => (
-                              <option key={role} value={role}>{role}</option>
-                            ))}
-                          </select>
-                          <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-transform group-hover:text-gray-600" />
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-2 flex-[0.7]">
-                        <label className="text-[13px] font-bold text-gray-700">Access Duration</label>
-                        <div className="relative group">
-                          <select 
-                            value={accessDuration}
-                            onChange={(e) => setAccessDuration(e.target.value)}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-4 pr-10 py-3 text-[14px] font-medium text-gray-800 outline-none hover:border-gray-200 hover:bg-white focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all appearance-none cursor-pointer"
-                          >
-                            <option value="1 Day">1 Day</option>
-                            <option value="7 Days">7 Days</option>
-                            <option value="30 Days">30 Days</option>
-                            <option value="1 Year">1 Year</option>
-                            <option value="No limit">No Limit</option>
-                          </select>
-                          <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-transform group-hover:text-gray-600" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex flex-col gap-3">
-                    <label className="text-[13px] font-bold text-gray-700">
-                      {isRoleSetupMode ? 'Configure Permissions for All Roles' : 'Assign Role & Permissions'}
-                      {isRoleSetupMode && <span className="ml-2 text-purple-600 font-medium text-[12px] bg-purple-50 px-2 py-0.5 rounded-md">Setup Mode Active</span>}
-                    </label>
-                    
-                    {renderPermissionsTable()}
-                  </div>
-                </div>
-              </div>
-            ) : editingMemberId ? (() => {
-              const member = teamMembers.find(m => m.id === editingMemberId);
-              if (!member) return null;
-              
-              return (
-                <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-right-4 duration-500">
-                  {/* Employee Header */}
-                  <div className="flex items-center gap-4 pb-6 border-b border-gray-100">
-                    <button 
-                      onClick={() => setEditingMemberId(null)}
-                      className="w-10 h-10 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-800 hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
-                    >
-                      <ArrowLeft size={20} />
-                    </button>
-                    
-                    <img src={member.avatar} alt={member.name} className="w-16 h-16 rounded-full border-2 border-white shadow-sm object-cover" />
-                    
-                    <div className="flex flex-col flex-1">
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold text-gray-900">{member.name}</h2>
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-bold ${
-                          member.status === 'Active' ? 'bg-green-50 text-green-700 border border-green-200/50' :
-                          'bg-orange-50 text-corgi border border-orange-200/50 border-dashed'
-                        }`}>
-                          {member.status}
-                        </span>
-                      </div>
-                      <p className="text-[14px] text-gray-500">{member.role} • {member.location}</p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <button 
-                        onClick={() => {
-                          setResetModalMemberId(member.id);
-                          setResetLink(null);
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 text-[13px] font-bold rounded-xl hover:bg-gray-100 transition-all cursor-pointer shadow-sm"
-                      >
-                        <Key size={16} />
-                        Reset Password
-                      </button>
-                      <button className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-[13px] font-bold rounded-xl hover:bg-red-100 transition-all cursor-pointer shadow-sm">
-                        <Trash2 size={16} />
-                        Deactivate
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Tabs Navigation */}
-                  <div className="flex gap-8 border-b border-gray-100 px-2">
-                    {['general', 'permissions', 'activity'].map((tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => setMemberViewTab(tab as any)}
-                        className={`pb-4 text-[14px] font-bold transition-all relative cursor-pointer ${memberViewTab === tab ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
-                      >
-                        {tab === 'general' && 'General Info'}
-                        {tab === 'permissions' && 'Permissions'}
-                        {tab === 'activity' && 'Activity & Stats'}
-                        {memberViewTab === tab && (
-                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  
-                  {/* Content Placeholder */}
-                  <div className="py-4">
-                    {memberViewTab === 'general' && (
-                      <div className="flex flex-col gap-8 animate-in fade-in duration-300 pt-2">
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-6 max-w-4xl">
-                          {/* Contact Info */}
-                          <div className="flex flex-col gap-2">
-                            <label className="text-[13px] font-bold text-gray-700">Email Address</label>
-                            <input type="email" defaultValue={member.email} className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-800 outline-none hover:bg-white hover:border-gray-200 focus:bg-white focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all" />
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            <label className="text-[13px] font-bold text-gray-700">Phone Number</label>
-                            <input type="tel" defaultValue="+380 99 123 4567" className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-[14px] font-medium text-gray-800 outline-none hover:bg-white hover:border-gray-200 focus:bg-white focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all" />
-                          </div>
-
-                          {/* Work Details */}
-                          <div className="flex flex-col gap-2">
-                            <label className="text-[13px] font-bold text-gray-700">Primary Location</label>
-                            <div className="relative group">
-                              <select defaultValue={member.location} className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-4 pr-10 py-3 text-[14px] font-medium text-gray-800 outline-none hover:border-gray-200 hover:bg-white focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all appearance-none cursor-pointer">
-                                <option value="All Locations">All Locations</option>
-                                <option value="Downtown Cafe">Downtown Cafe</option>
-                                <option value="Uptown Branch">Uptown Branch</option>
-                              </select>
-                              <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-transform group-hover:text-gray-600" />
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            <label className="text-[13px] font-bold text-gray-700">Assigned Role</label>
-                            <div className="relative group">
-                              <select 
-                                value={inviteRole}
-                                onChange={(e) => setInviteRole(e.target.value)}
-                                className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-4 pr-10 py-3 text-[14px] font-medium text-gray-800 outline-none hover:border-gray-200 hover:bg-white focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all appearance-none cursor-pointer"
-                              >
-                                {['Waiter', 'Kitchen', 'Manager', 'Franchise', 'Marketing', 'Admin', 'Super Admin'].map(role => (
-                                  <option key={role} value={role}>{role}</option>
-                                ))}
-                              </select>
-                              <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-transform group-hover:text-gray-600" />
-                            </div>
-                          </div>
-
-                          {/* POS PIN */}
-                          <div className="flex flex-col gap-2">
-                            <label className="text-[13px] font-bold text-gray-700">POS Login PIN (4 Digits)</label>
-                            <div className="relative group">
-                              <input type="password" defaultValue="1234" maxLength={4} className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-4 pr-10 py-3 text-[14px] font-bold tracking-[0.5em] text-gray-800 outline-none hover:bg-white hover:border-gray-200 focus:bg-white focus:ring-4 focus:ring-corgi/10 focus:border-corgi transition-all" />
-                              <button className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer">
-                                <Edit2 size={14} />
-                              </button>
-                            </div>
-                            <span className="text-[12px] text-gray-500">Used for fast access on iPad / Mobile POS apps.</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-end pt-4 border-t border-gray-100 max-w-4xl">
-                          <button className="px-6 py-2.5 bg-black text-white text-[14px] font-bold rounded-xl hover:bg-gray-800 shadow-sm transition-all cursor-pointer">
-                            Save Changes
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {memberViewTab === 'permissions' && (
-                      <div className="flex flex-col gap-6 animate-in fade-in duration-300 pt-2">
-                        <div className="flex flex-col gap-1 mb-2">
-                          <h3 className="text-[15px] font-bold text-gray-900">Custom Permissions Override</h3>
-                          <p className="text-[13px] text-gray-500">You can override specific permissions just for this user without affecting the base role.</p>
-                        </div>
-                        {renderPermissionsTable()}
-                        <div className="flex justify-end pt-4 border-t border-gray-100">
-                          <button className="px-6 py-2.5 bg-black text-white text-[14px] font-bold rounded-xl hover:bg-gray-800 shadow-sm transition-all cursor-pointer">
-                            Update Permissions
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {memberViewTab === 'activity' && (
-                      <div className="flex flex-col gap-8 animate-in fade-in duration-300 pt-2">
-                        {/* Mini Dashboard */}
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="p-5 rounded-2xl border border-gray-100 bg-white shadow-sm flex flex-col gap-1">
-                            <div className="flex items-center gap-2 text-gray-500 mb-2">
-                              <Receipt size={16} />
-                              <span className="text-[13px] font-bold">Total Orders</span>
-                            </div>
-                            <span className="text-2xl font-bold text-gray-900">124</span>
-                            <span className="text-[12px] text-green-600 font-medium flex items-center gap-1"><TrendingUp size={12}/> +12% this month</span>
-                          </div>
-                          
-                          <div className="p-5 rounded-2xl border border-gray-100 bg-white shadow-sm flex flex-col gap-1">
-                            <div className="flex items-center gap-2 text-gray-500 mb-2">
-                              <DollarSign size={16} />
-                              <span className="text-[13px] font-bold">Revenue Generated</span>
-                            </div>
-                            <span className="text-2xl font-bold text-gray-900">$4,520</span>
-                            <span className="text-[12px] text-green-600 font-medium flex items-center gap-1"><TrendingUp size={12}/> +5% this month</span>
-                          </div>
-
-                          <div className="p-5 rounded-2xl border border-gray-100 bg-white shadow-sm flex flex-col gap-1">
-                            <div className="flex items-center gap-2 text-gray-500 mb-2">
-                              <Clock size={16} />
-                              <span className="text-[13px] font-bold">Avg. Shift Duration</span>
-                            </div>
-                            <span className="text-2xl font-bold text-gray-900">7.5h</span>
-                            <span className="text-[12px] text-gray-400 font-medium">Over the last 30 days</span>
-                          </div>
-                        </div>
-
-                        {/* Activity Log */}
-                        <div className="flex flex-col border border-gray-100 rounded-2xl bg-white shadow-sm overflow-hidden">
-                          <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-                            <h3 className="text-[14px] font-bold text-gray-900">Recent Activity</h3>
-                          </div>
-                          <div className="divide-y divide-gray-50">
-                            <div className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
-                              <div className="flex items-center gap-4">
-                                <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-corgi">
-                                  <Clock size={14} />
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-[14px] font-bold text-gray-900">Closed Shift</span>
-                                  <span className="text-[13px] text-gray-500">Terminal 2 • Downtown Cafe</span>
-                                </div>
-                              </div>
-                              <span className="text-[13px] font-medium text-gray-400">Today, 5:00 PM</span>
-                            </div>
-                            
-                            <div className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
-                              <div className="flex items-center gap-4">
-                                <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500">
-                                  <ArrowLeft size={14} />
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-[14px] font-bold text-gray-900">Refunded Order #1042</span>
-                                  <span className="text-[13px] text-gray-500">Amount: $12.50 • Reason: Customer Complaint</span>
-                                </div>
-                              </div>
-                              <span className="text-[13px] font-medium text-gray-400">Today, 2:15 PM</span>
-                            </div>
-
-                            <div className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
-                              <div className="flex items-center gap-4">
-                                <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                                  <LayoutTemplate size={14} />
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-[14px] font-bold text-gray-900">Opened Shift</span>
-                                  <span className="text-[13px] text-gray-500">Terminal 2 • Downtown Cafe</span>
-                                </div>
-                              </div>
-                              <span className="text-[13px] font-medium text-gray-400">Today, 9:00 AM</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })() : null}
-          </div>
+          <TeamSettingsPanel />
         )}
-        
+
         {activeMenu === 'tables' && (
           <TablesView 
             key={tablesViewKey} 
@@ -1169,9 +297,25 @@ export default function SettingsView() {
                   <div className="flex items-center justify-between p-3 bg-red-50/30 border border-red-100/50 rounded-2xl">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-xs font-bold text-gray-900">VERI*FACTU (Spain)</span>
-                      <span className="text-[10px] text-gray-400 font-semibold">Enabled via immutable fiscal ledger.</span>
+                      <span className="text-[10px] text-gray-400 font-semibold">Immutable fiscal ledger sync for completed paid orders.</span>
                     </div>
-                    <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase border border-emerald-200">Active</span>
+                    <button
+                      type="button"
+                      disabled={!posSettings || receiptSaving}
+                      onClick={() => {
+                        if (!posSettings) return;
+                        const next = !posSettings.verifactuEnabled;
+                        setPosSettings({ ...posSettings, verifactuEnabled: next });
+                        saveReceiptLayout({ verifactuEnabled: next });
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase border ${
+                        posSettings?.verifactuEnabled
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-gray-100 text-gray-500 border-gray-200'
+                      }`}
+                    >
+                      {posSettings?.verifactuEnabled ? 'Active' : 'Disabled'}
+                    </button>
                   </div>
 
                   <div className="text-[11px] text-gray-400 font-medium leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100">
@@ -1301,10 +445,17 @@ export default function SettingsView() {
                           <label className="text-xs font-bold text-gray-500 uppercase">Color Tag</label>
                           <select
                             value={preset.color}
-                            onChange={(e) => {
+                            onChange={async (e) => {
+                              const color = e.target.value;
                               setDiscountPresets((prev) =>
-                                prev.map((p, i) => (i === idx ? { ...p, color: e.target.value } : p))
+                                prev.map((p, i) => (i === idx ? { ...p, color } : p))
                               );
+                              try {
+                                await updateDiscountPresetAsync(preset.id, { color });
+                              } catch (err) {
+                                console.error(err);
+                                reloadDiscountPresets();
+                              }
                             }}
                             className="w-full bg-gray-50 border border-transparent rounded-xl px-3 py-2 text-sm font-bold text-gray-700 outline-none focus:bg-white focus:border-gray-200 transition-all appearance-none cursor-pointer"
                           >
@@ -1333,6 +484,7 @@ export default function SettingsView() {
                   </div>
                   <button 
                     onClick={() => {
+                      setEditingPromoId(null);
                       setPromoName('');
                       setPromoPercent(20);
                       setPromoDays([1, 2, 3, 4, 5]);
@@ -1347,11 +499,11 @@ export default function SettingsView() {
                   </button>
                 </div>
 
-                {isAddingPromo && (
+                {(isAddingPromo || editingPromoId) && (
                   <div className="p-6 border border-darker-beige/40 rounded-3xl bg-beige/15 shadow-sm mb-6 flex flex-col gap-4 animate-in fade-in duration-200">
                     <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                      <h3 className="font-bold text-gray-950 text-sm">Create Scheduled Promotion</h3>
-                      <button onClick={() => setIsAddingPromo(false)} className="text-gray-450 hover:text-gray-700"><X size={16}/></button>
+                      <h3 className="font-bold text-gray-950 text-sm">{editingPromoId ? 'Edit Scheduled Promotion' : 'Create Scheduled Promotion'}</h3>
+                      <button onClick={() => { setIsAddingPromo(false); setEditingPromoId(null); }} className="text-gray-450 hover:text-gray-700"><X size={16}/></button>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
@@ -1448,16 +600,22 @@ export default function SettingsView() {
                         onClick={async () => {
                           if (!promoName.trim()) return;
                           try {
-                            await createPromotionAsync({
+                            const payload = {
                               name: promoName.trim(),
                               discountPercent: promoPercent,
                               activeDays: promoDays,
                               startHour: promoStartHour,
                               endHour: promoEndHour,
                               targetItems: promoItems.trim() ? promoItems.split(',').map(s => s.trim()).filter(Boolean) : undefined,
-                            });
+                            };
+                            if (editingPromoId) {
+                              await updatePromotionAsync(editingPromoId, payload);
+                            } else {
+                              await createPromotionAsync(payload);
+                            }
                             reloadPromotions();
                             setIsAddingPromo(false);
+                            setEditingPromoId(null);
                           } catch (err) {
                             console.error(err);
                           }
@@ -1485,19 +643,36 @@ export default function SettingsView() {
                             </span>
                             <h3 className="font-bold text-base text-gray-950 mt-1.5">{promo.name}</h3>
                           </div>
-                          <button 
-                            onClick={async () => {
-                              try {
-                                await deletePromotionAsync(promo.id);
-                                reloadPromotions();
-                              } catch (err) {
-                                console.error(err);
-                              }
-                            }}
-                            className="p-1.5 text-gray-450 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => {
+                                setEditingPromoId(promo.id);
+                                setIsAddingPromo(false);
+                                setPromoName(promo.name);
+                                setPromoPercent(promo.discountPercent);
+                                setPromoDays(promo.activeDays);
+                                setPromoStartHour(promo.startHour);
+                                setPromoEndHour(promo.endHour);
+                                setPromoItems((promo.targetItems ?? []).join(', '));
+                              }}
+                              className="p-1.5 text-gray-450 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button 
+                              onClick={async () => {
+                                try {
+                                  await deletePromotionAsync(promo.id);
+                                  reloadPromotions();
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                              className="p-1.5 text-gray-450 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="space-y-1.5 text-xs font-semibold text-gray-600">
@@ -1720,83 +895,6 @@ export default function SettingsView() {
                 </div>
               </div>
             )}
-            
-          </div>
-        )}
-
-      </div>
-
-      {/* --- RESET PASSWORD MODAL --- */}
-      {resetModalMemberId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity" onClick={() => setResetModalMemberId(null)}></div>
-          <div className="relative bg-white rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] w-full max-w-md p-6 animate-in zoom-in-95 fade-in duration-200">
-            <button onClick={() => setResetModalMemberId(null)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
-              <X size={18} />
-            </button>
-
-            {!resetLink ? (
-              <div className="flex flex-col items-center text-center gap-4 pt-2">
-                <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center shadow-sm">
-                  <Key size={24} className="text-corgi" />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-xl font-bold text-gray-900">Reset Password?</h3>
-                  <p className="text-[14px] text-gray-500 max-w-[280px]">
-                    Are you sure you want to reset the password for <span className="font-bold text-gray-800">{teamMembers.find(m => m.id === resetModalMemberId)?.name}</span>? They will be logged out of active sessions.
-                  </p>
-                </div>
-                <div className="flex w-full gap-3 mt-4">
-                  <button 
-                    onClick={() => setResetModalMemberId(null)}
-                    className="flex-1 py-3 px-4 rounded-xl font-bold text-[14px] text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    onClick={handleConfirmReset}
-                    className="flex-1 py-3 px-4 rounded-xl font-bold text-[14px] text-white bg-black hover:bg-gray-800 shadow-sm transition-all cursor-pointer"
-                  >
-                    Yes, Reset
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center text-center gap-4 pt-2">
-                <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center shadow-sm">
-                  <Check size={28} strokeWidth={3} className="text-green-500" />
-                </div>
-                <div className="flex flex-col gap-2 w-full">
-                  <h3 className="text-xl font-bold text-gray-900">Reset Link Generated!</h3>
-                  <p className="text-[14px] text-gray-500 mb-2">
-                    The link has been copied to your clipboard and emailed to the user.
-                  </p>
-                  
-                  <div className="flex items-center gap-2 p-1.5 pr-1.5 bg-gray-50 rounded-xl border border-gray-100 w-full">
-                    <div className="flex-1 px-3 py-2 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-gray-600 text-left">
-                      {resetLink}
-                    </div>
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(resetLink);
-                        setIsCopied(true);
-                        setTimeout(() => setIsCopied(false), 2000);
-                      }}
-                      className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${isCopied ? 'bg-green-100 text-green-700' : 'bg-white border border-gray-200 text-gray-700 shadow-sm hover:bg-gray-50'}`}
-                    >
-                      {isCopied ? <Check size={14}/> : <Copy size={14}/>}
-                      {isCopied ? 'Copied' : 'Copy'}
-                    </button>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setResetModalMemberId(null)}
-                  className="w-full py-3 px-4 mt-2 rounded-xl font-bold text-[14px] text-white bg-black hover:bg-gray-800 shadow-sm transition-all cursor-pointer"
-                >
-                  Done
-                </button>
-              </div>
-            )}
 
             {/* LOYALTY RULES SUB-TAB */}
             {discountsSubTab === 'loyalty' && (
@@ -2005,9 +1103,11 @@ export default function SettingsView() {
                 </div>
               </div>
             )}
+            
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
 
       {/* --- UNSAVED CHANGES MODAL --- */}
       {pendingMenuId && (

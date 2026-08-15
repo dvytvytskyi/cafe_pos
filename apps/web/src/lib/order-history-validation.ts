@@ -23,6 +23,7 @@ export type OrderHistoryFilters = {
   endDate: Date;
   paymentMethod?: OrderPaymentMethod;
   query?: string;
+  customerId?: string;
 };
 
 function startOfDay(d: Date): Date {
@@ -43,6 +44,10 @@ export function parseIsoDate(value: string, label: string): Date {
     throw new OrderHistoryValidationError(`Invalid ${label} date format`);
   }
   return d;
+}
+
+export function normalizeSearchText(value: string): string {
+  return value.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 }
 
 export function resolveDefaultDateRange(startRaw?: string | null, endRaw?: string | null): {
@@ -96,6 +101,11 @@ export function parseOrderHistoryFilters(searchParams: URLSearchParams): OrderHi
     throw new OrderHistoryValidationError('query must be at most 120 characters');
   }
 
+  const customerId = searchParams.get('customerId')?.trim();
+  if (customerId && customerId.length > 64) {
+    throw new OrderHistoryValidationError('customerId must be at most 64 characters');
+  }
+
   return {
     locationId,
     page,
@@ -105,5 +115,6 @@ export function parseOrderHistoryFilters(searchParams: URLSearchParams): OrderHi
     endDate,
     paymentMethod: paymentMethod as OrderPaymentMethod | undefined,
     query: query || undefined,
+    customerId: customerId || undefined,
   };
 }

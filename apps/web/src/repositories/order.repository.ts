@@ -4,6 +4,51 @@ import { crmRepository } from './crm.repository';
 import { auditRepository } from './audit.repository';
 import { shiftRepository } from './shift.repository';
 import type { OrderHistoryFilters } from '../lib/order-history-validation';
+import { normalizeSearchText } from '../lib/order-history-validation';
+import { coerceStatusForSource } from '../lib/orders-board';
+
+async function findCustomerIdsForOrderHistoryQuery(query: string): Promise<string[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  const directMatches = await prisma.customer.findMany({
+    where: {
+      OR: [
+        { name: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { phone: { contains: q } },
+      ],
+    },
+    select: { id: true, name: true, email: true, phone: true },
+    take: 100,
+  });
+
+  const ids = new Set(directMatches.map((c) => c.id));
+  const normalizedQ = normalizeSearchText(q.toLowerCase());
+
+  if (normalizedQ.length >= 2) {
+    const candidates = await prisma.customer.findMany({
+      ...(ids.size > 0 ? { where: { id: { notIn: [...ids] } } } : {}),
+      select: { id: true, name: true, email: true, phone: true },
+      take: 500,
+      orderBy: { name: 'asc' },
+    });
+
+    for (const c of candidates) {
+      const name = normalizeSearchText(c.name.toLowerCase());
+      const email = normalizeSearchText(c.email.toLowerCase());
+      if (
+        name.includes(normalizedQ) ||
+        email.includes(normalizedQ) ||
+        c.phone.includes(q)
+      ) {
+        ids.add(c.id);
+      }
+    }
+  }
+
+  return [...ids];
+}
 
 export interface PaymentLine {
   method: 'card' | 'cash' | 'points' | 'giftcard';
@@ -18,6 +63,8 @@ export interface CompletePaymentPayload {
   tip?: { type: 'percent' | 'fixed'; value: number };
   total?: number;
   paidItemIndexes?: number[];
+  /** When false, fully paid orders keep their current status (e.g. POS prepaid preparing). */
+  markCompleted?: boolean;
 }
 
 // Helper to map Prisma Order (with items) to Domain Order
@@ -53,10 +100,19 @@ export function mapToDomainOrder(dbOrder: any): Order {
     updatedAt: dbOrder.updatedAt,
     discountName: dbOrder.discountName || undefined,
     discountValue: dbOrder.discountValue ?? 0,
+    tipType: dbOrder.tipType || undefined,
+    tipValue: dbOrder.tipValue ?? 0,
     deliveryId: dbOrder.orderNumber.startsWith('GLV') || dbOrder.orderNumber.startsWith('UBR') ? dbOrder.orderNumber : undefined,
     orderedBy: dbOrder.source === 'dine_in' || dbOrder.source === 'takeaway' ? 'waiter' : 'app',
     customerId: dbOrder.customerId || undefined,
+    loyaltyGuestIds: dbOrder.loyaltyGuestIds?.length
+      ? dbOrder.loyaltyGuestIds
+      : dbOrder.customerId
+        ? [dbOrder.customerId]
+        : [],
     customerName: dbOrder.customerName || '',
+    orderNumber: dbOrder.orderNumber,
+    pointsToSpend: dbOrder.pointsToSpend ?? 0,
   } as Order;
 }
 
@@ -64,6 +120,7 @@ export type OrderHistoryRecord = Order & {
   orderNumber: string;
   tableNumber: string | null;
   waiterName: string | null;
+  customerPointsEarned?: number;
 };
 
 function resolveWaiterName(
@@ -114,26 +171,49 @@ export class OrderRepository {
     const where: Record<string, unknown> = {
       locationId: filters.locationId,
       createdAt: { gte: filters.startDate, lte: filters.endDate },
-      OR: [
-        { paid: true },
-        { status: 'completed' },
-        { status: 'cancelled' },
-        { refundedAmount: { gt: 0 } },
+      AND: [
+        {
+          OR: [
+            { paid: true },
+            { status: 'completed' },
+            { status: 'cancelled' },
+            { refundedAmount: { gt: 0 } },
+          ],
+        },
       ],
     };
 
     if (filters.source) where.source = filters.source;
 
+    if (filters.customerId) {
+      (where.AND as Record<string, unknown>[]).push({
+        OR: [
+          { customerId: filters.customerId },
+          { loyaltyGuestIds: { has: filters.customerId } },
+        ],
+      });
+    }
+
     if (filters.query) {
-      where.AND = [
-        {
-          OR: [
-            { orderNumber: { contains: filters.query, mode: 'insensitive' } },
-            { customerName: { contains: filters.query, mode: 'insensitive' } },
-            { id: { contains: filters.query, mode: 'insensitive' } },
-          ],
-        },
+      const q = filters.query.trim();
+      const customerIds = await findCustomerIdsForOrderHistoryQuery(q);
+      const orConditions: Record<string, unknown>[] = [
+        { orderNumber: { contains: q, mode: 'insensitive' } },
+        { customerName: { contains: q, mode: 'insensitive' } },
       ];
+
+      const looksLikeOrderId =
+        /^(ORD|GLV|UBR)/i.test(q) || /^[0-9a-f-]{8,}$/i.test(q);
+      if (looksLikeOrderId) {
+        orConditions.push({ id: { contains: q, mode: 'insensitive' } });
+      }
+
+      if (customerIds.length > 0) {
+        orConditions.push({ customerId: { in: customerIds } });
+        orConditions.push({ loyaltyGuestIds: { hasSome: customerIds } });
+      }
+
+      (where.AND as Record<string, unknown>[]).push({ OR: orConditions });
     }
 
     if (filters.paymentMethod) {
@@ -160,13 +240,35 @@ export class OrderRepository {
       }),
     ]);
 
+    const orderIds = dbOrders.map((row) => row.id);
+    const earnRows =
+      orderIds.length > 0
+        ? await prisma.loyaltyTransaction.findMany({
+            where: { orderId: { in: orderIds }, type: 'earn' },
+          })
+        : [];
+
+    const pointsByOrderCustomer = new Map<string, number>();
+    for (const tx of earnRows) {
+      if (!tx.orderId) continue;
+      const key = `${tx.orderId}:${tx.customerId}`;
+      pointsByOrderCustomer.set(key, (pointsByOrderCustomer.get(key) ?? 0) + tx.points);
+    }
+
     const items = dbOrders.map((row) => {
       const domain = mapToDomainOrder(row);
+      const guestId = filters.customerId ?? row.customerId ?? undefined;
+      const customerPointsEarned = guestId
+        ? pointsByOrderCustomer.get(`${row.id}:${guestId}`) ?? 0
+        : row.customerId
+          ? pointsByOrderCustomer.get(`${row.id}:${row.customerId}`) ?? 0
+          : 0;
       return {
         ...domain,
         orderNumber: row.orderNumber,
         tableNumber: row.table?.number ?? null,
         waiterName: resolveWaiterName(row.createdAt, shifts),
+        customerPointsEarned,
       };
     });
 
@@ -187,21 +289,43 @@ export class OrderRepository {
     }
   }
 
-  async findActiveOrders(): Promise<Order[]> {
+  async findBoardOrders(locationId?: string): Promise<Order[]> {
     try {
-      const activeStatuses = ['incoming', 'preparing', 'ready', 'served'];
-      const dbOrders = await prisma.order.findMany({
-        where: {
-          status: { in: activeStatuses },
-        },
-        include: { items: true },
-        orderBy: { createdAt: 'desc' },
-      });
-      return dbOrders.map(mapToDomainOrder);
+      const locationFilter = locationId ? { locationId } : {};
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const [pipeline, terminal] = await prisma.$transaction([
+        prisma.order.findMany({
+          where: {
+            status: { in: ['incoming', 'preparing', 'ready', 'served'] },
+            ...locationFilter,
+          },
+          include: { items: true, transactions: true },
+          orderBy: { createdAt: 'asc' },
+        }),
+        prisma.order.findMany({
+          where: {
+            status: { in: ['completed', 'cancelled'] },
+            updatedAt: { gte: startOfDay },
+            ...locationFilter,
+          },
+          include: { items: true, transactions: true },
+          orderBy: { updatedAt: 'desc' },
+          take: 100,
+        }),
+      ]);
+
+      return [...pipeline, ...terminal].map(mapToDomainOrder);
     } catch (error) {
-      console.error('Error finding active orders in DB:', error);
+      console.error('Error finding board orders in DB:', error);
       throw error;
     }
+  }
+
+  /** @deprecated Use findBoardOrders */
+  async findActiveOrders(locationId?: string): Promise<Order[]> {
+    return this.findBoardOrders(locationId);
   }
 
   async create(data: Partial<Order>): Promise<Order> {
@@ -227,15 +351,21 @@ export class OrderRepository {
           discountValue: (data as any).discountValue ?? 0,
           tipType: (data as any).tipType || null,
           tipValue: (data as any).tipValue ?? 0,
+          pointsToSpend: (data as any).pointsToSpend ?? 0,
           paid,
           amountPaid,
+          loyaltyGuestIds: (data as any).loyaltyGuestIds ?? [],
           items: {
-            create: (data.items || []).map((item) => ({
+            create: (data.items || []).map((item: any) => ({
               name: item.name,
               price: item.price,
               quantity: item.quantity,
               paid: item.paid || false,
               comments: item.comments || null,
+              itemType: item.itemType || 'food',
+              menuItemId: item.menuItemId || null,
+              merchSkuId: item.merchSkuId || null,
+              modifierSnapshot: item.modifierSnapshot ?? null,
             })),
           },
         },
@@ -254,7 +384,12 @@ export class OrderRepository {
   async update(id: string, data: Partial<Order>): Promise<Order> {
     try {
       const updateData: any = {};
-      if (data.status) updateData.status = data.status;
+      if (data.status) {
+        const existing = await prisma.order.findUnique({ where: { id }, select: { source: true } });
+        updateData.status = existing
+          ? coerceStatusForSource(existing.source, data.status)
+          : data.status;
+      }
       if (data.total !== undefined) updateData.total = data.total;
       if (data.paymentStatus) {
         updateData.paid = data.paymentStatus === 'paid';
@@ -263,11 +398,17 @@ export class OrderRepository {
       if (data.tableId !== undefined) updateData.tableId = data.tableId;
       if (data.customerName !== undefined) updateData.customerName = data.customerName;
       if (data.customerId !== undefined) updateData.customerId = data.customerId;
+      if ((data as any).loyaltyGuestIds !== undefined) {
+        updateData.loyaltyGuestIds = (data as any).loyaltyGuestIds;
+      }
+      if (data.source !== undefined) updateData.source = data.source;
       if ((data as any).discountName !== undefined) updateData.discountName = (data as any).discountName;
       if ((data as any).discountValue !== undefined) updateData.discountValue = (data as any).discountValue;
+      if ((data as any).tipType !== undefined) updateData.tipType = (data as any).tipType;
+      if ((data as any).tipValue !== undefined) updateData.tipValue = (data as any).tipValue;
 
-      // Handle items update (for simplicity, delete and recreate items if provided)
-      if (data.items) {
+      // Replace line items only when a non-empty list is sent (never wipe via [])
+      if (Array.isArray(data.items) && data.items.length > 0) {
         await prisma.orderItem.deleteMany({ where: { orderId: id } });
         updateData.items = {
           create: data.items.map((item) => ({
@@ -303,6 +444,9 @@ export class OrderRepository {
       });
       if (!order) throw new Error('Order not found');
       if (order.paid) throw new Error('Order is already paid');
+      if (order.items.length === 0 && order.total > 0.01) {
+        throw new Error('Cannot checkout: order line items are missing. Re-open the order from the table or create a new one.');
+      }
 
       const paymentTotal = payload.payments.reduce((sum, p) => sum + p.amount, 0);
       if (paymentTotal <= 0) throw new Error('Payment amount must be greater than zero');
@@ -315,18 +459,38 @@ export class OrderRepository {
         }
       }
 
-      const pointsSpent = payload.payments
+      const reservedPoints = Number(order.pointsToSpend ?? 0);
+      const explicitPoints = payload.payments
         .filter((p) => p.method === 'points')
         .reduce((sum, p) => sum + p.amount, 0);
-      const customerId = payload.customerId || order.customerId || undefined;
+      const pointsToDeduct =
+        explicitPoints > 0.001 ? explicitPoints : reservedPoints > 0.001 ? reservedPoints : 0;
+      const customerId =
+        payload.customerId ||
+        order.customerId ||
+        order.loyaltyGuestIds?.[0] ||
+        undefined;
 
-      if (pointsSpent > 0) {
+      if (pointsToDeduct > 0) {
         if (!customerId) throw new Error('Customer required for points payment');
         const customer = await tx.customer.findUnique({ where: { id: customerId } });
         if (!customer) throw new Error('Customer not found');
-        if (customer.points < pointsSpent - 0.001) {
+        if (customer.points < pointsToDeduct - 0.001) {
           throw new Error('Insufficient loyalty points');
         }
+        const newPoints = parseFloat((customer.points - pointsToDeduct).toFixed(2));
+        await tx.customer.update({
+          where: { id: customerId },
+          data: { points: Math.max(0, newPoints) },
+        });
+        await tx.loyaltyTransaction.create({
+          data: {
+            customerId,
+            type: 'spend',
+            points: pointsToDeduct,
+            orderId,
+          },
+        });
       }
 
       for (const payment of payload.payments.filter((p) => p.method === 'giftcard')) {
@@ -372,6 +536,16 @@ export class OrderRepository {
           },
         });
       }
+      if (reservedPoints > 0.001 && explicitPoints < 0.001) {
+        await tx.transaction.create({
+          data: {
+            orderId,
+            method: 'points',
+            amount: reservedPoints,
+            code: null,
+          },
+        });
+      }
 
       const openShift = await tx.cashShift.findFirst({
         where: { locationId: order.locationId, status: 'open' },
@@ -384,6 +558,9 @@ export class OrderRepository {
           if (p.method === 'cash') cashDelta += p.amount;
           else if (p.method === 'card') cardDelta += p.amount;
           else if (p.method === 'points') pointsDelta += p.amount;
+        }
+        if (reservedPoints > 0.001 && explicitPoints < 0.001) {
+          pointsDelta += reservedPoints;
         }
         const newCashSales = parseFloat((openShift.cashSales + cashDelta).toFixed(2));
         const newCardSales = parseFloat((openShift.cardSales + cardDelta).toFixed(2));
@@ -408,7 +585,9 @@ export class OrderRepository {
       const updateData: Record<string, unknown> = {
         amountPaid: newAmountPaid,
         paid: isFullyPaid,
-        status: isFullyPaid ? 'completed' : order.status,
+        status: isFullyPaid
+          ? (payload.markCompleted === false ? order.status : 'completed')
+          : order.status,
         total: orderTotal,
       };
       if (payload.discount) {
@@ -429,19 +608,20 @@ export class OrderRepository {
       if (isFullyPaid && order.tableId) {
         await tx.table.update({
           where: { id: order.tableId },
-          data: { status: 'dirty' },
+          data: { status: 'available' },
         });
       }
 
       if (isFullyPaid && customerId) {
-        const cashCardPaid = payload.payments
-          .filter((p) => p.method === 'cash' || p.method === 'card' || p.method === 'giftcard')
-          .reduce((sum, p) => sum + p.amount, 0);
+        const allTx = await tx.transaction.findMany({ where: { orderId } });
+        const cashCardPaid = allTx
+          .filter((t) => t.method === 'cash' || t.method === 'card' || t.method === 'giftcard')
+          .reduce((sum, t) => sum + t.amount, 0);
         await crmRepository.applyLoyaltyTransactionInTx(
           tx,
           customerId,
           cashCardPaid,
-          pointsSpent,
+          0,
           orderId
         );
       }
@@ -452,7 +632,7 @@ export class OrderRepository {
       });
     });
 
-    if (result.paid) {
+    if (result.paid && result.status === 'completed') {
       await auditRepository.logEvent('order_completed', {
         orderId,
         total: result.total,
@@ -467,10 +647,15 @@ export class OrderRepository {
 
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
     try {
+      const existing = await prisma.order.findUnique({ where: { id }, select: { source: true } });
+      const nextStatus = existing
+        ? (coerceStatusForSource(existing.source, status) as OrderStatus)
+        : status;
+
       const dbOrder = await prisma.order.update({
         where: { id },
-        data: { status },
-        include: { items: true },
+        data: { status: nextStatus },
+        include: { items: true, transactions: true },
       });
       return mapToDomainOrder(dbOrder);
     } catch (error) {

@@ -372,14 +372,14 @@ async function runTaskExtraTests(page: puppeteer.Page) {
   assert.strictEqual(taskRes.status, 201, 'task create should succeed');
   const createdTask = await taskRes.json();
 
-  await gotoPage(page, '/operations?tab=tasks', '[data-testid="operations-kpi-bar"]');
+  await gotoPage(page, '/operations?tab=tasks', '[data-testid="task-board-settings-btn"]');
   await waitForHeadings(page, 6);
   await page.waitForFunction(
     (title) => [...document.querySelectorAll('h4')].some((h) => h.textContent?.includes(title)),
     { timeout: 30000 },
     'Migration Test Task M9'
   );
-  await reloadPage(page, '[data-testid="operations-kpi-bar"]');
+  await reloadPage(page, '[data-testid="task-board-settings-btn"]');
   await page.waitForFunction(
     (title) => [...document.querySelectorAll('h4')].some((h) => h.textContent?.includes(title)),
     { timeout: 20000 },

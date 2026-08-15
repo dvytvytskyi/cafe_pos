@@ -4,10 +4,12 @@ import {
   validateCreateItemInput,
   validateStockQuantity,
   validateTransferInput,
+  validateUpdateItemInput,
   type StockTransferStatus,
 } from '../lib/inventory-validation.ts';
 import { INVENTORY_ITEMS_CACHE_KEY, invalidateInventoryCache } from '../lib/inventory-cache.ts';
 import { cache } from '../lib/cache/index.ts';
+import { MAIN_WAREHOUSE_LOCATION_ID } from '../lib/inventory-constants.ts';
 
 export class InsufficientStockError extends Error {
   code = 'INSUFFICIENT_STOCK';
@@ -18,9 +20,65 @@ export class InsufficientStockError extends Error {
   }
 }
 
-const STOCK_TRANSFER_INCLUDE = {
-  item: { select: { id: true, sku: true, name: true, quantity: true, minStockLevel: true } },
+const ITEM_INCLUDE = {
+  transfers: { orderBy: { createdAt: 'desc' as const }, take: 5 },
+  locationStock: {
+    include: { location: { select: { id: true, name: true } } },
+  },
 } as const;
+
+const STOCK_TRANSFER_INCLUDE = {
+  item: {
+    select: {
+      id: true,
+      sku: true,
+      name: true,
+      quantity: true,
+      minStockLevel: true,
+      category: true,
+      unit: true,
+    },
+  },
+} as const;
+
+async function assertLocationsExist(locationIds: string[]) {
+  const unique = [...new Set(locationIds)];
+  if (unique.length === 0) return;
+  const found = await prisma.location.findMany({
+    where: { id: { in: unique } },
+    select: { id: true },
+  });
+  const foundIds = new Set(found.map((l) => l.id));
+  const missing = unique.filter((id) => !foundIds.has(id));
+  if (missing.length > 0) {
+    throw new InventoryValidationError(`Unknown location(s): ${missing.join(', ')}`);
+  }
+}
+
+async function upsertLocationStock(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  itemId: string,
+  locationId: string,
+  quantity: number
+) {
+  return tx.inventoryLocationStock.upsert({
+    where: { itemId_locationId: { itemId, locationId } },
+    create: { itemId, locationId, quantity },
+    update: { quantity },
+  });
+}
+
+async function syncItemTotalQuantity(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  itemId: string
+) {
+  const rows = await tx.inventoryLocationStock.findMany({ where: { itemId } });
+  const total = rows.reduce((sum, row) => sum + row.quantity, 0);
+  return tx.merchInventory.update({
+    where: { id: itemId },
+    data: { quantity: total },
+  });
+}
 
 export class InventoryRepository {
   async getItems(useCache = true) {
@@ -36,7 +94,7 @@ export class InventoryRepository {
 
   private async fetchItems() {
     return prisma.merchInventory.findMany({
-      include: { transfers: { orderBy: { createdAt: 'desc' }, take: 5 } },
+      include: ITEM_INCLUDE,
       orderBy: { sku: 'asc' },
     });
   }
@@ -47,9 +105,24 @@ export class InventoryRepository {
     price: number;
     initialStock?: number;
     minStockLevel?: number;
+    category?: string;
+    unit?: string;
+    locationStocks?: Record<string, number>;
   }) {
     const validated = validateCreateItemInput(data);
-    const initialStock = validated.initialStock;
+    const stocks = validated.locationStocks ?? {};
+    const stockEntries = Object.entries(stocks).filter(([, qty]) => qty > 0);
+
+    if (stockEntries.length === 0 && validated.initialStock > 0) {
+      stockEntries.push([MAIN_WAREHOUSE_LOCATION_ID, validated.initialStock]);
+    }
+
+    await assertLocationsExist(stockEntries.map(([locationId]) => locationId));
+
+    const totalStock =
+      stockEntries.length > 0
+        ? stockEntries.reduce((sum, [, qty]) => sum + qty, 0)
+        : validated.initialStock;
 
     const item = await prisma.$transaction(async (tx) => {
       const created = await tx.merchInventory.create({
@@ -57,17 +130,23 @@ export class InventoryRepository {
           name: validated.name,
           sku: validated.sku,
           price: validated.price,
-          quantity: initialStock,
+          quantity: totalStock,
           minStockLevel: validated.minStockLevel,
+          category: validated.category,
+          unit: validated.unit,
         },
       });
 
-      if (initialStock > 0) {
+      for (const [locationId, qty] of stockEntries) {
+        await upsertLocationStock(tx, created.id, locationId, qty);
+      }
+
+      if (totalStock > 0) {
         await tx.inventoryTransfer.create({
           data: {
             itemId: created.id,
             type: 'check_in',
-            quantity: initialStock,
+            quantity: totalStock,
             reason: 'Initial stock setup',
           },
         });
@@ -75,7 +154,7 @@ export class InventoryRepository {
 
       return tx.merchInventory.findUnique({
         where: { id: created.id },
-        include: { transfers: true },
+        include: ITEM_INCLUDE,
       });
     });
 
@@ -83,22 +162,128 @@ export class InventoryRepository {
     return item;
   }
 
-  async adjustStock(itemId: string, type: 'check_in' | 'check_out', quantity: number, reason?: string) {
+  async updateItem(
+    itemId: string,
+    data: {
+      name: string;
+      sku?: string;
+      price: number;
+      minStockLevel: number;
+      category: string;
+      unit: string;
+      locationStocks: Record<string, number>;
+    }
+  ) {
+    const validated = validateUpdateItemInput(data);
+    const locationIds = Object.keys(validated.locationStocks);
+    await assertLocationsExist(locationIds);
+
+    const existing = await prisma.merchInventory.findUnique({ where: { id: itemId } });
+    if (!existing) throw new InventoryValidationError('Inventory item not found');
+
+    const totalStock = Object.values(validated.locationStocks).reduce((sum, n) => sum + n, 0);
+
+    const item = await prisma.$transaction(async (tx) => {
+      await tx.merchInventory.update({
+        where: { id: itemId },
+        data: {
+          name: validated.name,
+          ...(validated.sku ? { sku: validated.sku } : {}),
+          price: validated.price,
+          minStockLevel: validated.minStockLevel,
+          category: validated.category,
+          unit: validated.unit,
+          quantity: totalStock,
+        },
+      });
+
+      for (const locationId of locationIds) {
+        const qty = validated.locationStocks[locationId] ?? 0;
+        await upsertLocationStock(tx, itemId, locationId, qty);
+      }
+
+      await tx.inventoryLocationStock.deleteMany({
+        where: {
+          itemId,
+          locationId: { notIn: locationIds },
+        },
+      });
+
+      return tx.merchInventory.findUnique({
+        where: { id: itemId },
+        include: ITEM_INCLUDE,
+      });
+    });
+
+    await invalidateInventoryCache();
+    return item;
+  }
+
+  async patchGuestMerchSettings(
+    itemId: string,
+    data: {
+      guestVisible?: boolean;
+      guestImageUrl?: string | null;
+      guestDescription?: string | null;
+    }
+  ) {
+    const existing = await prisma.merchInventory.findUnique({ where: { id: itemId } });
+    if (!existing) throw new InventoryValidationError('Inventory item not found');
+
+    const update: Record<string, unknown> = {};
+    if (data.guestVisible !== undefined) update.guestVisible = !!data.guestVisible;
+    if (data.guestImageUrl !== undefined) {
+      update.guestImageUrl =
+        typeof data.guestImageUrl === 'string' ? data.guestImageUrl.trim() || null : null;
+    }
+    if (data.guestDescription !== undefined) {
+      update.guestDescription =
+        typeof data.guestDescription === 'string' ? data.guestDescription.trim() || null : null;
+    }
+
+    if (Object.keys(update).length === 0) {
+      throw new InventoryValidationError('No guest settings provided');
+    }
+
+    const item = await prisma.merchInventory.update({
+      where: { id: itemId },
+      data: update,
+      include: ITEM_INCLUDE,
+    });
+    await invalidateInventoryCache();
+    return item;
+  }
+
+  async adjustStock(
+    itemId: string,
+    type: 'check_in' | 'check_out',
+    quantity: number,
+    reason?: string,
+    locationId = MAIN_WAREHOUSE_LOCATION_ID
+  ) {
     const qty = validateStockQuantity(quantity);
+    await assertLocationsExist([locationId]);
 
     const updated = await prisma.$transaction(async (tx) => {
       const item = await tx.merchInventory.findUnique({ where: { id: itemId } });
       if (!item) throw new InventoryValidationError('Inventory item not found');
 
-      let newQuantity = item.quantity;
+      const stockRow = await tx.inventoryLocationStock.findUnique({
+        where: { itemId_locationId: { itemId, locationId } },
+      });
+      const currentAtLocation = stockRow?.quantity ?? 0;
+
+      let newAtLocation = currentAtLocation;
       if (type === 'check_in') {
-        newQuantity += qty;
+        newAtLocation += qty;
       } else {
-        if (item.quantity < qty) {
-          throw new InsufficientStockError(item.quantity, qty);
+        if (currentAtLocation < qty) {
+          throw new InsufficientStockError(currentAtLocation, qty);
         }
-        newQuantity -= qty;
+        newAtLocation -= qty;
       }
+
+      await upsertLocationStock(tx, itemId, locationId, newAtLocation);
 
       await tx.inventoryTransfer.create({
         data: {
@@ -109,10 +294,11 @@ export class InventoryRepository {
         },
       });
 
-      return tx.merchInventory.update({
+      await syncItemTotalQuantity(tx, itemId);
+
+      return tx.merchInventory.findUnique({
         where: { id: itemId },
-        data: { quantity: newQuantity },
-        include: { transfers: { orderBy: { createdAt: 'desc' } } },
+        include: ITEM_INCLUDE,
       });
     });
 
@@ -135,21 +321,31 @@ export class InventoryRepository {
     createdByName?: string;
   }) {
     const validated = validateTransferInput(input);
+    await assertLocationsExist([validated.sourceLocationId, validated.targetLocationId]);
 
     const transfer = await prisma.$transaction(async (tx) => {
       const item = await tx.merchInventory.findUnique({ where: { id: validated.itemId } });
       if (!item) throw new InventoryValidationError('Inventory item not found');
 
-      if (item.quantity < validated.quantity) {
-        throw new InsufficientStockError(item.quantity, validated.quantity);
+      const sourceRow = await tx.inventoryLocationStock.findUnique({
+        where: {
+          itemId_locationId: {
+            itemId: validated.itemId,
+            locationId: validated.sourceLocationId,
+          },
+        },
+      });
+      const available = sourceRow?.quantity ?? 0;
+      if (available < validated.quantity) {
+        throw new InsufficientStockError(available, validated.quantity);
       }
 
-      const newQuantity = item.quantity - validated.quantity;
-
-      await tx.merchInventory.update({
-        where: { id: validated.itemId },
-        data: { quantity: newQuantity },
-      });
+      await upsertLocationStock(
+        tx,
+        validated.itemId,
+        validated.sourceLocationId,
+        available - validated.quantity
+      );
 
       await tx.inventoryTransfer.create({
         data: {
@@ -159,6 +355,8 @@ export class InventoryRepository {
           reason: `Transfer to ${validated.targetLocationId}`,
         },
       });
+
+      await syncItemTotalQuantity(tx, validated.itemId);
 
       return tx.stockTransfer.create({
         data: {
@@ -190,9 +388,20 @@ export class InventoryRepository {
       if (!existing) throw new InventoryValidationError('Transfer not found');
       if (existing.status === 'completed') return existing;
 
-      if (existing.status !== 'in_transit') {
-        throw new InventoryValidationError('Only in_transit transfers can be completed');
+      if (existing.status !== 'in_transit' && existing.status !== 'pending') {
+        throw new InventoryValidationError('Only in_transit or pending transfers can be completed');
       }
+
+      const targetRow = await tx.inventoryLocationStock.findUnique({
+        where: {
+          itemId_locationId: {
+            itemId: existing.itemId,
+            locationId: existing.targetLocationId,
+          },
+        },
+      });
+      const targetQty = (targetRow?.quantity ?? 0) + existing.quantity;
+      await upsertLocationStock(tx, existing.itemId, existing.targetLocationId, targetQty);
 
       await tx.inventoryTransfer.create({
         data: {
@@ -202,6 +411,8 @@ export class InventoryRepository {
           reason: `Transfer received at ${existing.targetLocationId}`,
         },
       });
+
+      await syncItemTotalQuantity(tx, existing.itemId);
 
       return tx.stockTransfer.update({
         where: { id },
@@ -233,7 +444,14 @@ export class InventoryRepository {
 
         if (matched) {
           const qty = orderItem.quantity;
-          const newQty = matched.quantity - qty;
+          const locationId = order.locationId ?? MAIN_WAREHOUSE_LOCATION_ID;
+          const stockRow = await tx.inventoryLocationStock.findUnique({
+            where: { itemId_locationId: { itemId: matched.id, locationId } },
+          });
+          const current = stockRow?.quantity ?? matched.quantity;
+          const newQty = Math.max(0, current - qty);
+
+          await upsertLocationStock(tx, matched.id, locationId, newQty);
 
           await tx.inventoryTransfer.create({
             data: {
@@ -244,10 +462,7 @@ export class InventoryRepository {
             },
           });
 
-          await tx.merchInventory.update({
-            where: { id: matched.id },
-            data: { quantity: newQty < 0 ? 0 : newQty },
-          });
+          await syncItemTotalQuantity(tx, matched.id);
         }
       }
     });

@@ -19,6 +19,7 @@ const POS_SETTINGS_KEYS = new Set([
   'receiptFooter',
   'autoPrintReceipts',
   'happyHourDiscount',
+  'verifactuEnabled',
 ]);
 
 export function isValidCurrency(value: string): boolean {
@@ -80,6 +81,13 @@ export function validatePosSettingsPatch(body: Record<string, unknown>): Partial
     patch.happyHourDiscount = Math.round(discount * 100) / 100;
   }
 
+  if (body.verifactuEnabled !== undefined) {
+    if (typeof body.verifactuEnabled !== 'boolean') {
+      throw new PosSettingsValidationError('verifactuEnabled must be a boolean');
+    }
+    patch.verifactuEnabled = body.verifactuEnabled;
+  }
+
   if (Object.keys(patch).length === 0) {
     throw new PosSettingsValidationError('No valid POS settings fields provided');
   }
@@ -116,6 +124,9 @@ export function normalizePosSettings(raw: unknown): PosSettings {
   }
   if (typeof obj.happyHourDiscount === 'number' && Number.isFinite(obj.happyHourDiscount)) {
     base.happyHourDiscount = Math.min(100, Math.max(0, obj.happyHourDiscount));
+  }
+  if (typeof obj.verifactuEnabled === 'boolean') {
+    base.verifactuEnabled = obj.verifactuEnabled;
   }
 
   return base;

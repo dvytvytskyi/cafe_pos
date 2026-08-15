@@ -1,8 +1,8 @@
 /**
  * Module 1 — Table status PATCH integration (T1.6)
  */
-import { prisma, disconnectDb } from './db.ts';
-import { tableRepository } from '../repositories/table.repository.ts';
+import { prisma, disconnectDb } from './db';
+import { tableRepository } from '../repositories/table.repository';
 
 const locationId = 'loc-patch-test';
 const tableId = 'tab-patch-1';

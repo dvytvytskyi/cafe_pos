@@ -25,6 +25,8 @@ export default function ProfileSettingsPanel() {
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [oldPassword, setOldPassword] = useState('');
@@ -44,6 +46,9 @@ export default function ProfileSettingsPanel() {
         setFirstName(split.firstName);
         setLastName(split.lastName);
         setEmail(data.email ?? '');
+        setAvatarUrl(data.avatarUrl ?? null);
+        setPendingAvatarFile(null);
+        setRemoveAvatar(false);
         if (data.phone?.startsWith('+')) {
           const match = data.phone.match(/^(\+\d{1,3})(.*)$/);
           if (match) {
@@ -72,11 +77,15 @@ export default function ProfileSettingsPanel() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPendingAvatarFile(file);
     setAvatarUrl(URL.createObjectURL(file));
+    setRemoveAvatar(false);
     setHasChanges(true);
   };
   const handleRemoveAvatar = () => {
     setAvatarUrl(null);
+    setPendingAvatarFile(null);
+    setRemoveAvatar(true);
     setHasChanges(true);
   };
 
@@ -89,13 +98,31 @@ export default function ProfileSettingsPanel() {
     setSaveError(null);
     if (!validateEmail(email)) return;
     try {
+      let nextAvatarUrl: string | null | undefined = undefined;
+      if (removeAvatar) {
+        nextAvatarUrl = null;
+      } else if (pendingAvatarFile) {
+        const form = new FormData();
+        form.append('file', pendingAvatarFile);
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: form });
+        const uploadBody = await uploadRes.json().catch(() => ({}));
+        if (!uploadRes.ok) {
+          throw new Error(uploadBody.error ?? 'Failed to upload avatar');
+        }
+        nextAvatarUrl = uploadBody.url as string;
+      }
+
       const name = joinProfileName(firstName, lastName);
       const updated = await updateProfileAsync({
         name,
         email,
         phone: buildPhone(),
+        ...(nextAvatarUrl !== undefined ? { avatarUrl: nextAvatarUrl } : {}),
       });
       setProfile(updated);
+      setAvatarUrl(updated.avatarUrl ?? null);
+      setPendingAvatarFile(null);
+      setRemoveAvatar(false);
       notifyProfileUpdated(updated);
       setIsSaved(true);
       setHasChanges(false);
@@ -155,8 +182,8 @@ export default function ProfileSettingsPanel() {
         <div className="flex items-center gap-6 mb-10 pb-8 border-b border-gray-100">
           <div className="relative group cursor-pointer" onClick={handleUploadClick}>
             <div className="w-20 h-20 rounded-full bg-orange-100 border-4 border-white shadow-sm flex items-center justify-center overflow-hidden">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="User Avatar" className="w-full h-full object-cover group-hover:opacity-30 transition-opacity" />
+              {avatarUrl || profile?.avatarUrl ? (
+                <img src={avatarUrl ?? profile?.avatarUrl ?? ''} alt="User Avatar" className="w-full h-full object-cover group-hover:opacity-30 transition-opacity" />
               ) : (
                 <User size={32} className="text-gray-400 group-hover:opacity-0 transition-opacity" />
               )}
@@ -173,6 +200,11 @@ export default function ProfileSettingsPanel() {
             <p className="text-[13px] font-medium text-gray-500">
               {roleLabel} • {locationLabel}
             </p>
+            {(avatarUrl || profile?.avatarUrl) && (
+              <button type="button" onClick={handleRemoveAvatar} className="text-[12px] font-bold text-red-500 self-start hover:underline">
+                Remove photo
+              </button>
+            )}
           </div>
         </div>
 

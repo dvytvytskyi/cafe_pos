@@ -14,6 +14,9 @@ import {
   validateVariantPrices,
   MenuValidationError,
 } from '@/lib/menu-validation';
+import { ALLOWED_ALLERGENS } from '@/lib/allergens';
+import { formatPriceDisplay, formatPriceInputBlur, parsePriceInput } from '@/lib/format-price';
+import { onPriceInputChange, onPriceInputBlur, onPriceInputKeyDown } from '@/lib/price-input-handlers';
 
 export type DishEditData = {
   id: string;
@@ -41,28 +44,28 @@ const AVAILABLE_MODIFIER_CATEGORIES = [
   {
     name: 'Milk options',
     selections: [
-      { name: 'Oat milk', price: '0.40' },
-      { name: 'Almond milk', price: '0.40' },
-      { name: 'Soy milk', price: '0.30' },
-      { name: 'Lactose-free milk', price: '0.30' },
-      { name: 'Normal milk', price: '0.00' }
+      { name: 'Oat milk', price: '0,40' },
+      { name: 'Almond milk', price: '0,40' },
+      { name: 'Soy milk', price: '0,30' },
+      { name: 'Lactose-free milk', price: '0,30' },
+      { name: 'Normal milk', price: '0,00' }
     ]
   },
   {
     name: 'Ice',
     selections: [
-      { name: 'No ice', price: '0.00' },
-      { name: 'Less ice', price: '0.00' },
-      { name: 'Regular ice', price: '0.00' },
-      { name: 'Extra ice', price: '0.00' }
+      { name: 'No ice', price: '0,00' },
+      { name: 'Less ice', price: '0,00' },
+      { name: 'Regular ice', price: '0,00' },
+      { name: 'Extra ice', price: '0,00' }
     ]
   },
   {
     name: 'Extras',
     selections: [
-      { name: 'Chocolate drizzle', price: '0.50' },
-      { name: 'Whipped cream', price: '0.60' },
-      { name: 'Cinnamon powder', price: '0.20' }
+      { name: 'Chocolate drizzle', price: '0,50' },
+      { name: 'Whipped cream', price: '0,60' },
+      { name: 'Cinnamon powder', price: '0,20' }
     ]
   }
 ];
@@ -87,17 +90,15 @@ export default function DishModal({
 
   // Pricing State
   const [pricingType, setPricingType] = useState<'single' | 'variants'>('single');
-  const [singlePrice, setSinglePrice] = useState('0.00');
-  const [variants, setVariants] = useState([{ id: '1', name: 'Standard', price: '0.00', isActive: true }]);
+  const [singlePrice, setSinglePrice] = useState('');
+  const [variants, setVariants] = useState([{ id: '1', name: 'Standard', price: '', isActive: true }]);
 
   // Modifiers State
-  const [modifiers, setModifiers] = useState([{ id: '1', name: 'Extra Shot', price: '1.50', maxQty: '1', isActive: true }]);
+  const [modifiers, setModifiers] = useState([{ id: '1', name: 'Extra Shot', price: '1,50', maxQty: '1', isActive: true }]);
 
-  // Allergens State
-  const [allergens, setAllergens] = useState(['Dairy', 'Nuts']);
-  const [customAllergens, setCustomAllergens] = useState<string[]>([]);
-  const [newAllergen, setNewAllergen] = useState('');
-  const allAvailableAllergens = [...['Dairy', 'Nuts', 'Gluten', 'Soy', 'Eggs', 'Fish', 'Shellfish'], ...customAllergens];
+  // Allergens State (EU Reg 1169/2011 Annex II)
+  const [allergens, setAllergens] = useState<string[]>([]);
+  const allAvailableAllergens = [...ALLOWED_ALLERGENS];
 
   // Tags State
   const [tags, setTags] = useState<string[]>(['Best Seller']);
@@ -114,20 +115,6 @@ export default function DishModal({
 
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(t => t !== tagToRemove));
-  };
-
-  const handleAddCustomAllergen = (e: React.KeyboardEvent | React.MouseEvent) => {
-    if (e.type === 'keydown' && (e as React.KeyboardEvent).key !== 'Enter') return;
-    e.preventDefault();
-    if (!newAllergen.trim()) return;
-    const capitalized = newAllergen.trim().charAt(0).toUpperCase() + newAllergen.trim().slice(1);
-    if (!allAvailableAllergens.includes(capitalized)) {
-      setCustomAllergens([...customAllergens, capitalized]);
-    }
-    if (!allergens.includes(capitalized)) {
-      setAllergens([...allergens, capitalized]);
-    }
-    setNewAllergen('');
   };
 
   // Delete Confirmation State
@@ -206,7 +193,7 @@ export default function DishModal({
     if (mode === 'edit' && dish) {
       const nextName = { en: dish.name, ru: '', es: '' };
       const nextDesc = { en: dish.description || '', ru: '', es: '' };
-      const nextPrice = dish.price.toFixed(2);
+      const nextPrice = formatPriceDisplay(dish.price);
       const nextVariants = [{ id: '1', name: 'Standard', price: nextPrice, isActive: true }];
       const nextAllergens = dish.allergens ?? [];
       const nextActive = !dish.isArchived;
@@ -221,6 +208,7 @@ export default function DishModal({
       setIsDishActive(nextActive);
       setIsRecommended(false);
       setTags([]);
+      setPhotoPreview(null);
       setActiveSection('general');
       setActiveLang('en');
       setSelectedLocations(availableLocations.map((l) => l.id));
@@ -235,8 +223,7 @@ export default function DishModal({
           variants: nextVariants,
           modifiers,
           allergens: nextAllergens,
-          customAllergens,
-          photoPreview,
+          photoPreview: null,
           isDishActive: nextActive,
           selectedLocations: availableLocations.map((l) => l.id),
           tags: [],
@@ -245,8 +232,8 @@ export default function DishModal({
     } else {
       const nextName = { en: '', ru: '', es: '' };
       const nextDesc = { en: '', ru: '', es: '' };
-      const nextPrice = '0.00';
-      const nextVariants = [{ id: '1', name: 'Standard', price: '0.00', isActive: true }];
+      const nextPrice = '';
+      const nextVariants = [{ id: '1', name: 'Standard', price: '', isActive: true }];
       const nextAllergens: string[] = [];
 
       setName(nextName);
@@ -259,6 +246,7 @@ export default function DishModal({
       setIsDishActive(true);
       setIsRecommended(false);
       setTags([]);
+      setPhotoPreview(null);
       setActiveSection('general');
       setActiveLang('en');
       setSelectedLocations(availableLocations.map((l) => l.id));
@@ -273,8 +261,7 @@ export default function DishModal({
           variants: nextVariants,
           modifiers,
           allergens: nextAllergens,
-          customAllergens,
-          photoPreview,
+          photoPreview: null,
           isDishActive: true,
           selectedLocations: availableLocations.map((l) => l.id),
           tags: [],
@@ -283,7 +270,7 @@ export default function DishModal({
     }
   }, [isOpen, mode, dish?.id]);
 
-  const hasUnsavedChanges = initialStateHash !== null && initialStateHash !== JSON.stringify({ name, description, notes, pricingType, singlePrice, variants, modifiers, allergens, customAllergens, photoPreview, isDishActive, selectedLocations, tags });
+  const hasUnsavedChanges = initialStateHash !== null && initialStateHash !== JSON.stringify({ name, description, notes, pricingType, singlePrice, variants, modifiers, allergens, photoPreview, isDishActive, selectedLocations, tags });
 
   const handleCloseAnimation = () => {
     setIsClosing(true);
@@ -372,7 +359,6 @@ export default function DishModal({
             variants,
             modifiers,
             allergens,
-            customAllergens,
             photoPreview,
             isDishActive,
             selectedLocations,
@@ -400,6 +386,21 @@ export default function DishModal({
       setPhotoPreview(url);
     }
   };
+
+  const handlePriceChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (val: string) => void
+  ) => onPriceInputChange(e, setter);
+
+  const handlePriceBlur = (
+    e: React.FocusEvent<HTMLInputElement>,
+    setter: (val: string) => void
+  ) => onPriceInputBlur(e, setter);
+
+  const handlePriceKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    setter: (val: string) => void
+  ) => onPriceInputKeyDown(e, setter);
 
   if (!isOpen) return null;
 
@@ -741,10 +742,13 @@ export default function DishModal({
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">€</span>
                         <input 
-                          type="number" 
+                          type="text"
                           data-testid="dish-price-input"
                           value={singlePrice}
-                          onChange={(e) => setSinglePrice(e.target.value)}
+                          onChange={(e) => handlePriceChange(e, setSinglePrice)}
+                          onBlur={(e) => handlePriceBlur(e, setSinglePrice)}
+                          onKeyDown={(e) => handlePriceKeyDown(e, setSinglePrice)}
+                          placeholder="0,00"
                           className="w-48 bg-white border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi"
                         />
                       </div>
@@ -772,9 +776,12 @@ export default function DishModal({
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-[13px]">€</span>
                               <input 
-                                type="number" 
+                                type="text"
                                 value={variant.price}
-                                onChange={(e) => setVariants(variants.map(v => v.id === variant.id ? { ...v, price: e.target.value } : v))}
+                                onChange={(e) => handlePriceChange(e, (val) => setVariants(variants.map(v => v.id === variant.id ? { ...v, price: val } : v)))}
+                                onBlur={(e) => setVariants(variants.map(v => v.id === variant.id ? { ...v, price: formatPriceInputBlur(e.target.value) } : v))}
+                                onKeyDown={(e) => handlePriceKeyDown(e, (val) => setVariants(variants.map(v => v.id === variant.id ? { ...v, price: val } : v)))}
+                                placeholder="0,00"
                                 className="w-full bg-gray-50 border border-transparent hover:bg-white hover:border-gray-200 focus:bg-white focus:border-corgi rounded-lg pl-7 pr-3 py-2 text-[13px] font-semibold text-gray-900 outline-none transition-all"
                               />
                             </div>
@@ -798,7 +805,7 @@ export default function DishModal({
                       ))}
                       
                       <button 
-                        onClick={() => setVariants([...variants, { id: Date.now().toString(), name: 'New Variant', price: '0.00', isActive: true }])}
+                        onClick={() => setVariants([...variants, { id: Date.now().toString(), name: 'New Variant', price: '', isActive: true }])}
                         className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-[13px] font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-800 hover:border-gray-300 transition-all flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Plus size={16} />
@@ -854,7 +861,7 @@ export default function DishModal({
                                   <div key={sel.name} className="flex justify-between items-center px-3 py-2 text-xs font-semibold">
                                     <span className="text-gray-900">{sel.name}</span>
                                     <div className="flex items-center gap-2">
-                                      <span className="text-gray-400">€{parseFloat(sel.price).toFixed(2).replace('.', ',')}</span>
+                                      <span className="text-gray-400">€{formatPriceDisplay(parsePriceInput(sel.price))}</span>
                                       {isDuplicate && (
                                         <span className="text-[9px] font-black uppercase bg-red-50 text-red-500 border border-red-100 px-1.5 py-0.5 rounded">Duplicate (will skip)</span>
                                       )}
@@ -951,9 +958,12 @@ export default function DishModal({
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-[13px]">€</span>
                             <input 
-                              type="number" 
+                              type="text"
                               value={modifier.price}
-                              onChange={(e) => setModifiers(modifiers.map(m => m.id === modifier.id ? { ...m, price: e.target.value } : m))}
+                              onChange={(e) => handlePriceChange(e, (val) => setModifiers(modifiers.map(m => m.id === modifier.id ? { ...m, price: val } : m)))}
+                              onBlur={(e) => setModifiers(modifiers.map(m => m.id === modifier.id ? { ...m, price: formatPriceInputBlur(e.target.value) } : m))}
+                              onKeyDown={(e) => handlePriceKeyDown(e, (val) => setModifiers(modifiers.map(m => m.id === modifier.id ? { ...m, price: val } : m)))}
+                              placeholder="0,00"
                               className="w-full bg-gray-50 border border-transparent hover:bg-white hover:border-gray-200 focus:bg-white focus:border-corgi rounded-lg pl-7 pr-3 py-2 text-[13px] font-semibold text-gray-900 outline-none transition-all"
                             />
                           </div>
@@ -988,7 +998,7 @@ export default function DishModal({
                     ))}
                     
                     <button 
-                      onClick={() => setModifiers([...modifiers, { id: Date.now().toString(), name: 'New Modifier', price: '0.00', maxQty: '1', isActive: true }])}
+                      onClick={() => setModifiers([...modifiers, { id: Date.now().toString(), name: 'New Modifier', price: '', maxQty: '1', isActive: true }])}
                       className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-[13px] font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-800 hover:border-gray-300 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Plus size={16} />
@@ -1003,7 +1013,9 @@ export default function DishModal({
                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div>
                     <h3 className="text-[16px] font-bold text-gray-900">Allergens</h3>
-                    <p className="text-[13px] text-gray-500 font-medium mt-1">Select allergens present in this dish to keep customers informed.</p>
+                    <p className="text-[13px] text-gray-500 font-medium mt-1">
+                      EU mandatory allergens (Regulation EU 1169/2011, Annex II).
+                    </p>
                   </div>
                   
                   <div className="flex flex-wrap gap-2">
@@ -1020,23 +1032,6 @@ export default function DishModal({
                         </button>
                       );
                     })}
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100 w-max">
-                    <input
-                      type="text"
-                      placeholder="Add custom allergen..."
-                      value={newAllergen}
-                      onChange={(e) => setNewAllergen(e.target.value)}
-                      onKeyDown={handleAddCustomAllergen}
-                      className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi w-48"
-                    />
-                    <button 
-                      onClick={handleAddCustomAllergen} 
-                      className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-corgi hover:border-corgi transition-colors cursor-pointer"
-                    >
-                      <Plus size={16} />
-                    </button>
                   </div>
                 </div>
               )}

@@ -54,9 +54,12 @@ const createDiagonalPattern = (color: string, bgColor: string) => {
   return ctx.createPattern(canvas, 'repeat') || color;
 };
 
-function formatDayLabel(iso: string): string {
+function formatDayLabel(iso: string, weekly = false): string {
   const d = new Date(iso + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
+  if (weekly) {
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 function resolveChartData(
@@ -161,6 +164,7 @@ type RevenueChartProps = {
   compare?: boolean;
   viewMode?: 'total' | 'locations';
   grossOnly?: boolean;
+  weekly?: boolean;
   revenueByDay?: RevenueByDayRow[];
   previousRevenueByDay?: RevenueByDayRow[];
   revenueByDayByLocation?: Array<{ locationId: string; name: string; days: RevenueByDayRow[] }>;
@@ -170,6 +174,7 @@ export function RevenueLineChart({
   compare = false,
   viewMode = 'total',
   grossOnly = false,
+  weekly = false,
   revenueByDay = [],
   previousRevenueByDay,
   revenueByDayByLocation = [],
@@ -179,7 +184,7 @@ export function RevenueLineChart({
     const allDates = [
       ...new Set(revenueByDayByLocation.flatMap((l) => l.days.map((d) => d.date))),
     ].sort();
-    const labels = allDates.map(formatDayLabel);
+    const labels = allDates.map((d) => formatDayLabel(d, weekly));
 
     const datasets = revenueByDayByLocation.map((loc, index) => ({
       label: loc.name,
@@ -192,9 +197,18 @@ export function RevenueLineChart({
     }));
 
     return { labels: labels.length ? labels : ['—'], datasets };
-  }, [viewMode, revenueByDayByLocation]);
+  }, [viewMode, revenueByDayByLocation, weekly]);
 
-  if (viewMode === 'locations' && locationChart) {
+  const chartData = useMemo(() => {
+    const data = resolveChartData(
+      compare ? revenueByDay : revenueByDay,
+      compare ? previousRevenueByDay : undefined
+    );
+    data.labels = revenueByDay.map((d) => formatDayLabel(d.date, weekly));
+    return data;
+  }, [compare, revenueByDay, previousRevenueByDay, weekly]);
+
+  if (viewMode === 'locations' && revenueByDayByLocation.length > 0 && locationChart) {
     return (
       <div className="w-full h-full min-h-[220px]">
         <Bar data={locationChart as never} options={barOptions as never} />
@@ -202,22 +216,18 @@ export function RevenueLineChart({
     );
   }
 
-  const chartData = resolveChartData(
-    compare ? revenueByDay : revenueByDay,
-    compare ? previousRevenueByDay : undefined
-  );
-
+  const displayData = { ...chartData };
   if (grossOnly) {
-    chartData.datasets = chartData.datasets.filter((ds) =>
+    displayData.datasets = chartData.datasets.filter((ds) =>
       String(ds.label).includes('Gross')
     );
   } else if (!compare) {
-    chartData.datasets = chartData.datasets.slice(0, 2);
+    displayData.datasets = chartData.datasets.slice(0, 2);
   }
 
   const resolvedData = {
-    ...chartData,
-    datasets: chartData.datasets.map((ds) => ({
+    ...displayData,
+    datasets: displayData.datasets.map((ds) => ({
       ...ds,
       backgroundColor:
         typeof ds.backgroundColor === 'function' ? ds.backgroundColor() : ds.backgroundColor,

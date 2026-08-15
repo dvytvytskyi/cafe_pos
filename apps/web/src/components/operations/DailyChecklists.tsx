@@ -8,6 +8,7 @@ import DatePicker from '../ui/DatePicker';
 import {
   getChecklistsAsync,
   saveChecklistCompletionAsync,
+  saveChecklistTemplatesAsync,
   completionsToStateMap,
   type ChecklistTemplate,
 } from '@/lib/checklists';
@@ -65,6 +66,7 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode, onComplet
   const [actorUserId, setActorUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSavingTemplates, setIsSavingTemplates] = useState(false);
 
   const [selectedShift, setSelectedShift] = useState<ChecklistShiftType>('opening');
   const [uploadModalItem, setUploadModalItem] = useState<{ id: string, loc: LocationKey, title: string, photoUrl?: string } | null>(null);
@@ -210,6 +212,45 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode, onComplet
     setIsAddingNew(null);
     setNewTaskTitle('');
     setNewTaskRequiresPhoto(false);
+  };
+
+  const buildTemplatesPayload = (): Omit<ChecklistTemplate, 'id'>[] => {
+    const payload: Omit<ChecklistTemplate, 'id'>[] = [];
+    for (const category of ['opening', 'closing'] as ChecklistShiftType[]) {
+      masterTasks
+        .filter((task) => task.category === category)
+        .forEach((task, index) => {
+          payload.push({
+            taskKey: task.id,
+            title: task.title,
+            requiresPhoto: task.requiresPhoto,
+            category,
+            sortOrder: index,
+            permissions: permissions[task.id] ?? {},
+          });
+        });
+    }
+    return payload;
+  };
+
+  const handleSetupToggle = async () => {
+    if (!isSetupMode) {
+      setIsSetupMode(true);
+      return;
+    }
+
+    try {
+      setIsSavingTemplates(true);
+      setSaveError(null);
+      await saveChecklistTemplatesAsync(buildTemplatesPayload());
+      setIsSetupMode(false);
+      await loadChecklists();
+    } catch (err) {
+      console.error('Failed to save SOP templates:', err);
+      setSaveError(err instanceof Error ? err.message : 'Failed to save SOP templates');
+    } finally {
+      setIsSavingTemplates(false);
+    }
   };
 
   // ----------------------------------------------------
@@ -511,15 +552,18 @@ export default function DailyChecklists({ isSetupMode, setIsSetupMode, onComplet
         )}
 
         <button 
-          onClick={() => setIsSetupMode(!isSetupMode)}
-          className={`flex items-center justify-center gap-2 w-9 xl:w-auto xl:px-4 h-9 rounded-xl text-[13px] font-bold transition-all cursor-pointer shrink-0 ${
+          onClick={() => void handleSetupToggle()}
+          disabled={isSavingTemplates}
+          className={`flex items-center justify-center gap-2 w-9 xl:w-auto xl:px-4 h-9 rounded-xl text-[13px] font-bold transition-all cursor-pointer shrink-0 disabled:opacity-60 ${
             isSetupMode 
               ? 'bg-purple-100 text-purple-700 hover:bg-purple-200 shadow-sm' 
               : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
           }`}
         >
           <Settings size={16} />
-          <span className="hidden xl:inline">{isSetupMode ? 'Exit Setup Mode' : 'Edit SOPs'}</span>
+          <span className="hidden xl:inline">
+            {isSavingTemplates ? 'Saving…' : isSetupMode ? 'Exit Setup Mode' : 'Edit SOPs'}
+          </span>
         </button>
       </div>
 

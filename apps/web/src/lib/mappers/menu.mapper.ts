@@ -1,3 +1,5 @@
+import { normalizeAllergenList } from '../allergens';
+
 export interface PosModifierOption {
   id: string;
   name: string;
@@ -65,6 +67,10 @@ interface DbMenuCategory {
 const DEFAULT_EMENU_IMAGE =
   'https://images.pexels.com/photos/37417630/pexels-photo-37417630.jpeg';
 
+function mapItemAllergens(allergens?: string[]): string[] {
+  return normalizeAllergenList(allergens);
+}
+
 export function mapCategoriesToEmenuMenu(
   categories: DbMenuCategory[] | null | undefined,
   defaultImage: string = DEFAULT_EMENU_IMAGE
@@ -83,7 +89,7 @@ export function mapCategoriesToEmenuMenu(
       description: item.description || '',
       image: defaultImage,
       basePrice: item.price,
-      allergens: item.allergens || [],
+      allergens: mapItemAllergens(item.allergens),
     }))
   );
 
@@ -124,7 +130,7 @@ export function mapCategoriesToPosMenu(categories: DbMenuCategory[] | null | und
       id: item.id,
       name: item.name,
       price: item.price,
-      allergens: item.allergens || [],
+      allergens: mapItemAllergens(item.allergens),
       sizes: [],
       categoryId: cat.id,
     })),

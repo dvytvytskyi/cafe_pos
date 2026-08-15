@@ -8,16 +8,21 @@ import {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { weekStart, shifts } = body as {
+    const { weekStart, shifts, clearedUserIds } = body as {
       weekStart?: string;
       shifts?: Array<{ userId: string; dayOfWeek: number; startTime: string; endTime: string }>;
+      clearedUserIds?: string[];
     };
 
     if (!weekStart || !Array.isArray(shifts)) {
       return NextResponse.json({ error: 'weekStart and shifts array are required' }, { status: 400 });
     }
 
-    const saved = await scheduleRepository.bulkSave(weekStart, shifts);
+    const saved = await scheduleRepository.bulkSave(
+      weekStart,
+      shifts,
+      Array.isArray(clearedUserIds) ? clearedUserIds : []
+    );
     return NextResponse.json(
       {
         weekStart,

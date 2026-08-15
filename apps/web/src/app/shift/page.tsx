@@ -11,6 +11,7 @@ import {
   closeShiftAsync,
   recordCashAdjustmentAsync,
   getCurrentShiftAsync,
+  formatShiftAdjustmentTime,
 } from '@/lib/shifts';
 import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 import { getCurrentUserId } from '@/lib/current-user';
@@ -274,7 +275,7 @@ export default function ShiftPage() {
                       <div>
                         <div className="font-bold text-gray-900">Shift {activeShift.id} is Open</div>
                         <div className="text-xs text-gray-400 font-semibold mt-0.5">
-                          Opened at {activeShift.openedAt.toLocaleDateString()} {activeShift.openedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} <span className="text-gray-300 mx-1">•</span> by Name Surname
+                          Opened at {activeShift.openedAt.toLocaleDateString()} {activeShift.openedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} <span className="text-gray-300 mx-1">•</span> by {activeShift.openedByName ?? 'Staff'}
                         </div>
                       </div>
                     </div>
@@ -373,7 +374,7 @@ export default function ShiftPage() {
                                 </div>
                                 <div>
                                   <span className="font-bold text-sm text-gray-900 block">{adj.reason}</span>
-                                  <span className="text-[11px] font-medium text-gray-400 mt-0.5 block">{adj.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                  <span className="text-[11px] font-medium text-gray-400 mt-0.5 block">{formatShiftAdjustmentTime(adj.time)}</span>
                                 </div>
                               </div>
                               <span className={`font-black text-base ${adj.type === 'in' ? 'text-emerald-600' : 'text-red-500'}`}>
@@ -489,7 +490,9 @@ export default function ShiftPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50 bg-white text-xs font-semibold text-gray-700">
-                    {shifts.slice().reverse().map(s => (
+                    {[...shifts]
+                      .sort((a, b) => b.openedAt.getTime() - a.openedAt.getTime())
+                      .map(s => (
                       <React.Fragment key={s.id}>
                         <tr 
                           className="hover:bg-beige/10 transition-colors cursor-pointer group"
@@ -567,7 +570,7 @@ export default function ShiftPage() {
                                             </div>
                                             <div>
                                               <span className="font-bold text-xs text-gray-900 block">{adj.reason}</span>
-                                              <span className="text-[10px] font-medium text-gray-400 mt-0.5 block">{adj.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                              <span className="text-[10px] font-medium text-gray-400 mt-0.5 block">{formatShiftAdjustmentTime(adj.time)}</span>
                                             </div>
                                           </div>
                                           <span className={`font-black text-sm ${adj.type === 'in' ? 'text-emerald-600' : 'text-red-500'}`}>

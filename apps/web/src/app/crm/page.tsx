@@ -17,6 +17,8 @@ import {
   DEFAULT_LOYALTY_CONFIG,
   type LoyaltyConfig,
   buildCustomerQrCode,
+  formatLoyaltyPoints,
+  formatLoyaltyPointsDelta,
 } from '@/lib/crm';
 import {
   filterCustomersBySearch,
@@ -24,6 +26,7 @@ import {
   validateCustomerName,
   validatePhoneE164,
   validateEmail,
+  sortCustomers,
 } from '@/lib/crm-validation';
 import { 
   Search, 
@@ -104,7 +107,7 @@ function CrmPageContent() {
     setLoadError(null);
     getGuestsAsync()
       .then((data) => {
-        if (!cancelled) setGuests(data);
+        if (!cancelled) setGuests(sortCustomers(data, 'name', 'asc'));
       })
       .catch((err) => {
         if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Failed to load guests');
@@ -117,25 +120,33 @@ function CrmPageContent() {
 
   useEffect(() => {
     let cancelled = false;
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - 365);
-    Promise.all([
-      getOrderHistoryAsync({
-        startDate: start.toISOString().slice(0, 10),
-        endDate: end.toISOString().slice(0, 10),
-        limit: 100,
-      }),
-      getLoyaltyConfigAsync(),
-    ])
-      .then(([history, config]) => {
-        if (cancelled) return;
-        setCrmOrders(history.orders);
-        setLoyaltyConfig(config);
+    getLoyaltyConfigAsync()
+      .then((config) => {
+        if (!cancelled) setLoyaltyConfig(config);
       })
       .catch(console.error);
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 365);
+
+    getOrderHistoryAsync({
+      startDate: start.toISOString().slice(0, 10),
+      endDate: end.toISOString().slice(0, 10),
+      limit: activeTab === 'activity' ? 100 : 50,
+      ...(selectedGuestId && activeTab === 'overview' ? { customerId: selectedGuestId } : {}),
+    })
+      .then((history) => {
+        if (cancelled) return;
+        setCrmOrders(history.orders);
+      })
+      .catch(console.error);
+    return () => { cancelled = true; };
+  }, [selectedGuestId, activeTab]);
 
   // Set default selected guest
   useEffect(() => {
@@ -146,26 +157,33 @@ function CrmPageContent() {
 
   // Helper: check if customer is inactive (> 30 days)
   const isInactive = (lastVisitDate: string) => {
-    const today = new Date('2026-07-12'); // Fixed system date context
+    const today = new Date();
     const lastVisit = new Date(lastVisitDate);
     const diffTime = Math.abs(today.getTime() - lastVisit.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 30;
   };
 
-  // Filtered guests (client-side search + segment filters)
-  const filteredGuests = filterCustomersBySearch(guests, searchQuery).filter(guest => {
-    if (activeFilter === 'vip') {
-      return guest.tier === 'VIP' || guest.tier === 'Gold';
-    }
-    if (activeFilter === 'inactive') {
-      return isInactive(guest.lastVisitDate);
-    }
-    if (activeFilter === 'allergies') {
-      return !!guest.allergyNotes;
-    }
-    return true;
-  });
+  const orderBelongsToGuest = (order: Order, guestId: string) =>
+    order.customerId === guestId || (order.loyaltyGuestIds?.includes(guestId) ?? false);
+
+  // Filtered guests (client-side search + segment filters), sorted A→Z by name
+  const filteredGuests = sortCustomers(
+    filterCustomersBySearch(guests, searchQuery).filter(guest => {
+      if (activeFilter === 'vip') {
+        return guest.tier === 'VIP' || guest.tier === 'Gold';
+      }
+      if (activeFilter === 'inactive') {
+        return isInactive(guest.lastVisitDate);
+      }
+      if (activeFilter === 'allergies') {
+        return !!guest.allergyNotes;
+      }
+      return true;
+    }),
+    'name',
+    'asc'
+  );
 
   const selectedGuest = guests.find(g => g.id === selectedGuestId) || null;
 
@@ -205,13 +223,30 @@ function CrmPageContent() {
         allergyNotes: formAllergies || undefined,
         notes: formNotes || undefined,
       });
-      setGuests((prev) => [created, ...prev]);
+      setGuests((prev) => sortCustomers([created, ...prev], 'name', 'asc'));
       setSelectedGuestId(created.id);
       setIsAddOpen(false);
       resetForm();
     } catch (err) {
       if (err instanceof CrmApiError && err.code === 'PHONE_DUPLICATE') {
+        setFormErrors((p) => ({
+          ...p,
+          phone: 'This phone number is already registered to another guest.',
+        }));
         setToast('This phone number is already registered to another guest.');
+        return;
+      }
+      if (err instanceof CrmApiError && err.status === 400) {
+        const msg = err.message;
+        if (msg.toLowerCase().includes('phone')) {
+          setFormErrors((p) => ({ ...p, phone: msg }));
+        } else if (msg.toLowerCase().includes('email')) {
+          setFormErrors((p) => ({ ...p, email: msg }));
+        } else if (msg.toLowerCase().includes('name')) {
+          setFormErrors((p) => ({ ...p, name: msg }));
+        } else {
+          setToast(msg);
+        }
         return;
       }
       console.error('Failed to create guest:', err);
@@ -236,12 +271,29 @@ function CrmPageContent() {
         allergyNotes: formAllergies || undefined,
         notes: formNotes || undefined,
       });
-      setGuests((prev) => prev.map((g) => (g.id === selectedGuestId ? updated : g)));
+      setGuests((prev) => sortCustomers(prev.map((g) => (g.id === selectedGuestId ? updated : g)), 'name', 'asc'));
       setIsEditOpen(false);
       resetForm();
     } catch (err) {
       if (err instanceof CrmApiError && err.code === 'PHONE_DUPLICATE') {
+        setFormErrors((p) => ({
+          ...p,
+          phone: 'This phone number is already registered to another guest.',
+        }));
         setToast('This phone number is already registered to another guest.');
+        return;
+      }
+      if (err instanceof CrmApiError && err.status === 400) {
+        const msg = err.message;
+        if (msg.toLowerCase().includes('phone')) {
+          setFormErrors((p) => ({ ...p, phone: msg }));
+        } else if (msg.toLowerCase().includes('email')) {
+          setFormErrors((p) => ({ ...p, email: msg }));
+        } else if (msg.toLowerCase().includes('name')) {
+          setFormErrors((p) => ({ ...p, name: msg }));
+        } else {
+          setToast(msg);
+        }
         return;
       }
       console.error('Failed to update guest:', err);
@@ -272,7 +324,7 @@ function CrmPageContent() {
   const handleAdjustPoints = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGuestId) return;
-    const amountVal = parseFloat(adjustAmount);
+    const amountVal = Math.round(parseFloat(adjustAmount));
     if (isNaN(amountVal) || amountVal <= 0) return;
     if (!adjustReason.trim()) return;
 
@@ -294,7 +346,7 @@ function CrmPageContent() {
           id: Date.now(),
           type: 'adjustment',
           guestName: currentGuest.name,
-          description: `Manually adjusted points by ${diff > 0 ? '+' : ''}${diff.toFixed(2)} pts (${adjustReason})`,
+          description: `Manually adjusted points by ${formatLoyaltyPointsDelta(diff)} pts (${adjustReason})`,
           time: new Date(),
         },
         ...prev,
@@ -346,7 +398,7 @@ function CrmPageContent() {
   const totalGuests = guests.length;
   const vipCount = guests.filter(g => g.tier === 'VIP' || g.tier === 'Gold').length;
   const totalLTV = guests.reduce((sum, g) => sum + g.ltv, 0).toFixed(2);
-  const totalPoints = guests.reduce((sum, g) => sum + g.points, 0).toFixed(1);
+  const totalPoints = formatLoyaltyPoints(guests.reduce((sum, g) => sum + g.points, 0));
 
   return (
     <DashboardLayout>
@@ -477,7 +529,7 @@ function CrmPageContent() {
                           {guest.tier} ({cashbackRate}%)
                         </span>
                         <span className="text-[11px] font-bold text-gray-500">
-                          {guest.points.toFixed(1)} pts
+                          {formatLoyaltyPoints(guest.points)} pts
                         </span>
                       </div>
                     </div>
@@ -573,7 +625,7 @@ function CrmPageContent() {
                           <Coins size={14} className="text-amber-500" />
                           <span>Balance</span>
                         </div>
-                        <div className="text-lg font-black text-gray-900">{selectedGuest.points.toFixed(2)} pts</div>
+                        <div className="text-lg font-black text-gray-900">{formatLoyaltyPoints(selectedGuest.points)} pts</div>
                       </div>
                       <button 
                         onClick={() => { setAdjustError(null); setIsAdjustPointsOpen(true); }}
@@ -694,7 +746,7 @@ function CrmPageContent() {
                     </h3>
                     
                     {(() => {
-                      const guestOrders = crmOrders.filter(o => o.customerId === selectedGuest.id);
+                      const guestOrders = crmOrders.filter((o) => orderBelongsToGuest(o, selectedGuest.id));
                       if (guestOrders.length === 0) {
                         return (
                           <div className="text-xs text-gray-400 font-semibold block italic py-2">
@@ -725,7 +777,7 @@ function CrmPageContent() {
                                     {order.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}
                                   </td>
                                   <td className="py-3 px-3 font-bold text-green-600">
-                                    {order.customerPointsEarned ? `+${order.customerPointsEarned.toFixed(2)}` : '0.00'}
+                                    {order.customerPointsEarned ? `+${formatLoyaltyPoints(order.customerPointsEarned)}` : '0'}
                                   </td>
                                   <td className="py-3 px-3 text-right font-black text-gray-950">
                                     €{order.total.toFixed(2)}
@@ -767,7 +819,7 @@ function CrmPageContent() {
                       id: o.id + '-' + o.time.getTime(),
                       type: 'checkout',
                       guestName: o.customerName,
-                      description: `Paid order ${o.id} for €${o.total.toFixed(2)} (${o.customerPointsEarned ? `+${o.customerPointsEarned.toFixed(2)} pts earned` : '0 pts'})`,
+                      description: `Paid order ${o.id} for €${o.total.toFixed(2)} (${o.customerPointsEarned ? `+${formatLoyaltyPoints(o.customerPointsEarned)} pts earned` : '0 pts'})`,
                       time: o.time
                     });
                   }
@@ -886,7 +938,7 @@ function CrmPageContent() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Phone Number</label>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Phone Number *</label>
                       <input
                         type="text"
                         data-testid="crm-form-phone"
@@ -911,7 +963,7 @@ function CrmPageContent() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Email Address</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Email Address *</label>
                     <input
                       type="email"
                       data-testid="crm-form-email"
@@ -1007,7 +1059,7 @@ function CrmPageContent() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Phone Number</label>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Phone Number *</label>
                       <input
                         type="text"
                         data-testid="crm-form-phone"
@@ -1032,7 +1084,7 @@ function CrmPageContent() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Email Address</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Email Address *</label>
                     <input
                       type="email"
                       data-testid="crm-form-email"
@@ -1133,7 +1185,7 @@ function CrmPageContent() {
                       <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block">Balance</span>
                       <span className="text-lg font-black text-amber-400 flex items-center gap-0.5 justify-end">
                         <Coins size={14} />
-                        {selectedGuest.points.toFixed(1)}
+                        {formatLoyaltyPoints(selectedGuest.points)}
                       </span>
                     </div>
                   </div>
@@ -1234,6 +1286,15 @@ function CrmPageContent() {
                 </div>
                 
                 <form onSubmit={handleAdjustPoints} className="space-y-4">
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1">
+                      Current Balance — {selectedGuest.name}
+                    </span>
+                    <span className="text-xl font-black text-gray-900" data-testid="crm-adjust-current-balance">
+                      {formatLoyaltyPoints(selectedGuest.points)} pts
+                    </span>
+                  </div>
+
                   <div className="flex gap-4">
                     <button
                       type="button"
@@ -1264,13 +1325,13 @@ function CrmPageContent() {
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Points Amount *</label>
                     <input
                       type="number"
-                      step="0.01"
-                      min="0.01"
+                      step="1"
+                      min="1"
                       required
                       data-testid="crm-adjust-amount"
                       value={adjustAmount}
                       onChange={e => setAdjustAmount(e.target.value)}
-                      placeholder="e.g. 10.00"
+                      placeholder="e.g. 10"
                       className="w-full bg-gray-50 border border-gray-150 hover:bg-white hover:border-gray-200 focus:bg-white focus:border-corgi rounded-xl px-4 py-2.5 text-[13px] font-semibold text-gray-900 outline-none transition-all"
                       autoFocus
                     />

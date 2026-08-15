@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --color-corgi: #FDBD38;
+  --color-brand-green: #87B031;
+  --color-background: #FAF7F3;
+  --color-foreground: #111827;
+}
+
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

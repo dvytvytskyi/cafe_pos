@@ -6,6 +6,7 @@ export type Profile = {
   email: string | null;
   phone: string | null;
   avatarInitials: string | null;
+  avatarUrl: string | null;
   role: { id: string; name: string };
   locations: { id: string; name: string }[];
   hasPassword: boolean;
@@ -43,7 +44,7 @@ export async function getProfileAsync(userId?: string): Promise<Profile> {
 }
 
 export async function updateProfileAsync(
-  data: { name: string; email: string; phone?: string | null },
+  data: { name: string; email: string; phone?: string | null; avatarUrl?: string | null },
   userId?: string
 ): Promise<Profile> {
   const res = await fetch(profileUrl('', userId), {

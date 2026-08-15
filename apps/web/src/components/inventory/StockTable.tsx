@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PackageSearch, Download, Search, MapPin, ChevronDown, Check, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AddItemModal, { StockItemData } from './AddItemModal';
 import {
   getInventoryAsync,
-  inferCategoryFromSku,
+  getInventoryLocationsAsync,
+  locationStocksToMap,
   stockStatusFromQuantity,
   type MerchItem,
 } from '@/lib/inventory';
+import type { LocationSummary } from '@/lib/locations';
 
 type StockStatus = 'healthy' | 'low' | 'out';
 type Category = 'merch' | 'kitchen' | 'bar';
@@ -17,35 +19,30 @@ interface StockItem {
   sku: string;
   name: string;
   category: Category;
+  unit: string;
   totalStock: number;
   minThreshold: number;
   status: StockStatus;
-  locations: {
-    main: number;
-    gothic: number;
-    eixample: number;
-    sagrada: number;
-  };
+  locationStocks: Record<string, number>;
 }
 
-function mapMerchToStock(item: MerchItem): StockItem {
+function mapMerchToStock(item: MerchItem, locationIds: string[]): StockItem {
+  const stocks = locationStocksToMap(item);
+  for (const id of locationIds) {
+    if (stocks[id] === undefined) stocks[id] = 0;
+  }
   const minThreshold = item.minStockLevel ?? 10;
-  const status = stockStatusFromQuantity(item.quantity, minThreshold);
-  const category = inferCategoryFromSku(item.sku);
+  const category = (item.category ?? 'merch') as Category;
   return {
     id: item.id,
     sku: item.sku,
     name: item.name,
     category,
+    unit: item.unit ?? 'pcs',
     totalStock: item.quantity,
     minThreshold,
-    status,
-    locations: {
-      main: item.quantity,
-      gothic: 0,
-      eixample: 0,
-      sagrada: 0,
-    },
+    status: stockStatusFromQuantity(item.quantity, minThreshold),
+    locationStocks: stocks,
   };
 }
 
@@ -57,21 +54,23 @@ export default function StockTable({
   refreshKey?: number;
 }) {
   const [items, setItems] = useState<StockItem[]>([]);
+  const [locations, setLocations] = useState<LocationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Category | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<StockItemData | null>(null);
-  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [exportState, setExportState] = useState<'idle' | 'exporting' | 'done'>('idle');
 
   const loadItems = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
     try {
-      const data = await getInventoryAsync();
-      setItems(data.map(mapMerchToStock));
+      const [data, locs] = await Promise.all([getInventoryAsync(), getInventoryLocationsAsync()]);
+      setLocations(locs);
+      setItems(data.map((item) => mapMerchToStock(item, locs.map((l) => l.id))));
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Failed to load inventory');
     } finally {
@@ -91,72 +90,65 @@ export default function StockTable({
     setSortConfig({ key, direction });
   };
 
-  const sortedItems = React.useMemo(() => {
+  const sortedItems = useMemo(() => {
     let sortableItems = [...items];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
-        let aValue: any = a[sortConfig.key as keyof StockItem];
-        let bValue: any = b[sortConfig.key as keyof StockItem];
-        
-        // Handle nested locations
-        if (['main', 'gothic', 'eixample', 'sagrada'].includes(sortConfig.key)) {
-          aValue = a.locations[sortConfig.key as keyof typeof a.locations];
-          bValue = b.locations[sortConfig.key as keyof typeof b.locations];
-        } else if (sortConfig.key === 'status') {
-          // simple mapping for status priority: out < low < healthy
-          const statusVal = { out: 0, low: 1, healthy: 2 };
-          aValue = statusVal[a.status];
-          bValue = statusVal[b.status];
+        let aValue: number | string;
+        let bValue: number | string;
+        if (sortConfig.key === 'name' || sortConfig.key === 'status' || sortConfig.key === 'totalStock') {
+          aValue = a[sortConfig.key as 'name' | 'status' | 'totalStock'];
+          bValue = b[sortConfig.key as 'name' | 'status' | 'totalStock'];
+        } else {
+          aValue = a.locationStocks[sortConfig.key] ?? 0;
+          bValue = b.locationStocks[sortConfig.key] ?? 0;
         }
-
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
     return sortableItems;
   }, [sortConfig, items]);
 
-  const filteredItems = sortedItems.filter(item => {
+  const filteredItems = sortedItems.filter((item) => {
     const matchesFilter = filter === 'all' || item.category === filter;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesLocation =
+      locationFilter === 'all' || (item.locationStocks[locationFilter] ?? 0) > 0;
+    return matchesFilter && matchesSearch && matchesLocation;
   });
 
   const handleExportCSV = async () => {
     if (exportState !== 'idle') return;
     setExportState('exporting');
-    
-    // Simulate generation delay for smooth UI
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const headers = [
-      'SKU', 'Name', 'Category', 'Status', 'Total Stock', 
-      'Min Threshold', 'Main WH', 'Gótico', 'Eixample', 'Sagrada'
+      'SKU',
+      'Name',
+      'Category',
+      'Unit',
+      'Status',
+      'Total Stock',
+      'Min Threshold',
+      ...locations.map((l) => l.name),
     ];
 
-    const rows = filteredItems.map(item => [
+    const rows = filteredItems.map((item) => [
       item.sku,
       `"${item.name}"`,
       item.category,
+      item.unit,
       item.status,
       item.totalStock,
       item.minThreshold,
-      item.locations.main,
-      item.locations.gothic,
-      item.locations.eixample,
-      item.locations.sagrada
+      ...locations.map((l) => item.locationStocks[l.id] ?? 0),
     ]);
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-
+    const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -167,71 +159,95 @@ export default function StockTable({
     document.body.removeChild(link);
 
     setExportState('done');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setExportState('idle');
   };
 
   const getStatusBadge = (status: StockStatus) => {
     switch (status) {
       case 'healthy':
-        return <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-green-500"></div><span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Healthy</span></span>;
+        return (
+          <span className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Healthy</span>
+          </span>
+        );
       case 'low':
-        return <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></div><span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Low Stock</span></span>;
+        return (
+          <span className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></div>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Low Stock</span>
+          </span>
+        );
       case 'out':
-        return <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div><span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Critical</span></span>;
+        return (
+          <span className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Critical</span>
+          </span>
+        );
     }
   };
 
   const getCategoryLabel = (cat: Category) => {
-    switch(cat) {
-      case 'merch': return 'Merch';
-      case 'kitchen': return 'Kitchen';
-      case 'bar': return 'Bar';
+    switch (cat) {
+      case 'merch':
+        return 'Merch';
+      case 'kitchen':
+        return 'Kitchen';
+      case 'bar':
+        return 'Bar';
     }
-  }
+  };
 
   const SortIcon = ({ columnKey }: { columnKey: string }) => {
-    if (sortConfig?.key !== columnKey) return <ArrowUpDown size={12} className="ml-1 opacity-0 group-hover:opacity-50 transition-opacity" />;
-    return sortConfig.direction === 'asc' ? <ArrowUp size={12} className="ml-1 text-gray-800" /> : <ArrowDown size={12} className="ml-1 text-gray-800" />;
+    if (sortConfig?.key !== columnKey)
+      return <ArrowUpDown size={12} className="ml-1 opacity-0 group-hover:opacity-50 transition-opacity" />;
+    return sortConfig.direction === 'asc' ? (
+      <ArrowUp size={12} className="ml-1 text-gray-800" />
+    ) : (
+      <ArrowDown size={12} className="ml-1 text-gray-800" />
+    );
   };
+
+  const colSpan = 3 + locations.length;
 
   return (
     <div className="flex flex-col h-full" data-testid="inventory-stock-table">
       <div className="flex flex-col gap-4 mb-6">
-        {/* Row 1: Search, Locations, Add Item */}
         <div className="flex flex-wrap sm:flex-nowrap justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative group shrink-0 w-full sm:w-auto">
               <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              <input 
-                type="text" 
-                placeholder="Search SKU or item name..." 
+              <input
+                type="text"
+                placeholder="Search SKU or item name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full sm:w-[270px] bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all placeholder:font-medium placeholder:text-gray-400"
               />
             </div>
-            
+
             <div className="relative shrink-0 hidden sm:block">
               <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              <select 
+              <select
                 value={locationFilter}
                 onChange={(e) => setLocationFilter(e.target.value)}
                 className="appearance-none bg-white border border-gray-200 rounded-xl pl-9 pr-8 py-2 text-[13px] font-semibold text-gray-800 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/10 transition-all cursor-pointer"
               >
                 <option value="all">All Locations</option>
-                <option value="gotico">Gothic</option>
-                <option value="sagrada">Sagrada</option>
-                <option value="arc">Arc de Triumph</option>
-                <option value="eixample">Eixample</option>
-                <option value="gracia">Gracia</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
               </select>
               <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
           </div>
-          
+
           {onAdd && (
-            <button 
+            <button
               onClick={onAdd}
               className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl shadow-sm transition-all cursor-pointer hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 shrink-0"
             >
@@ -240,11 +256,10 @@ export default function StockTable({
             </button>
           )}
         </div>
-        
-        {/* Row 2: Tabs, Export */}
+
         <div className="flex flex-wrap justify-between items-center gap-4">
           <div className="flex items-center gap-0.5 h-9 bg-gray-50/80 p-1 rounded-xl border border-gray-200/60 shrink-0">
-            {(['all', 'merch', 'bar', 'kitchen'] as const).map(cat => (
+            {(['all', 'merch', 'bar', 'kitchen'] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
@@ -254,8 +269,8 @@ export default function StockTable({
               </button>
             ))}
           </div>
-          <button 
-            onClick={handleExportCSV}
+          <button
+            onClick={() => void handleExportCSV()}
             disabled={exportState !== 'idle'}
             title="Export to CSV"
             className="relative overflow-hidden flex items-center justify-center px-4 w-auto h-9 min-w-[130px] bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-90 disabled:cursor-default shrink-0"
@@ -316,86 +331,113 @@ export default function StockTable({
           <div className="px-6 py-12 text-center text-red-500 font-medium">{loadError}</div>
         )}
         {!loading && !loadError && (
-        <table className="w-full text-left border-collapse min-w-[800px]">
-          <thead>
-            <tr className="bg-white border-b border-gray-50 sticky top-0 z-10">
-              <th className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group" onClick={() => handleSort('name')}>
-                <div className="flex items-center">Item Details <SortIcon columnKey="name" /></div>
-              </th>
-              <th className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group" onClick={() => handleSort('status')}>
-                <div className="flex items-center">Status <SortIcon columnKey="status" /></div>
-              </th>
-              <th className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group" onClick={() => handleSort('totalStock')}>
-                <div className="flex items-center">Total Stock <SortIcon columnKey="totalStock" /></div>
-              </th>
-              <th className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group" onClick={() => handleSort('main')}>
-                <div className="flex items-center">Main WH <SortIcon columnKey="main" /></div>
-              </th>
-              <th className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group" onClick={() => handleSort('gothic')}>
-                <div className="flex items-center">Gótico <SortIcon columnKey="gothic" /></div>
-              </th>
-              <th className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group" onClick={() => handleSort('eixample')}>
-                <div className="flex items-center">Eixample <SortIcon columnKey="eixample" /></div>
-              </th>
-              <th className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group" onClick={() => handleSort('sagrada')}>
-                <div className="flex items-center">Sagrada <SortIcon columnKey="sagrada" /></div>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            <AnimatePresence>
-              {filteredItems.map(item => (
-                <motion.tr 
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  key={item.id} 
-                  data-testid={`inventory-row-${item.sku}`}
-                  onClick={() => setSelectedItem(item as unknown as StockItemData)}
-                  className="hover:bg-gray-50/80 transition-colors group cursor-pointer"
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr className="bg-white border-b border-gray-50 sticky top-0 z-10">
+                <th
+                  className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group"
+                  onClick={() => handleSort('name')}
                 >
-                <td className="px-5 py-3">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-bold text-gray-900 text-sm">{item.name}</span>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] font-mono font-medium text-gray-400">{item.sku}</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{getCategoryLabel(item.category)}</span>
+                  <div className="flex items-center">
+                    Item Details <SortIcon columnKey="name" />
+                  </div>
+                </th>
+                <th
+                  className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group"
+                  onClick={() => handleSort('status')}
+                >
+                  <div className="flex items-center">
+                    Status <SortIcon columnKey="status" />
+                  </div>
+                </th>
+                <th
+                  className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group"
+                  onClick={() => handleSort('totalStock')}
+                >
+                  <div className="flex items-center">
+                    Total Stock <SortIcon columnKey="totalStock" />
+                  </div>
+                </th>
+                {locations.map((loc) => (
+                  <th
+                    key={loc.id}
+                    className="px-5 py-4 text-[10px] font-bold text-gray-400 hover:text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-50/50 transition-colors group"
+                    onClick={() => handleSort(loc.id)}
+                  >
+                    <div className="flex items-center">
+                      {loc.name} <SortIcon columnKey={loc.id} />
                     </div>
-                  </div>
-                </td>
-                <td className="px-5 py-3">
-                  {getStatusBadge(item.status)}
-                </td>
-                <td className="px-5 py-3">
-                  <div className="flex flex-col">
-                    <span className="font-bold text-gray-900 text-sm">{item.totalStock}</span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Min: {item.minThreshold}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-3 text-sm font-semibold text-gray-600">{item.locations.main}</td>
-                <td className="px-5 py-3 text-sm font-semibold text-gray-600">{item.locations.gothic}</td>
-                <td className="px-5 py-3 text-sm font-semibold text-gray-600">{item.locations.eixample}</td>
-                <td className="px-5 py-3 text-sm font-semibold text-gray-600">{item.locations.sagrada}</td>
-                </motion.tr>
-              ))}
-            </AnimatePresence>
-            {filteredItems.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500 font-medium">
-                  No inventory items found matching your filters.
-                </td>
+                  </th>
+                ))}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              <AnimatePresence>
+                {filteredItems.map((item) => (
+                  <motion.tr
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    key={item.id}
+                    data-testid={`inventory-row-${item.sku}`}
+                    onClick={() =>
+                      setSelectedItem({
+                        id: item.id,
+                        sku: item.sku,
+                        name: item.name,
+                        category: item.category,
+                        unit: item.unit,
+                        minThreshold: item.minThreshold,
+                        locationStocks: item.locationStocks,
+                      })
+                    }
+                    className="hover:bg-gray-50/80 transition-colors group cursor-pointer"
+                  >
+                    <td className="px-5 py-3">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-gray-900 text-sm">{item.name}</span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] font-mono font-medium text-gray-400">{item.sku}</span>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            {getCategoryLabel(item.category)}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">{getStatusBadge(item.status)}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 text-sm">{item.totalStock}</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
+                          Min: {item.minThreshold}
+                        </span>
+                      </div>
+                    </td>
+                    {locations.map((loc) => (
+                      <td key={loc.id} className="px-5 py-3 text-sm font-semibold text-gray-600">
+                        {item.locationStocks[loc.id] ?? 0}
+                      </td>
+                    ))}
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+              {filteredItems.length === 0 && (
+                <tr>
+                  <td colSpan={colSpan} className="px-6 py-12 text-center text-gray-500 font-medium">
+                    No inventory items found matching your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         )}
       </div>
 
-      <AddItemModal 
-        isOpen={!!selectedItem} 
-        onClose={() => setSelectedItem(null)} 
+      <AddItemModal
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
         initialItem={selectedItem}
         onSaved={loadItems}
       />

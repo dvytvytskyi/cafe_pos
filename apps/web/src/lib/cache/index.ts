@@ -18,12 +18,14 @@ export class RedisCacheService implements ICacheService {
   constructor() {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     this.client = new Redis(redisUrl, {
-      maxRetriesPerRequest: null,
+      maxRetriesPerRequest: 1,
       enableReadyCheck: true,
+      connectTimeout: 2000,
+      commandTimeout: 2000,
+      enableOfflineQueue: false,
       retryStrategy(times) {
-        // Retry connection with exponential backoff
-        const delay = Math.min(times * 100, 3000);
-        return delay;
+        if (times > 3) return null;
+        return Math.min(times * 100, 1000);
       },
     });
 

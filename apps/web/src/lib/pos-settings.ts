@@ -5,6 +5,7 @@ export type PosSettings = {
   receiptFooter: string;
   autoPrintReceipts: boolean;
   happyHourDiscount: number;
+  verifactuEnabled: boolean;
 };
 
 export const POS_SETTINGS_DB_KEY = 'pos_settings';
@@ -17,6 +18,7 @@ export const DEFAULT_POS_SETTINGS: PosSettings = {
   receiptFooter: 'Thank you for your visit!',
   autoPrintReceipts: true,
   happyHourDiscount: 15,
+  verifactuEnabled: true,
 };
 
 /** ISO 4217 subset used by the cafe */

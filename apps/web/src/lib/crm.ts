@@ -36,6 +36,17 @@ export interface Guest {
   joinedDate: string;
 }
 
+/** Display loyalty points as whole numbers (no decimals). */
+export function formatLoyaltyPoints(points: number): string {
+  return Math.round(points).toLocaleString();
+}
+
+/** Signed points delta for logs, e.g. +10 or -5 */
+export function formatLoyaltyPointsDelta(delta: number): string {
+  const rounded = Math.round(delta);
+  return `${rounded > 0 ? '+' : ''}${rounded}`;
+}
+
 export const DEFAULT_GUESTS: Guest[] = [
   {
     id: 'g-1',

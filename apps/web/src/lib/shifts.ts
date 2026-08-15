@@ -12,6 +12,7 @@ export interface Shift {
   id: string;
   openedAt: Date;
   closedAt?: Date;
+  openedByName?: string;
   floatAmount: number;
   expectedCash: number;
   actualCash?: number;
@@ -23,15 +24,50 @@ export interface Shift {
   status: 'open' | 'closed';
 }
 
+function normalizeAdjustmentType(type: unknown): 'in' | 'out' {
+  if (type === 'in' || type === 'cash_in') return 'in';
+  return 'out';
+}
+
+function parseAdjustmentTime(value: unknown, fallback: Date): Date {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+    const hm = value.trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (hm) {
+      const d = new Date(fallback);
+      d.setHours(parseInt(hm[1], 10), parseInt(hm[2], 10), 0, 0);
+      return d;
+    }
+  }
+  return fallback;
+}
+
+export function formatShiftAdjustmentTime(time: Date): string {
+  if (Number.isNaN(time.getTime())) return '—';
+  return time.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export function mapApiShiftToUi(raw: Record<string, unknown>): Shift {
+  const openedAt = new Date(raw.openedAt as string);
+  const user = raw.user as { name?: string } | null | undefined;
   const adjustments = ((raw.adjustments as CashAdjustment[] | null) ?? []).map((a) => ({
-    ...a,
-    time: new Date(a.time as unknown as string),
+    type: normalizeAdjustmentType(a.type),
+    amount: Number(a.amount ?? 0),
+    reason: String(a.reason ?? ''),
+    time: parseAdjustmentTime(a.time, openedAt),
   }));
   return {
     id: String(raw.id),
-    openedAt: new Date(raw.openedAt as string),
+    openedAt,
     closedAt: raw.closedAt ? new Date(raw.closedAt as string) : undefined,
+    openedByName: user?.name,
     floatAmount: Number(raw.floatStart ?? raw.floatAmount ?? 0),
     expectedCash: Number(raw.expected ?? raw.expectedCash ?? 0),
     actualCash: raw.actual != null ? Number(raw.actual) : raw.actualCash != null ? Number(raw.actualCash) : undefined,

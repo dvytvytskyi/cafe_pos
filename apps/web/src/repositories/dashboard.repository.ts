@@ -7,6 +7,8 @@ import {
   type DashboardReport,
   type DashboardReview,
   type DashboardShiftEntry,
+  filterOrdersByPayment,
+  type DashboardPaymentFilter,
   type LocationBreakdownRow,
   type PaymentBreakdown,
 } from '../lib/dashboard.ts';
@@ -167,7 +169,12 @@ export class DashboardRepository {
     });
   }
 
-  async getDashboard(startDate: Date, endDate: Date, compare = false): Promise<DashboardReport> {
+  async getDashboard(
+    startDate: Date,
+    endDate: Date,
+    compare = false,
+    paymentFilter: DashboardPaymentFilter = 'all'
+  ): Promise<DashboardReport> {
     await this.ensureDefaultLocation();
     await reputationRepository.ensureSeedData('default');
 
@@ -208,19 +215,20 @@ export class DashboardRepository {
     }
 
     const dayCount = countDaysInclusive(startDate, endDate);
+    const filteredOrders = filterOrdersByPayment(orders, paymentFilter);
     const summary = calculateFinancialMetrics(
-      orders.map((o) => ({ total: o.total, status: o.status, paid: o.paid }))
+      filteredOrders.map((o) => ({ total: o.total, status: o.status, paid: o.paid }))
     );
-    const revenueByDay = buildRevenueByDay(orders);
-    const dishes = buildDishes(orders);
+    const revenueByDay = buildRevenueByDay(filteredOrders);
+    const dishes = buildDishes(filteredOrders);
     const paymentBreakdown = buildPaymentBreakdown(orders);
-    const hourlySales = buildHourlySales(orders, dayCount);
-    const revenueByLocation = buildLocationBreakdown(orders, locations);
+    const hourlySales = buildHourlySales(filteredOrders, dayCount);
+    const revenueByLocation = buildLocationBreakdown(filteredOrders, locations);
 
     const revenueByDayByLocation = locations.map((loc) => ({
       locationId: loc.id,
       name: loc.name,
-      days: buildRevenueByDay(orders.filter((o) => o.locationId === loc.id)),
+      days: buildRevenueByDay(filteredOrders.filter((o) => o.locationId === loc.id)),
     }));
 
     const activeTableStatuses = new Set(['occupied', 'billed']);
@@ -233,7 +241,7 @@ export class DashboardRepository {
     const clockedInIds = new Set(openTimeCards.map((c) => c.userId));
 
     const locationMetrics = locations.map((loc) => {
-      const locOrders = orders.filter((o) => o.locationId === loc.id && isCompletedOrder(o));
+      const locOrders = filteredOrders.filter((o) => o.locationId === loc.id && isCompletedOrder(o));
       const gross = roundMoney(locOrders.reduce((s, o) => s + o.total, 0));
       const count = locOrders.length;
       const locReviews = reviewsInPeriod.filter((r) => r.locationId === loc.id);
@@ -316,13 +324,14 @@ export class DashboardRepository {
     if (compare) {
       const prev = previousPeriodRange(startDate, endDate);
       const prevDayCount = countDaysInclusive(prev.startDate, prev.endDate);
+      const prevFiltered = filterOrdersByPayment(previousOrders, paymentFilter);
       base.previousSummary = calculateFinancialMetrics(
-        previousOrders.map((o) => ({ total: o.total, status: o.status, paid: o.paid }))
+        prevFiltered.map((o) => ({ total: o.total, status: o.status, paid: o.paid }))
       );
-      base.previousRevenueByDay = buildRevenueByDay(previousOrders);
-      base.previousRevenueByLocation = buildLocationBreakdown(previousOrders, locations);
+      base.previousRevenueByDay = buildRevenueByDay(prevFiltered);
+      base.previousRevenueByLocation = buildLocationBreakdown(prevFiltered, locations);
       base.previousPaymentBreakdown = buildPaymentBreakdown(previousOrders);
-      base.previousHourlySales = buildHourlySales(previousOrders, prevDayCount);
+      base.previousHourlySales = buildHourlySales(prevFiltered, prevDayCount);
     }
 
     return base;

@@ -11,6 +11,8 @@ export type SessionPayload = {
   roleId: string;
   roleName: string;
   permissions: RolePermissions;
+  /** Assigned location ids; empty = general team (all locations for HQ staff). */
+  locationIds: string[];
 };
 
 export type SessionUser = {

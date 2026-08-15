@@ -1,0 +1,28 @@
+{"timestamp":"00:00:01.169","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:01.169","source":"Server","level":"LOG","message":"  We detected TypeScript in your project and reconfigured your tsconfig.json file for you."}
+{"timestamp":"00:00:01.169","source":"Server","level":"LOG","message":"  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:\n"}
+{"timestamp":"00:00:01.169","source":"Server","level":"LOG","message":"  \t- include was updated to add '.next-pos/types/**/*.ts'"}
+{"timestamp":"00:00:01.169","source":"Server","level":"LOG","message":"  \t- include was updated to add '.next-pos/dev/types/**/*.ts'"}
+{"timestamp":"00:00:01.169","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:01.194","source":"Server","level":"WARN","message":"⚠ The \"middleware\" file convention is deprecated. Please use \"proxy\" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy"}
+{"timestamp":"00:00:01.561","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:27.611","source":"Server","level":"LOG","message":"○ Compiling / ..."}
+{"timestamp":"00:01:39.123","source":"Server","level":"LOG","message":"○ Compiling /orders ..."}
+{"timestamp":"00:01:43.369","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, write"}
+{"timestamp":"00:01:43.370","source":"Server","level":"ERROR","message":"⨯ \"uncaughtException:\" Error: ENOSPC: no space left on device, write"}
+{"timestamp":"00:01:43.370","source":"Server","level":"ERROR","message":"⨯ \"uncaughtException: \" Error: ENOSPC: no space left on device, write"}
+{"timestamp":"00:02:17.819","source":"Server","level":"ERROR","message":"⨯ Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:02:26.786","source":"Server","level":"ERROR","message":"⨯ Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:03:13.189","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:03:13.210","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:03:13.248","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:03:13.250","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:05:42.074","source":"Server","level":"ERROR","message":"⨯ Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:05:42.080","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:05:42.081","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:05:44.332","source":"Server","level":"ERROR","message":"⨯ Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:05:44.333","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:05:44.343","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:05:44.531","source":"Server","level":"ERROR","message":"⨯ Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:05:44.531","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}
+{"timestamp":"00:05:44.532","source":"Server","level":"ERROR","message":"Error: ENOSPC: no space left on device, mkdir '/Users/vytvytskyi/corgi_cafe/apps/web/.next-pos/dev/server/app/orders'"}

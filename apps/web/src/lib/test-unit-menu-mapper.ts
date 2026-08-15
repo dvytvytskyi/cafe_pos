@@ -12,14 +12,14 @@ export async function run() {
     {
       id: 'c1',
       name: 'Coffee',
-      items: [{ id: 'm1', name: 'Espresso', price: 2.5, allergens: ['dairy'] }],
+      items: [{ id: 'm1', name: 'Espresso', price: 2.5, allergens: ['Milk'] }],
     },
   ]);
 
   assert.strictEqual(mapped.length, 1);
   assert.strictEqual(mapped[0].name, 'Coffee');
   assert.strictEqual(mapped[0].items[0].name, 'Espresso');
-  assert.deepStrictEqual(mapped[0].items[0].allergens, ['dairy']);
+  assert.deepStrictEqual(mapped[0].items[0].allergens, ['Milk']);
 
   console.log('✅ test-unit-menu-mapper passed.');
 }

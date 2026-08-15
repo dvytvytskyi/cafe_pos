@@ -4,6 +4,11 @@ import React, { useState, useRef } from 'react';
 import { Calendar, ChevronDown, CreditCard, Smartphone, Banknote, ChevronLeft, ChevronRight } from 'lucide-react';
 import { monthsToDateRange, presetToDateRange, toLocalIsoDate } from '@/lib/reports';
 import AnchoredDropdown from '@/components/dashboard/AnchoredDropdown';
+import {
+  type DashboardPaymentFilter,
+  type PaymentFilterLabel,
+  uiPaymentLabelToFilter,
+} from '@/lib/dashboard';
 
 export type DateRangeValue = { startDate: string; endDate: string };
 
@@ -15,6 +20,7 @@ interface GlobalFiltersProps {
   /** @deprecated use onDateRangeChange */
   onPresetChange?: (preset: string) => void;
   onDateRangeChange?: (range: DateRangeValue) => void;
+  onPaymentMethodChange?: (method: DashboardPaymentFilter) => void;
   initialPreset?: string;
 }
 
@@ -25,6 +31,7 @@ export default function GlobalFilters({
   children,
   onPresetChange,
   onDateRangeChange,
+  onPaymentMethodChange,
   initialPreset = 'Last 7 days',
 }: GlobalFiltersProps) {
   const [activePreset, setActivePreset] = useState(initialPreset);
@@ -32,7 +39,7 @@ export default function GlobalFilters({
   const compare = externalCompare !== undefined ? externalCompare : internalCompare;
   const setCompare = onCompareChange || setInternalCompare;
 
-  const [payment, setPayment] = useState('All Methods');
+  const [payment, setPayment] = useState<PaymentFilterLabel>('All Methods');
 
   const [dateOpen, setDateOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -67,6 +74,9 @@ export default function GlobalFilters({
 
   const applyMonthSelection = (months: number[], year: number, closePicker = true) => {
     setActivePreset('Month');
+    setRangeStart(null);
+    setRangeEnd(null);
+    setHoverDate(null);
     emitRange(monthsToDateRange(year, months));
     if (closePicker) setMonthOpen(false);
   };
@@ -74,6 +84,7 @@ export default function GlobalFilters({
   const applyCustomRange = () => {
     if (!rangeStart || !rangeEnd) return;
     setActivePreset('Custom');
+    setMonthOpen(false);
     emitRange({ startDate: toLocalIsoDate(rangeStart), endDate: toLocalIsoDate(rangeEnd) });
     setDateOpen(false);
     onPresetChange?.('Custom');
@@ -219,9 +230,21 @@ export default function GlobalFilters({
     );
   };
 
-  const buttonLabel = rangeStart 
-    ? `${formatDateLabel(rangeStart)}${rangeEnd ? ` - ${formatDateLabel(rangeEnd)}` : ' - ...'}`
-    : 'Select Date Range';
+  const monthButtonSummary =
+    selectedMonths.length === 0
+      ? 'Select Month'
+      : selectedMonths.length === 1
+        ? `${monthNames[selectedMonths[0]].slice(0, 3)} ${selectedYear}`
+        : selectedMonths.length === 12
+          ? `All of ${selectedYear}`
+          : `${selectedMonths.length} Months (${selectedYear})`;
+
+  const buttonLabel =
+    activePreset === 'Month'
+      ? monthButtonSummary
+      : activePreset === 'Custom' && rangeStart
+        ? `${formatDateLabel(rangeStart)}${rangeEnd ? ` - ${formatDateLabel(rangeEnd)}` : ' - ...'}`
+        : 'Select Date Range';
 
   return (
     <div className={variant === 'reports' ? "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-3 z-20 relative flex-1 min-w-0 max-w-full w-full" : "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-4 z-20 relative w-full min-w-0 max-w-full"}>
@@ -271,13 +294,7 @@ export default function GlobalFilters({
           >
             <Calendar className={`w-3.5 h-3.5 ${activePreset === 'Month' || monthOpen ? 'text-gray-900' : 'text-gray-500'}`} />
             <span className="text-[13px] font-semibold tracking-tight whitespace-nowrap">
-              {selectedMonths.length === 0
-                ? 'Select Month'
-                : selectedMonths.length === 1
-                  ? `${monthNames[selectedMonths[0]].slice(0, 3)} ${selectedYear}`
-                  : selectedMonths.length === 12
-                    ? `All of ${selectedYear}`
-                    : `${selectedMonths.length} Months (${selectedYear})`}
+              {monthButtonSummary}
             </span>
           </button>
 
@@ -456,8 +473,10 @@ export default function GlobalFilters({
                   key={opt.id}
                   type="button"
                   onClick={() => {
-                    setPayment(opt.id);
+                    const label = opt.id as PaymentFilterLabel;
+                    setPayment(label);
                     setPaymentOpen(false);
+                    onPaymentMethodChange?.(uiPaymentLabelToFilter(label));
                   }}
                   className={`cursor-pointer focus:outline-none w-full text-left px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between transition-all group ${payment === opt.id ? 'bg-gray-50 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
                 >

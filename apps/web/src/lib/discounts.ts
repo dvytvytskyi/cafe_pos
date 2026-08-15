@@ -53,7 +53,7 @@ export async function createDiscountPresetAsync(name: string, value: number): Pr
 
 export async function updateDiscountPresetAsync(
   id: string,
-  patch: { name?: string; value?: number }
+  patch: { name?: string; value?: number; color?: string }
 ): Promise<DiscountPreset> {
   const res = await fetch(`/api/discounts/${id}`, {
     method: 'PUT',

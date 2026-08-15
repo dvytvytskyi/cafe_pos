@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Employee, getEmployeesAsync } from '@/lib/staff';
 import {
@@ -25,44 +26,76 @@ function pendingEntry(employeeId: string, date: string): TimeTrackingEntry {
   };
 }
 
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T12:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function formatDisplayDate(dateStr: string): string {
+  return new Date(`${dateStr}T12:00:00.000Z`).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 export default function TimeTrackingPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [entries, setEntries] = useState<TimeTrackingEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const todayStr = new Date().toISOString().split('T')[0];
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]!);
+  const todayStr = new Date().toISOString().split('T')[0]!;
+  const isToday = selectedDate === todayStr;
 
   const reload = useCallback(async () => {
-    const [staff, tracking] = await Promise.all([
-      getEmployeesAsync(),
-      getTimeTrackingAsync(todayStr),
-    ]);
-    setEmployees(staff.filter((e) => e.status === 'active'));
-    setEntries(tracking);
-    setLoading(false);
-  }, [todayStr]);
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [staff, tracking] = await Promise.all([
+        getEmployeesAsync(),
+        getTimeTrackingAsync(selectedDate),
+      ]);
+      setEmployees(staff.filter((e) => e.status === 'active'));
+      setEntries(tracking);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load time tracking');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
-    reload().catch(console.error);
+    void reload();
   }, [reload]);
 
   const getEntryForEmployee = (empId: string): TimeTrackingEntry => {
-    return entries.find((e) => e.employeeId === empId) ?? pendingEntry(empId, todayStr);
+    return entries.find((e) => e.employeeId === empId) ?? pendingEntry(empId, selectedDate);
   };
 
   const handleCheckIn = async (employeeId: string) => {
     try {
+      setActionError(null);
       const updated = await clockInAsync({ userId: employeeId });
       setEntries((prev) => [...prev.filter((e) => e.employeeId !== employeeId), updated]);
     } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Check in failed';
+      setActionError(msg === 'Unauthorized' ? 'Please log in to record check-ins.' : msg);
       console.error('Check in failed:', e);
     }
   };
 
   const handleCheckOut = async (employeeId: string) => {
     try {
+      setActionError(null);
       const updated = await clockOutAsync({ userId: employeeId });
       setEntries((prev) => [...prev.filter((e) => e.employeeId !== employeeId), updated]);
     } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Check out failed';
+      setActionError(msg === 'Unauthorized' ? 'Please log in to record check-outs.' : msg);
       console.error('Check out failed:', e);
     }
   };
@@ -87,12 +120,42 @@ export default function TimeTrackingPage() {
             <h1 className="text-2xl font-bold text-gray-900">Time Tracking</h1>
             <p className="text-sm font-medium text-gray-500 mt-1">Daily check-in and check-out records</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-200">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Today&apos;s date</p>
-              <p className="font-bold text-gray-900 text-sm" data-testid="time-tracking-date">
-                {new Date().toLocaleDateString('en-US')}
-              </p>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+              <button
+                type="button"
+                onClick={() => setSelectedDate(addDays(selectedDate, -1))}
+                data-testid="time-tracking-prev-day"
+                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-white"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="text-center min-w-[140px]">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-0.5">
+                  {isToday ? "Today's date" : 'Selected date'}
+                </p>
+                <p className="font-bold text-gray-900 text-sm" data-testid="time-tracking-date">
+                  {formatDisplayDate(selectedDate)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDate(addDays(selectedDate, 1))}
+                disabled={selectedDate >= todayStr}
+                data-testid="time-tracking-next-day"
+                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-white disabled:opacity-40"
+              >
+                <ChevronRight size={16} />
+              </button>
+              {!isToday && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(todayStr)}
+                  className="ml-1 px-2 py-1 text-[11px] font-bold text-corgi hover:underline"
+                >
+                  Today
+                </button>
+              )}
             </div>
             <Link
               href="/staff"
@@ -104,6 +167,12 @@ export default function TimeTrackingPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50/30">
+          {(loadError || actionError) && (
+            <div role="alert" className="mb-4 bg-red-50 border border-red-100 text-red-700 text-[13px] font-medium rounded-xl px-4 py-3">
+              {loadError ?? actionError}
+            </div>
+          )}
+
           <div className="w-full space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="bg-white p-5 rounded-2xl border border-gray-100">
@@ -169,13 +238,15 @@ export default function TimeTrackingPage() {
                           Check Out
                         </th>
                         <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">
-                          Hours Today
+                          Hours
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 bg-white">
                       {employees.map((emp) => {
                         const entry = getEntryForEmployee(emp.id);
+                        const canCheckIn = isToday && entry.status === 'pending';
+                        const canCheckOut = isToday && entry.status === 'on_shift';
                         return (
                           <tr
                             key={emp.id}
@@ -213,11 +284,11 @@ export default function TimeTrackingPage() {
                             </td>
                             <td className="px-6 py-4 text-center">
                               <button
-                                onClick={() => handleCheckIn(emp.id)}
-                                disabled={entry.status !== 'pending'}
+                                onClick={() => void handleCheckIn(emp.id)}
+                                disabled={!canCheckIn}
                                 data-testid={`time-tracking-check-in-${emp.id}`}
                                 className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
-                                  entry.status === 'pending'
+                                  canCheckIn
                                     ? 'bg-corgi hover:bg-[#e6a800] text-brown cursor-pointer'
                                     : 'bg-gray-50 text-gray-400 border border-gray-200 cursor-not-allowed opacity-60'
                                 }`}
@@ -253,11 +324,11 @@ export default function TimeTrackingPage() {
                             </td>
                             <td className="px-6 py-4 text-center">
                               <button
-                                onClick={() => handleCheckOut(emp.id)}
-                                disabled={entry.status !== 'on_shift'}
+                                onClick={() => void handleCheckOut(emp.id)}
+                                disabled={!canCheckOut}
                                 data-testid={`time-tracking-check-out-${emp.id}`}
                                 className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
-                                  entry.status === 'on_shift'
+                                  canCheckOut
                                     ? 'bg-gray-900 hover:bg-black text-white cursor-pointer'
                                     : 'bg-gray-50 text-gray-400 border border-gray-200 cursor-not-allowed opacity-60'
                                 }`}

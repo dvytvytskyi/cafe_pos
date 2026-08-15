@@ -88,6 +88,29 @@ export function validatePointsAdjustment(pointsDelta: number, currentBalance: nu
   return capped;
 }
 
+/** POS quick-register: unique contact when phone omitted */
+export function buildQuickGuestContact(
+  name: string,
+  phone?: string
+): { phone: string; email: string } {
+  const trimmedName = name.trim();
+  const slug = trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'guest';
+  const unique = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+
+  if (phone?.trim()) {
+    return {
+      phone: phone.trim(),
+      email: `${slug}.${unique}@guest.corgi.local`,
+    };
+  }
+
+  const digits = Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join('');
+  return {
+    phone: `+346${digits}`,
+    email: `${slug}.${unique}@guest.corgi.local`,
+  };
+}
+
 /** T20.1 — normalize phone to E.164-like format */
 export function normalizePhone(phone: string): string {
   const trimmed = phone.trim();

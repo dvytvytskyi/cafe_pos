@@ -16,6 +16,7 @@ export type ProfileRecord = {
   email: string | null;
   phone: string | null;
   avatarInitials: string | null;
+  avatarUrl: string | null;
   role: { id: string; name: string };
   locations: { id: string; name: string }[];
   hasPassword: boolean;
@@ -27,6 +28,7 @@ function mapProfile(user: {
   email: string | null;
   phone: string | null;
   avatarInitials: string | null;
+  avatarUrl: string | null;
   passwordHash: string | null;
   role: { id: string; name: string };
   locations: { id: string; name: string }[];
@@ -37,6 +39,7 @@ function mapProfile(user: {
     email: user.email,
     phone: user.phone,
     avatarInitials: user.avatarInitials,
+    avatarUrl: user.avatarUrl,
     role: { id: user.role.id, name: user.role.name },
     locations: user.locations.map((loc) => ({ id: loc.id, name: loc.name })),
     hasPassword: !!user.passwordHash,
@@ -67,7 +70,7 @@ export class ProfileRepository {
 
   async updateProfile(
     userId: string,
-    data: { name?: string; email?: string; phone?: string | null }
+    data: { name?: string; email?: string; phone?: string | null; avatarUrl?: string | null }
   ): Promise<ProfileRecord> {
     const updateData: Record<string, unknown> = {};
 
@@ -81,6 +84,9 @@ export class ProfileRepository {
     }
     if (data.phone !== undefined) {
       updateData.phone = validateProfilePhone(data.phone);
+    }
+    if (data.avatarUrl !== undefined) {
+      updateData.avatarUrl = data.avatarUrl === null ? null : String(data.avatarUrl).trim() || null;
     }
 
     if (Object.keys(updateData).length === 0) {

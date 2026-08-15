@@ -23,20 +23,26 @@ export class ScheduleRepository {
     });
   }
 
-  async bulkSave(weekStartInput: string, shifts: ScheduleShiftInput[]) {
+  async bulkSave(
+    weekStartInput: string,
+    shifts: ScheduleShiftInput[],
+    clearedUserIds: string[] = []
+  ) {
     const weekStart = parseWeekStart(weekStartInput);
     validateNoOverlappingShifts(shifts);
 
     const weekDate = toUtcDateOnly(weekStart);
-    const userIds = [...new Set(shifts.map((s) => s.userId))];
+    const userIds = [...new Set([...shifts.map((s) => s.userId), ...clearedUserIds])];
 
     return prisma.$transaction(async (tx) => {
-      await tx.shiftSchedule.deleteMany({
-        where: {
-          weekStart: weekDate,
-          userId: { in: userIds },
-        },
-      });
+      if (userIds.length > 0) {
+        await tx.shiftSchedule.deleteMany({
+          where: {
+            weekStart: weekDate,
+            userId: { in: userIds },
+          },
+        });
+      }
 
       if (shifts.length === 0) return [];
 

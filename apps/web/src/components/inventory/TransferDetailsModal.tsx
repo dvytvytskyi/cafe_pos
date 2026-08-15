@@ -1,9 +1,10 @@
 import React from 'react';
-import { X, ArrowRight, Package, User, Clock, CheckCircle2, Truck, AlertCircle, ChevronDown } from 'lucide-react';
+import { X, ArrowRight, Package, User, Clock, CheckCircle2, Truck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface TransferData {
   id: string;
+  fullId: string;
   date: string;
   item: string;
   sku: string;
@@ -101,34 +102,10 @@ export default function TransferDetailsModal({ transfer, isOpen, onClose, onUpda
             {/* Route */}
             <section className="space-y-3">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2"><ArrowRight size={16} className="text-corgi" /> Transfer Route</h3>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 relative">
-                  <select 
-                    defaultValue={transfer.from}
-                    className="w-full bg-white border border-gray-200 pl-4 pr-10 py-3 rounded-xl text-left text-[13px] font-bold text-gray-700 outline-none hover:border-gray-300 focus:border-corgi appearance-none cursor-pointer transition-colors"
-                  >
-                    <option value={transfer.from}>{transfer.from}</option>
-                    {transfer.from !== 'Main WH' && <option value="Main WH">Main WH</option>}
-                    {transfer.from !== 'Gótico' && <option value="Gótico">Gótico</option>}
-                    {transfer.from !== 'Eixample' && <option value="Eixample">Eixample</option>}
-                    {transfer.from !== 'Sagrada' && <option value="Sagrada">Sagrada</option>}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                </div>
+              <div className="flex items-center gap-3 bg-gray-50/50 px-4 py-3 rounded-xl border border-gray-100">
+                <span className="text-[13px] font-bold text-gray-800">{transfer.from}</span>
                 <ArrowRight className="w-4 h-4 text-gray-300 shrink-0" />
-                <div className="flex-1 relative">
-                  <select 
-                    defaultValue={transfer.to}
-                    className="w-full bg-white border border-gray-200 pl-4 pr-10 py-3 rounded-xl text-left text-[13px] font-bold text-gray-700 outline-none hover:border-gray-300 focus:border-corgi appearance-none cursor-pointer transition-colors"
-                  >
-                    <option value={transfer.to}>{transfer.to}</option>
-                    {transfer.to !== 'Main WH' && <option value="Main WH">Main WH</option>}
-                    {transfer.to !== 'Gótico' && <option value="Gótico">Gótico</option>}
-                    {transfer.to !== 'Eixample' && <option value="Eixample">Eixample</option>}
-                    {transfer.to !== 'Sagrada' && <option value="Sagrada">Sagrada</option>}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                </div>
+                <span className="text-[13px] font-bold text-gray-800">{transfer.to}</span>
               </div>
             </section>
 
@@ -164,7 +141,7 @@ export default function TransferDetailsModal({ transfer, isOpen, onClose, onUpda
                     Cancel Transfer
                   </button>
                   <button 
-                    onClick={() => onUpdateStatus(transfer.id, 'in_transit')}
+                    onClick={() => onUpdateStatus(transfer.fullId, 'in_transit')}
                     className="flex items-center gap-2 px-6 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-[13px] font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
                   >
                     <Truck size={16} />
@@ -175,7 +152,7 @@ export default function TransferDetailsModal({ transfer, isOpen, onClose, onUpda
 
               {transfer.status === 'in_transit' && (
                 <button 
-                  onClick={() => onUpdateStatus(transfer.id, 'completed')}
+                  onClick={() => onUpdateStatus(transfer.fullId, 'completed')}
                   className="flex items-center gap-2 px-6 py-2.5 bg-corgi hover:bg-[#ff8f20] text-white rounded-xl text-[13px] font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
                 >
                   <CheckCircle2 size={16} strokeWidth={2.5} />

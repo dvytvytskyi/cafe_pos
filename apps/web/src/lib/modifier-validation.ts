@@ -38,10 +38,13 @@ export function validateModifierPrice(price: unknown): number {
   }
   if (typeof price === 'string') {
     const trimmed = price.trim();
-    if (!trimmed || !/^\d+(\.\d{1,2})?$/.test(trimmed)) {
+    const normalized = trimmed.includes(',')
+      ? trimmed.replace(/\./g, '').replace(',', '.')
+      : trimmed;
+    if (!normalized || !/^\d+(\.\d{1,2})?$/.test(normalized)) {
       throw new ModifierValidationError('Modifier price must be a valid decimal');
     }
-    const num = parseFloat(trimmed);
+    const num = parseFloat(normalized);
     if (num < 0) {
       throw new ModifierValidationError('Modifier price must be zero or greater');
     }

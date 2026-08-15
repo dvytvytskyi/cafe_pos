@@ -97,6 +97,12 @@ export async function updateModifierOptionAsync(
   return res.json();
 }
 
+export async function archiveModifierOptionAsync(id: string): Promise<ModifierOption> {
+  const res = await fetch(`/api/modifiers/options/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to archive modifier option');
+  return res.json();
+}
+
 export async function linkModifierGroupCategoriesAsync(
   groupId: string,
   categoryIds: string[]

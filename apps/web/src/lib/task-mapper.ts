@@ -13,8 +13,10 @@ export interface TaskRecord {
   comments: number;
   attachments: number;
   progress: number;
+  priority: string;
   deadline: string;
   assignees: string[];
+  likedBy: string[];
   status: string;
   scheduledDate: string;
   dueAt?: string | null;
@@ -84,8 +86,10 @@ export function mapDbTaskToRecord(dbTask: any): TaskRecord {
     comments: dbTask.commentsCount ?? 0,
     attachments: dbTask.attachmentsCount ?? 0,
     progress: dbTask.progress ?? 0,
+    priority: dbTask.priority ?? 'Lowest',
     deadline: formatDeadlineLabel(dueAt, dbTask.status, dbTask.progress ?? 0),
     assignees: dbTask.assigneeIds ?? [],
+    likedBy: dbTask.likedByIds ?? [],
     status: dbTask.status,
     scheduledDate: scheduled.toISOString().slice(0, 10),
     dueAt: dueAt ? dueAt.toISOString() : null,
@@ -114,6 +118,7 @@ export function mapUiTaskToPayload(task: Partial<TaskRecord> & { title: string; 
     commentsCount: task.comments ?? 0,
     attachmentsCount: task.attachments ?? 0,
     progress: task.progress ?? 0,
+    priority: task.priority ?? 'Lowest',
     dueAt,
     scheduledDate,
     assigneeIds: task.assignees ?? [],

@@ -119,6 +119,28 @@ export async function deletePromotionAsync(id: string): Promise<void> {
   }
 }
 
+export async function updatePromotionAsync(
+  id: string,
+  data: {
+    name?: string;
+    discountPercent?: number;
+    activeDays?: number[];
+    startHour?: number;
+    endHour?: number;
+    targetItems?: string[];
+  }
+): Promise<Promotion> {
+  const res = await fetch(`/api/promotions/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to update promotion [${id}] in PostgreSQL`);
+  }
+  return res.json();
+}
+
 export async function calculateHappyHourDiscountAsync(
   items: OrderItem[],
   dateInput?: Date | string

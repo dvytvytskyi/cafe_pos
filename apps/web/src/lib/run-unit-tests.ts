@@ -16,6 +16,7 @@ import { run as runMenu } from './test-unit-menu';
 import { run as runAuditTrail } from './test-unit-audit-trail';
 import { run as runPayment } from './test-unit-payment';
 import { run as runEmenu } from './test-unit-emenu';
+import { run as runGuestValidation } from './test-unit-guest-validation.ts';
 import { run as runOrdersBoard } from './test-unit-orders-board';
 import { run as runTasks } from './test-unit-tasks';
 import { run as runTaskOffline } from './test-unit-task-offline';
@@ -52,6 +53,7 @@ async function main() {
     { name: '🛡️ POS Audit Trail Chain Integrity', fn: runAuditTrail },
     { name: '💳 Payment Checkout Logic (T3.1–T3.5)', fn: runPayment },
     { name: '📱 eMenu Search & Allergen Filters (T5.1–T5.3)', fn: runEmenu },
+    { name: '📲 Guest PWA Validation (guest-validation)', fn: runGuestValidation },
     { name: '📋 OrdersBoard Column Filters & Sort (T6.1–T6.3)', fn: runOrdersBoard },
     { name: '✅ Task Date Validation (T7.1)', fn: runTasks },
     { name: '📲 Task Offline Queue Shape (T7.2)', fn: runTaskOffline },

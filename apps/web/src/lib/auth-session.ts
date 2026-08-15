@@ -151,6 +151,7 @@ export function sessionPayloadFromUser(user: {
   id: string;
   name: string;
   role: { id: string; name: string; permissions: unknown };
+  locations?: { id: string }[];
 }): SessionPayload {
   return {
     sub: user.id,
@@ -158,6 +159,7 @@ export function sessionPayloadFromUser(user: {
     roleId: user.role.id,
     roleName: user.role.name,
     permissions: (user.role.permissions as RolePermissions) ?? {},
+    locationIds: (user.locations ?? []).map((loc) => loc.id),
   };
 }
 

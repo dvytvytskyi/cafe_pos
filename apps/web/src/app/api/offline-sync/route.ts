@@ -66,6 +66,12 @@ export async function POST(req: Request) {
               total: orderData.total,
               items: orderData.items,
               tableId: orderData.tableId,
+              customerName: orderData.customerName,
+              customerId: orderData.customerId,
+              discountName: orderData.discountName,
+              discountValue: orderData.discountValue,
+              tipType: orderData.tipType,
+              tipValue: orderData.tipValue,
             });
           } else {
             // Server version is newer or equal: skip updating order but treat as synced

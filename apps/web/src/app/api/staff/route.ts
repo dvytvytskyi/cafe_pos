@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { userRepository, PinDuplicateError } from '@/repositories/user.repository';
 import { StaffValidationError } from '@/lib/staff-validation';
-import { requirePermission } from '@/lib/auth';
+import { requirePermission, getSessionFromRequest } from '@/lib/auth';
+import {
+  assertStaffLocationAssignment,
+  filterByLocationScope,
+  getAccessibleLocationIds,
+  isGeneralTeamMember,
+} from '@/lib/location-scope';
 
 type UserWithRelations = Awaited<ReturnType<typeof userRepository.findById>>;
 
@@ -54,7 +60,26 @@ export async function GET(req: Request) {
       status,
     });
 
-    const safeUsers = result.items.map((user) => formatUser(user));
+    const session = getSessionFromRequest(req);
+    let items = result.items;
+    if (session) {
+      const access = getAccessibleLocationIds(session);
+      items = filterByLocationScope(
+        items,
+        (user) => user.locations.map((l) => l.id),
+        access
+      );
+      // Location admins also see general team (read-only at UI layer)
+      if (access !== 'all') {
+        const general = result.items.filter((u) => isGeneralTeamMember(u.locations.map((l) => l.id)));
+        const ids = new Set(items.map((u) => u.id));
+        for (const g of general) {
+          if (!ids.has(g.id)) items.push(g);
+        }
+      }
+    }
+
+    const safeUsers = items.map((user) => formatUser(user));
 
     if (paginated) {
       return NextResponse.json(
@@ -108,6 +133,17 @@ export async function POST(req: Request) {
         { error: 'Missing required fields: name, pin, and roleId are required.' },
         { status: 400 }
       );
+    }
+
+    const session = getSessionFromRequest(req);
+    if (session) {
+      assertStaffLocationAssignment(session, locationIds);
+      if (isGeneralTeamMember(locationIds) && session.roleName !== 'Super Admin') {
+        return NextResponse.json(
+          { error: 'Only Super Admin can create general team members' },
+          { status: 403 }
+        );
+      }
     }
 
     const createdUser = await userRepository.create({

@@ -2,6 +2,10 @@
 @import "tailwindcss";
 
 @layer utilities {
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
   .scrollbar-hide {
     /* IE and Edge */
     -ms-overflow-style: none;

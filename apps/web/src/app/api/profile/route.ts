@@ -38,6 +38,7 @@ export async function PUT(req: Request) {
       name: body.name,
       email: body.email,
       phone: body.phone,
+      avatarUrl: body.avatarUrl,
     });
 
     return NextResponse.json(profile, { status: 200 });

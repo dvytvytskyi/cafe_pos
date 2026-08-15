@@ -6,6 +6,12 @@ const PUBLIC_API_PREFIXES = [
   '/api/auth/login-pin',
   '/api/auth/logout',
   '/api/webhooks/',
+  '/api/guest/bootstrap',
+  '/api/guest/menu',
+  '/api/guest/merch',
+  '/api/guest/table',
+  '/api/guest/auth/',
+  '/api/guest/orders',
 ];
 
 const PROTECTED_ADMIN: { prefix: string; methods: string[] }[] = [

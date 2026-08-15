@@ -9,15 +9,18 @@ import { INVENTORY_ITEMS_CACHE_KEY } from './inventory-cache.ts';
 const BASE = 'http://localhost:3000';
 const SKU = 'INV-MER-0001';
 const locationId = 'loc-inv-test';
+const targetLocationId = 'loc-inv-target';
 const orderId = 'ord-inv-test-id';
 
 async function cleanup() {
   await prisma.stockTransfer.deleteMany({ where: { item: { sku: SKU } } });
   await prisma.inventoryTransfer.deleteMany({ where: { item: { sku: SKU } } });
+  await prisma.inventoryLocationStock.deleteMany({ where: { item: { sku: SKU } } });
   await prisma.merchInventory.deleteMany({ where: { sku: SKU } });
   await prisma.orderItem.deleteMany({ where: { orderId } });
   await prisma.order.deleteMany({ where: { id: orderId } });
   await prisma.location.delete({ where: { id: locationId } }).catch(() => {});
+  await prisma.location.delete({ where: { id: targetLocationId } }).catch(() => {});
 }
 
 async function main() {
@@ -29,6 +32,9 @@ async function main() {
     await prisma.location.create({
       data: { id: locationId, name: 'Inventory Shop', address: 'Warehouse Rd 10' },
     });
+    await prisma.location.create({
+      data: { id: targetLocationId, name: 'Inventory Branch', address: 'Branch Rd 2' },
+    });
 
     console.log('Creating Merch Item (initial stock: 10)...');
     const createRes = await fetch(`${BASE}/api/inventory`, {
@@ -38,7 +44,7 @@ async function main() {
         name: 'Corgi T-Shirt',
         sku: SKU,
         price: 25.0,
-        initialStock: 10,
+        locationStocks: { [locationId]: 10 },
       }),
     });
     const createdItem = await createRes.json();
@@ -64,7 +70,13 @@ async function main() {
     const restockRes = await fetch(`${BASE}/api/inventory/adjust`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, type: 'check_in', quantity: 5, reason: 'Weekly shipment' }),
+      body: JSON.stringify({
+        itemId,
+        type: 'check_in',
+        quantity: 5,
+        reason: 'Weekly shipment',
+        locationId,
+      }),
     });
     const restockItem = await restockRes.json();
     if (restockRes.status !== 200 || restockItem.quantity !== 15) {
@@ -87,7 +99,13 @@ async function main() {
     const checkoutRes = await fetch(`${BASE}/api/inventory/adjust`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, type: 'check_out', quantity: 2, reason: 'Damaged item' }),
+      body: JSON.stringify({
+        itemId,
+        type: 'check_out',
+        quantity: 2,
+        reason: 'Damaged item',
+        locationId,
+      }),
     });
     const checkoutItem = await checkoutRes.json();
     if (checkoutRes.status !== 200 || checkoutItem.quantity !== 13) {
@@ -99,7 +117,12 @@ async function main() {
     const overTransfer = await fetch(`${BASE}/api/inventory/transfers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, quantity: 999, targetLocationId: 'sagrada' }),
+      body: JSON.stringify({
+        itemId,
+        quantity: 999,
+        sourceLocationId: locationId,
+        targetLocationId,
+      }),
     });
     const overBody = await overTransfer.json();
     if (overTransfer.status !== 400 || overBody.code !== 'INSUFFICIENT_STOCK') {
@@ -111,7 +134,12 @@ async function main() {
     const transferRes = await fetch(`${BASE}/api/inventory/transfers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, quantity: 3, targetLocationId: 'eixample' }),
+      body: JSON.stringify({
+        itemId,
+        quantity: 3,
+        sourceLocationId: locationId,
+        targetLocationId,
+      }),
     });
     const transfer = await transferRes.json();
     if (transferRes.status !== 201 || transfer.status !== 'in_transit') {
@@ -152,7 +180,7 @@ async function main() {
     await fetch(`${BASE}/api/inventory/adjust`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, type: 'check_in', quantity: 1 }),
+      body: JSON.stringify({ itemId, type: 'check_in', quantity: 1, locationId }),
     });
     const cachedAfter = await cache.get(INVENTORY_ITEMS_CACHE_KEY);
     if (cachedAfter !== null) {

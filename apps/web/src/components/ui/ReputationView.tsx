@@ -12,16 +12,7 @@ import {
   ReputationApiError,
 } from '@/lib/reputation';
 import type { ReviewSource } from '@/lib/reputation-validation';
-
-const LOCATIONS = [
-  'All Locations',
-  'Gothic',
-  'Sagrada',
-  'Gracia',
-  'Arc de Triumph',
-  'Eixample',
-  'HQ',
-];
+import { getLocationsCachedAsync, type LocationSummary } from '@/lib/locations';
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -84,7 +75,8 @@ export default function ReputationView() {
   const [activeTab, setActiveTab] = useState<'all' | 'google' | 'tripadvisor'>('all');
   const [visibleCount, setVisibleCount] = useState(15);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
-  const [activeLocation, setActiveLocation] = useState('All Locations');
+  const [activeLocationId, setActiveLocationId] = useState<string>('all');
+  const [locations, setLocations] = useState<LocationSummary[]>([]);
   const [reviews, setReviews] = useState<CustomerReview[]>([]);
   const [summaries, setSummaries] = useState<ReviewSummary[]>([]);
   const [total, setTotal] = useState(0);
@@ -98,13 +90,24 @@ export default function ReputationView() {
   const sourceFilter: ReviewSource | undefined =
     activeTab === 'google' ? 'GOOGLE' : activeTab === 'tripadvisor' ? 'TRIPADVISOR' : undefined;
 
+  const activeLocationLabel =
+    activeLocationId === 'all'
+      ? 'All Locations'
+      : locations.find((loc) => loc.id === activeLocationId)?.name ?? 'All Locations';
+
+  useEffect(() => {
+    getLocationsCachedAsync()
+      .then(setLocations)
+      .catch(console.error);
+  }, []);
+
   const load = useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
       const page = await getReviewsAsync({
         source: sourceFilter,
-        locationId: activeLocation === 'All Locations' ? undefined : activeLocation,
+        locationId: activeLocationId === 'all' ? undefined : activeLocationId,
         limit: 100,
       });
       setReviews(page.items);
@@ -115,7 +118,7 @@ export default function ReputationView() {
     } finally {
       setLoading(false);
     }
-  }, [sourceFilter, activeLocation]);
+  }, [sourceFilter, activeLocationId]);
 
   useEffect(() => {
     load().catch(console.error);
@@ -165,7 +168,7 @@ export default function ReputationView() {
             className="flex items-center gap-1.5 px-3 h-[38px] rounded-xl border text-[13px] font-bold transition-colors cursor-pointer bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
           >
             <MapPin size={14} />
-            {activeLocation}
+            {activeLocationLabel}
             <ChevronDown size={14} className="text-gray-400" />
           </button>
 
@@ -173,18 +176,29 @@ export default function ReputationView() {
             <>
               <div className="fixed inset-0 z-10" onClick={() => setIsLocationOpen(false)} />
               <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-[200px] py-1 animate-in fade-in slide-in-from-top-2 duration-150">
-                {LOCATIONS.map((loc) => (
+                <button
+                  onClick={() => {
+                    setActiveLocationId('all');
+                    setIsLocationOpen(false);
+                    setVisibleCount(15);
+                  }}
+                  className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between group cursor-pointer"
+                >
+                  All Locations
+                  {activeLocationId === 'all' && <CheckSquare size={14} className="text-corgi" />}
+                </button>
+                {locations.map((loc) => (
                   <button
-                    key={loc}
+                    key={loc.id}
                     onClick={() => {
-                      setActiveLocation(loc);
+                      setActiveLocationId(loc.id);
                       setIsLocationOpen(false);
                       setVisibleCount(15);
                     }}
                     className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between group cursor-pointer"
                   >
-                    {loc}
-                    {activeLocation === loc && <CheckSquare size={14} className="text-corgi" />}
+                    {loc.name}
+                    {activeLocationId === loc.id && <CheckSquare size={14} className="text-corgi" />}
                   </button>
                 ))}
               </div>
@@ -198,8 +212,8 @@ export default function ReputationView() {
       )}
 
       <div className="grid grid-cols-2 gap-6">
-        <SummaryCard title="Google Maps" summary={googleSummary} location={activeLocation} />
-        <SummaryCard title="TripAdvisor" summary={tripSummary} location={activeLocation} />
+        <SummaryCard title="Google Maps" summary={googleSummary} location={activeLocationLabel} />
+        <SummaryCard title="TripAdvisor" summary={tripSummary} location={activeLocationLabel} />
       </div>
 
       <div className="flex flex-col gap-6 mt-4">

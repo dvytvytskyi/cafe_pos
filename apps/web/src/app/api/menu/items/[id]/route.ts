@@ -2,12 +2,24 @@ import { NextResponse } from 'next/server';
 import { menuRepository } from '@/repositories/menu.repository';
 import { auditRepository } from '@/repositories/audit.repository';
 import { MenuValidationError } from '@/lib/menu-validation';
+import { GUEST_SUPPORTED_LOCALES } from '@/lib/guest-constants';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, description, price, categoryId, allergens, isArchived } = body;
+    const {
+      name,
+      description,
+      price,
+      categoryId,
+      allergens,
+      isArchived,
+      imageUrl,
+      tags,
+      isVisible,
+      locationIds,
+    } = body;
 
     const updatedItem = await menuRepository.updateMenuItem(id, {
       name,
@@ -16,6 +28,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       categoryId,
       allergens,
       isArchived,
+      imageUrl,
+      tags: Array.isArray(tags) ? tags : undefined,
+      isVisible: typeof isVisible === 'boolean' ? isVisible : undefined,
+      locationIds: Array.isArray(locationIds) ? locationIds : undefined,
     });
 
     return NextResponse.json(updatedItem, { status: 200 });

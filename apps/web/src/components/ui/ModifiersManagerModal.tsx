@@ -7,7 +7,13 @@ import {
   addModifierOptionAsync,
   updateModifierGroupAsync,
   archiveModifierGroupAsync,
+  createModifierGroupAsync,
+  updateModifierOptionAsync,
+  archiveModifierOptionAsync,
+  type ModifierGroup,
 } from '@/lib/modifiers';
+import { formatPriceDisplay, parsePriceInput } from '@/lib/format-price';
+import { onPriceInputChange, onPriceInputBlur, onPriceInputKeyDown } from '@/lib/price-input-handlers';
 
 interface ModifierItem {
   id: string;
@@ -15,6 +21,7 @@ interface ModifierItem {
   price: number;
   isActive: boolean;
   isDefault: boolean;
+  translations?: Record<string, string>;
 }
 
 interface ModifierCategory {
@@ -28,6 +35,46 @@ interface ModifierCategory {
   assignedDishIds: string[];
 }
 
+function mapGroupToCategory(g: ModifierGroup): ModifierCategory {
+  return {
+    id: g.id,
+    name: g.name,
+    isMultiChoice: g.maxQty > 1,
+    isFreeSelection: g.minQty === 0,
+    freeSelectionsCount: g.maxQty,
+    isActive: !g.isArchived,
+    selections: g.options.map((o) => ({
+      id: o.id,
+      name: o.name,
+      price: o.price,
+      isActive: !o.isArchived,
+      isDefault: false,
+    })),
+    assignedDishIds: (g.categories ?? []).map((c) => c.id),
+  };
+}
+
+function categoryToMinMax(cat: Pick<ModifierCategory, 'isMultiChoice' | 'isFreeSelection' | 'freeSelectionsCount'>) {
+  const minQty = cat.isFreeSelection ? 0 : 1;
+  let maxQty = cat.freeSelectionsCount || 1;
+  if (cat.isMultiChoice) {
+    maxQty = Math.max(2, maxQty);
+  } else {
+    maxQty = Math.max(1, maxQty);
+  }
+  return { minQty, maxQty };
+}
+
+function mergeCategoryFromApi(prev: ModifierCategory, fromApi: ModifierCategory): ModifierCategory {
+  return {
+    ...fromApi,
+    selections: fromApi.selections.map((s) => {
+      const old = prev.selections.find((o) => o.id === s.id);
+      return { ...s, isDefault: old?.isDefault ?? false };
+    }),
+  };
+}
+
 interface ModifiersManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,32 +84,49 @@ interface ModifiersManagerModalProps {
 
 export default function ModifiersManagerModal({ isOpen, onClose, dishes, categories: menuCategories = [] }: ModifiersManagerModalProps) {
   const [categories, setCategories] = useState<ModifierCategory[]>([]);
-
   const [activeCategoryId, setActiveCategoryId] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const loadGroups = async (selectId?: string) => {
+    setLoading(true);
+    setActionError(null);
+    try {
+      const groups = await getModifierGroupsAsync();
+      const mapped = groups.map(mapGroupToCategory);
+      setCategories(mapped);
+      if (selectId && mapped.some((c) => c.id === selectId)) {
+        setActiveCategoryId(selectId);
+      } else if (mapped[0]) {
+        setActiveCategoryId((prev) => (mapped.some((c) => c.id === prev) ? prev : mapped[0].id));
+      }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to load modifier groups');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return;
-    void getModifierGroupsAsync().then((groups) => {
-      const mapped = groups.map((g) => ({
-        id: g.id,
-        name: g.name,
-        isMultiChoice: g.maxQty > 1,
-        isFreeSelection: g.minQty === 0,
-        freeSelectionsCount: g.maxQty,
-        isActive: !g.isArchived,
-        selections: g.options.map((o) => ({
-          id: o.id,
-          name: o.name,
-          price: o.price,
-          isActive: !o.isArchived,
-          isDefault: false,
-        })),
-        assignedDishIds: (g.categories ?? []).map((c) => c.id),
-      }));
-      setCategories(mapped);
-      if (mapped[0]) setActiveCategoryId(mapped[0].id);
-    });
+    void loadGroups();
   }, [isOpen]);
+
+  const setCategory = (updated: ModifierCategory) => {
+    setCategories((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+  };
+
+  const persistGroup = async (cat: ModifierCategory) => {
+    const { minQty, maxQty } = categoryToMinMax(cat);
+    const saved = await updateModifierGroupAsync(cat.id, {
+      name: cat.name,
+      minQty,
+      maxQty,
+      isArchived: !cat.isActive,
+    });
+    const mapped = mapGroupToCategory(saved);
+    setCategory(mergeCategoryFromApi(cat, mapped));
+  };
 
   const [editingField, setEditingField] = useState<'name' | 'free_count' | null>(null);
   const [tempInputValue, setTempInputValue] = useState('');
@@ -76,7 +140,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
   const [selModalMode, setSelModalMode] = useState<'create' | 'edit'>('create');
   const [activeSelItem, setActiveSelItem] = useState<ModifierItem | null>(null);
   const [selStep, setSelStep] = useState<1 | 2>(1);
-  const [selPrice, setSelPrice] = useState('0.00');
+  const [selPrice, setSelPrice] = useState('0,00');
   const [selSourceLang, setSelSourceLang] = useState('English');
   const [selName, setSelName] = useState('');
   const [selWithoutTranslation, setSelWithoutTranslation] = useState(false);
@@ -92,32 +156,43 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
 
   const activeCategory = categories.find(c => c.id === activeCategoryId) || categories[0];
 
-  const handleAddCategory = () => {
-    const newCat: ModifierCategory = {
-      id: 'mc-' + Date.now(),
-      name: 'New option category',
-      isMultiChoice: false,
-      isFreeSelection: false,
-      freeSelectionsCount: 0,
-      isActive: true,
-      selections: [
-        { id: 'ms-' + Date.now(), name: 'Default Item', price: 0, isActive: true, isDefault: true }
-      ],
-      assignedDishIds: []
-    };
-    setCategories([...categories, newCat]);
-    setActiveCategoryId(newCat.id);
+  const handleAddCategory = async () => {
+    setActionError(null);
+    try {
+      const created = await createModifierGroupAsync({
+        name: 'New option category',
+        minQty: 1,
+        maxQty: 1,
+        options: [{ name: 'Default Item', price: 0 }],
+      });
+      const mapped = mapGroupToCategory(created);
+      setCategories((prev) => [...prev, mapped]);
+      setActiveCategoryId(mapped.id);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to create modifier group');
+    }
   };
 
   const handleUpdateCategory = (updated: ModifierCategory) => {
-    setCategories(categories.map(c => c.id === updated.id ? updated : c));
+    setCategory(updated);
+  };
+
+  const handlePersistCategory = async (updated: ModifierCategory) => {
+    setActionError(null);
+    setCategory(updated);
+    try {
+      await persistGroup(updated);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to save modifier group');
+      await loadGroups(updated.id);
+    }
   };
 
   const handleOpenAddSelection = () => {
     setSelModalMode('create');
     setActiveSelItem(null);
     setSelStep(1);
-    setSelPrice('0.00');
+    setSelPrice('0,00');
     setSelSourceLang('English');
     setSelName('');
     setSelWithoutTranslation(false);
@@ -149,62 +224,135 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
     setIsSelModalOpen(true);
   };
 
-  const handleSaveSelectionModal = () => {
-    if (!selName.trim()) return;
-    const cleanPriceStr = selPrice.replace(',', '.');
-    const finalPrice = parseFloat(cleanPriceStr) || 0;
+  const handleSaveSelectionModal = async () => {
+    if (!selName.trim() || !activeCategory) return;
+    const finalPrice = parsePriceInput(selPrice);
     const currentName = selTranslations.EN?.trim() || selName.trim();
-    
-    if (selModalMode === 'create') {
-      const newItem: ModifierItem = {
-        id: 'ms-' + Date.now(),
-        name: currentName,
-        price: finalPrice,
-        isActive: true,
-        isDefault: false,
-        translations: selTranslations
-      };
-      handleUpdateCategory({
-        ...activeCategory,
-        selections: [...activeCategory.selections, newItem]
-      });
-    } else if (selModalMode === 'edit' && activeSelItem) {
-      const updatedSel = activeCategory.selections.map(s => {
-        if (s.id === activeSelItem.id) {
-          return {
-            ...s,
-            name: currentName,
-            price: finalPrice,
-            translations: selTranslations
-          };
-        }
-        return s;
-      });
-      handleUpdateCategory({
-        ...activeCategory,
-        selections: updatedSel
-      });
+    setActionError(null);
+
+    try {
+      if (selModalMode === 'create') {
+        const created = await addModifierOptionAsync(activeCategory.id, {
+          name: currentName,
+          price: finalPrice,
+        });
+        handleUpdateCategory({
+          ...activeCategory,
+          selections: [
+            ...activeCategory.selections,
+            {
+              id: created.id,
+              name: created.name,
+              price: created.price,
+              isActive: true,
+              isDefault: false,
+              translations: selTranslations,
+            },
+          ],
+        });
+      } else if (selModalMode === 'edit' && activeSelItem) {
+        const updated = await updateModifierOptionAsync(activeSelItem.id, {
+          name: currentName,
+          price: finalPrice,
+        });
+        handleUpdateCategory({
+          ...activeCategory,
+          selections: activeCategory.selections.map((s) =>
+            s.id === activeSelItem.id
+              ? { ...s, name: updated.name, price: updated.price, translations: selTranslations }
+              : s
+          ),
+        });
+      }
+      setIsSelModalOpen(false);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to save selection');
     }
-    setIsSelModalOpen(false);
   };
 
-  const handleRemoveSelection = (itemId: string) => {
+  const handleRemoveSelection = async (itemId: string) => {
+    if (!activeCategory) return;
+    setActionError(null);
+    try {
+      await archiveModifierOptionAsync(itemId);
+      handleUpdateCategory({
+        ...activeCategory,
+        selections: activeCategory.selections.filter((item) => item.id !== itemId),
+      });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to remove selection');
+    }
+  };
+
+  const handleSaveInlineSelection = async (itemId: string) => {
+    if (!activeCategory) return;
+    const finalPrice = parsePriceInput(tempSelectionPrice);
+    const finalName = tempSelectionName.trim();
+    setActionError(null);
+    try {
+      const updated = await updateModifierOptionAsync(itemId, {
+        name: finalName || undefined,
+        price: Number.isFinite(finalPrice) ? finalPrice : undefined,
+      });
+      handleUpdateCategory({
+        ...activeCategory,
+        selections: activeCategory.selections.map((s) =>
+          s.id === itemId ? { ...s, name: updated.name, price: updated.price } : s
+        ),
+      });
+      setEditingSelectionId(null);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to save selection');
+    }
+  };
+
+  const handleToggleSelectionActive = async (item: ModifierItem) => {
+    if (!activeCategory) return;
+    setActionError(null);
+    const nextActive = !item.isActive;
     handleUpdateCategory({
       ...activeCategory,
-      selections: activeCategory.selections.filter(item => item.id !== itemId)
+      selections: activeCategory.selections.map((s) =>
+        s.id === item.id ? { ...s, isActive: nextActive } : s
+      ),
     });
+    try {
+      await updateModifierOptionAsync(item.id, { isArchived: !nextActive });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to update selection');
+      await loadGroups(activeCategory.id);
+    }
   };
 
-  const handleToggleDishAssignment = (categoryId: string) => {
+  const handleDeleteCategory = async () => {
+    if (!activeCategory) return;
+    setActionError(null);
+    try {
+      await archiveModifierGroupAsync(activeCategory.id);
+      const remaining = categories.filter((c) => c.id !== activeCategory.id);
+      setCategories(remaining);
+      setActiveCategoryId(remaining[0]?.id ?? '');
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to delete category');
+    }
+  };
+
+  const handleToggleDishAssignment = async (categoryId: string) => {
+    if (!activeCategory) return;
     const isAssigned = activeCategory.assignedDishIds.includes(categoryId);
     const newAssigned = isAssigned
-      ? activeCategory.assignedDishIds.filter(id => id !== categoryId)
+      ? activeCategory.assignedDishIds.filter((id) => id !== categoryId)
       : [...activeCategory.assignedDishIds, categoryId];
-    handleUpdateCategory({
-      ...activeCategory,
-      assignedDishIds: newAssigned
-    });
-    void linkModifierGroupCategoriesAsync(activeCategory.id, newAssigned).catch(console.error);
+    handleUpdateCategory({ ...activeCategory, assignedDishIds: newAssigned });
+    setActionError(null);
+    try {
+      const saved = await linkModifierGroupCategoriesAsync(activeCategory.id, newAssigned);
+      setCategory(mergeCategoryFromApi(activeCategory, mapGroupToCategory(saved)));
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to link categories');
+      await loadGroups(activeCategory.id);
+    }
   };
 
   return (
@@ -240,6 +388,12 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
           </button>
         </div>
 
+        {actionError && (
+          <div className="mx-6 mt-3 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-semibold shrink-0">
+            {actionError}
+          </div>
+        )}
+
         {/* Workspace Body */}
         <div className="flex-1 flex overflow-hidden min-h-0">
           {/* Left Column: Options List */}
@@ -247,7 +401,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
             <div className="p-4 border-b border-gray-100 flex justify-between items-center shrink-0">
               <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Options list</span>
               <button 
-                onClick={handleAddCategory}
+                onClick={() => void handleAddCategory()}
                 className="p-1 text-corgi hover:bg-orange-50 rounded-lg cursor-pointer transition-colors"
                 title="Add new category"
               >
@@ -301,7 +455,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
             </Reorder.Group>
             <div className="p-3 border-t border-gray-100 bg-white shrink-0">
               <button
-                onClick={handleAddCategory}
+                onClick={() => void handleAddCategory()}
                 className="w-full py-3 rounded-xl border border-dashed border-gray-300 hover:border-corgi text-gray-400 hover:text-corgi flex items-center justify-center gap-1.5 text-xs font-black cursor-pointer transition-all active:scale-[0.98]"
               >
                 <Plus size={14} className="stroke-[3px]" /> Add new option
@@ -326,14 +480,14 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
-                              handleUpdateCategory({ ...activeCategory, name: tempInputValue.trim() || activeCategory.name });
+                              void handlePersistCategory({ ...activeCategory, name: tempInputValue.trim() || activeCategory.name });
                               setEditingField(null);
                             }
                           }}
                         />
                         <button 
                           onClick={() => {
-                            handleUpdateCategory({ ...activeCategory, name: tempInputValue.trim() || activeCategory.name });
+                            void handlePersistCategory({ ...activeCategory, name: tempInputValue.trim() || activeCategory.name });
                             setEditingField(null);
                           }}
                           className="w-9 h-9 rounded-xl bg-corgi text-white flex items-center justify-center cursor-pointer hover:bg-corgi/90 transition-all shrink-0"
@@ -361,7 +515,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                   <div className="flex items-center gap-2">
                     {/* Active Toggle Badge */}
                     <button
-                      onClick={() => handleUpdateCategory({ ...activeCategory, isActive: !activeCategory.isActive })}
+                      onClick={() => void handlePersistCategory({ ...activeCategory, isActive: !activeCategory.isActive })}
                       className={`h-9 px-4 rounded-xl font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer border shrink-0 flex items-center justify-center ${
                         activeCategory.isActive
                           ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100/50'
@@ -377,14 +531,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                         <span className="text-[11px] font-black text-red-700">Delete?</span>
                         <button
                           type="button"
-                          onClick={() => {
-                            const remaining = categories.filter(c => c.id !== activeCategory.id);
-                            setCategories(remaining);
-                            if (remaining.length > 0) {
-                              setActiveCategoryId(remaining[0].id);
-                            }
-                            setShowDeleteConfirm(false);
-                          }}
+                          onClick={() => void handleDeleteCategory()}
                           className="h-6 px-2.5 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-lg cursor-pointer transition-colors"
                         >
                           Yes
@@ -419,7 +566,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-extrabold text-gray-700">Multi choice selection</span>
                         <button
-                          onClick={() => handleUpdateCategory({ ...activeCategory, isMultiChoice: !activeCategory.isMultiChoice })}
+                          onClick={() => void handlePersistCategory({ ...activeCategory, isMultiChoice: !activeCategory.isMultiChoice })}
                           className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer ${activeCategory.isMultiChoice ? 'bg-corgi' : 'bg-gray-200'}`}
                         >
                           <div className={`w-5 h-5 rounded-full bg-white transition-transform ${activeCategory.isMultiChoice ? 'translate-x-5' : ''}`} />
@@ -428,7 +575,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-extrabold text-gray-700">Free selection of services</span>
                         <button
-                          onClick={() => handleUpdateCategory({ ...activeCategory, isFreeSelection: !activeCategory.isFreeSelection })}
+                          onClick={() => void handlePersistCategory({ ...activeCategory, isFreeSelection: !activeCategory.isFreeSelection })}
                           className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer ${activeCategory.isFreeSelection ? 'bg-corgi' : 'bg-gray-200'}`}
                         >
                           <div className={`w-5 h-5 rounded-full bg-white transition-transform ${activeCategory.isFreeSelection ? 'translate-x-5' : ''}`} />
@@ -451,7 +598,10 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                             />
                             <button 
                               onClick={() => {
-                                handleUpdateCategory({ ...activeCategory, freeSelectionsCount: parseInt(tempInputValue) || 0 });
+                                void handlePersistCategory({
+                                  ...activeCategory,
+                                  freeSelectionsCount: parseInt(tempInputValue, 10) || 0,
+                                });
                                 setEditingField(null);
                               }}
                               className="w-7 h-7 rounded-lg bg-corgi text-white flex items-center justify-center cursor-pointer hover:bg-orange-600 transition-all"
@@ -500,7 +650,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                             {editingSelectionId === item.id ? (
                               <input
                                 type="text"
-                                defaultValue={item.name}
+                                value={tempSelectionName}
                                 onChange={(e) => setTempSelectionName(e.target.value)}
                                 className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold outline-none"
                               />
@@ -511,22 +661,21 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                           <td className="px-4 py-3">
                             {editingSelectionId === item.id ? (
                               <input
-                                type="number"
-                                step="0.01"
-                                defaultValue={item.price}
-                                onChange={(e) => setTempSelectionPrice(e.target.value)}
+                                type="text"
+                                value={tempSelectionPrice}
+                                onChange={(e) => onPriceInputChange(e, setTempSelectionPrice)}
+                                onBlur={(e) => onPriceInputBlur(e, setTempSelectionPrice)}
+                                onKeyDown={(e) => onPriceInputKeyDown(e, setTempSelectionPrice)}
+                                placeholder="0,00"
                                 className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold outline-none w-20"
                               />
                             ) : (
-                              <span>€{item.price.toFixed(2)}</span>
+                              <span>€{formatPriceDisplay(item.price)}</span>
                             )}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <button
-                              onClick={() => {
-                                const updatedSel = activeCategory.selections.map(s => s.id === item.id ? { ...s, isActive: !s.isActive } : s);
-                                handleUpdateCategory({ ...activeCategory, selections: updatedSel });
-                              }}
+                              onClick={() => void handleToggleSelectionActive(item)}
                               className={`w-9 h-5 rounded-full p-0.5 mx-auto transition-colors cursor-pointer ${item.isActive ? 'bg-corgi' : 'bg-gray-200'}`}
                             >
                               <div className={`w-4 h-4 rounded-full bg-white transition-transform ${item.isActive ? 'translate-x-4' : ''}`} />
@@ -552,20 +701,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                             <div className="flex gap-2 justify-end">
                               {editingSelectionId === item.id ? (
                                 <button
-                                  onClick={() => {
-                                    const updatedSel = activeCategory.selections.map(s => {
-                                      if (s.id === item.id) {
-                                        return {
-                                          ...s,
-                                          name: tempSelectionName.trim() || s.name,
-                                          price: parseFloat(tempSelectionPrice) >= 0 ? parseFloat(tempSelectionPrice) : s.price
-                                        };
-                                      }
-                                      return s;
-                                    });
-                                    handleUpdateCategory({ ...activeCategory, selections: updatedSel });
-                                    setEditingSelectionId(null);
-                                  }}
+                                  onClick={() => void handleSaveInlineSelection(item.id)}
                                   className="text-xs font-bold text-corgi hover:underline cursor-pointer"
                                 >
                                   Save
@@ -575,7 +711,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                                   onClick={() => {
                                     setEditingSelectionId(item.id);
                                     setTempSelectionName(item.name);
-                                    setTempSelectionPrice(item.price.toString());
+                                    setTempSelectionPrice(formatPriceDisplay(item.price));
                                   }}
                                   className="p-1 text-gray-400 hover:text-gray-900 rounded cursor-pointer"
                                   title="Edit selection"
@@ -584,7 +720,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                                 </button>
                               )}
                               <button
-                                onClick={() => handleRemoveSelection(item.id)}
+                                onClick={() => void handleRemoveSelection(item.id)}
                                 className="p-1 text-gray-400 hover:text-red-500 rounded cursor-pointer"
                                 title="Remove selection"
                               >
@@ -617,7 +753,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                           key={cat.id}
                           type="button"
                           data-testid={`modifier-link-category-${cat.id}`}
-                          onClick={() => handleToggleDishAssignment(cat.id)}
+                          onClick={() => void handleToggleDishAssignment(cat.id)}
                           className={`px-3 py-2 rounded-xl text-[13px] font-bold border transition-all cursor-pointer ${
                             isLinked
                               ? 'border-corgi bg-corgi/10 text-corgi'
@@ -744,10 +880,9 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                       <input
                         type="text"
                         value={selPrice}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSelPrice(val.replace(/[^\d.,]/g, ''));
-                        }}
+                        onChange={(e) => onPriceInputChange(e, setSelPrice)}
+                        onBlur={(e) => onPriceInputBlur(e, setSelPrice)}
+                        onKeyDown={(e) => onPriceInputKeyDown(e, setSelPrice)}
                         className="h-10 w-full bg-white border border-gray-200 focus:border-corgi focus:ring-4 focus:ring-corgi/10 rounded-xl px-4 pr-12 text-sm font-extrabold text-gray-900 outline-none transition-all"
                         placeholder="0,00"
                       />
@@ -862,7 +997,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                     onClick={() => {
                       if (!selName.trim()) return;
                       if (selWithoutTranslation) {
-                        handleSaveSelectionModal();
+                        void handleSaveSelectionModal();
                       } else {
                         setSelStep(2);
                       }
@@ -886,7 +1021,7 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
                   </button>
                   <button
                     type="button"
-                    onClick={handleSaveSelectionModal}
+                    onClick={() => void handleSaveSelectionModal()}
                     className="px-5 py-2.5 bg-corgi hover:bg-corgi/90 text-xs font-black rounded-xl text-white cursor-pointer transition-all active:scale-[0.98]"
                   >
                     Save
@@ -904,7 +1039,5 @@ export default function ModifiersManagerModal({ isOpen, onClose, dishes, categor
         </motion.div>
       )}
     </AnimatePresence>
-  // force rebuild
-  // force rebuild
   );
 }

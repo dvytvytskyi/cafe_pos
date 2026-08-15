@@ -296,6 +296,19 @@ export default function BoardSettingsModal({
                           Add
                         </button>
                       </div>
+                      <div className="flex flex-wrap gap-2">
+                        {COLORS.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            aria-label={`Select color ${color}`}
+                            onClick={() => setSelectedColor(color)}
+                            className={`w-7 h-7 rounded-full ${color} transition-transform cursor-pointer ${
+                              selectedColor === color ? 'ring-2 ring-offset-2 ring-gray-900 scale-110' : 'hover:scale-105'
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}

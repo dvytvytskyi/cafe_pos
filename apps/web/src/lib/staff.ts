@@ -15,6 +15,8 @@ export interface Employee {
   status: 'active' | 'inactive';
   roleId?: string;
   roleName?: string;
+  locationIds?: string[];
+  locationNames?: string[];
   /** Form-only — never returned by GET /api/staff */
   pin?: string;
 }
@@ -30,6 +32,7 @@ export class StaffApiError extends Error {
 
 function mapApiEmployee(raw: Record<string, unknown>): Employee {
   const role = raw.role as { id?: string; name?: string } | undefined;
+  const locations = (raw.locations as { id?: string; name?: string }[] | undefined) ?? [];
   return {
     id: String(raw.id),
     name: String(raw.name ?? ''),
@@ -47,6 +50,8 @@ function mapApiEmployee(raw: Record<string, unknown>): Employee {
     status: (raw.status as Employee['status']) || 'active',
     roleId: String(raw.roleId ?? role?.id ?? ''),
     roleName: String(role?.name ?? ''),
+    locationIds: locations.map((l) => String(l.id ?? '')),
+    locationNames: locations.map((l) => String(l.name ?? '')),
   };
 }
 
@@ -84,10 +89,38 @@ export async function getEmployeesAsync(): Promise<Employee[]> {
   return list.map((raw: Record<string, unknown>) => mapApiEmployee(raw));
 }
 
-export async function getRolesAsync(): Promise<{ id: string; name: string }[]> {
+export async function getRolesAsync(): Promise<{ id: string; name: string; permissions?: unknown }[]> {
   const res = await fetch('/api/roles');
   if (!res.ok) {
     throw new StaffApiError('Failed to fetch roles');
+  }
+  return res.json();
+}
+
+export async function updateRoleAsync(
+  id: string,
+  permissions: Record<string, string[]>
+): Promise<{ id: string; name: string; permissions: unknown }> {
+  const res = await fetch(`/api/roles/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ permissions }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new StaffApiError(err.error || 'Failed to update role');
+  }
+  return res.json();
+}
+
+export async function resetEmployeePasswordAsync(id: string): Promise<{
+  tempPassword: string;
+  resetLink: string;
+}> {
+  const res = await fetch(`/api/staff/${id}/reset-password`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new StaffApiError(err.error || 'Failed to reset password');
   }
   return res.json();
 }

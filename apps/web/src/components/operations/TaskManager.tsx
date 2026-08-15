@@ -24,6 +24,7 @@ import {
   saveBoardSettingsAsync,
   DEFAULT_TASK_STAGES,
 } from '@/lib/board-settings';
+import { getLocationsCachedAsync } from '@/lib/locations';
 
 const INITIAL_STAGES = DEFAULT_TASK_STAGES;
 
@@ -53,6 +54,10 @@ export default function TaskManager({
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isDraftTask, setIsDraftTask] = useState(false);
   const [isClientMounted, setIsClientMounted] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
+  const [apiLocationNames, setApiLocationNames] = useState<string[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     setSelectedDate(new Date());
@@ -71,8 +76,10 @@ export default function TaskManager({
       }
       const data = await getTasksAsync(filters);
       setTasks(data);
+      setActionError(null);
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to fetch tasks');
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +94,11 @@ export default function TaskManager({
 
   useEffect(() => {
     getEmployeesAsync()
-      .then(setEmployees)
+      .then((staff) => {
+        setEmployees(staff);
+        const active = staff.find((e) => e.status === 'active') ?? staff[0];
+        if (active) setCurrentUserId(active.id);
+      })
       .catch((err) => console.error('Failed to load staff for task filters:', err));
   }, []);
 
@@ -95,6 +106,12 @@ export default function TaskManager({
     getBoardSettingsAsync('tasks', DEFAULT_LOCATION_ID)
       .then(setStages)
       .catch((err) => console.error('Failed to load task board settings:', err));
+  }, []);
+
+  useEffect(() => {
+    getLocationsCachedAsync()
+      .then((locations) => setApiLocationNames(locations.map((l) => l.name)))
+      .catch((err) => console.error('Failed to load locations for task filters:', err));
   }, []);
 
   useEffect(() => {
@@ -139,8 +156,10 @@ export default function TaskManager({
       comments: 0,
       attachments: 0,
       progress: 0,
+      priority: 'Lowest',
       deadline: 'No deadline',
       assignees: employees[0]?.id ? [employees[0].id] : [],
+      likedBy: [],
       status,
       scheduledDate: selectedDate ? formatDateParam(selectedDate) : formatDateParam(new Date()),
     };
@@ -175,8 +194,27 @@ export default function TaskManager({
       setEditingTask(null);
       setIsDraftTask(false);
       onTasksChanged?.();
+      setActionError(null);
     } catch (err) {
       console.error('Failed to save task:', err);
+      const message = err instanceof Error ? err.message : 'Failed to save task';
+      setActionError(message);
+      throw err instanceof Error ? err : new Error(message);
+    }
+  };
+
+  const handleMoveTask = async (taskId: string, newStatus: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || task.status === newStatus) return;
+
+    try {
+      const saved = await updateTaskAsync(taskId, { ...task, status: newStatus });
+      setTasks((prev) => prev.map((t) => (t.id === saved.id ? saved : t)));
+      onTasksChanged?.();
+      setActionError(null);
+    } catch (err) {
+      console.error('Failed to move task:', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to move task');
     }
   };
 
@@ -190,14 +228,18 @@ export default function TaskManager({
       setEditingTask(null);
       setIsDraftTask(false);
       onTasksChanged?.();
+      setActionError(null);
     } catch (err) {
       console.error('Failed to delete task:', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to delete task');
     }
   };
 
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLocation = locationFilter === 'All' || t.branch === locationFilter;
+    const matchesLocation = locationFilter === 'All'
+      || t.branch === locationFilter
+      || t.branch.split(', ').includes(locationFilter);
     const matchesTag = tagFilter === 'All' || (t.tags && t.tags.some(tag => tag.label === tagFilter));
     return matchesSearch && matchesLocation && matchesTag;
   });
@@ -206,7 +248,10 @@ export default function TaskManager({
     ...tasks.flatMap(t => t.assignees || []),
     ...employees.map(e => e.id),
   ]));
-  const uniqueLocations = Array.from(new Set(tasks.map(t => t.branch).filter(Boolean)));
+  const uniqueLocations = Array.from(new Set([
+    ...apiLocationNames,
+    ...tasks.map(t => t.branch).filter(Boolean),
+  ])).filter((name) => name !== 'All Branches');
   
   const tagCounts = React.useMemo(() => {
     const counts: Record<string, number> = {};
@@ -472,10 +517,27 @@ export default function TaskManager({
         </button>
       </div>
 
+      {actionError && (
+        <div role="alert" className="mx-4 mt-3 bg-red-50 border border-red-100 text-red-700 text-[13px] font-medium rounded-xl px-3 py-2 shrink-0">
+          {actionError}
+        </div>
+      )}
+
       <div className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar relative bg-[#f9fafc]">
         <div className="flex gap-0.5 h-full p-4 pt-3 items-start w-max">
         {stages.map(stage => (
-          <div key={stage.id} className="flex-shrink-0 w-[264px] flex flex-col h-full bg-[#f9fafc] rounded-[16px] p-1.5 border border-gray-100/50">
+          <div
+            key={stage.id}
+            className="flex-shrink-0 w-[264px] flex flex-col h-full bg-[#f9fafc] rounded-[16px] p-1.5 border border-gray-100/50"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const taskId = e.dataTransfer.getData('text/plain');
+              if (!taskId) return;
+              void handleMoveTask(taskId, stage.id);
+              setDraggingTaskId(null);
+            }}
+          >
             {/* Column Header (Sticky) */}
             <div className="flex items-center justify-between mb-4 shrink-0 px-1">
               <div className="flex items-center gap-2">
@@ -529,13 +591,20 @@ export default function TaskManager({
           setEditingTask(null);
           setIsDraftTask(false);
         }} 
-        onSave={handleUpdateTask} 
+        onSave={async (task) => { await handleUpdateTask(task); }} 
         uniqueLocations={uniqueLocations} 
         uniqueAssignees={uniqueAssignees} 
         uniqueTags={tagCounts}
         employees={employees}
         editingTask={editingTask}
         onDelete={(taskId) => { void handleDeleteTask(taskId); }}
+        stages={stages}
+        isDraftTask={isDraftTask}
+        currentUserId={currentUserId}
+        onTaskUpdated={(updated) => {
+          setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+          setEditingTask(updated);
+        }}
       />
 
       <BoardSettingsModal
@@ -550,8 +619,9 @@ export default function TaskManager({
             setStages(saved);
 
             if (taskMigrations.length > 0) {
+              const dateParam = selectedDate ? formatDateParam(selectedDate) : undefined;
               for (const migration of taskMigrations) {
-                await migrateTaskStatusAsync(migration.from, migration.to);
+                await migrateTaskStatusAsync(migration.from, migration.to, dateParam);
               }
               await fetchTasks();
               onTasksChanged?.();
@@ -584,8 +654,21 @@ export default function TaskManager({
 
     return (
       <div 
-        onClick={() => editTask(task)}
-        className="bg-white rounded-[12px] p-2 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all cursor-pointer group"
+        draggable
+        onDragStart={(e) => {
+          e.stopPropagation();
+          setDraggingTaskId(task.id);
+          e.dataTransfer.setData('text/plain', task.id);
+          e.dataTransfer.effectAllowed = 'move';
+        }}
+        onDragEnd={() => setDraggingTaskId(null)}
+        onClick={() => {
+          if (draggingTaskId) return;
+          editTask(task);
+        }}
+        className={`bg-white rounded-[12px] p-2 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group ${
+          draggingTaskId === task.id ? 'opacity-50' : ''
+        }`}
       >
         <h4 className="text-[14px] font-bold text-gray-900 leading-snug mb-4 mt-1">{task.title}</h4>
         

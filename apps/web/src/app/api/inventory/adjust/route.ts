@@ -24,7 +24,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const updatedItem = await inventoryRepository.adjustStock(itemId, type, quantity, reason);
+    const updatedItem = await inventoryRepository.adjustStock(
+      itemId,
+      type,
+      quantity,
+      reason,
+      typeof body.locationId === 'string' ? body.locationId : undefined
+    );
     return NextResponse.json(updatedItem, { status: 200 });
   } catch (error: unknown) {
     if (error instanceof InventoryValidationError) {

@@ -53,7 +53,7 @@ export class MenuRepository {
           description: 'Filled with almond paste',
           price: 4.0,
           categoryId: pastries.id,
-          allergens: ['Gluten', 'Dairy', 'Nuts'],
+          allergens: ['Gluten', 'Milk', 'Nuts'],
         },
       });
       await invalidateMenuCache();
@@ -89,6 +89,7 @@ export class MenuRepository {
         items: {
           where: includeArchived ? undefined : { isArchived: false },
           orderBy: { name: 'asc' },
+          include: { translations: true },
         },
         modifierGroups: {
           where: includeArchived ? undefined : { isArchived: false },
@@ -210,6 +211,10 @@ export class MenuRepository {
       categoryId?: string;
       allergens?: string[];
       isArchived?: boolean;
+      imageUrl?: string | null;
+      tags?: string[];
+      isVisible?: boolean;
+      locationIds?: string[];
     }
   ) {
     const currentItem = await prisma.menuItem.findUnique({ where: { id } });
@@ -221,6 +226,10 @@ export class MenuRepository {
     if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
     if (data.allergens !== undefined) updateData.allergens = validateAllergenIds(data.allergens);
     if (data.isArchived !== undefined) updateData.isArchived = data.isArchived;
+    if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl?.trim() || null;
+    if (data.tags !== undefined) updateData.tags = data.tags;
+    if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
+    if (data.locationIds !== undefined) updateData.locationIds = data.locationIds;
 
     if (data.price !== undefined) {
       const price = validateDishPrice(data.price);
@@ -249,6 +258,41 @@ export class MenuRepository {
     });
     await invalidateMenuCache();
     return archived;
+  }
+
+  async upsertMenuItemTranslation(
+    itemId: string,
+    locale: string,
+    data: { name: string; description?: string | null }
+  ) {
+    const item = await prisma.menuItem.findUnique({ where: { id: itemId } });
+    if (!item) throw new Error('Menu item not found');
+
+    const normalizedLocale = locale.trim().toLowerCase();
+    const name = validateDishName(data.name);
+    const description = data.description?.trim() || null;
+
+    const translation = await prisma.menuItemTranslation.upsert({
+      where: { itemId_locale: { itemId, locale: normalizedLocale } },
+      create: { itemId, locale: normalizedLocale, name, description },
+      update: { name, description },
+    });
+    await invalidateMenuCache();
+    return translation;
+  }
+
+  async deleteMenuItemTranslation(itemId: string, locale: string) {
+    await prisma.menuItemTranslation.deleteMany({
+      where: { itemId, locale: locale.trim().toLowerCase() },
+    });
+    await invalidateMenuCache();
+  }
+
+  async listMenuItemTranslations(itemId: string) {
+    return prisma.menuItemTranslation.findMany({
+      where: { itemId },
+      orderBy: { locale: 'asc' },
+    });
   }
 }
 

@@ -17,12 +17,62 @@ export interface MenuCategory {
   items: MenuItem[];
 }
 
+const menuCache = new Map<string, { data: MenuCategory[]; ts: number }>();
+const MENU_CLIENT_CACHE_MS = 60_000;
+
 export async function getMenuCategoriesAsync(includeArchived: boolean = false): Promise<MenuCategory[]> {
+  const cacheKey = includeArchived ? 'archived' : 'active';
+  const hit = menuCache.get(cacheKey);
+  if (hit && Date.now() - hit.ts < MENU_CLIENT_CACHE_MS) {
+    return hit.data;
+  }
+
+  if (typeof window !== 'undefined' && typeof navigator !== 'undefined' && !navigator.onLine) {
+    try {
+      const { getMenuSnapshot } = await import('./pos-offline-db');
+      const snap = await getMenuSnapshot(cacheKey);
+      if (snap?.categories) {
+        return snap.categories as MenuCategory[];
+      }
+    } catch {
+      // fall through to fetch attempt
+    }
+  }
+
   const res = await fetch(`/api/menu/categories?includeArchived=${includeArchived}`);
   if (!res.ok) {
+    if (typeof window !== 'undefined') {
+      try {
+        const { getMenuSnapshot } = await import('./pos-offline-db');
+        const snap = await getMenuSnapshot(cacheKey);
+        if (snap?.categories) return snap.categories as MenuCategory[];
+      } catch {
+        // ignore
+      }
+    }
     throw new Error('Failed to fetch menu categories from PostgreSQL');
   }
-  return res.json();
+  const data = (await res.json()) as MenuCategory[];
+  menuCache.set(cacheKey, { data, ts: Date.now() });
+
+  if (typeof window !== 'undefined') {
+    import('./pos-offline-db')
+      .then(({ putMenuSnapshot }) =>
+        putMenuSnapshot({
+          key: cacheKey,
+          categories: data,
+          updatedAt: new Date().toISOString(),
+        })
+      )
+      .catch(() => {});
+  }
+
+  return data;
+}
+
+/** Warm menu cache before opening POS modal (avoids "Loading menu…" on first click). */
+export function prefetchMenuCategories(): void {
+  void getMenuCategoriesAsync().catch(() => {});
 }
 
 export async function createCategoryAsync(name: string): Promise<MenuCategory> {

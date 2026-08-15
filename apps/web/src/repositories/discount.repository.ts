@@ -3,6 +3,7 @@ import { prisma } from '../lib/db';
 export interface DiscountPresetData {
   name: string;
   value: number;
+  colorTag?: string | null;
 }
 
 export interface PromotionData {
@@ -116,6 +117,20 @@ export class DiscountRepository {
         startHour: data.startHour,
         endHour: data.endHour,
         targetItems: data.targetItems || [],
+      },
+    });
+  }
+
+  async updatePromotion(id: string, data: Partial<PromotionData>) {
+    return prisma.promotion.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.discountPercent !== undefined ? { discountPercent: data.discountPercent } : {}),
+        ...(data.activeDays !== undefined ? { activeDays: data.activeDays } : {}),
+        ...(data.startHour !== undefined ? { startHour: data.startHour } : {}),
+        ...(data.endHour !== undefined ? { endHour: data.endHour } : {}),
+        ...(data.targetItems !== undefined ? { targetItems: data.targetItems } : {}),
       },
     });
   }

@@ -7,6 +7,71 @@ export type PaymentBreakdown = {
   total: number;
 };
 
+export type DashboardPaymentFilter = 'all' | 'card' | 'cash' | 'app';
+
+export const PAYMENT_FILTER_LABELS = ['All Methods', 'Card', 'App', 'Cash'] as const;
+export type PaymentFilterLabel = (typeof PAYMENT_FILTER_LABELS)[number];
+
+export function uiPaymentLabelToFilter(label: string): DashboardPaymentFilter {
+  if (label === 'Card') return 'card';
+  if (label === 'Cash') return 'cash';
+  if (label === 'App') return 'app';
+  return 'all';
+}
+
+export function parseDashboardPaymentFilter(value: string | null | undefined): DashboardPaymentFilter {
+  if (!value || value === 'all') return 'all';
+  const v = value.toLowerCase();
+  if (v === 'card' || v === 'cash' || v === 'app') return v;
+  return 'all';
+}
+
+type TxLike = { method: string; amount: number };
+type ItemLike = { name: string; price: number; quantity: number };
+export type PaymentFilterableOrder = {
+  total: number;
+  status: string;
+  paid: boolean;
+  transactions: TxLike[];
+  items: ItemLike[];
+};
+
+function txMatchesFilter(method: string, filter: DashboardPaymentFilter): boolean {
+  if (filter === 'card') return method === 'card';
+  if (filter === 'cash') return method === 'cash';
+  if (filter === 'app') return method === 'points' || method === 'giftcard';
+  return true;
+}
+
+/** Narrow orders + totals to the selected payment method (for dashboard KPIs/charts). */
+export function filterOrdersByPayment<T extends PaymentFilterableOrder>(
+  orders: T[],
+  filter: DashboardPaymentFilter
+): T[] {
+  if (filter === 'all') return orders;
+
+  const result: T[] = [];
+  for (const order of orders) {
+    if (!order.paid && order.status !== 'completed') continue;
+    const matchingTx = order.transactions.filter((tx) => txMatchesFilter(tx.method, filter));
+    if (matchingTx.length === 0) continue;
+
+    const filteredTotal = matchingTx.reduce((sum, tx) => sum + tx.amount, 0);
+    const ratio = order.total > 0 ? filteredTotal / order.total : 1;
+
+    result.push({
+      ...order,
+      total: Math.round(filteredTotal * 100) / 100,
+      transactions: matchingTx,
+      items: order.items.map((item) => ({
+        ...item,
+        price: Math.round(item.price * ratio * 100) / 100,
+      })),
+    });
+  }
+  return result;
+}
+
 export type DashboardLocationMetrics = {
   id: string;
   name: string;
