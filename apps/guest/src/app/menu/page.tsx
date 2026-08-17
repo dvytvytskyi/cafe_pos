@@ -467,14 +467,14 @@ export default function MenuPage() {
           {/* Back button */}
           <button 
             onClick={() => router.push('/')}
-            className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.08)] hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0"
+            className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0"
           >
             <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
           </button>
 
           {/* Central premium combined location/order-mode capsule selector */}
           <div className="flex-1 flex justify-center">
-            <div className="bg-white/95 hover:bg-white border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.08)] cursor-pointer transition-all active:scale-[0.98]">
+            <div className="bg-white/95 hover:bg-white border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm shadow-black/5 cursor-pointer transition-all active:scale-[0.98]">
               <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
               <div className="flex items-center gap-1.5 text-xs text-gray-900">
                 <span className="font-extrabold tracking-tight">
@@ -493,7 +493,7 @@ export default function MenuPage() {
           {/* Settings Control Filter icon */}
           <button 
             onClick={() => setShowFiltersModal(true)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.08)] transition-all active:scale-95 flex-shrink-0 relative ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm shadow-black/5 transition-all active:scale-95 flex-shrink-0 relative ${
               (selectedDiet || excludedAllergens.length > 0 || sortBy !== 'default')
                 ? 'bg-[#FDBD38] hover:bg-[#e5a420] text-black font-bold'
                 : 'bg-white/95 hover:bg-white text-gray-900'
@@ -532,7 +532,7 @@ export default function MenuPage() {
         </div>
 
         {/* Scrollable Categories List bar (White Background, sticky inside header wrapper) */}
-        <div className="bg-white border-b border-gray-100 flex w-full">
+        <div className="bg-white flex w-full">
           <div 
             ref={tabsContainerRef}
             className="flex gap-6 overflow-x-auto scrollbar-none px-6 py-4 w-full"
@@ -619,7 +619,7 @@ export default function MenuPage() {
                           className="w-[220px] flex-shrink-0 flex flex-col gap-3 cursor-pointer hover:opacity-95 transition-opacity"
                         >
                           {/* Food image (First Style) */}
-                          <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 relative shadow-sm">
+                          <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 relative">
                             <img 
                               src={getFoodImage(item.name, category.name)} 
                               alt={item.name}
@@ -668,7 +668,7 @@ export default function MenuPage() {
                           <div 
                             key={item.id}
                             onClick={() => setSelectedItem(item)}
-                            className="w-full bg-white rounded-3xl overflow-hidden border border-gray-100 flex flex-col hover:opacity-98 transition-all shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] cursor-pointer"
+                            className="w-full bg-white rounded-3xl overflow-hidden border border-gray-100 flex flex-col hover:opacity-98 transition-all cursor-pointer"
                           >
                             {/* Image container on beige bg */}
                             <div className="w-full aspect-[4/3] bg-[#f2f2ee] relative">
@@ -751,20 +751,12 @@ export default function MenuPage() {
         onClick={() => setSelectedItem(null)}
       >
         <div 
-          className={`w-full max-w-[480px] h-[95vh] bg-white rounded-t-[20px] overflow-hidden transition-transform duration-300 ease-out transform flex flex-col justify-between shadow-2xl relative ${
+          className={`w-full max-w-[480px] h-[95vh] bg-white rounded-t-[20px] overflow-hidden transition-transform duration-300 ease-out transform flex flex-col shadow-2xl relative ${
             selectedItem ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Floating Back Button - Fixed at top-left of sheet */}
-          <button 
-            onClick={() => setSelectedItem(null)}
-            className="absolute top-5 left-5 p-2 text-black hover:opacity-80 transition-opacity z-50"
-          >
-            <ArrowLeft className="w-6 h-6" strokeWidth={2.2} />
-          </button>
-
-          {/* Scrollable Content (Header, description, custom inputs) */}
+          {/* Scrollable Content (Header, description, custom inputs, and total/quantity footer at the end) */}
           <div className="flex-1 overflow-y-auto scrollbar-none flex flex-col gap-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {/* Top Image Banner Section */}
             {selectedItem && (
@@ -774,6 +766,13 @@ export default function MenuPage() {
                   alt={selectedItem.name}
                   className="w-full h-full object-cover"
                 />
+                {/* Floating Back Button - Pinned to the photo, scrolls with it */}
+                <button 
+                  onClick={() => setSelectedItem(null)}
+                  className="absolute top-5 left-5 w-9 h-9 bg-white/95 rounded-full flex items-center justify-center text-black hover:bg-white transition-all z-50 shadow-sm cursor-pointer"
+                >
+                  <ArrowLeft className="w-5 h-5" strokeWidth={2.2} />
+                </button>
               </div>
             )}
 
@@ -806,96 +805,105 @@ export default function MenuPage() {
               {selectedItem?.modifierGroups && selectedItem.modifierGroups.length > 0 && (
                 <div className="flex flex-col gap-6 mt-4 border-t border-gray-100 pt-6">
                   {selectedItem.modifierGroups.map((group) => (
-                    <div key={group.id} className="flex flex-col text-left">
-                      <h3 className="text-[13px] font-black text-gray-900 uppercase tracking-wider mb-4">
-                        {group.name}
-                      </h3>
-                      <div className="flex flex-wrap gap-5">
-                        {group.options.map((option) => {
-                          const isSelected = selectedModifiers.some((m) => m.optionId === option.id);
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => toggleModifier(group, option)}
-                              className="flex flex-col items-center bg-white cursor-pointer group"
-                            >
-                              <div className="relative">
-                                <img
-                                  src={getModifierImage(option.name)}
-                                  alt={option.name}
-                                  className={`w-[84px] h-[84px] rounded-full object-cover transition-all duration-200 border-2 ${
-                                    isSelected 
-                                      ? 'border-[#FDBD38] ring-2 ring-[#FDBD38] ring-offset-2 scale-[1.03] shadow-md' 
-                                      : 'border-transparent shadow-sm group-hover:scale-[1.02] group-hover:shadow-md'
-                                  }`}
-                                />
-                                {isSelected && (
-                                  <div className="absolute -top-1 -right-1 bg-[#FDBD38] text-black w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold shadow-sm border border-white">
-                                    ✓
-                                  </div>
-                                )}
-                              </div>
-                              <span className="text-[12px] font-bold text-gray-900 mt-2 text-center max-w-[90px] leading-tight">
-                                {option.name}
-                              </span>
-                              <span className="w-4 border-t border-gray-250 my-1 group-hover:border-gray-400 transition-colors"></span>
-                              <span className="text-[11px] font-extrabold text-gray-900 opacity-80">
-                                +{option.price.toFixed(2)}€
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                     <div key={group.id} className="flex flex-col text-left">
+                       <h3 className="text-[13px] font-black text-gray-900 uppercase tracking-wider mb-4">
+                         {group.name}
+                       </h3>
+                       <div className="flex flex-wrap gap-5">
+                         {group.options.map((option) => {
+                           const isSelected = selectedModifiers.some((m) => m.optionId === option.id);
+                           return (
+                             <button
+                               key={option.id}
+                               type="button"
+                               onClick={() => toggleModifier(group, option)}
+                               className="flex flex-col items-center bg-white cursor-pointer group"
+                             >
+                               <div className="relative">
+                                 <img
+                                   src={getModifierImage(option.name)}
+                                   alt={option.name}
+                                   className={`w-[84px] h-[84px] rounded-full object-cover transition-all duration-200 border-2 ${
+                                     isSelected 
+                                       ? 'border-[#FDBD38] ring-2 ring-[#FDBD38] ring-offset-2 scale-[1.03] shadow-md' 
+                                       : 'border-transparent shadow-sm group-hover:scale-[1.02] group-hover:shadow-md'
+                                   }`}
+                                 />
+                                 {isSelected && (
+                                   <div className="absolute -top-1 -right-1 bg-[#FDBD38] text-black w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold shadow-sm border border-white">
+                                     ✓
+                                   </div>
+                                 )}
+                               </div>
+                               <span className="text-[12px] font-bold text-gray-900 mt-2 text-center max-w-[90px] leading-tight">
+                                 {option.name}
+                               </span>
+                               <span className="w-4 border-t border-gray-250 my-1 group-hover:border-gray-400 transition-colors"></span>
+                               <span className="text-[11px] font-extrabold text-gray-900 opacity-80">
+                                 +{option.price.toFixed(2)}€
+                               </span>
+                             </button>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Footer nested inside the scrollable content view */}
+            <div className="px-6 pb-6 pt-2 bg-white mt-auto border-t border-gray-100">
+              {/* Total and Quantity Row */}
+              <div className="flex items-center justify-between mb-5 pt-3">
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total</span>
+                  <span className="text-[20px] font-extrabold text-black mt-0.5">
+                    <span key={totalPrice} className="animate-pop inline-block">
+                      {totalPrice.toFixed(2)}€
+                    </span>
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus size={14} strokeWidth={2.5} />
+                  </button>
+                  <div className="w-[42px] h-[34px] border border-black rounded-xl flex items-center justify-center text-[14px] font-black text-black overflow-hidden">
+                    <span key={quantity} className="animate-pop inline-block">
+                      {String(quantity).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus size={14} strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Fixed Bottom Footer */}
-          <div className="px-6 pb-10 pt-2 flex-shrink-0 bg-white">
-            {/* Total and Quantity Row */}
-            <div className="flex items-center justify-between mb-5 pt-3 border-t border-gray-100">
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total</span>
-                <span className="text-[20px] font-extrabold text-black mt-0.5">
-                  {totalPrice.toFixed(2)}€
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus size={14} strokeWidth={2.5} />
-                </button>
-                <div className="w-[42px] h-[34px] border border-black rounded-xl flex items-center justify-center text-[14px] font-black text-black">
-                  {String(quantity).padStart(2, '0')}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setQuantity((q) => q + 1)}
-                  className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer"
-                  aria-label="Increase quantity"
-                >
-                  <Plus size={14} strokeWidth={2.5} />
-                </button>
-              </div>
-            </div>
-
+          <div className="px-6 pb-4 pt-2 flex-shrink-0 bg-transparent">
             {/* Add to bag button */}
             <button 
               onClick={handleAddToCart}
               className="w-full bg-black hover:bg-gray-900 text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
             >
               <span className="text-base font-semibold">+ Add to bag</span>
-              <div className="bg-white/20 px-6 py-2 rounded-full text-white text-base font-bold">
-                {totalPrice.toFixed(2)}€
+              <div className="bg-white/20 px-6 py-2 rounded-full text-white text-base font-bold overflow-hidden">
+                <span key={totalPrice} className="animate-pop inline-block">
+                  {totalPrice.toFixed(2)}€
+                </span>
               </div>
             </button>
           </div>
@@ -1317,7 +1325,7 @@ export default function MenuPage() {
           <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-1 scrollbar-none">
             
             {/* Dietary Preferences Section */}
-            <div className="flex flex-col gap-2.5 px-4">
+            <div className="flex flex-col gap-2.5 px-0">
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Dietary Preference</span>
               <div className="flex flex-wrap gap-2">
                 {[
@@ -1344,7 +1352,7 @@ export default function MenuPage() {
             </div>
 
             {/* Exclude Allergens Section */}
-            <div className="flex flex-col gap-2.5 px-4">
+            <div className="flex flex-col gap-2.5 px-0">
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Exclude Allergens</span>
               <div className="flex flex-wrap gap-2">
                 {[
@@ -1380,7 +1388,7 @@ export default function MenuPage() {
             </div>
 
             {/* Sort Options Section */}
-            <div className="flex flex-col gap-2.5 px-4">
+            <div className="flex flex-col gap-2.5 px-0">
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Sort Dishes By</span>
               <div className="flex flex-col gap-2.5">
                 {[
