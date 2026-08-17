@@ -213,8 +213,13 @@ export default function HomePage() {
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-black select-none">
       
-      {/* Main Page Content Wrapper */}
-      <div className="relative h-full w-full bg-[#FFFFFF] text-gray-900 font-sans flex flex-col justify-between">
+      {/* Main Page Content Wrapper (Pushed to the right when drawer is active) */}
+      <div 
+        className={`relative h-full w-full bg-[#FFFFFF] text-gray-900 font-sans flex flex-col justify-between transform transition-transform duration-300 ease-out ${
+          showDrawer ? 'translate-x-[290px]' : 'translate-x-0'
+        }`}
+        style={{ willChange: 'transform' }}
+      >
       
       {/* Hero Visual Section - Dynamic height (flex-1) */}
       <div 
@@ -539,7 +544,7 @@ export default function HomePage() {
       </div>
        {/* Drawer Overlay Menu */}
       <div 
-        className={`fixed inset-0 bg-white/30 backdrop-blur-md z-50 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/45 z-50 transition-opacity duration-300 ${
           showDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setShowDrawer(false)}
