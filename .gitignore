@@ -7,3 +7,5 @@ node_modules
 .turbo
 apps/web/.turbo
 backups/
+.next
+apps/guest/.next

@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Coffee, Gift, ShoppingBag, ClipboardList } from 'lucide-react';
@@ -16,10 +17,37 @@ const tabs = [
 export function BottomNav() {
   const pathname = usePathname();
   const { locale, foodCart, merchCart } = useGuest();
+  const [visible, setVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = (e: any) => {
+      const target = e.target;
+      if (!target || typeof target.scrollTop === 'undefined') return;
+      const currentScrollY = target.scrollTop;
+      
+      if (Math.abs(currentScrollY - lastScrollY.current) > 8) {
+        if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+          setVisible(false);
+        } else {
+          setVisible(true);
+        }
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    // Capture scrolling on any inner container (like h-screen overflow-y-auto page wrappers)
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, []);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur safe-bottom">
-      <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 py-2">
+    <nav 
+      className={`fixed bottom-[14px] left-6 right-6 z-40 max-w-[400px] mx-auto bg-white/95 backdrop-blur-md border border-gray-100/80 rounded-[22px] shadow-[0_8px_30px_-8px_rgba(0,0,0,0.12)] transition-all duration-300 ease-out transform ${
+        visible ? 'translate-y-0 opacity-100' : 'translate-y-28 opacity-0 pointer-events-none'
+      }`}
+    >
+      <div className="mx-auto flex items-stretch justify-around px-2 py-[10px]">
         {tabs.map(({ href, icon: Icon, labelKey, cartKey }) => {
           const active = pathname.startsWith(href);
           const count = cartKey === 'food' ? foodCart.length : cartKey === 'merch' ? merchCart.length : 0;
@@ -27,14 +55,14 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-bold uppercase tracking-wide ${
-                active ? 'text-brand-green' : 'text-gray-400'
+              className={`flex min-h-9 min-w-9 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[9px] font-extrabold uppercase tracking-wider transition-colors ${
+                active ? 'text-corgi' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               <span className="relative">
-                <Icon size={22} strokeWidth={active ? 2.5 : 2} />
+                <Icon size={18} strokeWidth={active ? 2.6 : 2.1} />
                 {count > 0 && (
-                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-corgi px-1 text-[9px] font-black text-gray-900">
+                  <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-corgi px-0.5 text-[8px] font-black text-gray-900 shadow-sm border border-white">
                     {count}
                   </span>
                 )}

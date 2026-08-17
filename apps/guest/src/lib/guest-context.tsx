@@ -24,6 +24,8 @@ interface GuestContextValue {
   dismissWelcome: () => void;
   deferredInstall: BeforeInstallPromptEvent | null;
   setDeferredInstall: (e: BeforeInstallPromptEvent | null) => void;
+  orderMode: 'store' | 'pickup' | 'delivery';
+  setOrderMode: (mode: 'store' | 'pickup' | 'delivery') => void;
 }
 
 export interface BeforeInstallPromptEvent extends Event {
@@ -65,6 +67,7 @@ export function GuestProvider({
   const [merchCart, setMerchCart] = useState<CartLine[]>([]);
   const [showWelcome, setShowWelcome] = useState(false);
   const [deferredInstall, setDeferredInstall] = useState<BeforeInstallPromptEvent | null>(null);
+  const [orderMode, setOrderMode] = useState<'store' | 'pickup' | 'delivery'>('store');
 
   const setLocale = useCallback((l: GuestLocale) => {
     setLocaleState(l);
@@ -73,6 +76,14 @@ export function GuestProvider({
 
   const refreshAuth = useCallback(async () => {
     try {
+      if (typeof window !== 'undefined') {
+        const mockUser = localStorage.getItem('corgi_mock_user');
+        if (mockUser) {
+          setIsLoggedIn(true);
+          setProfileName(mockUser);
+          return;
+        }
+      }
       const profile = await getProfile();
       setIsLoggedIn(true);
       setProfileName(profile.name);
@@ -102,9 +113,9 @@ export function GuestProvider({
 
     refreshAuth();
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
-    }
+    // if ('serviceWorker' in navigator) {
+    //   navigator.serviceWorker.register('/sw.js').catch(() => {});
+    // }
 
     const onInstall = (e: Event) => {
       e.preventDefault();
@@ -184,6 +195,8 @@ export function GuestProvider({
       },
       deferredInstall,
       setDeferredInstall,
+      orderMode,
+      setOrderMode,
     }),
     [
       bootstrap,
@@ -201,6 +214,7 @@ export function GuestProvider({
       updateMerchQty,
       showWelcome,
       deferredInstall,
+      orderMode,
     ]
   );
 

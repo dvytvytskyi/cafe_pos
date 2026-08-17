@@ -73,8 +73,15 @@ export async function POST(req: Request) {
       items: body.items || [],
       discountName: body.discountName,
       discountValue: body.discountValue,
+      discountType: body.discountType,
       tipType: body.tipType,
       tipValue: body.tipValue,
+      guestCount: body.guestCount,
+      takenByStaffId: body.takenByStaffId,
+      servedByStaffId: body.servedByStaffId,
+      assignedStaffId: body.assignedStaffId,
+      pointsToSpend: body.pointsToSpend,
+      isPrepaid: body.isPrepaid,
     } as any);
 
     return NextResponse.json(created, { status: 201 });

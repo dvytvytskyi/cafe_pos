@@ -6,6 +6,7 @@ import { shiftRepository } from './shift.repository';
 import type { OrderHistoryFilters } from '../lib/order-history-validation';
 import { normalizeSearchText } from '../lib/order-history-validation';
 import { coerceStatusForSource } from '../lib/orders-board';
+import { isDeliverySource, calculateCashChange } from '../lib/order-totals';
 
 async function findCustomerIdsForOrderHistoryQuery(query: string): Promise<string[]> {
   const q = query.trim();
@@ -54,17 +55,19 @@ export interface PaymentLine {
   method: 'card' | 'cash' | 'points' | 'giftcard';
   amount: number;
   code?: string;
+  cashTendered?: number;
 }
 
 export interface CompletePaymentPayload {
   payments: PaymentLine[];
   customerId?: string;
-  discount?: { name: string; value: number };
+  discount?: { name: string; value: number; type?: 'percent' | 'fixed' };
   tip?: { type: 'percent' | 'fixed'; value: number };
   total?: number;
   paidItemIndexes?: number[];
   /** When false, fully paid orders keep their current status (e.g. POS prepaid preparing). */
   markCompleted?: boolean;
+  closedByStaffId?: string;
 }
 
 // Helper to map Prisma Order (with items) to Domain Order
@@ -85,12 +88,20 @@ export function mapToDomainOrder(dbOrder: any): Order {
       code: t.code || undefined,
     })),
     items: (dbOrder.items || []).map((item: any) => ({
+      id: item.id,
       name: item.name,
       price: item.price,
       quantity: item.quantity,
       paid: item.paid,
       comments: item.comments || undefined,
       refundedQuantity: item.refundedQuantity ?? 0,
+      menuItemId: item.menuItemId || undefined,
+      modifierSnapshot: item.modifierSnapshot ?? undefined,
+      guestIndex: item.guestIndex ?? undefined,
+      soldByStaffId: item.soldByStaffId || undefined,
+      sentToKitchen: item.sentToKitchen ?? false,
+      sentToBar: item.sentToBar ?? false,
+      served: item.served ?? false,
     })),
     subtotal: dbOrder.total,
     tax: dbOrder.total * 0.1,
@@ -100,8 +111,17 @@ export function mapToDomainOrder(dbOrder: any): Order {
     updatedAt: dbOrder.updatedAt,
     discountName: dbOrder.discountName || undefined,
     discountValue: dbOrder.discountValue ?? 0,
+    discountType: dbOrder.discountType || 'percent',
     tipType: dbOrder.tipType || undefined,
     tipValue: dbOrder.tipValue ?? 0,
+    guestCount: dbOrder.guestCount ?? undefined,
+    takenByStaffId: dbOrder.takenByStaffId || undefined,
+    servedByStaffId: dbOrder.servedByStaffId || undefined,
+    closedByStaffId: dbOrder.closedByStaffId || undefined,
+    assignedStaffId: dbOrder.assignedStaffId || undefined,
+    isPrepaid: dbOrder.isPrepaid ?? false,
+    invoiceEmail: dbOrder.invoiceEmail || undefined,
+    receiptsSentTo: dbOrder.receiptsSentTo ?? [],
     deliveryId: dbOrder.orderNumber.startsWith('GLV') || dbOrder.orderNumber.startsWith('UBR') ? dbOrder.orderNumber : undefined,
     orderedBy: dbOrder.source === 'dine_in' || dbOrder.source === 'takeaway' ? 'waiter' : 'app',
     customerId: dbOrder.customerId || undefined,
@@ -333,7 +353,9 @@ export class OrderRepository {
       const orderNumber = data.deliveryId || `ORD-${Date.now().toString().slice(-6)}`;
       const source = data.source || 'dine_in';
       const status = data.status || 'preparing';
-      const paid = data.paymentStatus === 'paid' || data.paid || false;
+      const deliveryPrepaid = isDeliverySource(source);
+      const paid =
+        data.paymentStatus === 'paid' || data.paid || deliveryPrepaid || false;
       const amountPaid = paid ? (data.total || 0) : 0;
 
       const dbOrder = await prisma.order.create({
@@ -349,9 +371,15 @@ export class OrderRepository {
           total: data.total || 0,
           discountName: (data as any).discountName || null,
           discountValue: (data as any).discountValue ?? 0,
+          discountType: (data as any).discountType || null,
           tipType: (data as any).tipType || null,
           tipValue: (data as any).tipValue ?? 0,
           pointsToSpend: (data as any).pointsToSpend ?? 0,
+          guestCount: (data as any).guestCount ?? null,
+          takenByStaffId: (data as any).takenByStaffId ?? null,
+          servedByStaffId: (data as any).servedByStaffId ?? null,
+          assignedStaffId: (data as any).assignedStaffId ?? null,
+          isPrepaid: deliveryPrepaid || (data as any).isPrepaid === true,
           paid,
           amountPaid,
           loyaltyGuestIds: (data as any).loyaltyGuestIds ?? [],
@@ -366,6 +394,8 @@ export class OrderRepository {
               menuItemId: item.menuItemId || null,
               merchSkuId: item.merchSkuId || null,
               modifierSnapshot: item.modifierSnapshot ?? null,
+              soldByStaffId: item.soldByStaffId || null,
+              guestIndex: item.guestIndex ?? null,
             })),
           },
         },
@@ -404,19 +434,30 @@ export class OrderRepository {
       if (data.source !== undefined) updateData.source = data.source;
       if ((data as any).discountName !== undefined) updateData.discountName = (data as any).discountName;
       if ((data as any).discountValue !== undefined) updateData.discountValue = (data as any).discountValue;
+      if ((data as any).discountType !== undefined) updateData.discountType = (data as any).discountType;
       if ((data as any).tipType !== undefined) updateData.tipType = (data as any).tipType;
       if ((data as any).tipValue !== undefined) updateData.tipValue = (data as any).tipValue;
+      if ((data as any).guestCount !== undefined) updateData.guestCount = (data as any).guestCount;
+      if ((data as any).takenByStaffId !== undefined) updateData.takenByStaffId = (data as any).takenByStaffId;
+      if ((data as any).servedByStaffId !== undefined) updateData.servedByStaffId = (data as any).servedByStaffId;
+      if ((data as any).closedByStaffId !== undefined) updateData.closedByStaffId = (data as any).closedByStaffId;
+      if ((data as any).assignedStaffId !== undefined) updateData.assignedStaffId = (data as any).assignedStaffId;
+      if ((data as any).pointsToSpend !== undefined) updateData.pointsToSpend = (data as any).pointsToSpend;
 
       // Replace line items only when a non-empty list is sent (never wipe via [])
       if (Array.isArray(data.items) && data.items.length > 0) {
         await prisma.orderItem.deleteMany({ where: { orderId: id } });
         updateData.items = {
-          create: data.items.map((item) => ({
+          create: data.items.map((item: any) => ({
             name: item.name,
             price: item.price,
             quantity: item.quantity,
             paid: item.paid || false,
             comments: item.comments || null,
+            menuItemId: item.menuItemId || null,
+            modifierSnapshot: item.modifierSnapshot ?? null,
+            soldByStaffId: item.soldByStaffId || null,
+            guestIndex: item.guestIndex ?? null,
           })),
         };
       }
@@ -444,6 +485,9 @@ export class OrderRepository {
       });
       if (!order) throw new Error('Order not found');
       if (order.paid) throw new Error('Order is already paid');
+      if (order.isPrepaid || isDeliverySource(order.source)) {
+        throw new Error('Delivery orders are prepaid and cannot be checked out from POS');
+      }
       if (order.items.length === 0 && order.total > 0.01) {
         throw new Error('Cannot checkout: order line items are missing. Re-open the order from the table or create a new one.');
       }
@@ -527,12 +571,22 @@ export class OrderRepository {
       }
 
       for (const payment of payload.payments) {
+        let cashTendered: number | null = null;
+        let changeGiven: number | null = null;
+        if (payment.method === 'cash' && payment.cashTendered != null) {
+          const change = calculateCashChange(payment.amount, payment.cashTendered);
+          cashTendered = change.cashTendered;
+          changeGiven = change.changeGiven;
+        }
         await tx.transaction.create({
           data: {
             orderId,
             method: payment.method,
             amount: payment.amount,
             code: payment.code || null,
+            cashTendered,
+            changeGiven,
+            recordedByStaffId: payload.closedByStaffId || null,
           },
         });
       }
@@ -593,10 +647,14 @@ export class OrderRepository {
       if (payload.discount) {
         updateData.discountName = payload.discount.name;
         updateData.discountValue = payload.discount.value;
+        updateData.discountType = payload.discount.type ?? 'percent';
       }
       if (payload.tip) {
         updateData.tipType = payload.tip.type;
         updateData.tipValue = payload.tip.value;
+      }
+      if (payload.closedByStaffId) {
+        updateData.closedByStaffId = payload.closedByStaffId;
       }
       if (customerId) updateData.customerId = customerId;
 
@@ -675,6 +733,50 @@ export class OrderRepository {
       console.error(`Error deleting order [${id}] from DB:`, error);
       return false;
     }
+  }
+
+  async applyLoyaltyPoints(orderId: string, customerId: string, pointsToSpend: number): Promise<Order> {
+    if (pointsToSpend < 0) throw new Error('Points must be non-negative');
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error('Order not found');
+    if (order.paid) throw new Error('Cannot apply points to a paid order');
+
+    const customer = await prisma.customer.findUnique({ where: { id: customerId } });
+    if (!customer) throw new Error('Customer not found');
+    if (customer.points < pointsToSpend - 0.001) {
+      throw new Error('Insufficient loyalty points');
+    }
+
+    const loyaltyGuestIds = order.loyaltyGuestIds.includes(customerId)
+      ? order.loyaltyGuestIds
+      : [...order.loyaltyGuestIds, customerId];
+
+    const dbOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        customerId,
+        pointsToSpend,
+        loyaltyGuestIds,
+      },
+      include: { items: true, transactions: true },
+    });
+
+    return mapToDomainOrder(dbOrder);
+  }
+
+  async getLoyaltyBalance(orderId: string, customerId?: string) {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error('Order not found');
+    const cid = customerId || order.customerId || order.loyaltyGuestIds[0];
+    if (!cid) return { customerId: null, points: 0, pointsToSpend: order.pointsToSpend };
+
+    const customer = await prisma.customer.findUnique({ where: { id: cid } });
+    return {
+      customerId: cid,
+      points: customer?.points ?? 0,
+      pointsToSpend: order.pointsToSpend,
+      customerName: customer?.name ?? null,
+    };
   }
 }
 

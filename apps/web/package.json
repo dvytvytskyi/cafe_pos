@@ -16,7 +16,7 @@
     "lint": "eslint",
     "test:payment": "bash src/lib/test-payment-api.sh",
     "test:tables": "node --experimental-strip-types src/lib/test-unit-tables-layout.ts && tsx src/lib/test-tables-layout.ts && tsx src/lib/test-table-status-patch.ts",
-    "test:pos": "node --experimental-strip-types src/lib/test-unit-orders.ts && node --experimental-strip-types src/lib/test-unit-order-mapper.ts && tsx src/lib/test-pos-order-flow.ts",
+    "test:pos": "node --experimental-strip-types src/lib/test-unit-orders.ts && node --experimental-strip-types src/lib/test-unit-order-mapper.ts && node --experimental-strip-types src/lib/test-unit-order-pravky.ts && tsx src/lib/test-pos-order-flow.ts",
     "test:pos-offline": "node --experimental-strip-types src/lib/test-unit-orders-offline.ts && node --experimental-strip-types src/lib/test-orders-offline.ts && node --experimental-strip-types src/lib/test-unit-location-scope.ts",
     "test:pos-shell": "node --experimental-strip-types src/lib/test-unit-pos-shell.ts && node --experimental-strip-types src/lib/test-unit-api-errors.ts && node --experimental-strip-types src/lib/test-unit-staff-location.ts",
     "test:payment-transaction": "node --experimental-strip-types src/lib/test-unit-payment.ts && tsx src/lib/test-payment-transaction.ts",

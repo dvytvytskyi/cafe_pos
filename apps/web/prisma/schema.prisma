@@ -5,7 +5,6 @@ datasource db {
 
 generator client {
   provider   = "prisma-client-js"
-  engineType = "client"
 }
 
 model Role {
@@ -28,6 +27,12 @@ model User {
   shifts         CashShift[]
   timeCards      TimeCard[]
   shiftSchedules ShiftSchedule[]
+  ordersTaken    Order[]     @relation("OrderTakenBy")
+  ordersServed   Order[]     @relation("OrderServedBy")
+  ordersClosed   Order[]     @relation("OrderClosedBy")
+  ordersAssigned Order[]     @relation("OrderAssigned")
+  itemsSold      OrderItem[] @relation("ItemSoldBy")
+  tablesAssigned Table[]     @relation("TableAssigned")
   
   // Employee details
   position       String?
@@ -80,6 +85,8 @@ model Table {
   roomId     String?
   roomName   String?
   seats      Int?     @default(4)
+  assignedStaffId String?
+  assignedStaff   User? @relation("TableAssigned", fields: [assignedStaffId], references: [id])
 
   orders     Order[]
   createdAt  DateTime @default(now())
@@ -170,9 +177,22 @@ model Order {
   total         Float
   discountName  String?
   discountValue Float          @default(0)
+  discountType  String?        // "percent" | "fixed"
   tipType       String?        // "percent" | "fixed"
   tipValue      Float          @default(0)
   pointsToSpend Float          @default(0)
+  guestCount    Int?
+  takenByStaffId    String?
+  takenByStaff      User?    @relation("OrderTakenBy", fields: [takenByStaffId], references: [id])
+  servedByStaffId   String?
+  servedByStaff     User?    @relation("OrderServedBy", fields: [servedByStaffId], references: [id])
+  closedByStaffId   String?
+  closedByStaff     User?    @relation("OrderClosedBy", fields: [closedByStaffId], references: [id])
+  assignedStaffId   String?
+  assignedStaff     User?    @relation("OrderAssigned", fields: [assignedStaffId], references: [id])
+  isPrepaid     Boolean        @default(false)
+  invoiceEmail  String?
+  receiptsSentTo String[]      @default([])
   paid          Boolean        @default(false)
   amountPaid    Float          @default(0)
   refundedAmount Float         @default(0)
@@ -201,6 +221,14 @@ model OrderItem {
   paid             Boolean  @default(false)
   comments         String?
   refundedQuantity Int      @default(0)
+  guestIndex       Int?
+  soldByStaffId    String?
+  soldByStaff      User?    @relation("ItemSoldBy", fields: [soldByStaffId], references: [id])
+  sentToKitchen    Boolean  @default(false)
+  sentToBar        Boolean  @default(false)
+  served           Boolean  @default(false)
+  acceptedAt       DateTime?
+  readyAt          DateTime?
   createdAt        DateTime @default(now())
 }
 
@@ -211,6 +239,9 @@ model Transaction {
   method    String   // "card" | "cash" | "points" | "giftcard"
   amount    Float
   code      String?  // Код сертифіката чи транзакції терміналу
+  cashTendered Float?
+  changeGiven  Float?
+  recordedByStaffId String?
   createdAt DateTime @default(now())
 
   @@index([method])

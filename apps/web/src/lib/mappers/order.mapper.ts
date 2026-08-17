@@ -1,13 +1,22 @@
+import { calculateDiscountAmount } from './order-totals';
+
 export type UiOrderSource = 'glovo' | 'ubereats' | 'dine_in' | 'takeaway';
 export type UiOrderStatus = 'incoming' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled';
 
 export interface UiOrderItem {
+  id?: string;
   name: string;
   price: number;
   quantity: number;
   paid?: boolean;
   comments?: string;
   refundedQuantity?: number;
+  menuItemId?: string;
+  modifierSnapshot?: unknown;
+  guestIndex?: number;
+  sentToKitchen?: boolean;
+  sentToBar?: boolean;
+  served?: boolean;
 }
 
 export interface UiOrder {
@@ -16,7 +25,7 @@ export interface UiOrder {
   customerName: string;
   items: UiOrderItem[];
   total: number;
-  discount?: { name: string; value: number; amountDeducted: number };
+  discount?: { name: string; value: number; type?: 'percent' | 'fixed'; amountDeducted: number };
   tip?: { type: 'percent' | 'fixed'; value: number; amountAdded: number };
   status: UiOrderStatus;
   time: Date;
@@ -33,6 +42,15 @@ export interface UiOrder {
   waiterName?: string | null;
   updatedAt?: Date;
   customerPointsEarned?: number;
+  guestCount?: number;
+  takenByStaffId?: string;
+  servedByStaffId?: string;
+  closedByStaffId?: string;
+  assignedStaffId?: string;
+  isPrepaid?: boolean;
+  pointsToSpend?: number;
+  receiptsSentTo?: string[];
+  customerEmail?: string;
 }
 
 export interface ApiOrder {
@@ -69,11 +87,21 @@ export interface ApiOrder {
   waiterName?: string | null;
   discountName?: string;
   discountValue?: number;
+  discountType?: 'percent' | 'fixed';
   tipType?: string;
   tipValue?: number;
   updatedAt?: string | Date;
   warnings?: string[];
   customerPointsEarned?: number;
+  guestCount?: number;
+  takenByStaffId?: string;
+  servedByStaffId?: string;
+  closedByStaffId?: string;
+  assignedStaffId?: string;
+  isPrepaid?: boolean;
+  pointsToSpend?: number;
+  receiptsSentTo?: string[];
+  invoiceEmail?: string;
 }
 
 export function mapApiOrderToUi(api: ApiOrder): UiOrder {
@@ -84,9 +112,14 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
     0
   );
   const rawSubtotal = itemsSubtotal > 0 ? itemsSubtotal : api.total;
+  const discountType = (api.discountType as 'percent' | 'fixed' | undefined) ?? 'percent';
   const amountDeducted =
     api.discountName && discountValue > 0
-      ? parseFloat((rawSubtotal * (discountValue / 100)).toFixed(2))
+      ? calculateDiscountAmount(rawSubtotal, {
+          name: api.discountName,
+          value: discountValue,
+          type: discountType,
+        })
       : 0;
   const afterDiscount = parseFloat(Math.max(0, rawSubtotal - amountDeducted).toFixed(2));
   const tipValue = api.tipValue ?? 0;
@@ -113,13 +146,20 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
     orderNumber: api.orderNumber,
     tableNumber: api.tableNumber ?? null,
     waiterName: api.waiterName ?? null,
-    items: (api.items || []).map((item) => ({
+    items: (api.items || []).map((item: any) => ({
+      id: item.id,
       name: item.name,
       price: item.price,
       quantity: item.quantity,
       comments: item.comments,
       paid: item.paid,
       refundedQuantity: item.refundedQuantity ?? 0,
+      menuItemId: item.menuItemId,
+      modifierSnapshot: item.modifierSnapshot,
+      guestIndex: item.guestIndex,
+      sentToKitchen: item.sentToKitchen,
+      sentToBar: item.sentToBar,
+      served: item.served,
     })),
     total: api.total,
     refundedAmount: api.refundedAmount ?? 0,
@@ -128,6 +168,7 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
         ? {
             name: api.discountName,
             value: discountValue,
+            type: discountType,
             amountDeducted,
           }
         : undefined,
@@ -151,6 +192,15 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
     })),
     orderedBy: api.source === 'dine_in' || api.source === 'takeaway' ? 'waiter' : 'app',
     customerPointsEarned: api.customerPointsEarned,
+    guestCount: api.guestCount,
+    takenByStaffId: api.takenByStaffId,
+    servedByStaffId: api.servedByStaffId,
+    closedByStaffId: api.closedByStaffId,
+    assignedStaffId: api.assignedStaffId,
+    isPrepaid: api.isPrepaid,
+    pointsToSpend: api.pointsToSpend,
+    receiptsSentTo: api.receiptsSentTo,
+    customerEmail: api.invoiceEmail,
   };
 }
 
@@ -185,6 +235,7 @@ export function mapUiOrderToApi(
   if (ui.discount?.name) {
     payload.discountName = ui.discount.name;
     payload.discountValue = ui.discount.value;
+    payload.discountType = ui.discount.type ?? 'percent';
   } else if ('discount' in ui && ui.discount === undefined) {
     payload.discountName = null;
     payload.discountValue = 0;

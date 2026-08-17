@@ -4,7 +4,7 @@
   "description": "Order food, shop merch, and earn loyalty points at Corgi Cafe",
   "start_url": "/menu",
   "display": "standalone",
-  "background_color": "#FAF7F3",
+  "background_color": "#FFFFFF",
   "theme_color": "#87B031",
   "orientation": "portrait",
   "icons": [

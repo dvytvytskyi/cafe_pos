@@ -1,4 +1,5 @@
 import { mapApiOrderToUi, mapUiOrderToApi } from './mappers/order.mapper';
+import { calculateCashChange } from './order-totals';
 import { DEFAULT_LOCATION_ID } from './constants';
 import { CapacitorBridge } from './capacitor-bridge';
 import {
@@ -59,7 +60,14 @@ export interface Order {
   loyaltyGuestIds?: string[];
   customerPointsPaid?: number;
   customerPointsEarned?: number;
-  tableId?: string; // Phase 1: Linked table id
+  tableId?: string;
+  guestCount?: number;
+  takenByStaffId?: string;
+  servedByStaffId?: string;
+  closedByStaffId?: string;
+  assignedStaffId?: string;
+  isPrepaid?: boolean;
+  pointsToSpend?: number;
   orderNumber?: string;
   tableNumber?: string | null;
   waiterName?: string | null;
@@ -367,13 +375,135 @@ export async function detachOrderFromTableAsync(orderId: string): Promise<Order>
 }
 
 export interface PayPayload {
-  payments: { method: 'card' | 'cash' | 'points' | 'giftcard'; amount: number; code?: string }[];
+  payments: {
+    method: 'card' | 'cash' | 'points' | 'giftcard';
+    amount: number;
+    code?: string;
+    cashTendered?: number;
+  }[];
   customerId?: string;
-  discount?: { name: string; value: number };
+  discount?: { name: string; value: number; type?: 'percent' | 'fixed' };
   tip?: { type: 'percent' | 'fixed'; value: number };
   total?: number;
   paidItemIndexes?: number[];
   markCompleted?: boolean;
+  closedByStaffId?: string;
+}
+
+export { calculateCashChange };
+
+export async function printOrderAsync(
+  orderId: string,
+  station: 'kitchen' | 'bar' | 'receipt' | 'all' = 'all',
+  onlyUnsent = true,
+) {
+  const res = await fetch(`/api/orders/${orderId}/print`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ station, onlyUnsent }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Print failed');
+  return data as { results: Array<{ station: string; success: boolean; error?: string }>; success: boolean };
+}
+
+export async function addOrderItemsAsync(
+  orderId: string,
+  items: Array<{
+    name: string;
+    price: number;
+    quantity: number;
+    menuItemId?: string;
+    comments?: string;
+    modifierSnapshot?: unknown;
+    soldByStaffId?: string;
+    guestIndex?: number;
+  }>,
+) {
+  const res = await fetch(`/api/orders/${orderId}/items`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Failed to add items');
+  return data;
+}
+
+export async function updateOrderItemAsync(
+  orderId: string,
+  itemId: string,
+  patch: {
+    name?: string;
+    price?: number;
+    quantity?: number;
+    comments?: string;
+    modifierSnapshot?: unknown;
+    guestIndex?: number;
+    served?: boolean;
+  },
+) {
+  const res = await fetch(`/api/orders/${orderId}/items/${itemId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Failed to update item');
+  return data;
+}
+
+export async function splitOrderItemAsync(
+  orderId: string,
+  itemId: string,
+  portions: Array<{ guestIndex: number; quantity: number }>,
+) {
+  const res = await fetch(`/api/orders/${orderId}/split`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ itemId, portions }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Split failed');
+  return data.items;
+}
+
+export async function sendOrderReceiptAsync(orderId: string, email: string, includeFiscal = true) {
+  const res = await fetch(`/api/orders/${orderId}/send-receipt`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, includeFiscal }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Failed to send receipt');
+  return data;
+}
+
+export async function getOrderLoyaltyBalanceAsync(orderId: string, customerId?: string) {
+  const qs = customerId ? `?customerId=${encodeURIComponent(customerId)}` : '';
+  const res = await fetch(`/api/orders/${orderId}/loyalty${qs}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Failed to load loyalty balance');
+  return data as { customerId: string | null; points: number; pointsToSpend: number; customerName?: string };
+}
+
+export async function applyOrderLoyaltyPointsAsync(
+  orderId: string,
+  customerId: string,
+  pointsToSpend: number,
+) {
+  const res = await fetch(`/api/orders/${orderId}/loyalty`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customerId, pointsToSpend }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Failed to apply points');
+  return mapApiOrderToUi(data) as Order;
+}
+
+export function isPrepaidDeliveryOrder(order: Pick<Order, 'source'> & { isPrepaid?: boolean }) {
+  return order.isPrepaid === true || order.source === 'glovo' || order.source === 'ubereats';
 }
 
 export async function completePaymentAsync(

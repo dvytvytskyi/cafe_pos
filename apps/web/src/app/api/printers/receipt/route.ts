@@ -11,7 +11,23 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { ip, orderId, type = 'receipt' } = body;
 
-    if (!ip) {
+    if (!ip && orderId) {
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!order) {
+        return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      }
+      const printerType = type === 'kitchen' ? 'kitchen' : type === 'bar' ? 'bar' : 'receipt';
+      const printer = await prisma.printer.findFirst({
+        where: { locationId: order.locationId, type: printerType },
+      });
+      if (!printer) {
+        return NextResponse.json({ error: `No ${printerType} printer configured` }, { status: 404 });
+      }
+      body.ip = printer.ipAddress;
+    }
+
+    const resolvedIp = body.ip;
+    if (!resolvedIp) {
       return NextResponse.json({ error: 'IP address is required' }, { status: 400 });
     }
 
@@ -26,7 +42,11 @@ export async function POST(req: Request) {
       }
       const lines = [
         'CORGI CAFE',
-        type === 'kitchen' ? '*** KITCHEN ***' : '*** RECEIPT ***',
+        type === 'kitchen'
+          ? '*** KITCHEN ***'
+          : type === 'bar'
+            ? '*** BAR ***'
+            : '*** RECEIPT ***',
         `Order: ${order.id}`,
         `Customer: ${order.customerName || 'Walk-in'}`,
         '---',
@@ -52,7 +72,7 @@ export async function POST(req: Request) {
         }
       };
 
-      client.connect(9100, ip, () => {
+      client.connect(9100, resolvedIp, () => {
         client.write(Buffer.from([0x1b, 0x40]));
         client.write(Buffer.from([0x1b, 0x61, 0x01]));
         client.write(escposLine(content));

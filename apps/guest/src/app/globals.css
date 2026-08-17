@@ -1,15 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700&display=swap');
 @import "tailwindcss";
+@import "mapbox-gl/dist/mapbox-gl.css";
 
 @theme inline {
+  --color-background: #FFFFFF;
+  --color-foreground: #000000;
   --color-corgi: #FDBD38;
-  --color-brand-green: #87B031;
-  --color-background: #FAF7F3;
-  --color-foreground: #111827;
+  --color-corgi-hover: #e5a420;
+  --color-beige: #FFF2E2;
+  --color-darker-beige: #FFEBD2;
+  --color-ui-beige: #FFFFFF;
+  --color-sauce: #FEDC94;
+  --color-yellow: #FEDB5B;
+  --color-light-brown: #DD8137;
+  --color-brown: #CB5900;
+  --color-light-pink: #FFCAC5;
+  --color-pink: #FFA8A6;
+  --color-saturated-pink: #FC8C86;
+  --color-dark-pink: #EE635E;
+  --color-light-green: #F3FEDD;
+  --color-green: #D2EE99;
+  --color-darker-green: #A2C35A;
+  --color-saturated-green: #87B031;
+  --font-nunito: 'Nunito', sans-serif;
 }
 
-body {
-  font-family: 'Nunito', system-ui, sans-serif;
+html, body {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  overscroll-behavior: none;
+  font-family: var(--font-nunito);
   background: var(--color-background);
   color: var(--color-foreground);
   -webkit-tap-highlight-color: transparent;

@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: corgi_password
       POSTGRES_DB: corgi_pos
     ports:
-      - '5435:5432'
+      - '5436:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
 
