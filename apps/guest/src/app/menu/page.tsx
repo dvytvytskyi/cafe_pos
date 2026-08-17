@@ -641,7 +641,7 @@ export default function MenuPage() {
         onClick={() => setSelectedItem(null)}
       >
         <div 
-          className={`w-full max-w-[480px] bg-white rounded-t-[32px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
+          className={`w-full max-w-[480px] h-[90vh] bg-white rounded-t-[32px] pt-8 px-6 pb-10 transition-transform duration-300 ease-out transform flex flex-col justify-between shadow-2xl relative ${
             selectedItem ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -666,41 +666,44 @@ export default function MenuPage() {
             </button>
           </div>
 
-          {/* Picture banner */}
-          {selectedItem && (
-            <div className="w-full h-[180px] rounded-[24px] overflow-hidden bg-gray-100 shadow-inner">
-              <img 
-                src={getFoodImage(selectedItem.name, 'Market Plates')} 
-                alt={selectedItem.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
+          {/* Scrollable Content Container */}
+          <div className="flex-1 overflow-y-auto pr-1 scrollbar-none flex flex-col gap-6 my-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Picture banner */}
+            {selectedItem && (
+              <div className="w-full h-[220px] rounded-[24px] overflow-hidden bg-gray-100 shadow-inner flex-shrink-0">
+                <img 
+                  src={getFoodImage(selectedItem.name, 'Market Plates')} 
+                  alt={selectedItem.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
 
-          {/* Form inputs */}
-          <div className="flex flex-col gap-5 w-full">
-            <p className="text-sm font-semibold text-gray-600 leading-relaxed">
-              {selectedItem?.description || 'Select optionals and add special instructions for the preparation.'}
-            </p>
+            {/* Form inputs */}
+            <div className="flex flex-col gap-5 w-full">
+              <p className="text-sm font-semibold text-gray-600 leading-relaxed">
+                {selectedItem?.description || 'Select optionals and add special instructions for the preparation.'}
+              </p>
 
-            <div className="flex flex-col w-full">
-              <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">
-                Special instructions (comments)
-              </label>
-              <input 
-                type="text" 
-                placeholder="e.g. No sauce, dressing on the side..."
-                value={itemComments}
-                onChange={(e) => setItemComments(e.target.value)}
-                className="w-full border-b border-gray-200 focus:border-gray-300 py-2 text-base text-black font-semibold transition-all outline-none bg-transparent placeholder-gray-300"
-              />
+              <div className="flex flex-col w-full">
+                <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">
+                  Special instructions (comments)
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. No sauce, dressing on the side..."
+                  value={itemComments}
+                  onChange={(e) => setItemComments(e.target.value)}
+                  className="w-full border-b border-gray-200 focus:border-gray-300 py-2 text-base text-black font-semibold transition-all outline-none bg-transparent placeholder-gray-300"
+                />
+              </div>
             </div>
           </div>
 
           {/* Add to Basket button */}
           <button 
             onClick={handleAddToCart}
-            className="w-full bg-black hover:bg-gray-900 text-white py-4 rounded-full font-bold text-center text-base transition-all active:scale-[0.99]"
+            className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-black py-4 rounded-full font-bold text-center text-base transition-all active:scale-[0.99] flex-shrink-0"
           >
             Add to Basket — {selectedItem?.basePrice.toFixed(2)}€
           </button>
