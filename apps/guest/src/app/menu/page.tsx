@@ -672,14 +672,14 @@ export default function MenuPage() {
               <h2 className="text-[20px] font-extrabold tracking-tight leading-snug text-black uppercase">
                 {selectedItem?.name}
               </h2>
-              <div className="text-[16px] font-black text-black mt-1">
+              <div className="text-[16px] font-bold text-black mt-1">
                 {selectedItem?.basePrice.toFixed(2)}€
               </div>
             </div>
 
             {/* Description & Metadata Section */}
             <div className="flex flex-col gap-3.5 w-full text-left">
-              <p className="text-[14px] font-medium text-gray-800 leading-relaxed">
+              <p className="text-[14px] font-normal text-gray-800 leading-relaxed">
                 {selectedItem?.description || 'Select optionals and add special instructions for the preparation.'}
               </p>
 
