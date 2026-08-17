@@ -213,13 +213,8 @@ export default function HomePage() {
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-black select-none">
       
-      {/* Main Page Content Wrapper (Pushed to the right when drawer is active) */}
-      <div 
-        className={`relative h-full w-full bg-[#FFFFFF] text-gray-900 font-sans flex flex-col justify-between transform ${
-          showDrawer ? 'translate-x-[290px]' : 'translate-x-0'
-        }`}
-        style={{ transition: 'transform 550ms cubic-bezier(0.68, -0.3, 0.32, 1.25)' }}
-      >
+      {/* Main Page Content Wrapper */}
+      <div className="relative h-full w-full bg-[#FFFFFF] text-gray-900 font-sans flex flex-col justify-between">
       
       {/* Hero Visual Section - Dynamic height (flex-1) */}
       <div 
@@ -550,10 +545,10 @@ export default function HomePage() {
         onClick={() => setShowDrawer(false)}
       >
         <div 
-          className={`w-[80%] max-w-[290px] h-full bg-[#FFFFFF] shadow-2xl flex flex-col justify-between relative transform ${
+          className={`w-[80%] max-w-[290px] h-full bg-[#FFFFFF] border-r border-gray-100 flex flex-col justify-between relative transform transition-transform duration-300 ease-out ${
             showDrawer ? 'translate-x-0' : '-translate-x-full'
           }`}
-          style={{ transition: 'transform 550ms cubic-bezier(0.68, -0.3, 0.32, 1.25)' }}
+          style={{ willChange: 'transform' }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Transparent close button - Moved outside to the right of the sidebar container */}
