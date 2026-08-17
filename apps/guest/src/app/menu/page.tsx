@@ -669,19 +669,19 @@ export default function MenuPage() {
 
             {/* Inner Content Block with paddings */}
             <div className="px-6 pb-6 flex flex-col gap-6">
-              {/* Header Block */}
-              <div className="flex flex-col text-left">
-                <h2 className="text-[20px] font-extrabold tracking-tight leading-none text-black uppercase">
-                  {selectedItem?.name}
-                </h2>
-                <div className="text-[16px] font-bold text-black mt-1">
-                  {selectedItem?.basePrice.toFixed(2)}€
+              
+              {/* Header & Description Combo Block */}
+              <div className="flex flex-col text-left gap-2.5">
+                <div className="flex flex-col">
+                  <h2 className="text-[20px] font-extrabold tracking-tight leading-none text-black uppercase">
+                    {selectedItem?.name}
+                  </h2>
+                  <div className="text-[16px] font-bold text-black mt-1">
+                    {selectedItem?.basePrice.toFixed(2)}€
+                  </div>
                 </div>
-              </div>
 
-              {/* Description & Metadata Section */}
-              <div className="flex flex-col gap-3.5 w-full text-left">
-                <p className="text-[14px] font-normal text-gray-800 leading-relaxed">
+                <p className="text-[14px] font-normal text-gray-800 leading-relaxed mt-0.5">
                   {selectedItem?.description || 'Select optionals and add special instructions for the preparation.'}
                 </p>
 
@@ -692,7 +692,7 @@ export default function MenuPage() {
                 )}
 
                 {/* Tag Row */}
-                <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-center gap-3 mt-0.5">
                   <span className="border-2 border-black rounded-[8px] px-2 py-0.5 text-[11px] font-black text-black uppercase tracking-wider">
                     {selectedItem?.name.toLowerCase().includes('salmon') ? 'GF' : selectedItem?.name.toLowerCase().includes('cheese') ? 'VE' : 'PB'}
                   </span>
