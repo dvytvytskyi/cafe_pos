@@ -541,6 +541,7 @@ export default function HomePage() {
            )}
         </div>
       </div>
+      </div>
        {/* Drawer Overlay Menu */}
       <div 
         className={`fixed inset-0 bg-white/30 backdrop-blur-md z-50 transition-opacity duration-300 ${
@@ -1100,7 +1101,6 @@ export default function HomePage() {
           )}
         </div>
       </div>
-    </div>
       {/* Bottom Sheet New Address Modal */}
       <div 
         className={`fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 flex items-end justify-center ${
