@@ -1,5 +1,7 @@
 import type { OrderLineItem } from './order-totals';
 
+export const DEFAULT_FOOD_TAX_RATE = 0.10;
+
 export type DiscountType = 'percent' | 'fixed';
 export type TipType = 'percent' | 'fixed';
 

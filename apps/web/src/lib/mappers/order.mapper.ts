@@ -1,4 +1,4 @@
-import { calculateDiscountAmount } from './order-totals';
+import { calculateDiscountAmount } from '../order-totals';
 
 export type UiOrderSource = 'glovo' | 'ubereats' | 'dine_in' | 'takeaway';
 export type UiOrderStatus = 'incoming' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled';
