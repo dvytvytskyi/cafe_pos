@@ -550,7 +550,7 @@ export default function HomePage() {
         onClick={() => setShowDrawer(false)}
       >
         <div 
-          className={`w-[80%] max-w-[290px] h-full bg-[#FFFFFF] border-r border-gray-100 flex flex-col justify-between relative transform transition-transform duration-300 ease-out ${
+          className={`w-[80%] max-w-[290px] h-full bg-[#FFFFFF] flex flex-col justify-between relative transform transition-transform duration-300 ease-out ${
             showDrawer ? 'translate-x-0' : '-translate-x-full'
           }`}
           style={{ willChange: 'transform' }}
@@ -606,7 +606,7 @@ export default function HomePage() {
             </div>
 
             {/* Navigation Links with indented bottom border */}
-            <nav className="flex-1 mt-4 overflow-y-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <nav className="flex-1 mt-4 overflow-y-auto scrollbar-none border-r border-gray-100" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="flex flex-col">
                 <Link 
                   href="/orders" 
@@ -658,7 +658,7 @@ export default function HomePage() {
             </nav>
 
             {/* Bottom Fixed Metadata & Footer Section */}
-            <div className="bg-white">
+            <div className="bg-white border-r border-gray-100">
               {/* Divider above Region */}
               <div className="ml-6 mr-0 border-t border-gray-200" />
               
