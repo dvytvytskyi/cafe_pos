@@ -649,9 +649,9 @@ export default function MenuPage() {
           {/* Floating Close Button - Fixed at top-right of sheet */}
           <button 
             onClick={() => setSelectedItem(null)}
-            className="absolute top-5 right-5 w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors z-50"
+            className="absolute top-5 right-5 p-2 text-black hover:opacity-80 transition-opacity z-50"
           >
-            <X className="w-5 h-5" strokeWidth={2.2} />
+            <X className="w-6 h-6" strokeWidth={2.2} />
           </button>
 
           {/* Scrollable Content (Header, description, custom inputs) */}
