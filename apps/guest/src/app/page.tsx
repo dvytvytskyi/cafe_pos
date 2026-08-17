@@ -467,11 +467,11 @@ export default function HomePage() {
           {!showOrderModeSelector ? (
             <button 
               onClick={() => setShowOrderModeSelector(true)} 
-              className="w-full bg-black text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between hover:bg-gray-900 active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
+              className="w-full bg-[#FDBD38] text-black py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between hover:bg-[#e5a420] active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
             >
               <span className="text-base font-medium">Order now</span>
-              <div className="bg-white/20 px-6 py-2 rounded-full">
-                <ArrowRight className="w-5 h-5 text-white" strokeWidth={1.5} />
+              <div className="bg-black/10 px-6 py-2 rounded-full">
+                <ArrowRight className="w-5 h-5 text-black" strokeWidth={1.5} />
               </div>
             </button>
           ) : showTimePicker ? (
@@ -488,11 +488,11 @@ export default function HomePage() {
                    setShowTimePicker(false);
                    router.push('/menu');
                  }}
-                 className="flex-1 bg-black hover:bg-gray-900 text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
+                 className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-black py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
                >
                  <span className="text-base font-medium">Confirm time</span>
-                 <div className="bg-white/20 px-6 py-2 rounded-full">
-                   <ArrowRight className="w-5 h-5 text-white" strokeWidth={1.5} />
+                 <div className="bg-black/10 px-6 py-2 rounded-full">
+                   <ArrowRight className="w-5 h-5 text-black" strokeWidth={1.5} />
                  </div>
                </button>
              </div>
@@ -520,22 +520,22 @@ export default function HomePage() {
                    }
                    setShowTimePicker(true);
                  }}
-                 className="flex-1 bg-black hover:bg-gray-900 text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
+                 className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-black py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
                >
                  <span className="text-base font-medium">Order now</span>
-                 <div className="bg-white/20 px-6 py-2 rounded-full">
-                   <ArrowRight className="w-5 h-5 text-white" strokeWidth={1.5} />
+                 <div className="bg-black/10 px-6 py-2 rounded-full">
+                   <ArrowRight className="w-5 h-5 text-black" strokeWidth={1.5} />
                  </div>
                </button>
              </div>
            ) : (
              <button 
                onClick={() => router.push('/menu')}
-               className="w-full bg-black hover:bg-gray-900 text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20 animate-fadeIn"
+               className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-black py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20 animate-fadeIn"
              >
                <span className="text-base font-medium">Order now</span>
-               <div className="bg-white/20 px-6 py-2 rounded-full">
-                 <ArrowRight className="w-5 h-5 text-white" strokeWidth={1.5} />
+               <div className="bg-black/10 px-6 py-2 rounded-full">
+                 <ArrowRight className="w-5 h-5 text-black" strokeWidth={1.5} />
                </div>
              </button>
            )}
@@ -574,7 +574,7 @@ export default function HomePage() {
           {/* Drawer Content */}
           <div className="flex-1 flex flex-col">
             {/* Top Black Header Section (~15% height) */}
-            <div className="bg-[#000000] text-white p-6 pt-12 pb-8 flex items-center gap-4">
+            <div className="bg-[#FDBD38] text-black p-6 pt-12 pb-8 flex items-center gap-4">
               {/* White circle avatar container with kiwi emoji inside */}
               <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl shadow-sm">
                 🥝
@@ -593,7 +593,7 @@ export default function HomePage() {
                       await refreshAuth();
                       setShowDrawer(false);
                     }}
-                    className="text-xs text-gray-300 hover:text-white font-medium block text-left"
+                    className="text-xs text-black/60 hover:text-black font-medium block text-left"
                   >
                     Log out
                   </button>
@@ -604,7 +604,7 @@ export default function HomePage() {
                       setAuthMode('login');
                       setShowLoginModal(true);
                     }}
-                    className="text-xs text-gray-300 hover:text-white font-medium block text-left"
+                    className="text-xs text-black/60 hover:text-black font-medium block text-left"
                   >
                     Log in
                   </button>
