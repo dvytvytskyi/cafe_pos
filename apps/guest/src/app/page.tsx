@@ -5,7 +5,7 @@ import { useGuest } from '@/lib/guest-context';
 import Link from 'next/link';
 import { logoutGuest } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, LogIn, UserPlus, ArrowRight, HelpCircle, Menu, X, MapPin, ClipboardList, Gift, Coffee, ShoppingBag, Navigation2, Zap, ArrowLeft, MoreHorizontal, Compass, Bike, Globe, FileText, Shirt, Package, MessageSquare, Megaphone, Radio } from 'lucide-react';
+import { ChevronRight, LogIn, UserPlus, ArrowRight, HelpCircle, Menu, X, MapPin, ClipboardList, Gift, Coffee, ShoppingBag, Navigation2, Zap, ArrowLeft, MoreHorizontal, Compass, Bike, Globe, FileText, Shirt, Package, MessageSquare, Megaphone, Radio, PawPrint } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 
 export default function HomePage() {
@@ -467,11 +467,11 @@ export default function HomePage() {
           {!showOrderModeSelector ? (
             <button 
               onClick={() => setShowOrderModeSelector(true)} 
-              className="w-full bg-[#FDBD38] text-black py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between hover:bg-[#e5a420] active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
+              className="w-full bg-[#FDBD38] text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between hover:bg-[#e5a420] active:scale-[0.98] transition-all duration-100 shadow-sm shadow-black/10"
             >
               <span className="text-base font-medium">Order now</span>
-              <div className="bg-black/10 px-6 py-2 rounded-full">
-                <ArrowRight className="w-5 h-5 text-black" strokeWidth={1.5} />
+              <div className="bg-white px-6 py-2 rounded-full">
+                <PawPrint className="w-5 h-5 text-[#FDBD38] fill-[#FDBD38]" strokeWidth={1.5} />
               </div>
             </button>
           ) : showTimePicker ? (
@@ -479,7 +479,7 @@ export default function HomePage() {
              <div className="flex gap-4 items-center animate-fadeIn">
                <button 
                  onClick={() => setShowTimePicker(false)}
-                 className="p-4 bg-gray-100 hover:bg-gray-200 rounded-full transition-all active:scale-95 text-gray-800 shadow-md shadow-black/20"
+                 className="p-4 bg-gray-100 hover:bg-gray-200 rounded-full transition-all active:scale-95 text-gray-800 shadow-sm shadow-black/10"
                >
                  <X className="w-6 h-6" strokeWidth={2} />
                </button>
@@ -488,11 +488,11 @@ export default function HomePage() {
                    setShowTimePicker(false);
                    router.push('/menu');
                  }}
-                 className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-black py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
+                 className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-sm shadow-black/10"
                >
                  <span className="text-base font-medium">Confirm time</span>
-                 <div className="bg-black/10 px-6 py-2 rounded-full">
-                   <ArrowRight className="w-5 h-5 text-black" strokeWidth={1.5} />
+                 <div className="bg-white px-6 py-2 rounded-full">
+                   <PawPrint className="w-5 h-5 text-[#FDBD38] fill-[#FDBD38]" strokeWidth={1.5} />
                  </div>
                </button>
              </div>
@@ -501,7 +501,7 @@ export default function HomePage() {
              <div className="flex gap-4 items-center animate-fadeIn">
                 <button 
                   onClick={() => setShowTimePicker(true)}
-                  className="p-4 bg-gray-100 hover:bg-gray-200 rounded-full transition-all active:scale-95 text-gray-800 shadow-md shadow-black/20"
+                  className="p-4 bg-gray-100 hover:bg-gray-200 rounded-full transition-all active:scale-95 text-gray-800 shadow-sm shadow-black/10"
                 >
                  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                    <circle cx="12" cy="12" r="10" />
@@ -520,22 +520,22 @@ export default function HomePage() {
                    }
                    setShowTimePicker(true);
                  }}
-                 className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-black py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
+                 className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-sm shadow-black/10"
                >
                  <span className="text-base font-medium">Order now</span>
-                 <div className="bg-black/10 px-6 py-2 rounded-full">
-                   <ArrowRight className="w-5 h-5 text-black" strokeWidth={1.5} />
+                 <div className="bg-white px-6 py-2 rounded-full">
+                   <PawPrint className="w-5 h-5 text-[#FDBD38] fill-[#FDBD38]" strokeWidth={1.5} />
                  </div>
                </button>
              </div>
            ) : (
              <button 
                onClick={() => router.push('/menu')}
-               className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-black py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20 animate-fadeIn"
+               className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-sm shadow-black/10 animate-fadeIn"
              >
                <span className="text-base font-medium">Order now</span>
-               <div className="bg-black/10 px-6 py-2 rounded-full">
-                 <ArrowRight className="w-5 h-5 text-black" strokeWidth={1.5} />
+               <div className="bg-white px-6 py-2 rounded-full">
+                 <PawPrint className="w-5 h-5 text-[#FDBD38] fill-[#FDBD38]" strokeWidth={1.5} />
                </div>
              </button>
            )}
@@ -1068,19 +1068,6 @@ export default function HomePage() {
             </button>
           )}
 
-          {authMode === 'register_step1' && (
-            <button 
-              disabled={!authEmail}
-              onClick={() => setAuthMode('register_step2')}
-              className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
-                authEmail
-                  ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
-                  : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
-              }`}
-            >
-              Next
-            </button>
-          )}
 
           {authMode === 'register_step2' && (
             <button 

@@ -61,7 +61,19 @@ const MOCK_MENU: GuestMenuResponse = {
       name: "Corgi Signature",
       description: "House blend with corgi signature cream, double shot espresso, organic milk.",
       basePrice: 4.50,
-      allergens: []
+      allergens: [],
+      modifierGroups: [
+        {
+          id: "mod-milk",
+          name: "Milk options",
+          minQty: 0,
+          maxQty: 1,
+          options: [
+            { id: "opt-oat", name: "Oat Milk", price: 0.50 },
+            { id: "opt-almond", name: "Almond Milk", price: 0.50 }
+          ]
+        }
+      ]
     },
     {
       id: "item-3",
@@ -69,7 +81,18 @@ const MOCK_MENU: GuestMenuResponse = {
       name: "Avocado Toast",
       description: "Extra virgin olive oil, pumpkin seeds, pine nuts, cucumber, radish, flaky salt.",
       basePrice: 6.75,
-      allergens: []
+      allergens: [],
+      modifierGroups: [
+        {
+          id: "mod-fancy-bread",
+          name: "Fancy bread?",
+          minQty: 0,
+          maxQty: 1,
+          options: [
+            { id: "opt-double-bread", name: "Double Bread", price: 0.95 }
+          ]
+        }
+      ]
     },
     {
       id: "item-4",
@@ -77,7 +100,19 @@ const MOCK_MENU: GuestMenuResponse = {
       name: "Brunch Plate",
       description: "Organic eggs, cherry tomatoes, toasted sourdough, fresh herbs, side salad.",
       basePrice: 12.50,
-      allergens: []
+      allergens: [],
+      modifierGroups: [
+        {
+          id: "mod-extras",
+          name: "Add Extras",
+          minQty: 0,
+          maxQty: 2,
+          options: [
+            { id: "opt-bacon", name: "Bacon", price: 1.50 },
+            { id: "opt-cheese", name: "Cheese", price: 1.00 }
+          ]
+        }
+      ]
     },
     {
       id: "item-5",
@@ -118,6 +153,15 @@ export default function MenuPage() {
   const [selectedItem, setSelectedItem] = useState<GuestMenuItem | null>(null);
   const [itemComments, setItemComments] = useState('');
   const [selectedModifiers, setSelectedModifiers] = useState<any[]>([]);
+  const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (selectedItem) {
+      setItemComments('');
+      setSelectedModifiers([]);
+      setQuantity(1);
+    }
+  }, [selectedItem]);
   
   // Custom states matching designs
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>('cat-coffee');
@@ -289,20 +333,85 @@ export default function MenuPage() {
     }
   };
 
+  const getModifierImage = (name: string) => {
+    const upper = name.toUpperCase();
+    if (upper.includes("BREAD") || upper.includes("PAN") || upper.includes("TOAST")) {
+      return "https://images.unsplash.com/photo-1584776296974-e1d94531f159?w=150&auto=format&fit=crop&q=80";
+    }
+    if (upper.includes("EGG") || upper.includes("HUEVO")) {
+      return "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=150&auto=format&fit=crop&q=80";
+    }
+    if (upper.includes("CHEESE") || upper.includes("QUESO")) {
+      return "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=150&auto=format&fit=crop&q=80";
+    }
+    if (upper.includes("BACON") || upper.includes("TOCINO")) {
+      return "https://images.unsplash.com/photo-1606851094055-3518306115bd?w=150&auto=format&fit=crop&q=80";
+    }
+    if (upper.includes("MILK") || upper.includes("LECHE") || upper.includes("OAT")) {
+      return "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=150&auto=format&fit=crop&q=80";
+    }
+    return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=80";
+  };
+
+  const toggleModifier = (group: any, option: any) => {
+    setSelectedModifiers((prev) => {
+      const isSelected = prev.some((m) => m.optionId === option.id);
+      if (group.maxQty === 1) {
+        if (isSelected) {
+          if (group.minQty === 0) {
+            return prev.filter((m) => m.groupId !== group.id);
+          }
+          return prev;
+        } else {
+          const filtered = prev.filter((m) => m.groupId !== group.id);
+          return [
+            ...filtered,
+            {
+              groupId: group.id,
+              groupName: group.name,
+              optionId: option.id,
+              optionName: option.name,
+              price: option.price,
+            },
+          ];
+        }
+      } else {
+        if (isSelected) {
+          return prev.filter((m) => m.optionId !== option.id);
+        } else {
+          const groupCount = prev.filter((m) => m.groupId === group.id).length;
+          if (groupCount >= group.maxQty) return prev;
+          return [
+            ...prev,
+            {
+              groupId: group.id,
+              groupName: group.name,
+              optionId: option.id,
+              optionName: option.name,
+              price: option.price,
+            },
+          ];
+        }
+      }
+    });
+  };
+
   const handleAddToCart = () => {
     if (!selectedItem) return;
+    const addedPrice = selectedModifiers.reduce((acc, m) => acc + m.price, 0);
     addFoodToCart({
       menuItemId: selectedItem.id,
       itemType: 'food',
       name: selectedItem.name,
-      unitPrice: selectedItem.basePrice,
-      quantity: 1,
+      unitPrice: selectedItem.basePrice + addedPrice,
+      quantity: quantity,
       comments: itemComments || undefined,
       modifiers: selectedModifiers.length > 0 ? selectedModifiers : undefined,
     });
     setSelectedItem(null);
     setItemComments('');
     setSelectedModifiers([]);
+    setQuantity(1);
   };
 
   const handleCheckout = async () => {
@@ -338,6 +447,7 @@ export default function MenuPage() {
   };
 
   const cartTotal = foodCart.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
+  const totalPrice = selectedItem ? (selectedItem.basePrice + selectedModifiers.reduce((acc: any, m: any) => acc + m.price, 0)) * quantity : 0;
 
   if (loadingMenu) {
     return (
@@ -646,12 +756,12 @@ export default function MenuPage() {
           }`}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Floating Close Button - Fixed at top-right of sheet */}
+          {/* Floating Back Button - Fixed at top-left of sheet */}
           <button 
             onClick={() => setSelectedItem(null)}
-            className="absolute top-5 right-5 p-2 text-black hover:opacity-80 transition-opacity z-50"
+            className="absolute top-5 left-5 p-2 text-black hover:opacity-80 transition-opacity z-50"
           >
-            <X className="w-6 h-6" strokeWidth={2.2} />
+            <ArrowLeft className="w-6 h-6" strokeWidth={2.2} />
           </button>
 
           {/* Scrollable Content (Header, description, custom inputs) */}
@@ -686,42 +796,107 @@ export default function MenuPage() {
                 </p>
 
                 {selectedItem?.allergens && selectedItem.allergens.length > 0 && (
-                  <p className="text-[12px] text-gray-400 font-medium">
+                  <p className="text-[12px] text-gray-400 font-normal">
                     Allergens: {selectedItem.allergens.map(a => a.charAt(0).toUpperCase() + a.slice(1)).join(' · ')}
                   </p>
                 )}
+              </div>
 
-                {/* Tag Row */}
-                <div className="flex items-center gap-3 mt-0.5">
-                  <span className="border-2 border-black rounded-[8px] px-2 py-0.5 text-[11px] font-black text-black uppercase tracking-wider">
-                    {selectedItem?.name.toLowerCase().includes('salmon') ? 'GF' : selectedItem?.name.toLowerCase().includes('cheese') ? 'VE' : 'PB'}
-                  </span>
+              {/* Modifier Groups Section */}
+              {selectedItem?.modifierGroups && selectedItem.modifierGroups.length > 0 && (
+                <div className="flex flex-col gap-6 mt-4 border-t border-gray-100 pt-6">
+                  {selectedItem.modifierGroups.map((group) => (
+                    <div key={group.id} className="flex flex-col text-left">
+                      <h3 className="text-[13px] font-black text-gray-900 uppercase tracking-wider mb-4">
+                        {group.name}
+                      </h3>
+                      <div className="flex flex-wrap gap-5">
+                        {group.options.map((option) => {
+                          const isSelected = selectedModifiers.some((m) => m.optionId === option.id);
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => toggleModifier(group, option)}
+                              className="flex flex-col items-center bg-white cursor-pointer group"
+                            >
+                              <div className="relative">
+                                <img
+                                  src={getModifierImage(option.name)}
+                                  alt={option.name}
+                                  className={`w-[84px] h-[84px] rounded-full object-cover transition-all duration-200 border-2 ${
+                                    isSelected 
+                                      ? 'border-[#FDBD38] ring-2 ring-[#FDBD38] ring-offset-2 scale-[1.03] shadow-md' 
+                                      : 'border-transparent shadow-sm group-hover:scale-[1.02] group-hover:shadow-md'
+                                  }`}
+                                />
+                                {isSelected && (
+                                  <div className="absolute -top-1 -right-1 bg-[#FDBD38] text-black w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold shadow-sm border border-white">
+                                    ✓
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-[12px] font-bold text-gray-900 mt-2 text-center max-w-[90px] leading-tight">
+                                {option.name}
+                              </span>
+                              <span className="w-4 border-t border-gray-250 my-1 group-hover:border-gray-400 transition-colors"></span>
+                              <span className="text-[11px] font-extrabold text-gray-900 opacity-80">
+                                +{option.price.toFixed(2)}€
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-
-              {/* Special Instructions Input */}
-              <div className="flex flex-col w-full text-left border-t border-gray-100 pt-5">
-                <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">
-                  Special instructions (comments)
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. No sauce, dressing on the side..."
-                  value={itemComments}
-                  onChange={(e) => setItemComments(e.target.value)}
-                  className="w-full border-b border-gray-200 focus:border-gray-300 py-2 text-base text-black font-semibold transition-all outline-none bg-transparent placeholder-gray-300"
-                />
-              </div>
+              )}
             </div>
           </div>
 
           {/* Fixed Bottom Footer */}
           <div className="px-6 pb-10 pt-2 flex-shrink-0 bg-white">
+            {/* Total and Quantity Row */}
+            <div className="flex items-center justify-between mb-5 pt-3 border-t border-gray-100">
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total</span>
+                <span className="text-[20px] font-extrabold text-black mt-0.5">
+                  {totalPrice.toFixed(2)}€
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus size={14} strokeWidth={2.5} />
+                </button>
+                <div className="w-[42px] h-[34px] border border-black rounded-xl flex items-center justify-center text-[14px] font-black text-black">
+                  {String(quantity).padStart(2, '0')}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => q + 1)}
+                  className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer"
+                  aria-label="Increase quantity"
+                >
+                  <Plus size={14} strokeWidth={2.5} />
+                </button>
+              </div>
+            </div>
+
+            {/* Add to bag button */}
             <button 
               onClick={handleAddToCart}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-black py-4 rounded-full font-bold text-center text-base transition-all active:scale-[0.99]"
+              className="w-full bg-black hover:bg-gray-900 text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
             >
-              Add to Basket — {selectedItem?.basePrice.toFixed(2)}€
+              <span className="text-base font-semibold">+ Add to bag</span>
+              <div className="bg-white/20 px-6 py-2 rounded-full text-white text-base font-bold">
+                {totalPrice.toFixed(2)}€
+              </div>
             </button>
           </div>
         </div>
@@ -765,6 +940,15 @@ export default function MenuPage() {
               <div key={item.key} className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div className="flex flex-col gap-0.5">
                   <span className="font-bold text-sm text-black uppercase tracking-tight">{item.name}</span>
+                  {item.modifiers && item.modifiers.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {item.modifiers.map((m, idx) => (
+                        <span key={idx} className="text-[10px] bg-gray-50 text-gray-500 border border-gray-200 px-1.5 py-0.5 rounded-md font-semibold">
+                          +{m.optionName}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {item.comments && (
                     <span className="text-[11px] text-gray-400 font-medium italic">"{item.comments}"</span>
                   )}
