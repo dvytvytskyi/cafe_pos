@@ -641,51 +641,49 @@ export default function MenuPage() {
         onClick={() => setSelectedItem(null)}
       >
         <div 
-          className={`w-full max-w-[480px] h-[95vh] bg-white rounded-t-[32px] pt-8 px-6 pb-10 transition-transform duration-300 ease-out transform flex flex-col justify-between shadow-2xl relative ${
+          className={`w-full max-w-[480px] h-[95vh] bg-white rounded-t-[32px] overflow-hidden transition-transform duration-300 ease-out transform flex flex-col justify-between shadow-2xl relative ${
             selectedItem ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header Block */}
-          <div className="flex justify-between items-start w-full">
-            <div className="flex flex-col">
-              <h2 className="text-[24px] font-black tracking-tight leading-none text-black uppercase">
+          {/* Top Image Banner Section */}
+          {selectedItem && (
+            <div className="w-full h-[260px] relative bg-gray-150 flex-shrink-0">
+              <img 
+                src={getFoodImage(selectedItem.name, 'Market Plates')} 
+                alt={selectedItem.name}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Floating Close Button */}
+              <button 
+                onClick={() => setSelectedItem(null)}
+                className="absolute top-5 right-5 w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors z-10"
+              >
+                <X className="w-5 h-5" strokeWidth={2.2} />
+              </button>
+            </div>
+          )}
+
+          {/* Scrollable Content (Header, description, custom inputs) */}
+          <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-none flex flex-col gap-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Header Block */}
+            <div className="flex flex-col gap-1">
+              <h2 className="text-[28px] font-black tracking-tight leading-none text-black uppercase">
                 {selectedItem?.name}
               </h2>
-              <span className="text-[14px] font-semibold text-gray-500 mt-2">
+              <span className="text-[14px] font-bold text-gray-400 uppercase tracking-wider mt-1">
                 Customize your plate
               </span>
             </div>
-            
-            {/* Close X Button */}
-            <button 
-              onClick={() => setSelectedItem(null)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-black"
-            >
-              <X className="w-6 h-6" strokeWidth={1.8} />
-            </button>
-          </div>
 
-          {/* Scrollable Content Container */}
-          <div className="flex-1 overflow-y-auto pr-1 scrollbar-none flex flex-col gap-6 my-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {/* Picture banner */}
-            {selectedItem && (
-              <div className="w-full h-[220px] rounded-[24px] overflow-hidden bg-gray-100 shadow-inner flex-shrink-0">
-                <img 
-                  src={getFoodImage(selectedItem.name, 'Market Plates')} 
-                  alt={selectedItem.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
-            {/* Form inputs */}
+            {/* Description & Form inputs */}
             <div className="flex flex-col gap-5 w-full">
               <p className="text-sm font-semibold text-gray-600 leading-relaxed">
                 {selectedItem?.description || 'Select optionals and add special instructions for the preparation.'}
               </p>
 
-              <div className="flex flex-col w-full">
+              <div className="flex flex-col w-full mt-2">
                 <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">
                   Special instructions (comments)
                 </label>
@@ -700,13 +698,15 @@ export default function MenuPage() {
             </div>
           </div>
 
-          {/* Add to Basket button */}
-          <button 
-            onClick={handleAddToCart}
-            className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-black py-4 rounded-full font-bold text-center text-base transition-all active:scale-[0.99] flex-shrink-0"
-          >
-            Add to Basket — {selectedItem?.basePrice.toFixed(2)}€
-          </button>
+          {/* Fixed Bottom Footer */}
+          <div className="px-6 pb-10 pt-2 flex-shrink-0 bg-white">
+            <button 
+              onClick={handleAddToCart}
+              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-black py-4 rounded-full font-bold text-center text-base transition-all active:scale-[0.99]"
+            >
+              Add to Basket — {selectedItem?.basePrice.toFixed(2)}€
+            </button>
+          </div>
         </div>
       </div>
 
