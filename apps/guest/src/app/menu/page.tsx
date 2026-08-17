@@ -641,74 +641,77 @@ export default function MenuPage() {
         onClick={() => setSelectedItem(null)}
       >
         <div 
-          className={`w-full max-w-[480px] h-[95vh] bg-white rounded-t-[32px] overflow-hidden transition-transform duration-300 ease-out transform flex flex-col justify-between shadow-2xl relative ${
+          className={`w-full max-w-[480px] h-[95vh] bg-white rounded-t-[20px] overflow-hidden transition-transform duration-300 ease-out transform flex flex-col justify-between shadow-2xl relative ${
             selectedItem ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Top Image Banner Section */}
-          {selectedItem && (
-            <div className="w-full h-[260px] relative bg-gray-150 flex-shrink-0">
-              <img 
-                src={getFoodImage(selectedItem.name, 'Market Plates')} 
-                alt={selectedItem.name}
-                className="w-full h-full object-cover"
-              />
-              
-              {/* Floating Close Button */}
-              <button 
-                onClick={() => setSelectedItem(null)}
-                className="absolute top-5 right-5 w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors z-10"
-              >
-                <X className="w-5 h-5" strokeWidth={2.2} />
-              </button>
-            </div>
-          )}
+          {/* Floating Close Button - Fixed at top-right of sheet */}
+          <button 
+            onClick={() => setSelectedItem(null)}
+            className="absolute top-5 right-5 w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors z-50"
+          >
+            <X className="w-5 h-5" strokeWidth={2.2} />
+          </button>
 
           {/* Scrollable Content (Header, description, custom inputs) */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-none flex flex-col gap-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {/* Header Block */}
-            <div className="flex flex-col text-left">
-              <h2 className="text-[20px] font-extrabold tracking-tight leading-snug text-black uppercase">
-                {selectedItem?.name}
-              </h2>
-              <div className="text-[16px] font-bold text-black mt-1">
-                {selectedItem?.basePrice.toFixed(2)}€
+          <div className="flex-1 overflow-y-auto scrollbar-none flex flex-col gap-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Top Image Banner Section */}
+            {selectedItem && (
+              <div className="w-full h-[260px] relative bg-gray-150 flex-shrink-0">
+                <img 
+                  src={getFoodImage(selectedItem.name, 'Market Plates')} 
+                  alt={selectedItem.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </div>
+            )}
 
-            {/* Description & Metadata Section */}
-            <div className="flex flex-col gap-3.5 w-full text-left">
-              <p className="text-[14px] font-normal text-gray-800 leading-relaxed">
-                {selectedItem?.description || 'Select optionals and add special instructions for the preparation.'}
-              </p>
+            {/* Inner Content Block with paddings */}
+            <div className="px-6 pb-6 flex flex-col gap-6">
+              {/* Header Block */}
+              <div className="flex flex-col text-left">
+                <h2 className="text-[20px] font-extrabold tracking-tight leading-none text-black uppercase">
+                  {selectedItem?.name}
+                </h2>
+                <div className="text-[16px] font-bold text-black mt-1">
+                  {selectedItem?.basePrice.toFixed(2)}€
+                </div>
+              </div>
 
-              {selectedItem?.allergens && selectedItem.allergens.length > 0 && (
-                <p className="text-[12px] text-gray-400 font-medium">
-                  Allergens: {selectedItem.allergens.map(a => a.charAt(0).toUpperCase() + a.slice(1)).join(' · ')}
+              {/* Description & Metadata Section */}
+              <div className="flex flex-col gap-3.5 w-full text-left">
+                <p className="text-[14px] font-normal text-gray-800 leading-relaxed">
+                  {selectedItem?.description || 'Select optionals and add special instructions for the preparation.'}
                 </p>
-              )}
 
-              {/* Tag Row */}
-              <div className="flex items-center gap-3 mt-1">
-                <span className="border-2 border-black rounded-[8px] px-2 py-0.5 text-[11px] font-black text-black uppercase tracking-wider">
-                  {selectedItem?.name.toLowerCase().includes('salmon') ? 'GF' : selectedItem?.name.toLowerCase().includes('cheese') ? 'VE' : 'PB'}
-                </span>
+                {selectedItem?.allergens && selectedItem.allergens.length > 0 && (
+                  <p className="text-[12px] text-gray-400 font-medium">
+                    Allergens: {selectedItem.allergens.map(a => a.charAt(0).toUpperCase() + a.slice(1)).join(' · ')}
+                  </p>
+                )}
+
+                {/* Tag Row */}
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="border-2 border-black rounded-[8px] px-2 py-0.5 text-[11px] font-black text-black uppercase tracking-wider">
+                    {selectedItem?.name.toLowerCase().includes('salmon') ? 'GF' : selectedItem?.name.toLowerCase().includes('cheese') ? 'VE' : 'PB'}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Special Instructions Input */}
-            <div className="flex flex-col w-full text-left border-t border-gray-100 pt-5">
-              <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">
-                Special instructions (comments)
-              </label>
-              <input 
-                type="text" 
-                placeholder="e.g. No sauce, dressing on the side..."
-                value={itemComments}
-                onChange={(e) => setItemComments(e.target.value)}
-                className="w-full border-b border-gray-200 focus:border-gray-300 py-2 text-base text-black font-semibold transition-all outline-none bg-transparent placeholder-gray-300"
-              />
+              {/* Special Instructions Input */}
+              <div className="flex flex-col w-full text-left border-t border-gray-100 pt-5">
+                <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">
+                  Special instructions (comments)
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. No sauce, dressing on the side..."
+                  value={itemComments}
+                  onChange={(e) => setItemComments(e.target.value)}
+                  className="w-full border-b border-gray-200 focus:border-gray-300 py-2 text-base text-black font-semibold transition-all outline-none bg-transparent placeholder-gray-300"
+                />
+              </div>
             </div>
           </div>
 
