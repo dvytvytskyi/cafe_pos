@@ -544,13 +544,20 @@ export default function HomePage() {
       </div>
        {/* Drawer Overlay Menu */}
       <div 
-        className={`fixed inset-0 bg-black/45 z-50 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-white/20 backdrop-blur-[5px] z-50 transition-opacity duration-300 ${
           showDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
+        style={{
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: 'translate3d(0,0,0)',
+          WebkitTransform: 'translate3d(0,0,0)',
+          willChange: 'opacity, backdrop-filter, -webkit-backdrop-filter'
+        }}
         onClick={() => setShowDrawer(false)}
       >
         <div 
-          className={`w-[80%] max-w-[290px] h-full bg-[#FFFFFF] flex flex-col justify-between relative transform transition-transform duration-300 ease-out ${
+          className={`w-[80%] max-w-[290px] h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between relative transform transition-transform duration-300 ease-out ${
             showDrawer ? 'translate-x-0' : '-translate-x-full'
           }`}
           style={{ willChange: 'transform' }}
