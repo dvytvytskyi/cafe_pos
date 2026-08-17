@@ -352,7 +352,7 @@ export default function MenuPage() {
     <div ref={pageContainerRef} className="h-screen overflow-y-auto bg-gray-50 text-gray-900 pb-[90px] font-sans select-none scroll-smooth">
       
       {/* Fixed Header section */}
-      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex flex-col w-full shadow-sm">
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex flex-col w-full">
         <div className="flex items-center justify-between px-4 pt-4 pb-3 gap-3">
           {/* Back button */}
           <button 
