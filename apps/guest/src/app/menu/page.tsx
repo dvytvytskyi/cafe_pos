@@ -665,11 +665,7 @@ export default function MenuPage() {
           {/* Settings Control Filter icon */}
           <button 
             onClick={() => setShowFiltersModal(true)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm shadow-black/5 transition-all active:scale-95 flex-shrink-0 relative ${
-              (selectedDiet || excludedAllergens.length > 0 || sortBy !== 'default')
-                ? 'bg-[#18181B] hover:bg-black text-white font-bold'
-                : 'bg-white/95 hover:bg-white text-gray-900'
-            }`}
+            className="w-10 h-10 bg-white/95 hover:bg-white text-gray-900 rounded-full flex items-center justify-center shadow-sm shadow-black/5 transition-all active:scale-95 flex-shrink-0 relative"
           >
             <Sliders className="w-4 h-4" strokeWidth={2.2} />
             {(selectedDiet || excludedAllergens.length > 0 || sortBy !== 'default') && (
