@@ -1562,22 +1562,21 @@ export default function MenuPage() {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex justify-between items-center w-full">
-            <div className="flex flex-col">
+          <div className="flex flex-col w-full gap-1">
+            <div className="flex justify-between items-center w-full">
               <h2 className="text-[22px] font-bold text-gray-900 uppercase tracking-tight leading-none">
                 FILTERS & DIET
               </h2>
-              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mt-1.5">
-                Customize your meal
-              </span>
+              <button 
+                onClick={() => setShowFiltersModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors text-black -mr-1"
+              >
+                <X className="w-5 h-5" strokeWidth={1.8} />
+              </button>
             </div>
-            
-            <button 
-              onClick={() => setShowFiltersModal(false)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-black -mr-2"
-            >
-              <X className="w-6 h-6" strokeWidth={1.8} />
-            </button>
+            <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+              Customize your meal
+            </span>
           </div>
 
           {/* Content Scroll Area */}
