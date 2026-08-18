@@ -739,7 +739,7 @@ export default function HomePage() {
         </div>
 
         {/* Bottom Card Overlay Floating ON TOP of Mapbox */}
-        <div className="absolute bottom-6 left-4 right-4 z-10 bg-white rounded-3xl p-6 shadow-2xl flex flex-col gap-4 animate-slideUp relative">
+        <div className="absolute bottom-6 left-4 right-4 z-10 bg-white rounded-3xl p-6 shadow-2xl flex flex-col gap-4 animate-slideUp">
           
           {/* Title / Hours Block with navigation arrows and Distance */}
           <div className="flex flex-col gap-1">
