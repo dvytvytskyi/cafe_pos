@@ -264,6 +264,11 @@ export default function MenuPage() {
     clearFoodCart 
   } = useGuest();
 
+  const isNewRecipe = (name: string) => {
+    const n = name.toLowerCase();
+    return n.includes('latte') || n.includes('bagel') || n.includes('croissant');
+  };
+
   const router = useRouter();
   const [menu, setMenu] = useState<GuestMenuResponse | null>(MOCK_MENU);
   const [loadingMenu, setLoadingMenu] = useState(false);
@@ -667,7 +672,7 @@ export default function MenuPage() {
               placeholder="Search dishes, drinks..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent border-none outline-none text-sm text-gray-900 placeholder-gray-400 font-semibold"
+              className="w-full bg-transparent border-none outline-none text-base text-gray-900 placeholder-gray-400 font-semibold"
             />
             {searchQuery && (
               <button 
@@ -775,7 +780,7 @@ export default function MenuPage() {
                               className="w-full h-full object-cover"
                             />
                             {/* Spark tag if new */}
-                            {item.allergens.length === 0 && (
+                            {isNewRecipe(item.name) && (
                               <div className="absolute top-3 left-3 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
                                 <Sparkle className="w-3 h-3 fill-current" />
                                 <span>New recipe</span>
@@ -785,21 +790,13 @@ export default function MenuPage() {
 
                           {/* Text descriptions */}
                           <div className="flex flex-col gap-0.5">
-                            <h4 className="font-bold text-[12px] text-black uppercase tracking-tight leading-snug">
+                            <h4 className="font-bold text-[12px] text-black uppercase tracking-tight leading-snug truncate w-full">
                               {item.name}
                             </h4>
                             <p className="text-[10px] text-gray-400 font-normal leading-normal line-clamp-2">
                               {item.description || 'Nutritious honest food made fresh daily.'}
                             </p>
                           </div>
-
-                          {/* Spark tag indicator list */}
-                          {item.allergens.length > 0 && (
-                            <div className="flex items-center gap-1 text-[11px] font-normal text-gray-400">
-                              <Sparkle className="w-3 h-3 text-gray-400" />
-                              <span>New recipe</span>
-                            </div>
-                          )}
 
                           {/* Price tag */}
                           <div className="text-[14px] font-bold text-black">
@@ -827,7 +824,7 @@ export default function MenuPage() {
                                 className="w-full h-full object-cover"
                               />
                               {/* Spark tag if new */}
-                              {item.allergens.length === 0 && (
+                              {isNewRecipe(item.name) && (
                                 <div className="absolute top-4 left-4 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
                                   <Sparkle className="w-3 h-3 fill-current" />
                                   <span>New recipe</span>
@@ -838,10 +835,10 @@ export default function MenuPage() {
                             {/* Item information area */}
                             <div className="p-6 bg-white flex flex-col gap-3 text-left">
                               <div className="flex flex-col gap-1">
-                                <h3 className="font-extrabold text-[15px] text-black uppercase tracking-tight leading-snug">
+                                <h3 className="font-extrabold text-[15px] text-black uppercase tracking-tight leading-snug truncate w-full">
                                   {item.name}
                                 </h3>
-                                <p className="text-[11px] text-gray-400 font-normal leading-relaxed">
+                                <p className="text-[11px] text-gray-400 font-normal leading-relaxed line-clamp-2">
                                   {item.description || 'Extra virgin olive oil, pumpkin seeds, pine nuts, cucumber, radish, flaky salt.'}
                                 </p>
                               </div>
