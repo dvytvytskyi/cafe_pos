@@ -509,11 +509,7 @@ export default function HomePage() {
                <button 
                  onClick={() => {
                    if (orderMode === 'delivery' && !deliveryAddress) {
-                     const addr = prompt("Enter your delivery address:", deliveryAddress);
-                     if (addr) {
-                       setDeliveryAddress(addr);
-                       setShowTimePicker(true);
-                     }
+                     setShowNewAddressModal(true);
                      return;
                    }
                    setShowTimePicker(true);
@@ -555,7 +551,7 @@ export default function HomePage() {
         onClick={() => setShowDrawer(false)}
       >
         <div 
-          className={`w-[80%] max-w-[290px] h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between relative transform transition-transform duration-300 ease-out ${
+          className={`w-[80%] max-w-[290px] h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between relative transform transition-transform duration-300 ease-out shadow-none ${
             showDrawer ? 'translate-x-0' : '-translate-x-full'
           }`}
           style={{ willChange: 'transform' }}
@@ -611,7 +607,7 @@ export default function HomePage() {
             </div>
 
             {/* Navigation Links with indented bottom border */}
-            <nav className="flex-1 mt-4 overflow-y-auto scrollbar-none border-r border-gray-100" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <nav className="flex-1 mt-4 overflow-y-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="flex flex-col">
                 <Link 
                   href="/orders" 
@@ -619,7 +615,7 @@ export default function HomePage() {
                   className="flex items-center justify-between hover:bg-black/5 transition-colors pl-6 py-[22px] pr-6 w-full"
                 >
                   <div className="flex items-center gap-3">
-                    <Package className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
+                    <Package className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
                     <span className="text-[14px] font-medium text-[#000000]">My orders</span>
                   </div>
                 </Link>
@@ -631,7 +627,7 @@ export default function HomePage() {
                   className="flex items-center justify-between hover:bg-black/5 transition-colors pl-6 py-[22px] pr-6 w-full"
                 >
                   <div className="flex items-center gap-3">
-                    <Gift className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
+                    <Gift className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
                     <span className="text-[14px] font-medium text-[#000000]">Honest People</span>
                   </div>
                 </Link>
@@ -643,7 +639,7 @@ export default function HomePage() {
                   className="flex items-center justify-between hover:bg-black/5 transition-colors pl-6 py-[22px] pr-6 w-full"
                 >
                   <div className="flex items-center gap-3">
-                    <Megaphone className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
+                    <Megaphone className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
                     <span className="text-[14px] font-medium text-[#000000]">Invite a friend</span>
                   </div>
                 </Link>
@@ -655,7 +651,7 @@ export default function HomePage() {
                   className="flex items-center justify-between hover:bg-black/5 transition-colors pl-6 py-[22px] pr-6 w-full"
                 >
                   <div className="flex items-center gap-3">
-                    <MessageSquare className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
+                    <MessageSquare className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
                     <span className="text-[14px] font-medium text-[#000000]">Chat & support</span>
                   </div>
                 </Link>
@@ -663,7 +659,7 @@ export default function HomePage() {
             </nav>
 
             {/* Bottom Fixed Metadata & Footer Section */}
-            <div className="bg-white border-r border-gray-100">
+            <div className="bg-white border-none">
               {/* Divider above Region */}
               <div className="ml-6 mr-0 border-t border-gray-200" />
               
@@ -1095,31 +1091,29 @@ export default function HomePage() {
       </div>
       {/* Bottom Sheet New Address Modal */}
       <div 
-        className={`fixed inset-0 bg-transparent z-50 transition-opacity duration-300 flex items-end justify-center ${
-          showNewAddressModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        className={`fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center ${
+          showNewAddressModal ? 'opacity-100 backdrop-blur-[3px] pointer-events-auto' : 'opacity-0 backdrop-blur-none pointer-events-none'
         }`}
         onClick={() => setShowNewAddressModal(false)}
       >
         <div 
-          className={`w-full max-w-[480px] bg-white rounded-t-[16px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-none relative ${
+          className={`w-full max-w-[480px] bg-white rounded-t-[16px] pt-6 px-6 pb-6 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-none relative ${
             showNewAddressModal ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Block */}
-          <div className="flex justify-between items-start w-full">
-            <div className="flex flex-col pl-[25px]">
-              <h2 className="text-[28px] font-extrabold tracking-tight leading-none text-black uppercase">
-                NEW ADDRESS
-              </h2>
-            </div>
+          <div className="flex justify-between items-center w-full">
+            <h2 className="text-[22px] font-bold tracking-tight leading-none text-gray-900 uppercase">
+              NEW ADDRESS
+            </h2>
             
             {/* Close X Button */}
             <button 
               onClick={() => setShowNewAddressModal(false)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-black"
+              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-black -mr-1.5"
             >
-              <X className="w-6 h-6" strokeWidth={1.8} />
+              <X className="w-5 h-5" strokeWidth={2} />
             </button>
           </div>
 
@@ -1127,7 +1121,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-6 w-full px-0">
             {/* Street address */}
             <div className="flex flex-col w-full relative">
-              <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-1">
+              <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">
                 Street address
               </label>
               <input 
@@ -1135,7 +1129,7 @@ export default function HomePage() {
                 placeholder="e.g. Passeig de Gràcia, 48"
                 value={newStreetAddress}
                 onChange={(e) => setNewStreetAddress(e.target.value)}
-                className="w-full border-none py-2 text-base text-black font-semibold transition-all outline-none placeholder-gray-300 bg-transparent"
+                className="w-full border-b border-gray-100 focus:border-gray-200 py-2 text-[14px] text-gray-800 font-medium transition-all outline-none placeholder-gray-300 bg-transparent"
               />
               {filteredSuggestions.length > 0 && (
                 <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-30 bg-white shadow-2xl rounded-none p-4 max-h-[195px] overflow-y-auto scrollbar-none animate-fadeIn flex flex-col gap-4">
@@ -1161,65 +1155,44 @@ export default function HomePage() {
 
             {/* Alias Selection */}
             <div className="flex flex-col w-full">
-              <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-3">
+              <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-3">
                 Select option
               </label>
               <div className="flex gap-4 w-full">
                 {/* Home */}
                 <div 
                   onClick={() => setNewAddressAlias('home')}
-                  className={`flex-1 py-4 text-center rounded-2xl font-bold text-sm cursor-pointer relative transition-all border ${
+                  className={`flex-1 py-3 text-center rounded-2xl font-semibold text-[13px] cursor-pointer relative transition-all border ${
                     newAddressAlias === 'home' 
                       ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
                       : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
                   }`}
                 >
                   <span>Home</span>
-                  {newAddressAlias === 'home' && (
-                    <div className="absolute -top-1.5 -right-1.5 bg-[#4ADE80] text-white rounded-full p-0.5 shadow-none">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                  )}
                 </div>
 
                 {/* Work */}
                 <div 
                   onClick={() => setNewAddressAlias('work')}
-                  className={`flex-1 py-4 text-center rounded-2xl font-bold text-sm cursor-pointer relative transition-all border ${
+                  className={`flex-1 py-3 text-center rounded-2xl font-semibold text-[13px] cursor-pointer relative transition-all border ${
                     newAddressAlias === 'work' 
                       ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
                       : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
                   }`}
                 >
                   <span>Work</span>
-                  {newAddressAlias === 'work' && (
-                    <div className="absolute -top-1.5 -right-1.5 bg-[#4ADE80] text-white rounded-full p-0.5 shadow-none">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                  )}
                 </div>
 
                 {/* Custom */}
                 <div 
                   onClick={() => setNewAddressAlias('custom')}
-                  className={`flex-1 py-4 text-center rounded-2xl font-bold text-sm cursor-pointer relative transition-all border ${
+                  className={`flex-1 py-3 text-center rounded-2xl font-semibold text-[13px] cursor-pointer relative transition-all border ${
                     newAddressAlias === 'custom' 
                       ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
                       : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
                   }`}
                 >
                   <span>Custom</span>
-                  {newAddressAlias === 'custom' && (
-                    <div className="absolute -top-1.5 -right-1.5 bg-[#4ADE80] text-white rounded-full p-0.5 shadow-none">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -1235,14 +1208,14 @@ export default function HomePage() {
                 onChange={() => {}} // handled by parent onClick
                 className="w-4.5 h-4.5 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer"
               />
-              <span className="text-[12px] text-gray-500 font-medium leading-tight">
+              <span className="text-[12px] text-gray-500 font-semibold leading-tight">
                 Default address
               </span>
             </div>
           </div>
 
           {/* Submit button */}
-          <div className="px-0 w-full mt-8">
+          <div className="px-0 w-full mt-[150px]">
             <button 
               disabled={!newStreetAddress}
               onClick={() => {
@@ -1250,7 +1223,7 @@ export default function HomePage() {
                 setShowNewAddressModal(false);
                 setShowTimePicker(true);
               }}
-              className={`w-full py-4 rounded-full font-bold text-center text-base transition-all shadow-none ${
+              className={`w-full py-3.5 rounded-full font-semibold text-center text-[15px] transition-all shadow-none ${
                 newStreetAddress 
                   ? 'bg-[#FDBD38] text-white hover:bg-[#e5a420] active:scale-[0.99] cursor-pointer' 
                   : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
