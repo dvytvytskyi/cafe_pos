@@ -264,6 +264,7 @@ export default function MenuPage() {
     bootstrap, 
     locale, 
     orderMode, 
+    setOrderMode,
     isLoggedIn, 
     profileName, 
     refreshAuth, 
@@ -322,6 +323,7 @@ export default function MenuPage() {
   const [customTipAmount, setCustomTipAmount] = useState<number>(0);
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showOrderModeModal, setShowOrderModeModal] = useState(false);
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const [isAllergiesOpen, setIsAllergiesOpen] = useState(false);
 
@@ -661,7 +663,10 @@ export default function MenuPage() {
 
           {/* Central premium combined location/order-mode capsule selector */}
           <div className="flex-1 flex justify-center">
-            <div className="bg-white/95 hover:bg-white border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm shadow-black/5 cursor-pointer transition-all active:scale-[0.98]">
+            <div 
+              onClick={() => setShowOrderModeModal(true)}
+              className="bg-white/95 hover:bg-white border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm shadow-black/5 cursor-pointer transition-all active:scale-[0.98]"
+            >
               <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
               <div className="flex items-center gap-1.5 text-xs text-gray-900">
                 <span className="font-extrabold tracking-tight">
@@ -1729,6 +1734,78 @@ export default function MenuPage() {
         </div>
       </div>
 
+      {/* Bottom Sheet Order Mode Modal */}
+      <div 
+        className={`fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center backdrop-blur-[3px] ${
+          showOrderModeModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setShowOrderModeModal(false)}
+      >
+        <div 
+          className={`w-full max-w-[480px] bg-white rounded-t-[32px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
+            showOrderModeModal ? 'translate-y-0' : 'translate-y-full'
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex flex-col w-full gap-1">
+            <div className="flex justify-between items-center w-full">
+              <h2 className="text-[22px] font-bold text-gray-900 uppercase tracking-tight leading-none">
+                Order Mode
+              </h2>
+              <button 
+                onClick={() => setShowOrderModeModal(false)}
+                className="p-1 hover:bg-gray-150 rounded-full transition-colors text-black -mr-1"
+              >
+                <X className="w-5 h-5" strokeWidth={1.8} />
+              </button>
+            </div>
+            <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+              Choose how you want to receive your order
+            </span>
+          </div>
+
+          {/* Options */}
+          <div className="flex flex-col gap-3">
+            {[
+              { id: 'store', label: 'Eat In Store', desc: 'Enjoy your food and drinks inside the cafe', emoji: '🥗' },
+              { id: 'pickup', label: 'Pick up / Takeaway', desc: 'Order ahead and collect it when ready', emoji: '🛍️' },
+              { id: 'delivery', label: 'Delivery', desc: 'Get it delivered directly to your address', emoji: '🚲' }
+            ].map((opt) => {
+              const active = orderMode === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setOrderMode(opt.id as 'store' | 'pickup' | 'delivery');
+                    setShowOrderModeModal(false);
+                  }}
+                  className={`w-full p-4 rounded-2xl text-left border flex items-center justify-between transition-all ${
+                    active 
+                      ? 'bg-[#FDBD38]/10 border-[#FDBD38] text-gray-900' 
+                      : 'bg-white border-gray-150 text-gray-800 hover:bg-gray-50/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <span className="text-2xl flex-shrink-0">{opt.emoji}</span>
+                    <div className="flex flex-col gap-0.5 text-left">
+                      <span className="text-[14px] font-bold text-gray-900">{opt.label}</span>
+                      <span className="text-[11px] text-gray-400 font-medium leading-tight">{opt.desc}</span>
+                    </div>
+                  </div>
+                  {active && (
+                    <span className="w-5 h-5 rounded-full bg-[#FDBD38] flex items-center justify-center text-white text-[11px] font-bold">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+        </div>
+      </div>
+ 
       {/* Order Details Screen (Full height checkout overlay) */}
       <div 
         className={`fixed inset-0 bg-white z-50 transition-transform duration-300 ease-out transform flex items-center justify-center ${
