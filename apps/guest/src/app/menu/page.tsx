@@ -1756,7 +1756,7 @@ export default function MenuPage() {
 
             {/* Location details row */}
             <div className="border-y border-gray-200/55 py-5 flex flex-col gap-0.5 text-left w-full">
-              <span className="text-[15px] font-extrabold text-black">Pedralbes Centre</span>
+              <span className="text-[15px] font-semibold text-black">Pedralbes Centre</span>
               <span className="text-[12px] text-gray-400 font-medium leading-tight">
                 Avinguda Diagonal, 609, 08028, Barcelona
               </span>
@@ -1786,7 +1786,7 @@ export default function MenuPage() {
                           />
                         </div>
                         <div className="flex flex-col text-left">
-                          <span className="text-[14px] font-extrabold text-black leading-tight">
+                          <span className="text-[14px] font-semibold text-black leading-tight">
                             {cartItem.name}
                           </span>
                           <span className="text-[11px] text-gray-400 font-semibold mt-1">
@@ -1799,7 +1799,7 @@ export default function MenuPage() {
                           )}
                         </div>
                       </div>
-                      <span className="text-[14px] font-extrabold text-black">
+                      <span className="text-[14px] font-semibold text-black">
                         {(cartItem.unitPrice * cartItem.quantity).toFixed(2)}€
                       </span>
                     </div>
