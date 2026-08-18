@@ -16,7 +16,13 @@ import {
   Plus,
   Minus,
   Check,
-  Info
+  Info,
+  Store,
+  RefreshCw,
+  Tag,
+  FileText,
+  CreditCard,
+  HelpCircle
 } from 'lucide-react';
 
 const foodImages = [
@@ -307,6 +313,12 @@ export default function MenuPage() {
   const [excludedAllergens, setExcludedAllergens] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>('default');
 
+  // Checkout and Order details states
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
+  const [selectedTip, setSelectedTip] = useState<number | null>(null);
+  const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const filteredItems = React.useMemo(() => {
     if (!menu?.items) return [];
     
@@ -568,7 +580,12 @@ export default function MenuPage() {
     return foodCart.filter(item => item.menuItemId === itemId).reduce((sum, item) => sum + item.quantity, 0);
   };
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
+    setShowCartOverlay(false);
+    setShowOrderDetails(true);
+  };
+
+  const handleFinalPayment = async (method: 'applepay' | 'card') => {
     if (!bootstrap?.locationId || foodCart.length === 0) return;
     try {
       const order = await createOrder({
@@ -576,11 +593,12 @@ export default function MenuPage() {
         tableId: bootstrap.tableId || undefined,
         items: foodCart,
       });
-      alert(`Order ORD-${order.orderNumber} created successfully! Status: ${order.status}`);
+      setCreatedOrderNumber(`ORD-${order.orderNumber}`);
       clearFoodCart();
-      setShowCartOverlay(false);
+      setShowOrderDetails(false);
+      setShowSuccessModal(true);
     } catch (err: any) {
-      alert(`Checkout failed: ${err.message}`);
+      alert(`Payment failed: ${err.message}`);
     }
   };
 
@@ -866,7 +884,7 @@ export default function MenuPage() {
       </div>
 
       {/* Floating Bottom Cart Bar */}
-      {foodCart.length > 0 && !selectedItem && !showUpsellModal && (
+      {foodCart.length > 0 && !selectedItem && !showUpsellModal && !showOrderDetails && (
         <div className="fixed bottom-6 left-6 right-6 z-40 max-w-[432px] mx-auto animate-slideUp">
           <button 
             onClick={() => setShowCartOverlay(true)}
@@ -1700,6 +1718,287 @@ export default function MenuPage() {
 
         </div>
       </div>
+
+      {/* Order Details Screen (Full height checkout overlay) */}
+      <div 
+        className={`fixed inset-0 bg-[#F9F9FB] z-50 transition-transform duration-300 ease-out transform flex items-center justify-center ${
+          showOrderDetails ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="w-full max-w-[480px] h-[100dvh] bg-white flex flex-col shadow-2xl relative">
+          
+          {/* Header */}
+          <div className="flex items-center px-6 pt-6 pb-4 bg-white border-b border-gray-100 flex-shrink-0">
+            <button 
+              onClick={() => setShowOrderDetails(false)}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors text-black -ml-1"
+            >
+              <ArrowLeft className="w-6 h-6" strokeWidth={1.8} />
+            </button>
+            <span className="ml-4 text-sm font-semibold text-gray-900">Order details</span>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8 bg-[#F9F9FB]">
+            
+            {/* Title Block */}
+            <div className="flex flex-col text-left gap-1">
+              <h1 className="text-[26px] font-black text-black leading-tight uppercase tracking-tight">
+                Your order at <br /> {bootstrap?.locationId === 'default' ? 'Pedralbes Centre' : 'Pedralbes Centre'}
+              </h1>
+              <span className="text-[14px] font-semibold text-gray-800 capitalize">
+                {orderMode === 'pickup' ? 'Pick up' : orderMode === 'delivery' ? 'Delivery' : 'Eat in'}
+              </span>
+            </div>
+
+            {/* Location details card */}
+            <div className="bg-white rounded-3xl p-5 border border-gray-150 flex items-start gap-4 shadow-sm text-left">
+              <div className="p-3 bg-gray-100 rounded-2xl flex items-center justify-center">
+                <Store className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[15px] font-extrabold text-black">Pedralbes Centre</span>
+                <span className="text-[12px] text-gray-400 font-medium leading-tight">
+                  Avinguda Diagonal, 609, 08028, Barcelona
+                </span>
+                <button 
+                  onClick={() => alert('Store settings can be updated in your profile.')}
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 mt-2 hover:text-black transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Change store</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Summary Block */}
+            <div className="flex flex-col gap-4 text-left">
+              <h3 className="text-[15px] font-extrabold text-black uppercase tracking-wider">Summary</h3>
+              
+              <div className="bg-white rounded-3xl p-5 border border-gray-150 flex flex-col gap-5 shadow-sm">
+                {foodCart.map((cartItem, idx) => {
+                  return (
+                    <div key={idx} className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                          <img 
+                            src={getFoodImage(cartItem.name, 'Market Plates')} 
+                            alt={cartItem.name} 
+                            className="w-full h-full object-cover" 
+                          />
+                        </div>
+                        <div className="flex flex-col text-left">
+                          <span className="text-[14px] font-extrabold text-black leading-tight">
+                            {cartItem.name}
+                          </span>
+                          <span className="text-[11px] text-gray-400 font-semibold mt-1">
+                            ({cartItem.unitPrice.toFixed(2)}€) × {cartItem.quantity}
+                          </span>
+                          {cartItem.comment && (
+                            <span className="text-[11px] text-gray-400 font-normal italic mt-0.5">
+                              "{cartItem.comment}"
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-[14px] font-extrabold text-black">
+                        {(cartItem.unitPrice * cartItem.quantity).toFixed(2)}€
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Staff tip section */}
+            <div className="flex flex-col gap-4 text-left">
+              <div className="flex justify-between items-center w-full">
+                <h3 className="text-[15px] font-extrabold text-black uppercase tracking-wider">Staff tip</h3>
+                <button onClick={() => alert('Tips support our staff directly.')} className="text-[11px] font-bold text-gray-400 hover:text-black transition-colors flex items-center gap-1">
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>How tips work</span>
+                </button>
+              </div>
+
+              <div className="flex gap-3 w-full">
+                {[
+                  { id: 'tip-5', label: '5%', value: 0.05 },
+                  { id: 'tip-10', label: '10%', value: 0.10 },
+                  { id: 'tip-other', label: 'Other', value: 0 }
+                ].map((tipOpt) => {
+                  const val = tipOpt.value > 0 ? Number((cartTotal * tipOpt.value).toFixed(2)) : 0;
+                  const active = selectedTip === val && val > 0 || (tipOpt.id === 'tip-other' && selectedTip === 0);
+                  const displayLabel = tipOpt.id === 'tip-other' ? 'Other' : `${val.toFixed(2)}€`;
+                  return (
+                    <button
+                      key={tipOpt.id}
+                      onClick={() => setSelectedTip(val)}
+                      className={`flex-1 py-3 text-center rounded-2xl font-semibold text-[13px] transition-all border ${
+                        active 
+                          ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
+                      }`}
+                    >
+                      {displayLabel}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Totals Section */}
+            <div className="bg-white rounded-3xl p-5 border border-gray-150 flex flex-col gap-3 shadow-sm text-left">
+              <div className="flex justify-between text-[13px] font-medium text-gray-500">
+                <span>Subtotal</span>
+                <span>{cartTotal.toFixed(2)}€</span>
+              </div>
+              {selectedTip !== null && selectedTip > 0 && (
+                <div className="flex justify-between text-[13px] font-medium text-gray-500">
+                  <span>Staff Tip</span>
+                  <span>{selectedTip.toFixed(2)}€</span>
+                </div>
+              )}
+              <div className="border-t border-gray-100 my-1" />
+              <div className="flex justify-between text-[16px] font-black text-black">
+                <span>Total</span>
+                <span>{(cartTotal + (selectedTip || 0)).toFixed(2)}€</span>
+              </div>
+            </div>
+
+            {/* got a promo code accordion */}
+            <div className="bg-white rounded-3xl border border-gray-150 overflow-hidden shadow-sm text-left">
+              <details className="group">
+                <summary className="flex justify-between items-center p-5 cursor-pointer list-none select-none">
+                  <div className="flex items-center gap-3">
+                    <Tag className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
+                    <span className="text-[13px] font-semibold text-black">Got a promo code?</span>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-5 pb-5 pt-1 border-t border-gray-50 flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="Enter code" 
+                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300"
+                  />
+                  <button className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-3 py-2 rounded-xl text-xs font-semibold transition-all">
+                    Apply
+                  </button>
+                </div>
+              </details>
+            </div>
+
+            {/* any allergies accordion */}
+            <div className="bg-white rounded-3xl border border-gray-150 overflow-hidden shadow-sm text-left">
+              <details className="group">
+                <summary className="flex justify-between items-center p-5 cursor-pointer list-none select-none">
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
+                    <span className="text-[13px] font-semibold text-black">Any allergies?</span>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-5 pb-5 pt-1 border-t border-gray-50 flex flex-col gap-2">
+                  <p className="text-[11px] text-gray-400 leading-tight">
+                    Please specify if you are allergic to any ingredients.
+                  </p>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. peanuts, dairy" 
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300"
+                  />
+                </div>
+              </details>
+            </div>
+
+            {/* add a note section */}
+            <div className="bg-white rounded-3xl p-5 border border-gray-150 shadow-sm flex flex-col gap-2.5 text-left">
+              <div className="flex items-center gap-3">
+                <FileText className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
+                <span className="text-[13px] font-semibold text-black">Add a note (optional)</span>
+              </div>
+              <textarea 
+                placeholder="Write a comment..." 
+                rows={2}
+                className="w-full border border-gray-200 rounded-xl p-3 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300 resize-none"
+              />
+            </div>
+
+            {/* Pay buttons section */}
+            <div className="flex flex-col gap-3.5 text-left mt-2">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1">
+                Pay for your order:
+              </span>
+              
+              <button 
+                onClick={() => handleFinalPayment('applepay')}
+                className="w-full bg-[#18181B] hover:bg-black text-white py-4 rounded-full font-bold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-md shadow-black/10"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg"></span>
+                  <span className="text-[15px] font-bold">Pay</span>
+                </div>
+                <span className="text-[15px] font-bold">{(cartTotal + (selectedTip || 0)).toFixed(2)}€</span>
+              </button>
+
+              <button 
+                onClick={() => handleFinalPayment('card')}
+                className="w-full bg-white border border-gray-200 hover:bg-gray-50 text-black py-4 rounded-full font-bold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-sm"
+              >
+                <div className="flex items-center gap-2.5">
+                  <CreditCard className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
+                  <span className="text-[15px] font-bold text-gray-900">Card</span>
+                </div>
+                <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
+                  <ArrowRight className="w-3.5 h-3.5 text-gray-500" />
+                </div>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      {/* Order Success Modal */}
+      <div 
+        className={`fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 flex items-center justify-center p-6 ${
+          showSuccessModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div 
+          className="bg-white w-full max-w-[400px] rounded-3xl p-6 flex flex-col items-center justify-center gap-6 shadow-2xl relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Big Checkmark */}
+          <div className="w-16 h-16 rounded-full bg-[#D2EE99] flex items-center justify-center">
+            <Check className="w-8 h-8 text-[#87B031]" strokeWidth={3} />
+          </div>
+          
+          <div className="flex flex-col items-center justify-center gap-1.5 text-center">
+            <h2 className="text-[20px] font-black text-black uppercase tracking-tight leading-tight">
+              Order Created!
+            </h2>
+            <span className="text-[14px] font-bold text-gray-800">
+              {createdOrderNumber}
+            </span>
+            <p className="text-[12px] text-gray-400 font-medium leading-relaxed max-w-[280px] mt-2">
+              Your order has been sent to the kitchen. You can track its status in the "My orders" section.
+            </p>
+          </div>
+
+          <button 
+            onClick={() => {
+              setShowSuccessModal(false);
+              router.push('/orders');
+            }}
+            className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3.5 rounded-full font-bold text-center text-sm shadow-md shadow-black/10 active:scale-[0.98] transition-all"
+          >
+            Go to My Orders
+          </button>
+        </div>
+      </div>
+
     </div>
   );
 }
