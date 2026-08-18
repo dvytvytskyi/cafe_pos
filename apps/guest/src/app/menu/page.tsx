@@ -1885,7 +1885,7 @@ export default function MenuPage() {
                 <summary className="flex justify-between items-center py-4 cursor-pointer list-none select-none">
                   <div className="flex items-center gap-3">
                     <Tag className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
-                    <span className="text-[13px] font-semibold text-black">Got a promo code?</span>
+                    <span className="text-[14px] font-semibold text-gray-900">Got a promo code?</span>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
                 </summary>
@@ -1893,9 +1893,9 @@ export default function MenuPage() {
                   <input 
                     type="text" 
                     placeholder="Enter code" 
-                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300 bg-white"
+                    className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-base outline-none focus:border-[#FDBD38] placeholder-gray-300 bg-white text-gray-900"
                   />
-                  <button className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-3 py-2 rounded-xl text-xs font-semibold transition-all">
+                  <button className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-5 py-3 rounded-xl text-[14px] font-semibold transition-all">
                     Apply
                   </button>
                 </div>
@@ -1908,18 +1908,18 @@ export default function MenuPage() {
                 <summary className="flex justify-between items-center py-4 cursor-pointer list-none select-none">
                   <div className="flex items-center gap-3">
                     <FileText className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
-                    <span className="text-[13px] font-semibold text-black">Any allergies?</span>
+                    <span className="text-[14px] font-semibold text-gray-900">Any allergies?</span>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
                 </summary>
                 <div className="pb-4 pt-1 flex flex-col gap-2">
-                  <p className="text-[11px] text-gray-400 leading-tight">
+                  <p className="text-[12px] text-gray-400 font-medium leading-tight">
                     Please specify if you are allergic to any ingredients.
                   </p>
                   <input 
                     type="text" 
                     placeholder="e.g. peanuts, dairy" 
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300 bg-white"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base outline-none focus:border-[#FDBD38] placeholder-gray-300 bg-white text-gray-900"
                   />
                 </div>
               </details>
@@ -1929,12 +1929,12 @@ export default function MenuPage() {
             <div className="flex flex-col gap-2.5 text-left py-2">
               <div className="flex items-center gap-3">
                 <FileText className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
-                <span className="text-[13px] font-semibold text-black">Add a note (optional)</span>
+                <span className="text-[14px] font-semibold text-gray-900">Add a note (optional)</span>
               </div>
               <textarea 
                 placeholder="Write a comment..." 
                 rows={2}
-                className="w-full border border-gray-200 rounded-xl p-3 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300 resize-none bg-white"
+                className="w-full border border-gray-200 rounded-xl p-4 text-base outline-none focus:border-[#FDBD38] placeholder-gray-300 resize-none bg-white text-gray-900"
               />
             </div>
 
