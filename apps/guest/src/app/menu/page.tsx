@@ -1562,19 +1562,19 @@ export default function MenuPage() {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex justify-between items-start w-full">
-            <div className="flex flex-col pl-[25px]">
-              <h2 className="text-[28px] font-extrabold tracking-tight leading-none text-black uppercase">
+          <div className="flex justify-between items-center w-full">
+            <div className="flex flex-col">
+              <h2 className="text-[22px] font-bold text-gray-900 uppercase tracking-tight leading-none">
                 FILTERS & DIET
               </h2>
-              <span className="text-[12px] text-gray-500 font-bold uppercase tracking-wider mt-1.5">
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mt-1.5">
                 Customize your meal
               </span>
             </div>
             
             <button 
               onClick={() => setShowFiltersModal(false)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-black"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-black -mr-2"
             >
               <X className="w-6 h-6" strokeWidth={1.8} />
             </button>
@@ -1599,7 +1599,7 @@ export default function MenuPage() {
                       onClick={() => setSelectedDiet(active ? null : diet.id)}
                       className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
                         active 
-                          ? 'bg-[#FDBD38] border-[#FDBD38] text-black shadow-sm' 
+                          ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-sm' 
                           : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
                       }`}
                     >
@@ -1635,7 +1635,7 @@ export default function MenuPage() {
                       }}
                       className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
                         active 
-                          ? 'bg-[#FDBD38] border-[#FDBD38] text-black shadow-sm' 
+                          ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-sm' 
                           : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
                       }`}
                     >
@@ -1693,7 +1693,7 @@ export default function MenuPage() {
             
             <button
               onClick={() => setShowFiltersModal(false)}
-              className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-black py-4 rounded-full font-bold text-center text-sm shadow-md shadow-black/10 active:scale-[0.98] transition-all"
+              className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-bold text-center text-sm shadow-md shadow-black/10 active:scale-[0.98] transition-all"
             >
               Show {filteredItems.length} dishes
             </button>
