@@ -85,7 +85,7 @@ const MOCK_MENU: GuestMenuResponse = {
       modifierGroups: [
         {
           id: "mod-fancy-bread",
-          name: "Fancy bread?",
+          name: "Combine with",
           minQty: 0,
           maxQty: 1,
           options: [
@@ -133,6 +133,48 @@ const MOCK_MENU: GuestMenuResponse = {
   ]
 };
 
+const UPSELL_SWEETS = [
+  {
+    id: "upsell-sweet-1",
+    name: "Shoyu Pecan Pie",
+    price: 4.95,
+    image: "/shoyu_pecan_pie.jpg"
+  },
+  {
+    id: "upsell-sweet-2",
+    name: "Yellow Carrot Chai Cake",
+    price: 3.45,
+    image: "/carrot_cake.jpg"
+  },
+  {
+    id: "upsell-sweet-3",
+    name: "Banana Bread",
+    price: 3.45,
+    image: "/banana_bread.jpg"
+  }
+];
+
+const UPSELL_DRINKS = [
+  {
+    id: "upsell-drink-1",
+    name: "Cold Pressed",
+    price: 4.95,
+    image: "/cold_pressed.jpg"
+  },
+  {
+    id: "upsell-drink-2",
+    name: "Beer",
+    price: 3.75,
+    image: "/beer.jpg"
+  },
+  {
+    id: "upsell-drink-3",
+    name: "Fresh Juice",
+    price: 2.75,
+    image: "/fresh_juice.jpg"
+  }
+];
+
 export default function MenuPage() {
   const { 
     bootstrap, 
@@ -154,6 +196,7 @@ export default function MenuPage() {
   const [itemComments, setItemComments] = useState('');
   const [selectedModifiers, setSelectedModifiers] = useState<any[]>([]);
   const [quantity, setQuantity] = useState(1);
+  const [showUpsellModal, setShowUpsellModal] = useState(false);
 
   useEffect(() => {
     if (selectedItem) {
@@ -162,6 +205,17 @@ export default function MenuPage() {
       setQuantity(1);
     }
   }, [selectedItem]);
+
+  useEffect(() => {
+    if (selectedItem || showUpsellModal) {
+      document.body.classList.add('item-detail-open');
+    } else {
+      document.body.classList.remove('item-detail-open');
+    }
+    return () => {
+      document.body.classList.remove('item-detail-open');
+    };
+  }, [selectedItem, showUpsellModal]);
   
   // Custom states matching designs
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>('cat-coffee');
@@ -336,21 +390,22 @@ export default function MenuPage() {
   const getModifierImage = (name: string) => {
     const upper = name.toUpperCase();
     if (upper.includes("BREAD") || upper.includes("PAN") || upper.includes("TOAST")) {
-      return "https://images.unsplash.com/photo-1584776296974-e1d94531f159?w=150&auto=format&fit=crop&q=80";
+      return foodImages[2]; // Avocado Toast image
     }
-    if (upper.includes("EGG") || upper.includes("HUEVO")) {
-      return "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=150&auto=format&fit=crop&q=80";
+    if (
+      upper.includes("EGG") || 
+      upper.includes("HUEVO") || 
+      upper.includes("CHEESE") || 
+      upper.includes("QUESO") || 
+      upper.includes("BACON") || 
+      upper.includes("TOCINO")
+    ) {
+      return foodImages[0]; // Brunch Plate image
     }
-    if (upper.includes("CHEESE") || upper.includes("QUESO")) {
-      return "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=150&auto=format&fit=crop&q=80";
+    if (upper.includes("MILK") || upper.includes("LECHE") || upper.includes("OAT") || upper.includes("ALMOND")) {
+      return foodImages[1]; // Corgi Signature Drink image
     }
-    if (upper.includes("BACON") || upper.includes("TOCINO")) {
-      return "https://images.unsplash.com/photo-1606851094055-3518306115bd?w=150&auto=format&fit=crop&q=80";
-    }
-    if (upper.includes("MILK") || upper.includes("LECHE") || upper.includes("OAT")) {
-      return "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=150&auto=format&fit=crop&q=80";
-    }
-    return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=80";
+    return foodImages[0]; // default fallback
   };
 
   const toggleModifier = (group: any, option: any) => {
@@ -408,10 +463,29 @@ export default function MenuPage() {
       comments: itemComments || undefined,
       modifiers: selectedModifiers.length > 0 ? selectedModifiers : undefined,
     });
+    setShowUpsellModal(true);
+  };
+
+  const handleAddUpsellItem = (item: { id: string; name: string; price: number }) => {
+    addFoodToCart({
+      menuItemId: item.id,
+      itemType: 'food',
+      name: item.name,
+      unitPrice: item.price,
+      quantity: 1,
+    });
+  };
+
+  const handleCloseUpsell = () => {
+    setShowUpsellModal(false);
     setSelectedItem(null);
     setItemComments('');
     setSelectedModifiers([]);
     setQuantity(1);
+  };
+
+  const getCartItemCount = (itemId: string) => {
+    return foodCart.filter(item => item.menuItemId === itemId).reduce((sum, item) => sum + item.quantity, 0);
   };
 
   const handleCheckout = async () => {
@@ -720,7 +794,7 @@ export default function MenuPage() {
       </div>
 
       {/* Floating Bottom Cart Bar */}
-      {foodCart.length > 0 && (
+      {foodCart.length > 0 && !selectedItem && !showUpsellModal && (
         <div className="fixed bottom-6 left-6 right-6 z-40 max-w-[432px] mx-auto animate-slideUp">
           <button 
             onClick={() => setShowCartOverlay(true)}
@@ -730,7 +804,7 @@ export default function MenuPage() {
               <div className="bg-white/20 p-2 rounded-full flex items-center justify-center">
                 <ShoppingBag className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium">View basket ({foodCart.length})</span>
+              <span className="text-sm font-medium">View ordered items ({foodCart.length})</span>
             </div>
             
             <div className="flex items-center gap-1.5">
@@ -903,6 +977,119 @@ export default function MenuPage() {
               <div className="bg-white/20 px-6 py-2 rounded-full text-white text-base font-bold overflow-hidden">
                 <span key={totalPrice} className="animate-pop inline-block">
                   {totalPrice.toFixed(2)}€
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Upsell Bottom Sheet Overlay */}
+      <div 
+        className={`fixed inset-0 bg-black/60 z-[60] transition-opacity duration-300 flex items-end justify-center ${
+          showUpsellModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={handleCloseUpsell}
+      >
+        <div 
+          className={`w-full max-w-[480px] bg-[#FAF7F2] rounded-t-[32px] pt-8 px-6 pb-6 transition-transform duration-300 ease-out transform flex flex-col gap-5 shadow-2xl relative ${
+            showUpsellModal ? 'translate-y-0' : 'translate-y-full'
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex justify-between items-start w-full mb-1">
+            <div className="flex flex-col">
+              <h2 className="text-[20px] font-black tracking-tight leading-none text-black uppercase">
+                Fancy a sweet ending?
+              </h2>
+            </div>
+            
+            <button 
+              onClick={handleCloseUpsell}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-black -mt-2 -mr-2"
+            >
+              <X className="w-5 h-5" strokeWidth={2} />
+            </button>
+          </div>
+
+          {/* Sweets Horizontal Scroll */}
+          <div className="flex overflow-x-auto gap-4 pb-2 px-6 -mx-6 scrollbar-none scroll-smooth">
+            {UPSELL_SWEETS.map((item) => {
+              const count = getCartItemCount(item.id);
+              return (
+                <div key={item.id} className="flex-shrink-0 w-[110px] bg-white rounded-xl overflow-hidden flex flex-col">
+                  <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
+                  <div className="bg-white p-2 flex flex-col justify-between flex-grow gap-1.5">
+                    <span className="text-[10px] font-black text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
+                      {item.name}
+                    </span>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-[10px] font-extrabold text-gray-900">{item.price.toFixed(2)}€</span>
+                      <button 
+                        onClick={() => handleAddUpsellItem(item)}
+                        className="w-5 h-5 bg-corgi text-gray-950 hover:bg-[#e5a420] rounded-md flex items-center justify-center transition-all duration-150 active:scale-90 cursor-pointer"
+                      >
+                        {count > 0 ? (
+                          <span className="text-[9px] font-black">{count}</span>
+                        ) : (
+                          <Plus size={10} strokeWidth={3} className="text-gray-950" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Drinks Header */}
+          <div className="flex flex-col mt-2">
+            <h2 className="text-[20px] font-black tracking-tight leading-none text-black uppercase">
+              Add a drink.
+            </h2>
+          </div>
+
+          {/* Drinks Horizontal Scroll */}
+          <div className="flex overflow-x-auto gap-4 pb-2 px-6 -mx-6 scrollbar-none scroll-smooth">
+            {UPSELL_DRINKS.map((item) => {
+              const count = getCartItemCount(item.id);
+              return (
+                <div key={item.id} className="flex-shrink-0 w-[110px] bg-white rounded-xl overflow-hidden flex flex-col">
+                  <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
+                  <div className="bg-white p-2 flex flex-col justify-between flex-grow gap-1.5">
+                    <span className="text-[10px] font-black text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
+                      {item.name}
+                    </span>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-[10px] font-extrabold text-gray-900">{item.price.toFixed(2)}€</span>
+                      <button 
+                        onClick={() => handleAddUpsellItem(item)}
+                        className="w-5 h-5 bg-corgi text-gray-950 hover:bg-[#e5a420] rounded-md flex items-center justify-center transition-all duration-150 active:scale-90 cursor-pointer"
+                      >
+                        {count > 0 ? (
+                          <span className="text-[9px] font-black">{count}</span>
+                        ) : (
+                          <Plus size={10} strokeWidth={3} className="text-gray-950" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Continue button */}
+          <div className="w-full pt-2">
+            <button 
+              onClick={handleCloseUpsell}
+              className="w-full bg-black hover:bg-gray-900 text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
+            >
+              <span className="text-base font-semibold">Continue</span>
+              <div className="bg-white/20 px-6 py-2 rounded-full text-white text-base font-bold overflow-hidden">
+                <span key={cartTotal} className="animate-pop inline-block">
+                  {cartTotal.toFixed(2)}€
                 </span>
               </div>
             </button>

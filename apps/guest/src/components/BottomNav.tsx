@@ -18,7 +18,22 @@ export function BottomNav() {
   const pathname = usePathname();
   const { locale, foodCart, merchCart } = useGuest();
   const [visible, setVisible] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
   const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const checkModal = () => {
+      const isOpen = document.body.classList.contains('item-detail-open');
+      setModalOpen(isOpen);
+    };
+
+    checkModal();
+
+    const observer = new MutationObserver(checkModal);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const handleScroll = (e: any) => {
@@ -40,6 +55,8 @@ export function BottomNav() {
     window.addEventListener('scroll', handleScroll, true);
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, []);
+
+  if (modalOpen) return null;
 
   return (
     <nav 

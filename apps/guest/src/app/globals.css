@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -23,6 +23,7 @@
   --color-darker-green: #A2C35A;
   --color-saturated-green: #87B031;
   --font-nunito: 'Nunito', sans-serif;
+  --font-sans: 'Nunito', sans-serif;
 }
 
 html, body {
@@ -53,4 +54,16 @@ html, body {
 
 .animate-pop {
   animation: pop 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+body.item-detail-open nav {
+  display: none !important;
 }
