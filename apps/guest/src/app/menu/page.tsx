@@ -1734,31 +1734,31 @@ export default function MenuPage() {
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8 bg-[#F9F9FB]">
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-[#F9F9FB]">
             
             {/* Title Block */}
-            <div className="flex flex-col text-left gap-1">
-              <h1 className="text-[26px] font-black text-black leading-tight uppercase tracking-tight">
+            <div className="flex flex-col text-left gap-1 mt-2">
+              <h1 className="text-[22px] font-bold text-gray-900 leading-tight uppercase tracking-tight">
                 Your order at <br /> {bootstrap?.locationId === 'default' ? 'Pedralbes Centre' : 'Pedralbes Centre'}
               </h1>
-              <span className="text-[14px] font-semibold text-gray-800 capitalize">
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
                 {orderMode === 'pickup' ? 'Pick up' : orderMode === 'delivery' ? 'Delivery' : 'Eat in'}
               </span>
             </div>
 
-            {/* Location details card */}
-            <div className="bg-white rounded-3xl p-5 border border-gray-150 flex items-start gap-4 shadow-sm text-left">
-              <div className="p-3 bg-gray-100 rounded-2xl flex items-center justify-center">
+            {/* Location details row */}
+            <div className="border-y border-gray-200/55 py-5 flex items-start gap-4 text-left">
+              <div className="w-12 h-12 bg-white border border-gray-150 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0">
                 <Store className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-0.5 flex-grow">
                 <span className="text-[15px] font-extrabold text-black">Pedralbes Centre</span>
                 <span className="text-[12px] text-gray-400 font-medium leading-tight">
                   Avinguda Diagonal, 609, 08028, Barcelona
                 </span>
                 <button 
                   onClick={() => alert('Store settings can be updated in your profile.')}
-                  className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 mt-2 hover:text-black transition-colors"
+                  className="flex items-center gap-1 text-[11px] font-bold text-gray-400 mt-2 hover:text-black transition-colors"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Change store</span>
@@ -1768,13 +1768,13 @@ export default function MenuPage() {
 
             {/* Summary Block */}
             <div className="flex flex-col gap-4 text-left">
-              <h3 className="text-[15px] font-extrabold text-black uppercase tracking-wider">Summary</h3>
+              <h3 className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Summary</h3>
               
-              <div className="bg-white rounded-3xl p-5 border border-gray-150 flex flex-col gap-5 shadow-sm">
+              <div className="flex flex-col gap-4">
                 {foodCart.map((cartItem, idx) => {
                   return (
-                    <div key={idx} className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3">
+                    <div key={idx} className="flex items-start justify-between gap-4 pb-4 border-b border-gray-100">
+                      <div className="flex items-start gap-3.5">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
                           <img 
                             src={getFoodImage(cartItem.name, 'Market Plates')} 
@@ -1808,7 +1808,7 @@ export default function MenuPage() {
             {/* Staff tip section */}
             <div className="flex flex-col gap-4 text-left">
               <div className="flex justify-between items-center w-full">
-                <h3 className="text-[15px] font-extrabold text-black uppercase tracking-wider">Staff tip</h3>
+                <h3 className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Staff tip</h3>
                 <button onClick={() => alert('Tips support our staff directly.')} className="text-[11px] font-bold text-gray-400 hover:text-black transition-colors flex items-center gap-1">
                   <HelpCircle className="w-3.5 h-3.5" />
                   <span>How tips work</span>
@@ -1842,7 +1842,7 @@ export default function MenuPage() {
             </div>
 
             {/* Totals Section */}
-            <div className="bg-white rounded-3xl p-5 border border-gray-150 flex flex-col gap-3 shadow-sm text-left">
+            <div className="border-t border-gray-200/55 pt-5 flex flex-col gap-3 text-left">
               <div className="flex justify-between text-[13px] font-medium text-gray-500">
                 <span>Subtotal</span>
                 <span>{cartTotal.toFixed(2)}€</span>
@@ -1861,20 +1861,20 @@ export default function MenuPage() {
             </div>
 
             {/* got a promo code accordion */}
-            <div className="bg-white rounded-3xl border border-gray-150 overflow-hidden shadow-sm text-left">
+            <div className="border-b border-gray-200/55 py-1 text-left">
               <details className="group">
-                <summary className="flex justify-between items-center p-5 cursor-pointer list-none select-none">
+                <summary className="flex justify-between items-center py-4 cursor-pointer list-none select-none">
                   <div className="flex items-center gap-3">
                     <Tag className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
                     <span className="text-[13px] font-semibold text-black">Got a promo code?</span>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
                 </summary>
-                <div className="px-5 pb-5 pt-1 border-t border-gray-50 flex gap-2">
+                <div className="pb-4 pt-1 flex gap-2">
                   <input 
                     type="text" 
                     placeholder="Enter code" 
-                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300"
+                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300 bg-white"
                   />
                   <button className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-3 py-2 rounded-xl text-xs font-semibold transition-all">
                     Apply
@@ -1884,30 +1884,30 @@ export default function MenuPage() {
             </div>
 
             {/* any allergies accordion */}
-            <div className="bg-white rounded-3xl border border-gray-150 overflow-hidden shadow-sm text-left">
+            <div className="border-b border-gray-200/55 py-1 text-left">
               <details className="group">
-                <summary className="flex justify-between items-center p-5 cursor-pointer list-none select-none">
+                <summary className="flex justify-between items-center py-4 cursor-pointer list-none select-none">
                   <div className="flex items-center gap-3">
                     <FileText className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
                     <span className="text-[13px] font-semibold text-black">Any allergies?</span>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
                 </summary>
-                <div className="px-5 pb-5 pt-1 border-t border-gray-50 flex flex-col gap-2">
+                <div className="pb-4 pt-1 flex flex-col gap-2">
                   <p className="text-[11px] text-gray-400 leading-tight">
                     Please specify if you are allergic to any ingredients.
                   </p>
                   <input 
                     type="text" 
                     placeholder="e.g. peanuts, dairy" 
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300 bg-white"
                   />
                 </div>
               </details>
             </div>
 
             {/* add a note section */}
-            <div className="bg-white rounded-3xl p-5 border border-gray-150 shadow-sm flex flex-col gap-2.5 text-left">
+            <div className="flex flex-col gap-2.5 text-left py-2">
               <div className="flex items-center gap-3">
                 <FileText className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
                 <span className="text-[13px] font-semibold text-black">Add a note (optional)</span>
@@ -1915,7 +1915,7 @@ export default function MenuPage() {
               <textarea 
                 placeholder="Write a comment..." 
                 rows={2}
-                className="w-full border border-gray-200 rounded-xl p-3 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300 resize-none"
+                className="w-full border border-gray-200 rounded-xl p-3 text-xs outline-none focus:border-[#FDBD38] placeholder-gray-300 resize-none bg-white"
               />
             </div>
 
@@ -1927,7 +1927,7 @@ export default function MenuPage() {
               
               <button 
                 onClick={() => handleFinalPayment('applepay')}
-                className="w-full bg-[#18181B] hover:bg-black text-white py-4 rounded-full font-bold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-md shadow-black/10"
+                className="w-full bg-[#18181B] hover:bg-black text-white py-4 rounded-full font-bold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none"
               >
                 <div className="flex items-center gap-1.5">
                   <span className="text-lg"></span>
@@ -1938,7 +1938,7 @@ export default function MenuPage() {
 
               <button 
                 onClick={() => handleFinalPayment('card')}
-                className="w-full bg-white border border-gray-200 hover:bg-gray-50 text-black py-4 rounded-full font-bold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-sm"
+                className="w-full bg-white border border-gray-200 hover:bg-gray-50 text-black py-4 rounded-full font-bold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none"
               >
                 <div className="flex items-center gap-2.5">
                   <CreditCard className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
