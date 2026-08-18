@@ -1720,21 +1720,20 @@ export default function MenuPage() {
           showOrderDetails ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="w-full max-w-[480px] h-[100dvh] bg-white flex flex-col shadow-2xl relative">
+        <div className="w-full max-w-[480px] h-[100dvh] bg-[#F9F9FB] flex flex-col shadow-2xl relative">
           
           {/* Header */}
-          <div className="flex items-center px-6 pt-6 pb-4 bg-white border-b border-gray-100 flex-shrink-0">
+          <div className="flex items-center px-6 pt-6 pb-2 bg-transparent flex-shrink-0">
             <button 
               onClick={() => setShowOrderDetails(false)}
               className="p-1 hover:bg-gray-100 rounded-full transition-colors text-black -ml-1"
             >
               <ArrowLeft className="w-6 h-6" strokeWidth={1.8} />
             </button>
-            <span className="ml-4 text-sm font-semibold text-gray-900">Order details</span>
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-[#F9F9FB]">
+          <div className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col gap-6 bg-[#F9F9FB]">
             
             {/* Title Block */}
             <div className="flex flex-col text-left gap-1 mt-2">
