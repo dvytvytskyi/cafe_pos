@@ -23,7 +23,9 @@ import {
   Tag,
   FileText,
   CreditCard,
-  HelpCircle
+  HelpCircle,
+  AlertCircle,
+  MessageSquare
 } from 'lucide-react';
 
 const foodImages = [
@@ -320,6 +322,8 @@ export default function MenuPage() {
   const [customTipAmount, setCustomTipAmount] = useState<number>(0);
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isPromoOpen, setIsPromoOpen] = useState(false);
+  const [isAllergiesOpen, setIsAllergiesOpen] = useState(false);
 
   const filteredItems = React.useMemo(() => {
     if (!menu?.items) return [];
@@ -1880,16 +1884,23 @@ export default function MenuPage() {
             </div>
 
             {/* got a promo code accordion */}
-            <div className="border-b border-gray-200/55 py-1 text-left">
-              <details className="group">
-                <summary className="flex justify-between items-center py-4 cursor-pointer list-none select-none">
-                  <div className="flex items-center gap-3">
-                    <Tag className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
-                    <span className="text-[14px] font-semibold text-gray-900">Got a promo code?</span>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
-                </summary>
-                <div className="pb-4 pt-1 flex gap-2">
+            <div className="border-b border-gray-200/55 text-left">
+              <button 
+                onClick={() => setIsPromoOpen(!isPromoOpen)}
+                className="flex justify-between items-center py-4 w-full cursor-pointer select-none focus:outline-none"
+              >
+                <div className="flex items-center gap-3">
+                  <Tag className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
+                  <span className="text-[14px] font-semibold text-gray-900">Got a promo code?</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isPromoOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <div 
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  isPromoOpen ? 'max-h-40 pb-4 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="pt-1 flex gap-2">
                   <input 
                     type="text" 
                     placeholder="Enter code" 
@@ -1899,20 +1910,27 @@ export default function MenuPage() {
                     Apply
                   </button>
                 </div>
-              </details>
+              </div>
             </div>
 
             {/* any allergies accordion */}
-            <div className="border-b border-gray-200/55 py-1 text-left">
-              <details className="group">
-                <summary className="flex justify-between items-center py-4 cursor-pointer list-none select-none">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
-                    <span className="text-[14px] font-semibold text-gray-900">Any allergies?</span>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
-                </summary>
-                <div className="pb-4 pt-1 flex flex-col gap-2">
+            <div className="border-b border-gray-200/55 text-left">
+              <button 
+                onClick={() => setIsAllergiesOpen(!isAllergiesOpen)}
+                className="flex justify-between items-center py-4 w-full cursor-pointer select-none focus:outline-none"
+              >
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
+                  <span className="text-[14px] font-semibold text-gray-900">Any allergies?</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isAllergiesOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <div 
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  isAllergiesOpen ? 'max-h-40 pb-4 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="pt-1 flex flex-col gap-2">
                   <p className="text-[12px] text-gray-400 font-medium leading-tight">
                     Please specify if you are allergic to any ingredients.
                   </p>
@@ -1922,13 +1940,13 @@ export default function MenuPage() {
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base outline-none focus:border-[#FDBD38] placeholder-gray-300 bg-white text-gray-900"
                   />
                 </div>
-              </details>
+              </div>
             </div>
 
             {/* add a note section */}
             <div className="flex flex-col gap-2.5 text-left py-2">
               <div className="flex items-center gap-3">
-                <FileText className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
+                <MessageSquare className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
                 <span className="text-[14px] font-semibold text-gray-900">Add a note (optional)</span>
               </div>
               <textarea 
