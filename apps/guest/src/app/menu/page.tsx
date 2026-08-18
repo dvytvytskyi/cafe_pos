@@ -8,6 +8,7 @@ import type { GuestMenuResponse, GuestMenuItem } from '@corgi/contracts';
 import { 
   ArrowLeft, 
   ChevronDown, 
+  ChevronRight,
   Sliders, 
   X, 
   Sparkle, 
@@ -1736,13 +1737,16 @@ export default function MenuPage() {
           <div className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col gap-6 bg-[#F9F9FB]">
             
             {/* Title Block */}
-            <div className="flex flex-col text-left gap-1 mt-2">
-              <h1 className="text-[22px] font-bold text-gray-900 leading-tight uppercase tracking-tight">
-                Your order at <br /> {bootstrap?.locationId === 'default' ? 'Pedralbes Centre' : 'Pedralbes Centre'}
-              </h1>
-              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-                {orderMode === 'pickup' ? 'Pick up' : orderMode === 'delivery' ? 'Delivery' : 'Eat in'}
-              </span>
+            <div className="flex items-center justify-between w-full mt-2 gap-4">
+              <div className="flex flex-col text-left gap-1 min-w-0 flex-1">
+                <h1 className="text-[18px] font-bold text-gray-900 leading-tight uppercase tracking-tight truncate">
+                  Your order at {bootstrap?.locationId === 'default' ? 'Pedralbes Centre' : 'Pedralbes Centre'}
+                </h1>
+                <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                  {orderMode === 'pickup' ? 'Pick up' : orderMode === 'delivery' ? 'Delivery' : 'Eat in'}
+                </span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
             </div>
 
             {/* Location details row */}
