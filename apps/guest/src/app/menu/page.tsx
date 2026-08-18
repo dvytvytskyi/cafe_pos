@@ -1723,21 +1723,19 @@ export default function MenuPage() {
       >
         <div className="w-full max-w-[480px] h-[100dvh] bg-[#F9F9FB] flex flex-col shadow-2xl relative">
           
-          {/* Header */}
-          <div className="flex items-center px-6 pt-6 pb-2 bg-transparent flex-shrink-0">
-            <button 
-              onClick={() => setShowOrderDetails(false)}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors text-black -ml-1"
-            >
-              <ArrowLeft className="w-6 h-6" strokeWidth={1.8} />
-            </button>
-          </div>
+          {/* Absolute Back Button */}
+          <button 
+            onClick={() => setShowOrderDetails(false)}
+            className="absolute top-6 left-6 z-10 p-1 hover:bg-gray-200/50 rounded-full transition-colors text-black"
+          >
+            <ArrowLeft className="w-6 h-6" strokeWidth={1.8} />
+          </button>
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col gap-6 bg-[#F9F9FB]">
             
             {/* Title Block */}
-            <div className="flex items-center justify-between w-full mt-2 gap-4">
+            <div className="flex items-center justify-between w-full mt-16 gap-4">
               <div className="flex flex-col text-left gap-1 min-w-0 flex-1">
                 <h1 className="text-[18px] font-bold text-gray-900 leading-tight uppercase tracking-tight truncate">
                   Your order at {bootstrap?.locationId === 'default' ? 'Pedralbes Centre' : 'Pedralbes Centre'}
