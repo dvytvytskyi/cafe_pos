@@ -663,20 +663,20 @@ export default function MenuPage() {
           </button>
 
           {/* Central premium combined location/order-mode capsule selector */}
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-center min-w-0">
             <div 
               onClick={() => setShowOrderModeModal(true)}
-              className="bg-white/95 hover:bg-white border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm shadow-black/5 cursor-pointer transition-all active:scale-[0.98]"
+              className="bg-white/95 hover:bg-white border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm shadow-black/5 cursor-pointer transition-all active:scale-[0.98] min-w-0 max-w-full"
             >
               <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
-              <div className="flex items-center gap-1.5 text-xs text-gray-900">
-                <span className="font-extrabold tracking-tight">
+              <div className="flex items-center gap-1.5 text-xs text-gray-900 min-w-0">
+                <span className="font-extrabold tracking-tight truncate max-w-[110px]">
                   {selectedStore === 'pedralbes' ? 'Pedralbes Centre' : 'Eixample Cafe'}
                 </span>
-                <span className="text-gray-300 font-light">|</span>
-                <span className="font-semibold text-gray-500 flex items-center gap-1">
-                  <span>{getOrderModeEmoji()}</span>
-                  <span>{getOrderModeLabel()}</span>
+                <span className="text-gray-300 font-light flex-shrink-0">|</span>
+                <span className="font-semibold text-gray-500 flex items-center gap-1 min-w-0">
+                  <span className="flex-shrink-0">{getOrderModeEmoji()}</span>
+                  <span className="truncate max-w-[80px]">{getOrderModeLabel()}</span>
                 </span>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-0.5 flex-shrink-0" strokeWidth={2} />
