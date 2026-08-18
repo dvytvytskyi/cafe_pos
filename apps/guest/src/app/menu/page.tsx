@@ -900,7 +900,7 @@ export default function MenuPage() {
         onClick={() => setSelectedItem(null)}
       >
         <div 
-          className={`w-full max-w-[480px] h-[100vh] bg-white rounded-t-none overflow-hidden transition-transform duration-300 ease-out transform flex flex-col shadow-2xl relative ${
+          className={`w-full max-w-[480px] h-[100dvh] bg-white rounded-t-none overflow-hidden transition-transform duration-300 ease-out transform flex flex-col shadow-2xl relative ${
             selectedItem ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
