@@ -1723,48 +1723,40 @@ export default function MenuPage() {
       >
         <div className="w-full max-w-[480px] h-[100dvh] bg-[#F9F9FB] flex flex-col shadow-2xl relative">
           
-          {/* Absolute Back Button */}
+          {/* Absolute Close Button */}
           <button 
             onClick={() => setShowOrderDetails(false)}
-            className="absolute top-6 left-6 z-10 p-1 hover:bg-gray-200/50 rounded-full transition-colors text-black"
+            className="absolute top-6 left-6 z-10 p-1 hover:bg-gray-200/55 rounded-full transition-colors text-black"
           >
-            <ArrowLeft className="w-6 h-6" strokeWidth={1.8} />
+            <X className="w-6 h-6" strokeWidth={1.8} />
           </button>
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col gap-6 bg-[#F9F9FB]">
             
             {/* Title Block */}
-            <div className="flex items-center justify-between w-full mt-16 gap-4">
-              <div className="flex flex-col text-left gap-1 min-w-0 flex-1">
-                <h1 className="text-[18px] font-bold text-gray-900 leading-tight uppercase tracking-tight truncate">
-                  Your order at {bootstrap?.locationId === 'default' ? 'Pedralbes Centre' : 'Pedralbes Centre'}
-                </h1>
-                <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-                  {orderMode === 'pickup' ? 'Pick up' : orderMode === 'delivery' ? 'Delivery' : 'Eat in'}
-                </span>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <div className="flex flex-col text-left gap-1 mt-16 w-full">
+              <h1 className="text-[18px] font-bold text-gray-900 leading-tight uppercase tracking-tight truncate">
+                Your order at {bootstrap?.locationId === 'default' ? 'Pedralbes Centre' : 'Pedralbes Centre'}
+              </h1>
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                {orderMode === 'pickup' ? 'Pick up' : orderMode === 'delivery' ? 'Delivery' : 'Eat in'}
+              </span>
             </div>
 
             {/* Location details row */}
-            <div className="border-y border-gray-200/55 py-5 flex items-start gap-4 text-left">
-              <div className="w-12 h-12 bg-white border border-gray-150 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0">
-                <Store className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
-              </div>
-              <div className="flex flex-col gap-0.5 flex-grow">
-                <span className="text-[15px] font-extrabold text-black">Pedralbes Centre</span>
-                <span className="text-[12px] text-gray-400 font-medium leading-tight">
-                  Avinguda Diagonal, 609, 08028, Barcelona
-                </span>
-                <button 
-                  onClick={() => alert('Store settings can be updated in your profile.')}
-                  className="flex items-center gap-1 text-[11px] font-bold text-gray-400 mt-2 hover:text-black transition-colors"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Change store</span>
-                </button>
-              </div>
+            <div className="border-y border-gray-200/55 py-5 flex flex-col gap-0.5 text-left w-full">
+              <span className="text-[15px] font-extrabold text-black">Pedralbes Centre</span>
+              <span className="text-[12px] text-gray-400 font-medium leading-tight">
+                Avinguda Diagonal, 609, 08028, Barcelona
+              </span>
+              <button 
+                onClick={() => alert('Store settings can be updated in your profile.')}
+                className="flex items-center gap-1 text-[11px] font-bold text-gray-400 mt-2 hover:text-black transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Change store</span>
+              </button>
             </div>
 
             {/* Summary Block */}
