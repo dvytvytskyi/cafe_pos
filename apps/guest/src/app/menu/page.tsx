@@ -8,6 +8,7 @@ import type { GuestMenuResponse, GuestMenuItem } from '@corgi/contracts';
 import { 
   ArrowLeft, 
   ChevronDown, 
+  ChevronLeft,
   ChevronRight,
   Sliders, 
   X, 
@@ -615,7 +616,7 @@ export default function MenuPage() {
     switch (orderMode) {
       case 'delivery': return 'Delivery';
       case 'pickup': return 'Pick Up';
-      default: return 'Eat In Store';
+      default: return 'Eat In';
     }
   };
 
@@ -1769,7 +1770,7 @@ export default function MenuPage() {
           {/* Options */}
           <div className="flex flex-col gap-3">
             {[
-              { id: 'store', label: 'Eat In Store', desc: 'Enjoy your food and drinks inside the cafe', emoji: '🥗' },
+              { id: 'store', label: 'Eat In', desc: 'Enjoy your food and drinks inside the cafe', emoji: '🥗' },
               { id: 'pickup', label: 'Pick up / Takeaway', desc: 'Order ahead and collect it when ready', emoji: '🛍️' },
               { id: 'delivery', label: 'Delivery', desc: 'Get it delivered directly to your address', emoji: '🚲' }
             ].map((opt) => {
@@ -1806,39 +1807,28 @@ export default function MenuPage() {
           {/* Select Cafe Section */}
           <div className="flex flex-col gap-3 text-left border-t border-gray-100 pt-5 mt-1">
             <h3 className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider pl-1 mb-1">Select Store</h3>
-            <div className="flex flex-col gap-3">
-              {[
-                { id: 'pedralbes', label: 'Pedralbes Centre', desc: 'Avinguda Diagonal, 609, 08028, Barcelona', emoji: '🏪' },
-                { id: 'eixample', label: 'Eixample Cafe', desc: 'Carrer de València, 245, 08007, Barcelona', emoji: '☕' }
-              ].map((storeOpt) => {
-                const active = selectedStore === storeOpt.id;
-                return (
-                  <button
-                    key={storeOpt.id}
-                    onClick={() => {
-                      setSelectedStore(storeOpt.id as 'pedralbes' | 'eixample');
-                    }}
-                    className={`w-full p-4 rounded-2xl text-left border transition-all flex items-center justify-between ${
-                      active 
-                        ? 'bg-[#FDBD38]/10 border-[#FDBD38] text-gray-900' 
-                        : 'bg-white border-gray-100 text-gray-800 hover:bg-gray-50/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <span className="text-2xl flex-shrink-0">{storeOpt.emoji}</span>
-                      <div className="flex flex-col gap-0.5 text-left">
-                        <span className="text-[14px] font-bold text-gray-900">{storeOpt.label}</span>
-                        <span className="text-[11px] text-gray-400 font-medium leading-tight">{storeOpt.desc}</span>
-                      </div>
-                    </div>
-                    {active && (
-                      <span className="w-5 h-5 rounded-full bg-[#FDBD38] flex items-center justify-center text-white text-[11px] font-bold">
-                        ✓
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            <div className="flex items-center justify-between w-full bg-white py-2 px-1">
+              <button
+                onClick={() => {
+                  setSelectedStore(selectedStore === 'pedralbes' ? 'eixample' : 'pedralbes');
+                }}
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" strokeWidth={2.2} />
+              </button>
+
+              <span className="text-[18px] font-black text-gray-900 uppercase tracking-tight text-center flex-1 mx-4">
+                {selectedStore === 'pedralbes' ? 'Pedralbes Centre.' : 'Eixample Cafe.'}
+              </span>
+
+              <button
+                onClick={() => {
+                  setSelectedStore(selectedStore === 'pedralbes' ? 'eixample' : 'pedralbes');
+                }}
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors"
+              >
+                <ChevronRight className="w-5 h-5" strokeWidth={2.2} />
+              </button>
             </div>
           </div>
 
