@@ -669,7 +669,7 @@ export default function MenuPage() {
           >
             <Sliders className="w-4 h-4" strokeWidth={2.2} />
             {(selectedDiet || excludedAllergens.length > 0 || sortBy !== 'default') && (
-              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#4ADE80] rounded-full border-2 border-white" />
+              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#FDBD38] rounded-full border-2 border-white" />
             )}
           </button>
         </div>
