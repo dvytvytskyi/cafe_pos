@@ -1727,14 +1727,14 @@ export default function MenuPage() {
 
       {/* Order Details Screen (Full height checkout overlay) */}
       <div 
-        className={`fixed inset-0 bg-[#F9F9FB] z-50 transition-transform duration-300 ease-out transform flex items-center justify-center ${
+        className={`fixed inset-0 bg-white z-50 transition-transform duration-300 ease-out transform flex items-center justify-center ${
           showOrderDetails ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="w-full max-w-[480px] h-[100dvh] bg-[#F9F9FB] flex flex-col shadow-2xl relative">
+        <div className="w-full max-w-[480px] h-[100dvh] bg-white flex flex-col shadow-2xl relative">
           
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col gap-6 bg-[#F9F9FB]">
+          <div className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col gap-6 bg-white">
             
             {/* Header / Title Block */}
             <div className="flex flex-col w-full gap-1 mt-6">
@@ -1861,19 +1861,19 @@ export default function MenuPage() {
             </div>
 
             {/* Totals Section */}
-            <div className="border-t border-gray-200/55 pt-5 flex flex-col gap-3 text-left">
-              <div className="flex justify-between text-[13px] font-medium text-gray-500">
+            <div className="border-t border-gray-100 pt-5 flex flex-col gap-3 text-left">
+              <div className="flex justify-between text-[13px] font-medium text-gray-800">
                 <span>Subtotal</span>
                 <span>{cartTotal.toFixed(2)}€</span>
               </div>
               {tipAmount > 0 && (
-                <div className="flex justify-between text-[13px] font-medium text-gray-500">
+                <div className="flex justify-between text-[13px] font-medium text-gray-800">
                   <span>Staff Tip</span>
                   <span>{tipAmount.toFixed(2)}€</span>
                 </div>
               )}
               <div className="border-t border-gray-100 my-1" />
-              <div className="flex justify-between text-[16px] font-black text-black">
+              <div className="flex justify-between text-[16px] font-semibold text-gray-900">
                 <span>Total</span>
                 <span>{(cartTotal + tipAmount).toFixed(2)}€</span>
               </div>
