@@ -1567,7 +1567,7 @@ export default function MenuPage() {
 
       {/* Bottom Sheet Filters Modal */}
       <div 
-        className={`fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 flex items-end justify-center ${
+        className={`fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center backdrop-blur-[3px] ${
           showFiltersModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setShowFiltersModal(false)}
@@ -1709,7 +1709,7 @@ export default function MenuPage() {
             
             <button
               onClick={() => setShowFiltersModal(false)}
-              className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-bold text-center text-sm shadow-md shadow-black/10 active:scale-[0.98] transition-all"
+              className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-semibold text-center text-[15px] transition-all active:scale-[0.98] shadow-none"
             >
               Show {filteredItems.length} dishes
             </button>
