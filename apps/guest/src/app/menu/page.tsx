@@ -1090,7 +1090,7 @@ export default function MenuPage() {
           {/* Header */}
           <div className="flex justify-between items-start w-full mb-1">
             <div className="flex flex-col">
-              <h2 className="text-[18px] font-black tracking-tight leading-none text-black uppercase">
+              <h2 className="text-[22px] font-bold text-gray-900 uppercase tracking-tight leading-none">
                 Fancy a sweet ending?
               </h2>
             </div>
@@ -1108,7 +1108,7 @@ export default function MenuPage() {
             {UPSELL_SWEETS.map((item) => {
               const count = getCartItemCount(item.id);
               return (
-                <div key={item.id} className="flex-shrink-0 w-[110px] bg-white rounded-xl overflow-hidden flex flex-col">
+                <div key={item.id} className="flex-shrink-0 w-[135px] bg-white rounded-xl overflow-hidden flex flex-col border border-gray-100">
                   <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
                   <div className="bg-white p-2 flex flex-col justify-between flex-grow gap-1.5">
                     <span className="text-[10px] font-black text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
@@ -1118,12 +1118,12 @@ export default function MenuPage() {
                       <span className="text-[10px] font-extrabold text-gray-900">{item.price.toFixed(2)}€</span>
                       <button 
                         onClick={() => handleAddUpsellItem(item)}
-                        className="w-5 h-5 bg-corgi text-gray-950 hover:bg-[#e5a420] rounded-md flex items-center justify-center transition-all duration-150 active:scale-90 cursor-pointer"
+                        className="w-5 h-5 bg-corgi text-white hover:bg-[#e5a420] rounded-md flex items-center justify-center transition-all duration-150 active:scale-90 cursor-pointer"
                       >
                         {count > 0 ? (
                           <span className="text-[9px] font-black">{count}</span>
                         ) : (
-                          <Plus size={10} strokeWidth={3} className="text-gray-950" />
+                          <Plus size={10} strokeWidth={3} className="text-white" />
                         )}
                       </button>
                     </div>
@@ -1135,7 +1135,7 @@ export default function MenuPage() {
 
           {/* Drinks Header */}
           <div className="flex flex-col mt-2">
-            <h2 className="text-[18px] font-black tracking-tight leading-none text-black uppercase">
+            <h2 className="text-[22px] font-bold text-gray-900 uppercase tracking-tight leading-none">
               Add a drink.
             </h2>
           </div>
@@ -1145,7 +1145,7 @@ export default function MenuPage() {
             {UPSELL_DRINKS.map((item) => {
               const count = getCartItemCount(item.id);
               return (
-                <div key={item.id} className="flex-shrink-0 w-[110px] bg-white rounded-xl overflow-hidden flex flex-col">
+                <div key={item.id} className="flex-shrink-0 w-[135px] bg-white rounded-xl overflow-hidden flex flex-col border border-gray-100">
                   <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
                   <div className="bg-white p-2 flex flex-col justify-between flex-grow gap-1.5">
                     <span className="text-[10px] font-black text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
@@ -1155,12 +1155,12 @@ export default function MenuPage() {
                       <span className="text-[10px] font-extrabold text-gray-900">{item.price.toFixed(2)}€</span>
                       <button 
                         onClick={() => handleAddUpsellItem(item)}
-                        className="w-5 h-5 bg-corgi text-gray-950 hover:bg-[#e5a420] rounded-md flex items-center justify-center transition-all duration-150 active:scale-90 cursor-pointer"
+                        className="w-5 h-5 bg-corgi text-white hover:bg-[#e5a420] rounded-md flex items-center justify-center transition-all duration-150 active:scale-90 cursor-pointer"
                       >
                         {count > 0 ? (
                           <span className="text-[9px] font-black">{count}</span>
                         ) : (
-                          <Plus size={10} strokeWidth={3} className="text-gray-950" />
+                          <Plus size={10} strokeWidth={3} className="text-white" />
                         )}
                       </button>
                     </div>
