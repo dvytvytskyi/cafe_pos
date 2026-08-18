@@ -324,6 +324,7 @@ export default function MenuPage() {
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showOrderModeModal, setShowOrderModeModal] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<'pedralbes' | 'eixample'>('pedralbes');
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const [isAllergiesOpen, setIsAllergiesOpen] = useState(false);
 
@@ -670,7 +671,7 @@ export default function MenuPage() {
               <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
               <div className="flex items-center gap-1.5 text-xs text-gray-900">
                 <span className="font-extrabold tracking-tight">
-                  {bootstrap?.locationName || 'Eixample'}
+                  {selectedStore === 'pedralbes' ? 'Pedralbes Centre' : 'Eixample Cafe'}
                 </span>
                 <span className="text-gray-300 font-light">|</span>
                 <span className="font-semibold text-gray-500 flex items-center gap-1">
@@ -1778,12 +1779,11 @@ export default function MenuPage() {
                   key={opt.id}
                   onClick={() => {
                     setOrderMode(opt.id as 'store' | 'pickup' | 'delivery');
-                    setShowOrderModeModal(false);
                   }}
-                  className={`w-full p-4 rounded-2xl text-left border flex items-center justify-between transition-all ${
+                  className={`w-full p-4 rounded-2xl text-left border transition-all flex items-center justify-between ${
                     active 
                       ? 'bg-[#FDBD38]/10 border-[#FDBD38] text-gray-900' 
-                      : 'bg-white border-gray-150 text-gray-800 hover:bg-gray-50/50'
+                      : 'bg-white border-gray-100 text-gray-800 hover:bg-gray-50/50'
                   }`}
                 >
                   <div className="flex items-center gap-3.5">
@@ -1801,6 +1801,45 @@ export default function MenuPage() {
                 </button>
               );
             })}
+          </div>
+
+          {/* Select Cafe Section */}
+          <div className="flex flex-col gap-3 text-left border-t border-gray-100 pt-5 mt-1">
+            <h3 className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider pl-1 mb-1">Select Store</h3>
+            <div className="flex flex-col gap-3">
+              {[
+                { id: 'pedralbes', label: 'Pedralbes Centre', desc: 'Avinguda Diagonal, 609, 08028, Barcelona', emoji: '🏪' },
+                { id: 'eixample', label: 'Eixample Cafe', desc: 'Carrer de València, 245, 08007, Barcelona', emoji: '☕' }
+              ].map((storeOpt) => {
+                const active = selectedStore === storeOpt.id;
+                return (
+                  <button
+                    key={storeOpt.id}
+                    onClick={() => {
+                      setSelectedStore(storeOpt.id as 'pedralbes' | 'eixample');
+                    }}
+                    className={`w-full p-4 rounded-2xl text-left border transition-all flex items-center justify-between ${
+                      active 
+                        ? 'bg-[#FDBD38]/10 border-[#FDBD38] text-gray-900' 
+                        : 'bg-white border-gray-100 text-gray-800 hover:bg-gray-50/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <span className="text-2xl flex-shrink-0">{storeOpt.emoji}</span>
+                      <div className="flex flex-col gap-0.5 text-left">
+                        <span className="text-[14px] font-bold text-gray-900">{storeOpt.label}</span>
+                        <span className="text-[11px] text-gray-400 font-medium leading-tight">{storeOpt.desc}</span>
+                      </div>
+                    </div>
+                    {active && (
+                      <span className="w-5 h-5 rounded-full bg-[#FDBD38] flex items-center justify-center text-white text-[11px] font-bold">
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
         </div>
@@ -1837,12 +1876,16 @@ export default function MenuPage() {
 
             {/* Location details row */}
             <div className="border-y border-gray-200/55 py-5 flex flex-col gap-0.5 text-left w-full">
-              <span className="text-[15px] font-semibold text-black">Pedralbes Centre</span>
+              <span className="text-[15px] font-semibold text-black">
+                {selectedStore === 'pedralbes' ? 'Pedralbes Centre' : 'Eixample Cafe'}
+              </span>
               <span className="text-[12px] text-gray-400 font-medium leading-tight">
-                Avinguda Diagonal, 609, 08028, Barcelona
+                {selectedStore === 'pedralbes' 
+                  ? 'Avinguda Diagonal, 609, 08028, Barcelona' 
+                  : 'Carrer de València, 245, 08007, Barcelona'}
               </span>
               <button 
-                onClick={() => alert('Store settings can be updated in your profile.')}
+                onClick={() => setShowOrderModeModal(true)}
                 className="flex items-center gap-1 text-[11px] font-bold text-gray-400 mt-2 hover:text-black transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
