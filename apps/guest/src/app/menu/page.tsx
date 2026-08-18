@@ -1583,8 +1583,8 @@ export default function MenuPage() {
           <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-1 scrollbar-none">
             
             {/* Dietary Preferences Section */}
-            <div className="flex flex-col gap-2.5 px-0">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Dietary Preference</span>
+            <div className="flex flex-col gap-3 px-0">
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Dietary Preference</span>
               <div className="flex flex-wrap gap-2">
                 {[
                   { id: 'gluten-free', label: 'Gluten-Free 🌾' },
@@ -1596,10 +1596,10 @@ export default function MenuPage() {
                     <button
                       key={diet.id}
                       onClick={() => setSelectedDiet(active ? null : diet.id)}
-                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                      className={`px-4 py-2.5 rounded-2xl text-[13px] font-semibold transition-all border ${
                         active 
-                          ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-sm' 
-                          : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
+                          ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
                       }`}
                     >
                       {diet.label}
@@ -1610,8 +1610,8 @@ export default function MenuPage() {
             </div>
 
             {/* Exclude Allergens Section */}
-            <div className="flex flex-col gap-2.5 px-0">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Exclude Allergens</span>
+            <div className="flex flex-col gap-3 px-0">
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Exclude Allergens</span>
               <div className="flex flex-wrap gap-2">
                 {[
                   { id: 'gluten', label: 'Gluten' },
@@ -1632,10 +1632,10 @@ export default function MenuPage() {
                           setExcludedAllergens([...excludedAllergens, allergen.id]);
                         }
                       }}
-                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                      className={`px-4 py-2.5 rounded-2xl text-[13px] font-semibold transition-all border ${
                         active 
-                          ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-sm' 
-                          : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
+                          ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
                       }`}
                     >
                       {active ? '✓ ' : ''}{allergen.label}
@@ -1646,9 +1646,9 @@ export default function MenuPage() {
             </div>
 
             {/* Sort Options Section */}
-            <div className="flex flex-col gap-2.5 px-0">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Sort Dishes By</span>
-              <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-3.5 px-0">
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Sort Dishes By</span>
+              <div className="flex flex-col gap-4">
                 {[
                   { id: 'default', label: 'Recommended' },
                   { id: 'price-asc', label: 'Price: Low to High' },
@@ -1661,13 +1661,13 @@ export default function MenuPage() {
                       onClick={() => setSortBy(option.id)}
                       className="flex items-center justify-between py-1 cursor-pointer select-none"
                     >
-                      <span className={`text-xs font-bold ${active ? 'text-black' : 'text-gray-600'}`}>
+                      <span className={`text-[14px] ${active ? 'font-semibold text-black' : 'font-medium text-gray-500'}`}>
                         {option.label}
                       </span>
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                        active ? 'border-[#FDBD38] bg-[#FDBD38]' : 'border-gray-300 bg-white'
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                        active ? 'border-[#FDBD38] bg-[#FDBD38] shadow-sm' : 'border-gray-200 bg-white'
                       }`}>
-                        {active && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                        {active && <div className="w-2 h-2 rounded-full bg-white" />}
                       </div>
                     </div>
                   );
