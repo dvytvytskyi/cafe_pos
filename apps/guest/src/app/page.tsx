@@ -5,7 +5,7 @@ import { useGuest } from '@/lib/guest-context';
 import Link from 'next/link';
 import { logoutGuest } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, LogIn, UserPlus, ArrowRight, HelpCircle, Menu, X, MapPin, ClipboardList, Gift, Coffee, ShoppingBag, Navigation2, Zap, ArrowLeft, MoreHorizontal, Compass, Bike, Globe, FileText, Shirt, Package, MessageSquare, Megaphone, Radio, PawPrint } from 'lucide-react';
+import { ChevronRight, ChevronLeft, LogIn, UserPlus, ArrowRight, HelpCircle, Menu, X, MapPin, ClipboardList, Gift, Coffee, ShoppingBag, Navigation2, Zap, ArrowLeft, MoreHorizontal, Compass, Bike, Globe, FileText, Shirt, Package, MessageSquare, Megaphone, Radio, PawPrint } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 
 export default function HomePage() {
@@ -739,7 +739,7 @@ export default function HomePage() {
         </div>
 
         {/* Bottom Card Overlay Floating ON TOP of Mapbox */}
-        <div className="absolute bottom-6 left-4 right-4 z-10 bg-white/95 backdrop-blur-lg rounded-3xl p-6 shadow-2xl flex flex-col gap-4 border border-white/20 animate-slideUp">
+        <div className="absolute bottom-6 left-4 right-4 z-10 bg-white rounded-3xl p-6 shadow-2xl flex flex-col gap-4 animate-slideUp relative">
           
           {/* Title / Hours Block with navigation arrows and Distance */}
           <div className="flex flex-col gap-1">
@@ -747,30 +747,30 @@ export default function HomePage() {
               {/* Left navigation arrow */}
               <button 
                 onClick={() => handleLocationChange(activeLocationIndex > 0 ? activeLocationIndex - 1 : locations.length - 1)}
-                className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors active:scale-95"
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors active:scale-95"
               >
-                <ChevronRight className="w-5 h-5 text-gray-700 transform rotate-180" strokeWidth={2.5} />
+                <ChevronLeft className="w-5 h-5 text-gray-800" strokeWidth={2.2} />
               </button>
 
               {/* Location Name in Center */}
-              <h3 className={`text-xl font-black uppercase tracking-tight text-gray-950 leading-tight text-center mx-2 flex-1 transition-all duration-150 ${isFading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+              <h3 className={`text-[20px] font-bold uppercase tracking-tight text-gray-900 leading-tight text-center mx-2 flex-1 transition-all duration-150 ${isFading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
                 {activeLocation.name}.
               </h3>
 
               {/* Right navigation arrow */}
               <button 
                 onClick={() => handleLocationChange(activeLocationIndex < locations.length - 1 ? activeLocationIndex + 1 : 0)}
-                className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors active:scale-95"
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors active:scale-95"
               >
-                <ChevronRight className="w-5 h-5 text-gray-700" strokeWidth={2.5} />
+                <ChevronRight className="w-5 h-5 text-gray-800" strokeWidth={2.2} />
               </button>
             </div>
 
             {/* Sub-header info: distance, hours, city */}
-            <div className={`flex flex-wrap items-center justify-center gap-2 text-xs font-semibold text-gray-500 mt-2 transition-all duration-150 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
-              <span className="text-gray-800 font-bold bg-gray-100 px-2 py-0.5 rounded-full">{activeLocation.distance}</span>
+            <div className={`flex flex-wrap items-center justify-center gap-2 text-xs font-semibold text-gray-400 mt-2 transition-all duration-150 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+              <span className="text-gray-700 font-bold bg-gray-100 px-2 py-0.5 rounded-full">{activeLocation.distance}</span>
               <span>·</span>
-              <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+              <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse inline-block" />
               <span>{activeLocation.hours}</span>
               <span>·</span>
               <span>{activeLocation.city}</span>
@@ -781,7 +781,7 @@ export default function HomePage() {
           <div className="flex gap-3 mt-1">
             <button 
               onClick={() => alert(`Opening maps for ${activeLocation.name}...`)}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-950 py-3 rounded-full font-medium text-sm transition-all active:scale-[0.98] text-center"
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 py-4 rounded-full font-semibold text-[15px] transition-all active:scale-[0.98] text-center"
             >
               Maps
             </button>
@@ -791,10 +791,10 @@ export default function HomePage() {
                 setShowLocations(false);
                 setShowOrderModeSelector(true);
               }}
-              className="flex-1 bg-black hover:bg-gray-900 text-white py-3 rounded-full font-medium text-sm transition-all active:scale-[0.98] text-center flex items-center justify-center gap-1.5 shadow-md shadow-black/20"
+              className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-semibold text-[15px] transition-all active:scale-[0.98] text-center flex items-center justify-center gap-1.5 shadow-none"
             >
               Open menu
-              <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+              <ArrowRight className="w-4 h-4 text-white" strokeWidth={1.8} />
             </button>
           </div>
         </div>
@@ -1129,7 +1129,7 @@ export default function HomePage() {
                 placeholder="e.g. Passeig de Gràcia, 48"
                 value={newStreetAddress}
                 onChange={(e) => setNewStreetAddress(e.target.value)}
-                className="w-full border-b border-gray-100 focus:border-gray-200 py-2 text-[14px] text-gray-800 font-medium transition-all outline-none placeholder-gray-300 bg-transparent"
+                className="w-full border-b border-gray-100 focus:border-gray-200 py-2 text-base text-gray-800 font-medium transition-all outline-none placeholder-gray-300 bg-transparent"
               />
               {filteredSuggestions.length > 0 && (
                 <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-30 bg-white shadow-2xl rounded-none p-4 max-h-[195px] overflow-y-auto scrollbar-none animate-fadeIn flex flex-col gap-4">
