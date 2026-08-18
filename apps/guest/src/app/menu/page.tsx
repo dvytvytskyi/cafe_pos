@@ -691,7 +691,7 @@ export default function MenuPage() {
 
         {/* Search Bar Input Row */}
         <div className="px-4 pb-3">
-          <div className="relative flex items-center bg-white/95 border border-black/5 rounded-full px-4 py-2.5 shadow-sm">
+          <div className="relative flex items-center bg-white border border-gray-100 rounded-full px-4 py-2.5 shadow-sm">
             <svg className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -1958,32 +1958,12 @@ export default function MenuPage() {
 
             {/* Pay buttons section */}
             <div className="flex flex-col gap-3.5 text-left mt-2">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1">
-                Pay for your order:
-              </span>
-              
-              <button 
-                onClick={() => handleFinalPayment('applepay')}
-                className="w-full bg-[#18181B] hover:bg-black text-white py-4 rounded-full font-bold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none"
-              >
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg"></span>
-                  <span className="text-[15px] font-bold">Pay</span>
-                </div>
-                <span className="text-[15px] font-bold">{(cartTotal + tipAmount).toFixed(2)}€</span>
-              </button>
-
               <button 
                 onClick={() => handleFinalPayment('card')}
-                className="w-full bg-white border border-gray-200 hover:bg-gray-50 text-black py-4 rounded-full font-bold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none"
+                className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-semibold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none"
               >
-                <div className="flex items-center gap-2.5">
-                  <CreditCard className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
-                  <span className="text-[15px] font-bold text-gray-900">Card</span>
-                </div>
-                <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
-                  <ArrowRight className="w-3.5 h-3.5 text-gray-500" />
-                </div>
+                <span className="text-[15px] font-semibold text-white">Confirm order</span>
+                <span className="text-[15px] font-semibold text-white">{(cartTotal + tipAmount).toFixed(2)}€</span>
               </button>
             </div>
 
