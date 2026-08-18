@@ -1101,7 +1101,7 @@ export default function MenuPage() {
         onClick={handleCloseUpsell}
       >
         <div 
-          className={`w-full max-w-[480px] bg-[#FAF7F2] rounded-t-[32px] pt-8 px-6 pb-6 transition-transform duration-300 ease-out transform flex flex-col gap-5 shadow-2xl relative ${
+          className={`w-full max-w-[480px] bg-[#FAF7F2] rounded-t-[16px] pt-8 px-6 pb-6 transition-transform duration-300 ease-out transform flex flex-col gap-5 shadow-2xl relative ${
             showUpsellModal ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -1302,7 +1302,7 @@ export default function MenuPage() {
         onClick={() => setShowLoginModal(false)}
       >
         <div 
-          className={`w-full max-w-[480px] bg-white rounded-t-[32px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
+          className={`w-full max-w-[480px] bg-white rounded-t-[16px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
             showLoginModal ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -1592,7 +1592,7 @@ export default function MenuPage() {
         onClick={() => setShowFiltersModal(false)}
       >
         <div 
-          className={`w-full max-w-[480px] bg-white rounded-t-[32px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
+          className={`w-full max-w-[480px] bg-white rounded-t-[16px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
             showFiltersModal ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -1745,7 +1745,7 @@ export default function MenuPage() {
         onClick={() => setShowOrderModeModal(false)}
       >
         <div 
-          className={`w-full max-w-[480px] bg-white rounded-t-[32px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
+          className={`w-full max-w-[480px] bg-white rounded-t-[16px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
             showOrderModeModal ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
