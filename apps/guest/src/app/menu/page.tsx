@@ -1189,7 +1189,7 @@ export default function MenuPage() {
 
       {/* Cart Summary Bottom Sheet Overlay */}
       <div 
-        className={`fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 flex items-end justify-center ${
+        className={`fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center backdrop-blur-[3px] ${
           showCartOverlay ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setShowCartOverlay(false)}
@@ -1201,22 +1201,21 @@ export default function MenuPage() {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex justify-between items-start w-full">
-            <div className="flex flex-col">
-              <h2 className="text-[18px] font-bold tracking-tight leading-none text-gray-900 uppercase">
+          <div className="flex flex-col w-full gap-1">
+            <div className="flex justify-between items-center w-full">
+              <h2 className="text-[22px] font-bold text-gray-900 uppercase tracking-tight leading-none">
                 YOUR BASKET
               </h2>
-              <span className="text-xs font-medium text-gray-400 mt-1.5">
-                Review your items
-              </span>
+              <button 
+                onClick={() => setShowCartOverlay(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors text-black -mr-1"
+              >
+                <X className="w-5 h-5" strokeWidth={1.8} />
+              </button>
             </div>
-            
-            <button 
-              onClick={() => setShowCartOverlay(false)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-black"
-            >
-              <X className="w-6 h-6" strokeWidth={1.8} />
-            </button>
+            <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+              Review your items
+            </span>
           </div>
 
           {/* List items */}
@@ -1268,7 +1267,7 @@ export default function MenuPage() {
           {/* Place Order button */}
           <button 
             onClick={handleCheckout}
-            className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-bold text-center text-base transition-all active:scale-[0.99] flex items-center justify-center gap-2 shadow-md shadow-black/10"
+            className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-semibold text-center text-[15px] transition-all active:scale-[0.99] flex items-center justify-center gap-2 shadow-none"
           >
             <span>Place Order ({getOrderModeLabel()})</span>
             <Check className="w-5 h-5 text-white" />
