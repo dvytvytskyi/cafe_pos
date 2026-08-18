@@ -316,7 +316,8 @@ export default function MenuPage() {
 
   // Checkout and Order details states
   const [showOrderDetails, setShowOrderDetails] = useState(false);
-  const [selectedTip, setSelectedTip] = useState<number | null>(null);
+  const [activeTipTab, setActiveTipTab] = useState<string>('tip-no');
+  const [customTipAmount, setCustomTipAmount] = useState<number>(0);
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -620,6 +621,15 @@ export default function MenuPage() {
   };
 
   const cartTotal = foodCart.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
+  
+  const getTipAmount = () => {
+    if (activeTipTab === 'tip-5') return Number((cartTotal * 0.05).toFixed(2));
+    if (activeTipTab === 'tip-10') return Number((cartTotal * 0.10).toFixed(2));
+    if (activeTipTab === 'tip-other') return customTipAmount;
+    return 0;
+  };
+  const tipAmount = getTipAmount();
+
   const totalPrice = selectedItem ? (selectedItem.basePrice + selectedModifiers.reduce((acc: any, m: any) => acc + m.price, 0)) * quantity : 0;
 
   if (loadingMenu) {
@@ -1808,20 +1818,36 @@ export default function MenuPage() {
                 </button>
               </div>
 
-              <div className="flex gap-3 w-full">
+              <div className="flex gap-2 w-full">
                 {[
-                  { id: 'tip-5', label: '5%', value: 0.05 },
-                  { id: 'tip-10', label: '10%', value: 0.10 },
-                  { id: 'tip-other', label: 'Other', value: 0 }
+                  { id: 'tip-no', label: 'No tip' },
+                  { id: 'tip-5', label: '5%' },
+                  { id: 'tip-10', label: '10%' },
+                  { id: 'tip-other', label: 'Other' }
                 ].map((tipOpt) => {
-                  const val = tipOpt.value > 0 ? Number((cartTotal * tipOpt.value).toFixed(2)) : 0;
-                  const active = selectedTip === val && val > 0 || (tipOpt.id === 'tip-other' && selectedTip === 0);
-                  const displayLabel = tipOpt.id === 'tip-other' ? 'Other' : `${val.toFixed(2)}€`;
+                  const active = activeTipTab === tipOpt.id;
+                  let displayLabel = tipOpt.label;
+                  if (tipOpt.id === 'tip-5') {
+                    displayLabel = `${(cartTotal * 0.05).toFixed(2)}€`;
+                  } else if (tipOpt.id === 'tip-10') {
+                    displayLabel = `${(cartTotal * 0.10).toFixed(2)}€`;
+                  }
                   return (
                     <button
                       key={tipOpt.id}
-                      onClick={() => setSelectedTip(val)}
-                      className={`flex-1 py-3 text-center rounded-2xl font-semibold text-[13px] transition-all border ${
+                      onClick={() => {
+                        setActiveTipTab(tipOpt.id);
+                        if (tipOpt.id === 'tip-other') {
+                          const custom = prompt('Enter tip amount (€):');
+                          const parsed = parseFloat(custom || '0');
+                          if (!isNaN(parsed) && parsed >= 0) {
+                            setCustomTipAmount(parsed);
+                          } else {
+                            setActiveTipTab('tip-no');
+                          }
+                        }
+                      }}
+                      className={`flex-1 py-3 text-center rounded-2xl font-semibold text-[11px] transition-all border ${
                         active 
                           ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
                           : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
@@ -1840,16 +1866,16 @@ export default function MenuPage() {
                 <span>Subtotal</span>
                 <span>{cartTotal.toFixed(2)}€</span>
               </div>
-              {selectedTip !== null && selectedTip > 0 && (
+              {tipAmount > 0 && (
                 <div className="flex justify-between text-[13px] font-medium text-gray-500">
                   <span>Staff Tip</span>
-                  <span>{selectedTip.toFixed(2)}€</span>
+                  <span>{tipAmount.toFixed(2)}€</span>
                 </div>
               )}
               <div className="border-t border-gray-100 my-1" />
               <div className="flex justify-between text-[16px] font-black text-black">
                 <span>Total</span>
-                <span>{(cartTotal + (selectedTip || 0)).toFixed(2)}€</span>
+                <span>{(cartTotal + tipAmount).toFixed(2)}€</span>
               </div>
             </div>
 
@@ -1926,7 +1952,7 @@ export default function MenuPage() {
                   <span className="text-lg"></span>
                   <span className="text-[15px] font-bold">Pay</span>
                 </div>
-                <span className="text-[15px] font-bold">{(cartTotal + (selectedTip || 0)).toFixed(2)}€</span>
+                <span className="text-[15px] font-bold">{(cartTotal + tipAmount).toFixed(2)}€</span>
               </button>
 
               <button 
