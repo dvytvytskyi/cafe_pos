@@ -83,14 +83,12 @@ export default function HomePage() {
   ];
 
   const addressSuggestions = [
-    { title: "Panora Alışveriş ve Yaşam Merkezi", desc: "Oran Mah. Kudüs Cad. No: 3/317, 06450 Çankaya, Ankara, Turkey" },
-    { title: "Palestinian Territories", desc: "" },
-    { title: "Kentpark AVM", desc: "Dumlupinar Blv., 06530 Cankaya Ankara, Türkiye" },
-    { title: "Passeig de Gràcia, 48", desc: "08007 Barcelona, Spain" },
-    { title: "Plaça de Catalunya, 1", desc: "08002 Barcelona, Spain" },
-    { title: "Avinguda Diagonal, 647", desc: "08028 Barcelona, Spain" },
-    { title: "Carrer de Mallorca, 401", desc: "08013 Barcelona, Spain" },
-    { title: "Pa.", desc: "United States" }
+    { title: "Passeig de Gràcia, 43", desc: "Casa Batlló, 08007 Barcelona, Spain" },
+    { title: "Parc de la Ciutadella", desc: "Passeig de Picasso, 21, 08003 Barcelona, Spain" },
+    { title: "Parc Güell", desc: "Carrer d'Olot, 08024 Barcelona, Spain" },
+    { title: "Plaça d'Espanya", desc: "08004 Barcelona, Spain" },
+    { title: "Palau de la Música Catalana", desc: "Carrer Palau de la Música, 4-6, 08003 Barcelona, Spain" },
+    { title: "Patronat de la Sagrada Família", desc: "Carrer de Mallorca, 401, 08013 Barcelona, Spain" }
   ];
 
   const filteredSuggestions = newStreetAddress.trim()
@@ -1097,13 +1095,13 @@ export default function HomePage() {
       </div>
       {/* Bottom Sheet New Address Modal */}
       <div 
-        className={`fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 flex items-end justify-center ${
+        className={`fixed inset-0 bg-transparent z-50 transition-opacity duration-300 flex items-end justify-center ${
           showNewAddressModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setShowNewAddressModal(false)}
       >
         <div 
-          className={`w-full max-w-[480px] bg-white rounded-t-[32px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
+          className={`w-full max-w-[480px] bg-white rounded-t-[16px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-none relative ${
             showNewAddressModal ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -1137,17 +1135,17 @@ export default function HomePage() {
                 placeholder="e.g. Passeig de Gràcia, 48"
                 value={newStreetAddress}
                 onChange={(e) => setNewStreetAddress(e.target.value)}
-                className="w-full border-b border-gray-300 focus:border-black py-2 text-base text-black font-semibold transition-all outline-none placeholder-gray-300 bg-transparent"
+                className="w-full border-none py-2 text-base text-black font-semibold transition-all outline-none placeholder-gray-300 bg-transparent"
               />
               {filteredSuggestions.length > 0 && (
-                <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-30 bg-white shadow-2xl rounded-2xl border border-gray-150 p-4 max-h-[195px] overflow-y-auto scrollbar-none animate-fadeIn flex flex-col gap-4">
+                <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-30 bg-white shadow-2xl rounded-none p-4 max-h-[195px] overflow-y-auto scrollbar-none animate-fadeIn flex flex-col gap-4">
                   {filteredSuggestions.map((sug, idx) => (
                     <div 
                       key={idx} 
                       onClick={() => setNewStreetAddress(sug.title)}
                       className="flex flex-col text-left cursor-pointer hover:opacity-75 transition-opacity"
                     >
-                      <span className="font-bold text-black text-[15px] leading-tight">
+                      <span className="font-bold text-black text-[14px] leading-tight">
                         {sug.title}
                       </span>
                       {sug.desc && (
@@ -1164,7 +1162,7 @@ export default function HomePage() {
             {/* Alias Selection */}
             <div className="flex flex-col w-full">
               <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-3">
-                Alias
+                Select option
               </label>
               <div className="flex gap-4 w-full">
                 {/* Home */}
@@ -1172,13 +1170,13 @@ export default function HomePage() {
                   onClick={() => setNewAddressAlias('home')}
                   className={`flex-1 py-4 text-center rounded-2xl font-bold text-sm cursor-pointer relative transition-all border ${
                     newAddressAlias === 'home' 
-                      ? 'bg-gray-50 border-gray-300 text-black shadow-sm' 
+                      ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
                       : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
                   }`}
                 >
                   <span>Home</span>
                   {newAddressAlias === 'home' && (
-                    <div className="absolute -top-1.5 -right-1.5 bg-[#4ADE80] text-white rounded-full p-0.5 shadow-sm">
+                    <div className="absolute -top-1.5 -right-1.5 bg-[#4ADE80] text-white rounded-full p-0.5 shadow-none">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
@@ -1191,13 +1189,13 @@ export default function HomePage() {
                   onClick={() => setNewAddressAlias('work')}
                   className={`flex-1 py-4 text-center rounded-2xl font-bold text-sm cursor-pointer relative transition-all border ${
                     newAddressAlias === 'work' 
-                      ? 'bg-gray-50 border-gray-300 text-black shadow-sm' 
+                      ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
                       : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
                   }`}
                 >
                   <span>Work</span>
                   {newAddressAlias === 'work' && (
-                    <div className="absolute -top-1.5 -right-1.5 bg-[#4ADE80] text-white rounded-full p-0.5 shadow-sm">
+                    <div className="absolute -top-1.5 -right-1.5 bg-[#4ADE80] text-white rounded-full p-0.5 shadow-none">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
@@ -1210,13 +1208,13 @@ export default function HomePage() {
                   onClick={() => setNewAddressAlias('custom')}
                   className={`flex-1 py-4 text-center rounded-2xl font-bold text-sm cursor-pointer relative transition-all border ${
                     newAddressAlias === 'custom' 
-                      ? 'bg-gray-50 border-gray-300 text-black shadow-sm' 
+                      ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
                       : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
                   }`}
                 >
                   <span>Custom</span>
                   {newAddressAlias === 'custom' && (
-                    <div className="absolute -top-1.5 -right-1.5 bg-[#4ADE80] text-white rounded-full p-0.5 shadow-sm">
+                    <div className="absolute -top-1.5 -right-1.5 bg-[#4ADE80] text-white rounded-full p-0.5 shadow-none">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
@@ -1244,7 +1242,7 @@ export default function HomePage() {
           </div>
 
           {/* Submit button */}
-          <div className="px-0 w-full">
+          <div className="px-0 w-full mt-8">
             <button 
               disabled={!newStreetAddress}
               onClick={() => {
@@ -1252,9 +1250,9 @@ export default function HomePage() {
                 setShowNewAddressModal(false);
                 setShowTimePicker(true);
               }}
-              className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
+              className={`w-full py-4 rounded-full font-bold text-center text-base transition-all shadow-none ${
                 newStreetAddress 
-                  ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer' 
+                  ? 'bg-[#FDBD38] text-white hover:bg-[#e5a420] active:scale-[0.99] cursor-pointer' 
                   : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
               }`}
             >
