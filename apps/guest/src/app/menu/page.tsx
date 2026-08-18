@@ -50,18 +50,30 @@ const MOCK_MENU: GuestMenuResponse = {
     {
       id: "item-1",
       categoryId: "cat-coffee",
-      name: "123",
-      description: "Organic fried egg, sliced bacon, local cheese, freshly toasted bagel, homemade signature sauce.",
-      basePrice: 123.00,
-      allergens: []
+      name: "Bacon & Egg Bagel",
+      description: "A freshly toasted artisanal bagel loaded with organic pasture-raised fried egg, thick-cut crispy bacon, melted local cheddar, and our homemade signature herb garlic sauce.",
+      basePrice: 7.50,
+      allergens: ["gluten", "eggs", "milk", "sesame"],
+      modifierGroups: [
+        {
+          id: "mod-bagel-extras",
+          name: "Add Extras",
+          minQty: 0,
+          maxQty: 2,
+          options: [
+            { id: "opt-bagel-egg", name: "Extra Egg", price: 1.00 },
+            { id: "opt-bagel-avocado", name: "Avocado Slices", price: 1.50 }
+          ]
+        }
+      ]
     },
     {
       id: "item-2",
       categoryId: "cat-coffee",
-      name: "Corgi Signature",
-      description: "House blend with corgi signature cream, double shot espresso, organic milk.",
+      name: "Corgi Signature Espresso",
+      description: "Our signature house blend coffee prepared with double shot espresso, organic whole milk, and topped with our secret recipe sweet cream for a rich, velvety finish.",
       basePrice: 4.50,
-      allergens: [],
+      allergens: ["milk"],
       modifierGroups: [
         {
           id: "mod-milk",
@@ -70,7 +82,8 @@ const MOCK_MENU: GuestMenuResponse = {
           maxQty: 1,
           options: [
             { id: "opt-oat", name: "Oat Milk", price: 0.50 },
-            { id: "opt-almond", name: "Almond Milk", price: 0.50 }
+            { id: "opt-almond", name: "Almond Milk", price: 0.50 },
+            { id: "opt-extra-shot", name: "Extra Espresso Shot", price: 1.00 }
           ]
         }
       ]
@@ -79,17 +92,18 @@ const MOCK_MENU: GuestMenuResponse = {
       id: "item-3",
       categoryId: "cat-brunch",
       name: "Avocado Toast",
-      description: "Extra virgin olive oil, pumpkin seeds, pine nuts, cucumber, radish, flaky salt.",
+      description: "Slices of toasted sourdough loaded with creamy smashed avocado, drizzled with premium cold-pressed extra virgin olive oil, toasted pumpkin seeds, pine nuts, fresh cucumbers, radishes, and a touch of flaky Maldon salt.",
       basePrice: 6.75,
-      allergens: [],
+      allergens: ["gluten", "nuts"],
       modifierGroups: [
         {
           id: "mod-fancy-bread",
-          name: "Combine with",
+          name: "Add Extras",
           minQty: 0,
-          maxQty: 1,
+          maxQty: 2,
           options: [
-            { id: "opt-double-bread", name: "Double Bread", price: 0.95 }
+            { id: "opt-poached-egg", name: "Poached Egg", price: 1.20 },
+            { id: "opt-feta-cheese", name: "Crumbled Feta", price: 1.00 }
           ]
         }
       ]
@@ -98,9 +112,9 @@ const MOCK_MENU: GuestMenuResponse = {
       id: "item-4",
       categoryId: "cat-brunch",
       name: "Brunch Plate",
-      description: "Organic eggs, cherry tomatoes, toasted sourdough, fresh herbs, side salad.",
+      description: "A hearty plate featuring two organic eggs cooked to your liking, roasted cherry tomatoes, freshly toasted sourdough bread, fragrant garden herbs, and a crisp side salad dressed with house vinaigrette.",
       basePrice: 12.50,
-      allergens: [],
+      allergens: ["gluten", "eggs"],
       modifierGroups: [
         {
           id: "mod-extras",
@@ -109,7 +123,8 @@ const MOCK_MENU: GuestMenuResponse = {
           maxQty: 2,
           options: [
             { id: "opt-bacon", name: "Bacon", price: 1.50 },
-            { id: "opt-cheese", name: "Cheese", price: 1.00 }
+            { id: "opt-cheese", name: "Cheese", price: 1.00 },
+            { id: "opt-salmon", name: "Smoked Salmon", price: 3.00 }
           ]
         }
       ]
@@ -118,17 +133,41 @@ const MOCK_MENU: GuestMenuResponse = {
       id: "item-5",
       categoryId: "cat-pastry",
       name: "Butter Croissant",
-      description: "Flaky french butter pastry baked fresh daily.",
+      description: "Flaky, multi-layered French butter pastry crafted with Normandy butter, baked fresh in-house every morning until golden brown and crispy on the outside, soft on the inside.",
       basePrice: 2.80,
-      allergens: []
+      allergens: ["gluten", "milk", "eggs"],
+      modifierGroups: [
+        {
+          id: "mod-croissant-spread",
+          name: "Add Jam / Spread",
+          minQty: 0,
+          maxQty: 2,
+          options: [
+            { id: "opt-croissant-jam", name: "Strawberry Jam", price: 0.50 },
+            { id: "opt-croissant-nutella", name: "Nutella", price: 0.80 }
+          ]
+        }
+      ]
     },
     {
       id: "item-6",
       categoryId: "cat-drinks",
       name: "Matcha Latte",
-      description: "Organic stone-ground ceremonial matcha with steamed oat milk.",
+      description: "Vibrant, premium organic stone-ground Japanese ceremonial grade matcha whisked to perfection and served with warm, velvety steamed organic oat milk.",
       basePrice: 4.80,
-      allergens: []
+      allergens: ["gluten"],
+      modifierGroups: [
+        {
+          id: "mod-matcha-sweetener",
+          name: "Add Sweetener",
+          minQty: 0,
+          maxQty: 1,
+          options: [
+            { id: "opt-honey", name: "Honey", price: 0.30 },
+            { id: "opt-agave", name: "Agave Syrup", price: 0.30 }
+          ]
+        }
+      ]
     }
   ]
 };
@@ -151,6 +190,24 @@ const UPSELL_SWEETS = [
     name: "Banana Bread",
     price: 3.45,
     image: "/banana_bread.jpg"
+  },
+  {
+    id: "upsell-sweet-4",
+    name: "Chocolate Cookie",
+    price: 2.50,
+    image: "/shoyu_pecan_pie.jpg"
+  },
+  {
+    id: "upsell-sweet-5",
+    name: "Blueberry Muffin",
+    price: 2.80,
+    image: "/carrot_cake.jpg"
+  },
+  {
+    id: "upsell-sweet-6",
+    name: "Cinnamon Roll",
+    price: 3.90,
+    image: "/banana_bread.jpg"
   }
 ];
 
@@ -171,6 +228,24 @@ const UPSELL_DRINKS = [
     id: "upsell-drink-3",
     name: "Fresh Juice",
     price: 2.75,
+    image: "/fresh_juice.jpg"
+  },
+  {
+    id: "upsell-drink-4",
+    name: "Matcha Latte",
+    price: 4.80,
+    image: "/cold_pressed.jpg"
+  },
+  {
+    id: "upsell-drink-5",
+    name: "Cappuccino",
+    price: 3.50,
+    image: "/beer.jpg"
+  },
+  {
+    id: "upsell-drink-6",
+    name: "Lemon Mint Soda",
+    price: 3.80,
     image: "/fresh_juice.jpg"
   }
 ];
@@ -798,7 +873,7 @@ export default function MenuPage() {
         <div className="fixed bottom-6 left-6 right-6 z-40 max-w-[432px] mx-auto animate-slideUp">
           <button 
             onClick={() => setShowCartOverlay(true)}
-            className="w-full bg-black hover:bg-gray-900 text-white p-4 rounded-full font-bold flex items-center justify-between shadow-2xl active:scale-[0.99] transition-all"
+            className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white p-4 rounded-full font-bold flex items-center justify-between shadow-2xl active:scale-[0.99] transition-all"
           >
             <div className="flex items-center gap-3">
               <div className="bg-white/20 p-2 rounded-full flex items-center justify-center">
@@ -819,13 +894,13 @@ export default function MenuPage() {
 
       {/* Item Customization Sheet (Bottom sheet overlay modal) */}
       <div 
-        className={`fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 flex items-end justify-center ${
+        className={`fixed inset-0 bg-transparent z-50 transition-opacity duration-300 flex items-end justify-center ${
           selectedItem ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setSelectedItem(null)}
       >
         <div 
-          className={`w-full max-w-[480px] h-[95vh] bg-white rounded-t-[20px] overflow-hidden transition-transform duration-300 ease-out transform flex flex-col shadow-2xl relative ${
+          className={`w-full max-w-[480px] h-[100vh] bg-white rounded-t-none overflow-hidden transition-transform duration-300 ease-out transform flex flex-col shadow-2xl relative ${
             selectedItem ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -971,7 +1046,7 @@ export default function MenuPage() {
             {/* Add to bag button */}
             <button 
               onClick={handleAddToCart}
-              className="w-full bg-black hover:bg-gray-900 text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
+              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/10"
             >
               <span className="text-base font-semibold">+ Add to bag</span>
               <div className="bg-white/20 px-6 py-2 rounded-full text-white text-base font-bold overflow-hidden">
@@ -1000,7 +1075,7 @@ export default function MenuPage() {
           {/* Header */}
           <div className="flex justify-between items-start w-full mb-1">
             <div className="flex flex-col">
-              <h2 className="text-[20px] font-black tracking-tight leading-none text-black uppercase">
+              <h2 className="text-[18px] font-black tracking-tight leading-none text-black uppercase">
                 Fancy a sweet ending?
               </h2>
             </div>
@@ -1045,7 +1120,7 @@ export default function MenuPage() {
 
           {/* Drinks Header */}
           <div className="flex flex-col mt-2">
-            <h2 className="text-[20px] font-black tracking-tight leading-none text-black uppercase">
+            <h2 className="text-[18px] font-black tracking-tight leading-none text-black uppercase">
               Add a drink.
             </h2>
           </div>
@@ -1084,7 +1159,7 @@ export default function MenuPage() {
           <div className="w-full pt-2">
             <button 
               onClick={handleCloseUpsell}
-              className="w-full bg-black hover:bg-gray-900 text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/20"
+              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/10"
             >
               <span className="text-base font-semibold">Continue</span>
               <div className="bg-white/20 px-6 py-2 rounded-full text-white text-base font-bold overflow-hidden">
@@ -1105,7 +1180,7 @@ export default function MenuPage() {
         onClick={() => setShowCartOverlay(false)}
       >
         <div 
-          className={`w-full max-w-[480px] bg-white rounded-t-[32px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
+          className={`w-full max-w-[480px] bg-white rounded-t-[16px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
             showCartOverlay ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -1113,10 +1188,10 @@ export default function MenuPage() {
           {/* Header */}
           <div className="flex justify-between items-start w-full">
             <div className="flex flex-col">
-              <h2 className="text-[24px] font-black tracking-tight leading-none text-black uppercase">
+              <h2 className="text-[18px] font-bold tracking-tight leading-none text-gray-900 uppercase">
                 YOUR BASKET
               </h2>
-              <span className="text-[14px] font-semibold text-gray-500 mt-2">
+              <span className="text-xs font-medium text-gray-400 mt-1.5">
                 Review your items
               </span>
             </div>
@@ -1134,7 +1209,7 @@ export default function MenuPage() {
             {foodCart.map((item) => (
               <div key={item.key} className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-bold text-sm text-black uppercase tracking-tight">{item.name}</span>
+                  <span className="font-semibold text-[13px] text-gray-800 uppercase tracking-tight">{item.name}</span>
                   {item.modifiers && item.modifiers.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-0.5">
                       {item.modifiers.map((m, idx) => (
@@ -1147,22 +1222,22 @@ export default function MenuPage() {
                   {item.comments && (
                     <span className="text-[11px] text-gray-400 font-medium italic">"{item.comments}"</span>
                   )}
-                  <span className="text-xs font-bold text-gray-500 mt-1">{(item.unitPrice).toFixed(2)}€ each</span>
+                  <span className="text-[11px] font-medium text-gray-400 mt-0.5">{(item.unitPrice).toFixed(2)}€ each</span>
                 </div>
                 
-                <div className="flex items-center gap-3.5 bg-gray-100 px-3 py-1.5 rounded-full">
+                <div className="flex items-center gap-3 bg-gray-100 px-2.5 py-1 rounded-full">
                   <button 
                     onClick={() => updateFoodQty(item.key, -1)}
                     className="p-0.5 hover:bg-white rounded-full transition-colors text-black"
                   >
-                    <Minus className="w-3.5 h-3.5" />
+                    <Minus className="w-3 h-3" />
                   </button>
-                  <span className="text-sm font-bold text-black">{item.quantity}</span>
+                  <span className="text-xs font-semibold text-gray-700 w-4 text-center">{item.quantity}</span>
                   <button 
                     onClick={() => updateFoodQty(item.key, 1)}
                     className="p-0.5 hover:bg-white rounded-full transition-colors text-black"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3 h-3" />
                   </button>
                 </div>
               </div>
@@ -1170,15 +1245,15 @@ export default function MenuPage() {
           </div>
 
           {/* Totals */}
-          <div className="flex items-center justify-between font-bold text-base border-t border-gray-150 pt-4 text-black">
-            <span>Total</span>
-            <span>{cartTotal.toFixed(2)}€</span>
+          <div className="flex items-center justify-between text-sm border-t border-gray-100 pt-4 text-gray-900">
+            <span className="font-semibold">Total</span>
+            <span className="font-extrabold text-base text-black">{cartTotal.toFixed(2)}€</span>
           </div>
 
           {/* Place Order button */}
           <button 
             onClick={handleCheckout}
-            className="w-full bg-black hover:bg-gray-900 text-white py-4 rounded-full font-bold text-center text-base transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+            className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-bold text-center text-base transition-all active:scale-[0.99] flex items-center justify-center gap-2 shadow-md shadow-black/10"
           >
             <span>Place Order ({getOrderModeLabel()})</span>
             <Check className="w-5 h-5 text-white" />
