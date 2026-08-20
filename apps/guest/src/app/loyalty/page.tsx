@@ -234,11 +234,11 @@ export default function LoyaltyPage() {
 
         {/* Simple QR Code & Points Panel */}
         <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
-          <div className="bg-white rounded-[32px] p-6 shadow-md border border-gray-150/60 flex flex-col items-center">
+          <div className="bg-white rounded-[24px] p-6 shadow-md flex flex-col items-center">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400">Scannable Member Code</span>
             
             {/* QR Code */}
-            <div className="my-6 bg-gray-50 p-4 rounded-[24px] border border-gray-100 shadow-inner">
+            <div className="my-6 bg-gray-50 p-4 rounded-[24px] shadow-inner">
               <img 
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrCode)}`}
                 alt="Member QR Code"
