@@ -30,6 +30,7 @@ import {
   AlertTriangle,
   X,
   Plus,
+  QrCode,
   Coffee,
   Heart,
   Sun,
@@ -325,46 +326,9 @@ export default function LoyaltyPage() {
                 isCardFlipped ? '[transform:rotateY(180deg)]' : ''
               }`}
             >
-              {/* Front Side: QR Code Card */}
+              {/* Front Side: Profile Info Card */}
               <div 
-                onClick={() => setIsCardFlipped(true)}
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col items-center justify-between [backface-visibility:hidden]"
-              >
-                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Scannable Member Code</span>
-                
-                {/* QR Code */}
-                <div className="my-1.5 bg-gray-50 p-2.5 rounded-[20px] shadow-inner">
-                  <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrCode)}`}
-                    alt="Member QR Code"
-                    className="w-[110px] h-[110px] object-contain rounded-lg"
-                  />
-                </div>
-
-                {/* Loyalty points details */}
-                <div className="w-full flex justify-between items-center border-t border-gray-100 pt-2.5">
-                  <div className="flex flex-col text-left">
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Member Tier</span>
-                    <span className="text-base font-bold text-gray-800 uppercase tracking-tight leading-none mt-1">{customer.tier}</span>
-                  </div>
-                  <div className="flex flex-col text-right">
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Balance</span>
-                    <span className="text-xl font-bold text-[#FDBD38] flex items-center gap-1 justify-end leading-none mt-0.5">
-                      <Coins className="w-4 h-4 text-[#FDBD38]" />
-                      {customer.points.toFixed(0)} <span className="text-[10px] font-bold text-gray-400">PTS</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Back Side: Profile Info Card */}
-              <div 
-                onClick={(e) => {
-                  const target = e.target as HTMLElement;
-                  if (target.closest('button') || target.closest('input') || target.closest('select')) return;
-                  setIsCardFlipped(false);
-                }}
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-12 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)] relative"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-12 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
               >
                 {/* Left Status Info (Absolute positioned) */}
                 <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
@@ -418,8 +382,8 @@ export default function LoyaltyPage() {
                   </div>
                 )}
 
-                {/* Footer Buttons: Add Points & History (No border on history button) */}
-                <div className="flex gap-3 relative z-10">
+                {/* Footer Buttons: Add Points, History, and QR Code Toggle */}
+                <div className="flex gap-2 relative z-10 w-full items-center">
                   <button
                     onClick={() => setIsAddPointsOpen(!isAddPointsOpen)}
                     className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-2.5 rounded-[12px] font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer border border-[#FDBD38] hover:border-[#e5a420]"
@@ -434,6 +398,45 @@ export default function LoyaltyPage() {
                     <History className="w-3.5 h-3.5 text-gray-500" />
                     <span>History</span>
                   </button>
+                  <button
+                    onClick={() => setIsCardFlipped(true)}
+                    className="w-10 h-10 bg-[#FDBD38] hover:bg-[#e5a420] text-white rounded-[12px] flex items-center justify-center flex-shrink-0 border border-[#FDBD38] hover:border-[#e5a420] active:scale-[0.95] transition-all cursor-pointer"
+                    title="Show QR Code"
+                  >
+                    <QrCode className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Back Side: QR Code Card */}
+              <div 
+                onClick={() => setIsCardFlipped(false)}
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col items-center justify-between [backface-visibility:hidden] [transform:rotateY(180deg)]"
+              >
+                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Scannable Member Code</span>
+                
+                {/* QR Code */}
+                <div className="my-1.5 bg-gray-50 p-2.5 rounded-[20px] shadow-inner">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrCode)}`}
+                    alt="Member QR Code"
+                    className="w-[110px] h-[110px] object-contain rounded-lg"
+                  />
+                </div>
+
+                {/* Loyalty points details */}
+                <div className="w-full flex justify-between items-center border-t border-gray-100 pt-2.5">
+                  <div className="flex flex-col text-left">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Member Tier</span>
+                    <span className="text-base font-bold text-gray-800 uppercase tracking-tight leading-none mt-1">{customer.tier}</span>
+                  </div>
+                  <div className="flex flex-col text-right">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Balance</span>
+                    <span className="text-xl font-bold text-[#FDBD38] flex items-center gap-1 justify-end leading-none mt-0.5">
+                      <Coins className="w-4 h-4 text-[#FDBD38]" />
+                      {customer.points.toFixed(0)} <span className="text-[10px] font-bold text-gray-400">PTS</span>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
