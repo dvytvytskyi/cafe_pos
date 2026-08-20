@@ -7,6 +7,7 @@ import type {
   GuestLoyaltyResponse,
   GuestLocale,
   GuestCartModifier,
+  GuestLoyaltyTransaction,
 } from '@corgi/contracts';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -158,4 +159,8 @@ export function updateProfile(data: { name?: string; allergyNotes?: string }) {
     method: 'PUT',
     body: JSON.stringify(data),
   });
+}
+
+export function getLoyaltyTransactions() {
+  return guestFetch<GuestLoyaltyTransaction[]>('/api/guest/me/loyalty/transactions');
 }
