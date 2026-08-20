@@ -810,37 +810,6 @@ function LoyaltyCard3D({
     return '#e9c4b0'; // Bronze / rose-gold
   };
 
-  // Create rounded rectangle geometry with thickness and bevels
-  const geometry = useMemo(() => {
-    const shape = new THREE.Shape();
-    const width = 2.8;
-    const height = 1.77;
-    const radius = 0.16; // large corner radius
-    const x = -width / 2;
-    const y = -height / 2;
-
-    shape.moveTo(x, y + radius);
-    shape.lineTo(x, y + height - radius);
-    shape.quadraticCurveTo(x, y + height, x + radius, y + height);
-    shape.lineTo(x + width - radius, y + height);
-    shape.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
-    shape.lineTo(x + width, y + radius);
-    shape.quadraticCurveTo(x + width, y, x + width - radius, y);
-    shape.lineTo(x + radius, y);
-    shape.quadraticCurveTo(x, y, x, y + radius);
-
-    const extrudeSettings = {
-      depth: 0.03, // Thin credit card thickness
-      bevelEnabled: true,
-      bevelSegments: 4,
-      steps: 1,
-      bevelSize: 0.015, // Prominent visible bevel edge
-      bevelThickness: 0.015
-    };
-
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, []);
-
   useEffect(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
@@ -849,7 +818,10 @@ function LoyaltyCard3D({
     if (!ctx) return;
 
     const render = () => {
-      // Draw background metallic gradient
+      // Clear canvas so outer corners are transparent
+      ctx.clearRect(0, 0, 1024, 648);
+
+      // Draw background metallic gradient inside a rounded rectangle
       const grad = ctx.createLinearGradient(0, 0, 1024, 648);
       const t = tier.toLowerCase();
       if (t === 'silver') {
@@ -869,8 +841,25 @@ function LoyaltyCard3D({
         grad.addColorStop(0.5, '#e9c4b0');
         grad.addColorStop(1, '#bc8c72');
       }
+
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1024, 648);
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(0, 0, 1024, 648, 56);
+      } else {
+        ctx.rect(0, 0, 1024, 648);
+      }
+      ctx.fill();
+
+      // Clip everything to the rounded card body
+      ctx.save();
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(0, 0, 1024, 648, 56);
+      } else {
+        ctx.rect(0, 0, 1024, 648);
+      }
+      ctx.clip();
 
       // Brushed metal texture lines
       ctx.strokeStyle = t === 'vip' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)';
@@ -883,13 +872,13 @@ function LoyaltyCard3D({
       }
 
       // Draw smooth border stroke outline around the card
-      ctx.strokeStyle = t === 'vip' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(60, 28, 10, 0.25)';
+      ctx.strokeStyle = t === 'vip' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(60, 28, 10, 0.25)';
       ctx.lineWidth = 14;
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(14, 14, 1024 - 28, 648 - 28, 48);
+        ctx.roundRect(7, 7, 1024 - 14, 648 - 14, 49);
       } else {
-        ctx.rect(14, 14, 1024 - 28, 648 - 28);
+        ctx.rect(7, 7, 1024 - 14, 648 - 14);
       }
       ctx.stroke();
 
@@ -919,6 +908,8 @@ function LoyaltyCard3D({
       ctx.font = 'black 42px sans-serif';
       ctx.fillStyle = t === 'vip' ? '#ffffff' : '#3c1c0a';
       ctx.fillText(`${points.toFixed(0)} PTS`, 750, 570);
+
+      ctx.restore();
     };
 
     render();
@@ -931,6 +922,15 @@ function LoyaltyCard3D({
     img.crossOrigin = 'anonymous';
     img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrCode)}`;
     img.onload = () => {
+      ctx.save();
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(0, 0, 1024, 648, 56);
+      } else {
+        ctx.rect(0, 0, 1024, 648);
+      }
+      ctx.clip();
+
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
@@ -940,6 +940,8 @@ function LoyaltyCard3D({
       }
       ctx.fill();
       ctx.drawImage(img, 412, 224, 200, 200);
+      ctx.restore();
+
       tex.needsUpdate = true;
     };
   }, [tier, name, points, qrCode]);
@@ -949,57 +951,42 @@ function LoyaltyCard3D({
     const t = state.clock.getElapsedTime();
     if (isHovered) {
       // Extra slow, heavy tracking with high inertia
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, state.pointer.x * 0.18, 0.015);
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, -state.pointer.y * 0.14, 0.015);
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, state.pointer.x * 0.15, 0.015);
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, -state.pointer.y * 0.12, 0.015);
       meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, 0, 0.015);
     } else {
-      // Very slow ambient floating loop centered around a permanent tilt to show off thickness
-      const baseRotationX = -10 * (Math.PI / 180);
-      const baseRotationY = 12 * (Math.PI / 180);
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, baseRotationY + Math.sin(t * 0.3) * 0.06, 0.015);
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, baseRotationX + Math.cos(t * 0.3) * 0.04, 0.015);
-      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, Math.sin(t * 0.4) * 0.02, 0.015);
+      // Gentle ambient floating loop with very small tilt to prevent clipping
+      const baseRotationX = -3 * (Math.PI / 180);
+      const baseRotationY = 4 * (Math.PI / 180);
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, baseRotationY + Math.sin(t * 0.3) * 0.04, 0.015);
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, baseRotationX + Math.cos(t * 0.3) * 0.03, 0.015);
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, Math.sin(t * 0.4) * 0.01, 0.015);
     }
   });
-
-  // Construct front/back and side materials
-  const materials = useMemo(() => {
-    if (!texture) {
-      return [
-        new THREE.MeshStandardMaterial({ color: getSideColor(tier) }),
-        new THREE.MeshStandardMaterial({ color: getSideColor(tier) })
-      ];
-    }
-
-    const frontMat = new THREE.MeshPhysicalMaterial({
-      map: texture,
-      metalness: tier.toLowerCase() === 'vip' ? 0.95 : 0.85,
-      roughness: 0.42,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.1
-    });
-
-    const sideMat = new THREE.MeshPhysicalMaterial({
-      color: getSideColor(tier),
-      metalness: 0.95,
-      roughness: 0.15,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.1
-    });
-
-    return [frontMat, sideMat];
-  }, [texture, tier]);
 
   return (
     <mesh 
       ref={meshRef} 
-      geometry={geometry}
-      material={materials}
       onPointerOver={() => setIsHovered(true)} 
       onPointerOut={() => setIsHovered(false)}
-    />
+    >
+      <planeGeometry args={[2.8, 1.77]} />
+      {texture ? (
+        <meshPhysicalMaterial 
+          map={texture}
+          transparent={true}
+          metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
+          roughness={0.42}
+          clearcoat={1.0}
+          clearcoatRoughness={0.1}
+          side={THREE.DoubleSide}
+        />
+      ) : (
+        <meshStandardMaterial color={getSideColor(tier)} transparent={true} />
+      )}
+    </mesh>
   );
-};
+}
 
 function Scene3D({ 
   tier, 
@@ -1020,7 +1007,7 @@ function Scene3D({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Canvas camera={{ position: [0, 0, 3.2], fov: 45 }}>
+      <Canvas camera={{ position: [0, 0, 3.5], fov: 45 }}>
         {/* Soft, rich ambient and directional lights for high-contrast metal reflections */}
         <ambientLight intensity={0.45} />
         <directionalLight position={[10, 10, 10]} intensity={0.8} />
