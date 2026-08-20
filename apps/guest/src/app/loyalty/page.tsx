@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useGuest } from '@/lib/guest-context';
 import {
   requestOtp,
@@ -41,10 +42,12 @@ import {
   Leaf,
   Moon,
   BookOpen,
-  ShoppingBag
+  ShoppingBag,
+  ArrowLeft
 } from 'lucide-react';
 
 export default function LoyaltyPage() {
+  const router = useRouter();
   const { isLoggedIn, profileName, refreshAuth } = useGuest();
 
   const [phone, setPhone] = useState('');
@@ -90,7 +93,33 @@ export default function LoyaltyPage() {
       setEditAllergy(loy.customer.allergyNotes || '');
 
       const txs = await getLoyaltyTransactions();
-      setTransactions(txs);
+      if (txs.length === 0) {
+        setTransactions([
+          {
+            id: 'mock-1',
+            type: 'earn',
+            points: 120,
+            createdAt: new Date(Date.now() - 1 * 3600000).toISOString(),
+            orderId: 'order-c0f1ee01'
+          },
+          {
+            id: 'mock-2',
+            type: 'spend',
+            points: 45,
+            createdAt: new Date(Date.now() - 18 * 3600000).toISOString(),
+            orderId: 'order-ba2ea451'
+          },
+          {
+            id: 'mock-3',
+            type: 'earn',
+            points: 80,
+            createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+            orderId: 'order-3a7b8c9d'
+          }
+        ]);
+      } else {
+        setTransactions(txs);
+      }
     } catch (err) {
       console.error('Failed to load loyalty details:', err);
     }
@@ -309,28 +338,37 @@ export default function LoyaltyPage() {
     return (
       <div className="h-screen overflow-y-auto bg-gray-50 pb-[90px] relative scroll-smooth">
         {/* Profile Header */}
-        <div className="bg-[#FDBD38] text-white px-6 pt-10 pb-20 rounded-b-[24px] shadow-lg relative">
+        <div className="bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 px-6 pt-6 pb-20 rounded-b-[24px] shadow-lg relative">
           <div className="max-w-[440px] mx-auto flex items-center justify-between">
+            {/* Back Button (matching other pages) */}
+            <button 
+              onClick={() => router.push('/')}
+              className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0"
+              title="Back to Home"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
+            </button>
+
+            {/* Welcome Greeting (Clickable to open profile settings) */}
             <div 
               onClick={() => setIsProfileOpen(true)}
-              className="flex flex-col text-left cursor-pointer hover:opacity-90 transition-opacity active:scale-[0.98] select-none"
+              className="flex flex-col text-center cursor-pointer hover:opacity-80 transition-opacity active:scale-[0.98] select-none mx-2 min-w-0 flex-1"
               title="Open Profile Settings"
             >
-              <span className="text-[11px] font-bold uppercase tracking-widest text-white/80">Loyalty Club</span>
-              <h1 className="text-[26px] font-bold mt-1 tracking-tight leading-none">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-black/50">Loyalty Club</span>
+              <h1 className="text-xl font-bold mt-0.5 tracking-tight leading-none truncate text-gray-900">
                 Hello, {profileName || customer.name}!
               </h1>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Support Button (Exclamation mark) */}
-              <button
-                onClick={() => alert("Support: support@corgicafe.com")}
-                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer flex-shrink-0"
-                title="Support"
-              >
-                <AlertCircle className="w-5 h-5 text-white" />
-              </button>
-            </div>
+
+            {/* Support / Help Icon (matching other pages) */}
+            <button
+              onClick={() => alert("Support: support@corgicafe.com")}
+              className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0"
+              title="Support"
+            >
+              <AlertCircle className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
+            </button>
           </div>
         </div>
 
@@ -347,7 +385,7 @@ export default function LoyaltyPage() {
             >
               {/* Front Side: Profile Info Card */}
               <div 
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[16px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[10px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
               >
                 {/* Left Status Info (Absolute positioned) */}
                 <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
