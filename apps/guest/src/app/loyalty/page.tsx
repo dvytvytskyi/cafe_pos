@@ -364,7 +364,7 @@ export default function LoyaltyPage() {
                   if (target.closest('button') || target.closest('input') || target.closest('select')) return;
                   setIsCardFlipped(false);
                 }}
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)] relative"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-12 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)] relative"
               >
                 {/* Left Status Info (Absolute positioned) */}
                 <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
