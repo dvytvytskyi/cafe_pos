@@ -320,7 +320,9 @@ export default function ShopPage() {
     merchCart, 
     addMerchToCart, 
     updateMerchQty, 
-    clearMerchCart 
+    clearMerchCart,
+    showCartBarInsteadOfNav,
+    setShowCartBarInsteadOfNav
   } = useGuest();
 
   const router = useRouter();
@@ -333,7 +335,6 @@ export default function ShopPage() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lastSelectedItem, setLastSelectedItem] = useState<any | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<Record<string, number>>({});
-  const [showNavPopup, setShowNavPopup] = useState(false);
   const imageScrollRef = useRef<HTMLDivElement>(null);
 
   const ADDONS = [
@@ -801,82 +802,36 @@ export default function ShopPage() {
       </div>
 
       {/* Floating Bottom Cart Bar */}
-      {merchCart.length > 0 && (
-        <>
-          <div className="fixed bottom-0 left-0 right-0 z-45 p-4 flex justify-center bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none">
-            <button 
-              onClick={() => setShowCartDrawer(true)}
-              className="w-full max-w-[440px] bg-[#EE635E] hover:opacity-90 text-white py-4 rounded-full font-semibold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none pointer-events-auto"
-            >
-              {/* Menu Navigation Button on the left */}
-              <div 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowNavPopup(!showNavPopup);
-                }}
-                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/35 px-3.5 py-1.5 rounded-full transition-colors cursor-pointer z-50 border border-white/10"
-              >
-                <MenuIcon className="w-3.5 h-3.5 text-white" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-white pr-1 select-none">Menu</span>
-              </div>
-
-              <div className="flex items-center gap-2 pl-2">
-                <ShoppingBag className="w-4 h-4 text-white" strokeWidth={2.2} />
-                <span className="text-[15px] font-semibold text-white">View bag</span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-bold text-white">
-                  {merchCart.reduce((sum, item) => sum + item.quantity, 0)} items
-                </span>
-                <span className="text-[15px] font-semibold text-white">{cartTotal.toFixed(2)}€</span>
-              </div>
-            </button>
-          </div>
-
-          {/* Navigation Popup Menu */}
-          {showNavPopup && (
+      {merchCart.length > 0 && showCartBarInsteadOfNav && (
+        <div className="fixed bottom-0 left-0 right-0 z-45 p-4 flex justify-center bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none">
+          <button 
+            onClick={() => setShowCartDrawer(true)}
+            className="w-full max-w-[440px] bg-[#EE635E] hover:opacity-90 text-white py-4 rounded-full font-semibold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none pointer-events-auto"
+          >
+            {/* Menu Toggle Button on the left */}
             <div 
-              className="fixed bottom-24 left-6 right-6 z-50 max-w-[400px] mx-auto bg-white/95 backdrop-blur-md border border-gray-100 rounded-[22px] shadow-[0_8px_30px_rgba(0,0,0,0.15)] p-4 flex flex-col gap-3 animate-fadeIn text-left"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowCartBarInsteadOfNav(false);
+              }}
+              className="flex items-center justify-center w-9 h-9 bg-white/20 hover:bg-white/30 rounded-full transition-colors cursor-pointer z-50 border border-white/10"
             >
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                <span className="text-[11px] text-gray-400 font-extrabold uppercase tracking-wider">Navigate To</span>
-                <button 
-                  onClick={() => setShowNavPopup(false)}
-                  className="text-[11px] font-bold text-[#EE635E] hover:opacity-80"
-                >
-                  Close
-                </button>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { href: '/menu', icon: Coffee, label: 'Menu', activeColor: 'text-corgi bg-corgi/10' },
-                  { href: '/shop', icon: ShoppingBag, label: 'Shop', activeColor: 'text-[#EE635E] bg-[#EE635E]/10' },
-                  { href: '/loyalty', icon: Gift, label: 'Loyalty', activeColor: 'text-corgi bg-corgi/10' },
-                  { href: '/orders', icon: ClipboardList, label: 'Orders', activeColor: 'text-corgi bg-corgi/10' }
-                ].map((tab) => {
-                  const isActive = tab.href === '/shop';
-                  return (
-                    <Link
-                      key={tab.href}
-                      href={tab.href}
-                      onClick={() => setShowNavPopup(false)}
-                      className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl transition-all ${
-                        isActive 
-                          ? `${tab.activeColor} scale-102` 
-                          : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      <tab.icon size={20} strokeWidth={isActive ? 2.8 : 2} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider">{tab.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+              <MenuIcon className="w-4 h-4 text-white" />
             </div>
-          )}
-        </>
+
+            <div className="flex items-center gap-2 pl-2">
+              <ShoppingBag className="w-4 h-4 text-white" strokeWidth={2.2} />
+              <span className="text-[15px] font-semibold text-white">View bag</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-bold text-white">
+                {merchCart.reduce((sum, item) => sum + item.quantity, 0)} items
+              </span>
+              <span className="text-[15px] font-semibold text-white">{cartTotal.toFixed(2)}€</span>
+            </div>
+          </button>
+        </div>
       )}
 
       {/* 1. Item Details Fullscreen Modal */}

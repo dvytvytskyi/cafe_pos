@@ -16,7 +16,7 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { locale, foodCart, merchCart } = useGuest();
+  const { locale, foodCart, merchCart, showCartBarInsteadOfNav, setShowCartBarInsteadOfNav } = useGuest();
   const [visible, setVisible] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const lastScrollY = useRef(0);
@@ -56,7 +56,8 @@ export function BottomNav() {
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, []);
 
-  if (modalOpen || (foodCart.length > 0 && pathname === '/menu') || (merchCart.length > 0 && pathname === '/shop')) return null;
+  const isCartActive = (foodCart.length > 0 && pathname === '/menu') || (merchCart.length > 0 && pathname === '/shop');
+  if (modalOpen || (isCartActive && showCartBarInsteadOfNav)) return null;
 
   return (
     <nav 
@@ -72,6 +73,15 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              onClick={(e) => {
+                const isTargetCartActive = (foodCart.length > 0 && href === '/menu') || (merchCart.length > 0 && href === '/shop');
+                if (isTargetCartActive) {
+                  if (active) {
+                    e.preventDefault();
+                  }
+                  setShowCartBarInsteadOfNav(true);
+                }
+              }}
               className={`flex min-h-9 min-w-9 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-colors ${
                 active 
                   ? (href === '/shop' ? 'text-[#EE635E]' : 'text-corgi') 

@@ -26,6 +26,8 @@ interface GuestContextValue {
   setDeferredInstall: (e: BeforeInstallPromptEvent | null) => void;
   orderMode: 'store' | 'pickup' | 'delivery';
   setOrderMode: (mode: 'store' | 'pickup' | 'delivery') => void;
+  showCartBarInsteadOfNav: boolean;
+  setShowCartBarInsteadOfNav: (show: boolean) => void;
 }
 
 export interface BeforeInstallPromptEvent extends Event {
@@ -68,6 +70,7 @@ export function GuestProvider({
   const [showWelcome, setShowWelcome] = useState(false);
   const [deferredInstall, setDeferredInstall] = useState<BeforeInstallPromptEvent | null>(null);
   const [orderMode, setOrderMode] = useState<'store' | 'pickup' | 'delivery'>('store');
+  const [showCartBarInsteadOfNav, setShowCartBarInsteadOfNav] = useState(true);
 
   const setLocale = useCallback((l: GuestLocale) => {
     setLocaleState(l);
@@ -197,6 +200,8 @@ export function GuestProvider({
       setDeferredInstall,
       orderMode,
       setOrderMode,
+      showCartBarInsteadOfNav,
+      setShowCartBarInsteadOfNav,
     }),
     [
       bootstrap,
@@ -215,6 +220,7 @@ export function GuestProvider({
       showWelcome,
       deferredInstall,
       orderMode,
+      showCartBarInsteadOfNav,
     ]
   );
 
