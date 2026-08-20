@@ -74,7 +74,7 @@ export function BottomNav() {
               href={href}
               className={`flex min-h-9 min-w-9 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-colors ${
                 active 
-                  ? (href === '/shop' ? 'text-[#FC8C86]' : 'text-corgi') 
+                  ? (href === '/shop' ? 'text-[#EE635E]' : 'text-corgi') 
                   : 'text-gray-400 hover:text-gray-600'
               }`}
             >
@@ -82,7 +82,7 @@ export function BottomNav() {
                 <Icon size={18} strokeWidth={active ? 2.6 : 2.1} />
                 {count > 0 && (
                   <span className={`absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full px-0.5 text-[8px] font-bold shadow-sm border border-white ${
-                    href === '/shop' ? 'bg-[#FC8C86] text-white' : 'bg-corgi text-gray-900'
+                    href === '/shop' ? 'bg-[#EE635E] text-white' : 'bg-corgi text-gray-900'
                   }`}>
                     {count}
                   </span>
