@@ -908,15 +908,15 @@ function LoyaltyCard3D({
     if (!meshRef.current) return;
     const t = state.clock.getElapsedTime();
     if (isHovered) {
-      // Slower, heavier tracking with inertia
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, state.pointer.x * 0.25, 0.04);
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, -state.pointer.y * 0.2, 0.04);
-      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, 0, 0.04);
+      // Extra slow, heavy tracking with high inertia
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, state.pointer.x * 0.18, 0.015);
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, -state.pointer.y * 0.14, 0.015);
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, 0, 0.015);
     } else {
-      // Slower ambient floating loop
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, Math.sin(t * 0.7) * 0.1, 0.03);
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, Math.cos(t * 0.7) * 0.06, 0.03);
-      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, Math.sin(t * 1.0) * 0.03, 0.03);
+      // Very slow and gentle ambient floating loop
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, Math.sin(t * 0.35) * 0.08, 0.015);
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, Math.cos(t * 0.35) * 0.05, 0.015);
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, Math.sin(t * 0.5) * 0.02, 0.015);
     }
   });
 
