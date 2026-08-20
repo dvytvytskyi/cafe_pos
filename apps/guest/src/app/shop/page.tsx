@@ -978,10 +978,10 @@ export default function ShopPage() {
                         {/* Bottom Quantity Selector (only if selected) */}
                         {isSelected && (
                           <div 
-                            className="w-full mt-0.5 z-20"
+                            className="w-full mt-1.5 z-20 flex justify-center"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <div className="flex items-center justify-between bg-white border border-[#EE635E]/20 rounded-full px-2 py-0.5 z-20 shadow-sm">
+                            <div className="flex items-center justify-center gap-3">
                               <button 
                                 onClick={() => {
                                   setSelectedAddons(prev => {
@@ -994,20 +994,20 @@ export default function ShopPage() {
                                     return next;
                                   });
                                 }}
-                                className="p-0.5 hover:bg-gray-50 rounded-full transition-colors text-gray-500 cursor-pointer"
+                                className="w-7 h-7 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-full flex items-center justify-center transition-all text-gray-600 cursor-pointer shadow-sm border border-gray-200/50"
                               >
-                                <Minus className="w-3 h-3" strokeWidth={2.5} />
+                                <Minus className="w-3.5 h-3.5" strokeWidth={2.8} />
                               </button>
-                              <span className="text-[11px] font-bold text-gray-900">
+                              <span className="text-[13px] font-extrabold text-gray-900 min-w-[12px] text-center">
                                 {q}
                               </span>
                               <button 
                                 onClick={() => {
                                   setSelectedAddons(prev => ({ ...prev, [addon.id]: (prev[addon.id] || 0) + 1 }));
                                 }}
-                                className="p-0.5 hover:bg-gray-50 rounded-full transition-colors text-gray-500 cursor-pointer"
+                                className="w-7 h-7 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-full flex items-center justify-center transition-all text-gray-600 cursor-pointer shadow-sm border border-gray-200/50"
                               >
-                                <Plus className="w-3 h-3" strokeWidth={2.5} />
+                                <Plus className="w-3.5 h-3.5" strokeWidth={2.8} />
                               </button>
                             </div>
                           </div>
