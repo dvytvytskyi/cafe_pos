@@ -355,8 +355,8 @@ export default function LoyaltyPage() {
               className="flex flex-col text-center cursor-pointer hover:opacity-80 transition-opacity active:scale-[0.98] select-none mx-2 min-w-0 flex-1"
               title="Open Profile Settings"
             >
-              <span className="text-[10px] font-bold uppercase tracking-widest text-black/50">Loyalty Club</span>
-              <h1 className="text-xl font-bold mt-0.5 tracking-tight leading-none truncate text-gray-900">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Loyalty Club</span>
+              <h1 className="text-xl font-bold mt-0.5 tracking-tight leading-none truncate text-white">
                 Hello, {profileName || customer.name}!
               </h1>
             </div>
