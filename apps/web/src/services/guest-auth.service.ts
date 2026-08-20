@@ -150,11 +150,12 @@ export class GuestAuthService {
     });
   }
 
-  async updateProfile(customerId: string, data: { name?: string; allergyNotes?: string }) {
+  async updateProfile(customerId: string, data: { name?: string; email?: string; allergyNotes?: string }) {
     return prisma.customer.update({
       where: { id: customerId },
       data: {
         ...(data.name ? { name: data.name } : {}),
+        ...(data.email ? { email: data.email } : {}),
         ...(data.allergyNotes !== undefined ? { allergyNotes: data.allergyNotes } : {}),
       },
     });

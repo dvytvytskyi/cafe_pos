@@ -130,9 +130,7 @@ export default function LoyaltyPage() {
     if (!regName || !regEmail) return;
     setLoading(true);
     try {
-      await registerGuest({
-        phone,
-        code: otpCode,
+      await updateProfile({
         name: regName,
         email: regEmail,
         allergyNotes: allergyNotes || undefined,

@@ -154,7 +154,7 @@ export function logoutGuest() {
   return guestFetch<{ ok: boolean }>('/api/guest/auth/logout', { method: 'POST' });
 }
 
-export function updateProfile(data: { name?: string; allergyNotes?: string }) {
+export function updateProfile(data: { name?: string; email?: string; allergyNotes?: string }) {
   return guestFetch<GuestCustomerProfile>('/api/guest/me', {
     method: 'PUT',
     body: JSON.stringify(data),
