@@ -296,8 +296,8 @@ export default function LoyaltyPage() {
         <div className="bg-[#FDBD38] text-white px-6 pt-10 pb-20 rounded-b-[40px] shadow-lg relative">
           <div className="max-w-[440px] mx-auto flex items-center justify-between">
             <div className="flex flex-col text-left">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-white/80">Loyalty Club</span>
-              <h1 className="text-[26px] font-extrabold mt-1 tracking-tight leading-none">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-white/80">Loyalty Club</span>
+              <h1 className="text-[26px] font-bold mt-1 tracking-tight leading-none">
                 Hello, {profileName || customer.name}!
               </h1>
             </div>
@@ -317,7 +317,7 @@ export default function LoyaltyPage() {
         {/* Flipping 3D QR Card */}
         <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
           <div 
-            className="w-full h-[360px] relative cursor-pointer"
+            className="w-full h-[290px] relative cursor-pointer"
             style={{ perspective: '1000px' }}
           >
             <div 
@@ -328,30 +328,30 @@ export default function LoyaltyPage() {
               {/* Front Side: QR Code Card */}
               <div 
                 onClick={() => setIsCardFlipped(true)}
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-between [backface-visibility:hidden]"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col items-center justify-between [backface-visibility:hidden]"
               >
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400">Scannable Member Code</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Scannable Member Code</span>
                 
                 {/* QR Code */}
-                <div className="my-3 bg-gray-50 p-4 rounded-[24px] shadow-inner">
+                <div className="my-2 bg-gray-50 p-3 rounded-[20px] shadow-inner">
                   <img 
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrCode)}`}
                     alt="Member QR Code"
-                    className="w-[170px] h-[170px] object-contain rounded-lg"
+                    className="w-[120px] h-[120px] object-contain rounded-lg"
                   />
                 </div>
 
                 {/* Loyalty points details */}
-                <div className="w-full flex justify-between items-center border-t border-gray-100 pt-4">
+                <div className="w-full flex justify-between items-center border-t border-gray-100 pt-3">
                   <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Member Tier</span>
-                    <span className="text-lg font-black text-gray-800 uppercase tracking-tight leading-none mt-1">{customer.tier}</span>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Member Tier</span>
+                    <span className="text-base font-bold text-gray-800 uppercase tracking-tight leading-none mt-1">{customer.tier}</span>
                   </div>
                   <div className="flex flex-col text-right">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Balance</span>
-                    <span className="text-2xl font-black text-[#FDBD38] flex items-center gap-1.5 justify-end leading-none mt-0.5">
-                      <Coins className="w-5 h-5 text-[#FDBD38]" />
-                      {customer.points.toFixed(0)} <span className="text-xs font-bold text-gray-400">PTS</span>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Balance</span>
+                    <span className="text-xl font-bold text-[#FDBD38] flex items-center gap-1 justify-end leading-none mt-0.5">
+                      <Coins className="w-4 h-4 text-[#FDBD38]" />
+                      {customer.points.toFixed(0)} <span className="text-[10px] font-bold text-gray-400">PTS</span>
                     </span>
                   </div>
                 </div>
@@ -364,19 +364,19 @@ export default function LoyaltyPage() {
                   if (target.closest('button') || target.closest('input') || target.closest('select')) return;
                   setIsCardFlipped(false);
                 }}
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-6 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)]"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)]"
               >
                 <div className="flex flex-col w-full h-full justify-between">
                   {/* Header Row: Left Tier, Center Photo, Right spent */}
                   <div className="flex justify-between items-start w-full">
                     {/* Left Status */}
                     <div className="flex flex-col text-left">
-                      <span className="text-base font-black text-gray-800 tracking-tight uppercase leading-none">{customer.tier}</span>
+                      <span className="text-sm font-bold text-gray-800 tracking-tight uppercase leading-none">{customer.tier}</span>
                       <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Profile</span>
                     </div>
 
                     {/* Center Avatar */}
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md -mt-1">
+                    <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-md -mt-1">
                       <img 
                         src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
                         alt="Profile Avatar"
@@ -386,14 +386,14 @@ export default function LoyaltyPage() {
 
                     {/* Right Spent */}
                     <div className="flex flex-col text-right">
-                      <span className="text-base font-black text-[#FDBD38] tracking-tight leading-none">{customer.ltv.toFixed(0)}€</span>
+                      <span className="text-sm font-bold text-[#FDBD38] tracking-tight leading-none">{customer.ltv.toFixed(0)}€</span>
                       <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Spent</span>
                     </div>
                   </div>
 
                   {/* Name & Subtitle */}
-                  <div className="flex flex-col items-center text-center my-2">
-                    <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase mb-1 leading-tight">
+                  <div className="flex flex-col items-center text-center my-1.5">
+                    <h2 className="text-lg font-bold text-gray-900 tracking-tight uppercase mb-0.5 leading-tight">
                       {profileName || customer.name}
                     </h2>
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider leading-none">
@@ -403,18 +403,18 @@ export default function LoyaltyPage() {
 
                   {/* Collapsible Add Points Code Field */}
                   {isAddPointsOpen && (
-                    <div className="w-full flex gap-2 items-center px-1 mb-3 animate-fadeIn">
+                    <div className="w-full flex gap-2 items-center px-1 mb-2 animate-fadeIn">
                       <input 
                         type="text" 
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
-                        placeholder="Enter code (e.g. CORGI100)" 
-                        className="flex-1 border border-gray-200 rounded-[12px] py-2 px-3 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#FDBD38]"
+                        placeholder="Code (e.g. CORGI100)" 
+                        className="w-full border border-gray-200 rounded-[10px] py-1.5 px-3 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#FDBD38]"
                       />
                       <button 
                         onClick={handleApplyPromo}
                         disabled={isApplyingPromo}
-                        className="bg-[#FDBD38] hover:bg-[#c29124] text-white px-4 py-2 rounded-[12px] text-xs font-black transition-all cursor-pointer whitespace-nowrap"
+                        className="bg-[#FDBD38] hover:bg-[#c29124] text-white px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
                       >
                         {isApplyingPromo ? '...' : 'Claim'}
                       </button>
@@ -425,16 +425,16 @@ export default function LoyaltyPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => setIsAddPointsOpen(!isAddPointsOpen)}
-                      className="flex-1 bg-gray-50 border border-gray-100 hover:bg-gray-100 text-gray-700 py-3 rounded-[16px] font-extrabold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-2.5 rounded-[12px] font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer border border-[#FDBD38] hover:border-[#e5a420]"
                     >
-                      <Plus className="w-4 h-4 text-gray-500" />
+                      <Plus className="w-3.5 h-3.5" />
                       <span>Add Points</span>
                     </button>
                     <button
                       onClick={() => setIsHistoryOpen(true)}
-                      className="flex-1 bg-gray-50 border border-gray-100 hover:bg-gray-100 text-gray-700 py-3 rounded-[16px] font-extrabold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 bg-white hover:bg-gray-55 text-gray-700 py-2.5 rounded-[12px] font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer border border-gray-250 shadow-sm"
                     >
-                      <History className="w-4 h-4 text-gray-500" />
+                      <History className="w-3.5 h-3.5 text-gray-500" />
                       <span>History</span>
                     </button>
                   </div>
@@ -521,14 +521,14 @@ export default function LoyaltyPage() {
             isProfileOpen ? 'translate-y-0' : 'translate-y-full'
           }`}>
             {/* Drawer Header */}
-            <div className="px-6 pt-12 pb-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0 bg-gray-50/50">
+            <div className="px-6 pt-12 pb-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0 bg-gray-55/50">
               <button 
                 onClick={() => setIsProfileOpen(false)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-all active:scale-90 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-550 transition-all active:scale-90 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
-              <span className="font-extrabold text-sm text-gray-800 tracking-widest uppercase">My Profile</span>
+              <span className="font-bold text-sm text-gray-800 tracking-widest uppercase">My Profile</span>
               <button 
                 onClick={() => {
                   setIsProfileOpen(false);
@@ -553,11 +553,11 @@ export default function LoyaltyPage() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <span className="absolute -bottom-1 -right-1 bg-[#FDBD38] text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-white shadow-sm">
+                  <span className="absolute -bottom-1 -right-1 bg-[#FDBD38] text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border border-white shadow-sm">
                     {customer.tier}
                   </span>
                 </div>
-                <h3 className="font-black text-lg text-gray-800 uppercase tracking-tight">{profileName || customer.name}</h3>
+                <h3 className="font-bold text-lg text-gray-800 uppercase tracking-tight">{profileName || customer.name}</h3>
                 <span className="text-[10px] font-bold text-gray-400 mt-0.5">{customer.points.toFixed(0)} Points Balance</span>
               </div>
 
@@ -693,7 +693,7 @@ export default function LoyaltyPage() {
               >
                 <X className="w-4 h-4" />
               </button>
-              <span className="font-extrabold text-sm text-gray-805 tracking-widest uppercase">Points History</span>
+              <span className="font-bold text-sm text-gray-805 tracking-widest uppercase">Points History</span>
               <div className="w-8 h-8" />
             </div>
 
@@ -730,7 +730,7 @@ export default function LoyaltyPage() {
                           </div>
                         </div>
                         <div className="flex flex-col items-end">
-                          <span className={`text-sm font-black ${
+                          <span className={`text-sm font-bold ${
                             isEarn ? 'text-emerald-600' : 'text-orange-600'
                           }`}>
                             {isEarn ? '+' : '-'}{tx.points.toFixed(0)} PTS
@@ -754,7 +754,7 @@ export default function LoyaltyPage() {
             <div className="bg-white rounded-[32px] w-full max-w-[340px] p-6 shadow-2xl flex flex-col items-center text-center relative border border-gray-100 animate-scaleUp">
               <button 
                 onClick={() => setSelectedSticker(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 absolute top-4 right-4 transition-all active:scale-90 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-550 transition-all active:scale-90 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -774,15 +774,15 @@ export default function LoyaltyPage() {
                 )}
               </div>
 
-              <h3 className="text-base font-black text-gray-800 tracking-tight mb-1 uppercase">{selectedSticker.name}</h3>
+              <h3 className="text-base font-bold text-gray-800 tracking-tight mb-1 uppercase">{selectedSticker.name}</h3>
               
               <div className="mb-4">
                 {selectedSticker.unlocked ? (
-                  <span className="bg-emerald-50 text-emerald-600 text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full border border-emerald-100">
+                  <span className="bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-emerald-100">
                     Unlocked 🎉
                   </span>
                 ) : (
-                  <span className="bg-gray-100 text-gray-500 text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full border border-gray-200">
+                  <span className="bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-gray-200">
                     Locked 🔒
                   </span>
                 )}
@@ -814,7 +814,7 @@ export default function LoyaltyPage() {
             <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-[#FDBD38] mb-3">
               <Gift className="w-6 h-6" />
             </div>
-            <h1 className="text-[22px] font-extrabold text-gray-900 tracking-tight">Complete Profile</h1>
+            <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Complete Profile</h1>
             <p className="text-xs text-gray-400 mt-1 max-w-[280px]">
               Complete your information to claim your member tier and start earning points.
             </p>
@@ -887,7 +887,7 @@ export default function LoyaltyPage() {
           <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-[#FDBD38] mb-3">
             <Gift className="w-6 h-6" />
           </div>
-          <h1 className="text-[22px] font-extrabold text-gray-900 tracking-tight">Loyalty Program</h1>
+          <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Loyalty Program</h1>
           <p className="text-xs text-gray-400 mt-1 max-w-[280px]">
             Sign up or log in using your phone number to collect points and claim free rewards.
           </p>
@@ -931,7 +931,7 @@ export default function LoyaltyPage() {
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <span className="block font-bold">Dev Sandbox Code (Auto-resolved):</span>
-                  <span className="block font-black text-sm text-amber-950 mt-0.5 select-all">{devCode}</span>
+                  <span className="block font-bold text-sm text-amber-950 mt-0.5 select-all">{devCode}</span>
                 </div>
               </div>
             )}

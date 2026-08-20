@@ -1115,9 +1115,9 @@ export default function MenuPage() {
                 onClick={handleAddToCart}
                 className="flex-1 flex justify-between items-center pl-3 pr-4 py-2 text-white font-semibold text-[15px] cursor-pointer active:scale-[0.99] transition-all"
               >
-                <span>Add to bag</span>
-                <span className="font-extrabold text-[16px]">{totalPrice.toFixed(2)}€</span>
-              </button>
+                 <span>Add to bag</span>
+                 <span className="font-bold text-[16px]">{totalPrice.toFixed(2)}€</span>
+               </button>
             </div>
           </div>
         </div>

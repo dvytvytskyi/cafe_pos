@@ -1006,7 +1006,7 @@ export default function ShopPage() {
                           <span className="text-[12px] font-bold text-gray-900 leading-tight">
                             {addon.name}
                           </span>
-                          <span className="text-[11px] font-extrabold text-[#EE635E] mt-0.5">
+                          <span className="text-[11px] font-bold text-[#EE635E] mt-0.5">
                             + {addon.price.toFixed(2)}€
                           </span>
                         </div>
@@ -1034,7 +1034,7 @@ export default function ShopPage() {
                               >
                                 <Minus className="w-3.5 h-3.5" strokeWidth={2.8} />
                               </button>
-                              <span className="text-[13px] font-extrabold text-gray-900 min-w-[12px] text-center">
+                              <span className="text-[13px] font-bold text-gray-900 min-w-[12px] text-center">
                                 {q}
                               </span>
                               <button 
@@ -1084,7 +1084,7 @@ export default function ShopPage() {
                   className="flex-1 flex justify-between items-center pl-3 pr-4 py-2 text-white font-semibold text-[15px] cursor-pointer active:scale-[0.99] transition-all"
                 >
                   <span>Add to bag</span>
-                  <span className="font-extrabold text-[16px]">{getDetailsTotalPrice().toFixed(2)}€</span>
+                  <span className="font-bold text-[16px]">{getDetailsTotalPrice().toFixed(2)}€</span>
                 </button>
               </div>
             </div>
