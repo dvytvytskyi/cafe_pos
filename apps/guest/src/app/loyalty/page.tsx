@@ -325,6 +325,64 @@ export default function LoyaltyPage() {
           </div>
         </div>
 
+        {/* Style block for auto-oscillating holographic effects */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes card-float-ambient {
+            0% {
+              transform: perspective(1000px) rotateX(1.5deg) rotateY(-2deg) translateY(0px);
+            }
+            50% {
+              transform: perspective(1000px) rotateX(-2deg) rotateY(2.5deg) translateY(-6px);
+            }
+            100% {
+              transform: perspective(1000px) rotateX(1.5deg) rotateY(-2deg) translateY(0px);
+            }
+          }
+
+          @keyframes sheen-ambient {
+            0% {
+              background-position: 0% 0%;
+              opacity: 0.55;
+            }
+            50% {
+              background-position: 100% 100%;
+              opacity: 0.75;
+            }
+            100% {
+              background-position: 0% 0%;
+              opacity: 0.55;
+            }
+          }
+
+          @keyframes flare-ambient {
+            0% {
+              transform: rotate(25deg) translate(-80%, -80%);
+              opacity: 0.3;
+            }
+            50% {
+              transform: rotate(25deg) translate(80%, 80%);
+              opacity: 0.7;
+            }
+            100% {
+              transform: rotate(25deg) translate(-80%, -80%);
+              opacity: 0.3;
+            }
+          }
+
+          .ambient-card-animation {
+            animation: card-float-ambient 6s ease-in-out infinite;
+          }
+
+          .ambient-sheen-animation {
+            background-size: 200% 200%;
+            animation: sheen-ambient 8s ease-in-out infinite;
+          }
+
+          .ambient-flare-animation {
+            animation: flare-ambient 7s ease-in-out infinite;
+          }
+        ` }} />
+
         {/* Floating Digital Member Card */}
         <div className="px-6 -mt-14 relative z-10 max-w-[480px] mx-auto" style={{ perspective: '1000px' }}>
           <div 
@@ -333,29 +391,39 @@ export default function LoyaltyPage() {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onTouchEnd={handleMouseLeave}
-            className="rounded-[32px] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.12)] border flex flex-col relative overflow-hidden select-none cursor-pointer"
+            className={`rounded-[32px] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.12)] border flex flex-col relative overflow-hidden select-none cursor-pointer ${
+              !isHovered ? 'ambient-card-animation' : ''
+            }`}
             style={{
               ...getTierGradientStyle(customer.tier),
-              transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+              ...(isHovered ? { transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` } : {}),
               transition: isHovered ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease',
             }}
           >
             {/* Holographic Sheen/Shine Overlay */}
             <div 
-              className="absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-300"
+              className={`absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-300 ${
+                !isHovered ? 'ambient-sheen-animation' : ''
+              }`}
               style={{
-                background: `radial-gradient(circle at ${sheen.x}% ${sheen.y}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 100%)`,
+                background: isHovered 
+                  ? `radial-gradient(circle at ${sheen.x}% ${sheen.y}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 100%)`
+                  : `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 100%)`,
                 mixBlendMode: 'overlay',
                 opacity: isHovered ? 1 : 0.6,
               }}
             />
             {/* Linear light flare streak */}
             <div 
-              className="absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-500"
+              className={`absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-500 ${
+                !isHovered ? 'ambient-flare-animation' : ''
+              }`}
               style={{
-                background: `linear-gradient(${105 + tilt.y * 2}deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) ${30 + tilt.x * 2}%, rgba(255,255,255,0.25) ${45 + tilt.x * 2}%, rgba(255,255,255,0.25) ${55 + tilt.x * 2}%, rgba(255,255,255,0) ${70 + tilt.x * 2}%, rgba(255,255,255,0) 100%)`,
+                background: `linear-gradient(${105 + (isHovered ? tilt.y * 2 : 0)}deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.2) 48%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.2) 52%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%)`,
+                backgroundSize: '200% 200%',
                 mixBlendMode: 'overlay',
                 opacity: isHovered ? 0.8 : 0.4,
+                ...(isHovered ? { transform: 'none' } : {}),
               }}
             />
 
