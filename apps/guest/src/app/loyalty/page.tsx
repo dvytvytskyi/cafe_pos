@@ -171,7 +171,103 @@ export default function LoyaltyPage() {
     }
   };
 
-  // Helper to determine tier gradient background
+  // Holographic card states
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [sheen, setSheen] = useState({ x: 50, y: 50 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    
+    const rotateX = -(y - yc) / (rect.height / 15);
+    const rotateY = (x - xc) / (rect.width / 15);
+    
+    const sheenX = (x / rect.width) * 100;
+    const sheenY = (y / rect.height) * 100;
+    
+    setTilt({ x: rotateX, y: rotateY });
+    setSheen({ x: sheenX, y: sheenY });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    if (e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+      handleMouseLeave();
+      return;
+    }
+    
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    
+    const rotateX = -(y - yc) / (rect.height / 15);
+    const rotateY = (x - xc) / (rect.width / 15);
+    
+    const sheenX = (x / rect.width) * 100;
+    const sheenY = (y / rect.height) * 100;
+    
+    setTilt({ x: rotateX, y: rotateY });
+    setSheen({ x: sheenX, y: sheenY });
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setTilt({ x: 0, y: 0 });
+    setSheen({ x: 50, y: 50 });
+  };
+
+  // Helper to determine tier gradient background style
+  const getTierGradientStyle = (tier: string) => {
+    const t = tier.toLowerCase();
+    if (t === 'silver') {
+      return {
+        background: 'linear-gradient(135deg, #d3d3d3 0%, #ffffff 20%, #a9a9a9 40%, #e0e0e0 60%, #ffffff 80%, #909090 100%)',
+        color: '#2d3748',
+        borderColor: 'rgba(255, 255, 255, 0.4)',
+        textShadow: '0 1px 1px rgba(255,255,255,0.6)',
+      };
+    }
+    if (t === 'gold') {
+      return {
+        background: 'linear-gradient(135deg, #c39c43 0%, #fbf5b7 20%, #b38728 40%, #fef8cc 60%, #aa771c 80%, #ffd700 100%)',
+        color: '#4a3712',
+        borderColor: 'rgba(255, 255, 255, 0.4)',
+        textShadow: '0 1px 1px rgba(255,255,255,0.6)',
+      };
+    }
+    if (t === 'vip') {
+      return {
+        background: 'linear-gradient(135deg, #0f0f16 0%, #201b2d 30%, #08060c 50%, #2a203f 70%, #030205 100%)',
+        color: '#e2e8f0',
+        borderColor: 'rgba(139, 92, 246, 0.5)',
+        textShadow: '0 -1px 1px rgba(0,0,0,0.8)',
+      };
+    }
+    // Bronze
+    return {
+      background: 'linear-gradient(135deg, #bc6c47 0%, #e59f7c 20%, #9f4924 40%, #f4b899 60%, #7f3412 80%, #bc6c47 100%)',
+      color: '#4c1d07',
+      borderColor: 'rgba(255, 255, 255, 0.4)',
+      textShadow: '0 1px 1px rgba(255,255,255,0.6)',
+    };
+  };
+
+  // Helper to determine tier badge border / color
   const getTierGradient = (tier: string) => {
     const t = tier.toLowerCase();
     if (t === 'silver') {
@@ -213,7 +309,7 @@ export default function LoyaltyPage() {
     const progressPercent = nextThreshold === Infinity ? 100 : Math.min(100, (customer.ltv / nextThreshold) * 100);
 
     return (
-      <div className="min-h-screen bg-gray-50 pb-[90px] relative scroll-smooth overflow-y-auto">
+      <div className="h-screen overflow-y-auto bg-gray-50 pb-[90px] relative scroll-smooth">
         {/* Profile Header */}
         <div className="bg-[#FDBD38] text-white px-6 pt-10 pb-20 rounded-b-[40px] shadow-lg relative">
           <div className="max-w-[440px] mx-auto flex items-center justify-between">
@@ -230,21 +326,52 @@ export default function LoyaltyPage() {
         </div>
 
         {/* Floating Digital Member Card */}
-        <div className="px-6 -mt-14 relative z-10 max-w-[480px] mx-auto">
-          <div className={`rounded-[32px] p-6 shadow-[0_15px_30px_rgba(0,0,0,0.08)] border flex flex-col bg-gradient-to-br ${getTierGradient(customer.tier)}`}>
-            <div className="flex justify-between items-start w-full">
+        <div className="px-6 -mt-14 relative z-10 max-w-[480px] mx-auto" style={{ perspective: '1000px' }}>
+          <div 
+            onMouseMove={handleMouseMove}
+            onTouchMove={handleTouchMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onTouchEnd={handleMouseLeave}
+            className="rounded-[32px] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.12)] border flex flex-col relative overflow-hidden select-none cursor-pointer"
+            style={{
+              ...getTierGradientStyle(customer.tier),
+              transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+              transition: isHovered ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease',
+            }}
+          >
+            {/* Holographic Sheen/Shine Overlay */}
+            <div 
+              className="absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-300"
+              style={{
+                background: `radial-gradient(circle at ${sheen.x}% ${sheen.y}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 100%)`,
+                mixBlendMode: 'overlay',
+                opacity: isHovered ? 1 : 0.6,
+              }}
+            />
+            {/* Linear light flare streak */}
+            <div 
+              className="absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-500"
+              style={{
+                background: `linear-gradient(${105 + tilt.y * 2}deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) ${30 + tilt.x * 2}%, rgba(255,255,255,0.25) ${45 + tilt.x * 2}%, rgba(255,255,255,0.25) ${55 + tilt.x * 2}%, rgba(255,255,255,0) ${70 + tilt.x * 2}%, rgba(255,255,255,0) 100%)`,
+                mixBlendMode: 'overlay',
+                opacity: isHovered ? 0.8 : 0.4,
+              }}
+            />
+
+            <div className="flex justify-between items-start w-full relative z-10">
               <div className="flex flex-col text-left">
                 <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Member Card</span>
                 <span className="text-[20px] font-extrabold uppercase tracking-tight mt-1">Corgi Cafe</span>
               </div>
-              <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
+              <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border border-white/10">
                 Level {customer.tier}
               </div>
             </div>
 
             {/* Scannable QR Code */}
-            <div className="my-6 flex justify-center">
-              <div className="bg-white p-3 rounded-[24px] shadow-inner border border-black/5">
+            <div className="my-6 flex justify-center relative z-10">
+              <div className="bg-white p-3 rounded-[24px] shadow-[0_8px_16px_rgba(0,0,0,0.06)] border border-black/5">
                 <img 
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrCode)}`}
                   alt="Member QR Code"
@@ -253,7 +380,10 @@ export default function LoyaltyPage() {
               </div>
             </div>
 
-            <div className="flex justify-between items-end w-full pt-2 border-t border-black/5 mt-2">
+            <div 
+              className="flex justify-between items-end w-full pt-2 border-t mt-2 relative z-10" 
+              style={{ borderColor: customer.tier.toLowerCase() === 'vip' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }}
+            >
               <div className="flex flex-col text-left">
                 <span className="text-[9px] font-bold uppercase tracking-wider opacity-60">Card Holder</span>
                 <span className="text-sm font-bold tracking-wide mt-0.5">{customer.name}</span>
