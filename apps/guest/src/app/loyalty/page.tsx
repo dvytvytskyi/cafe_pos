@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import { useGuest } from '@/lib/guest-context';
 import {
   requestOtp,
@@ -32,6 +34,10 @@ import {
 
 export default function LoyaltyPage() {
   const { isLoggedIn, profileName, refreshAuth } = useGuest();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [phone, setPhone] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
@@ -385,86 +391,82 @@ export default function LoyaltyPage() {
 
         {/* Floating Digital Member Card */}
         <div className="px-6 -mt-14 relative z-10 max-w-[480px] mx-auto" style={{ perspective: '1000px' }}>
-          <div 
-            onMouseMove={handleMouseMove}
-            onTouchMove={handleTouchMove}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onTouchEnd={handleMouseLeave}
-            className={`rounded-[32px] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.12)] border flex flex-col relative overflow-hidden select-none cursor-pointer ${
-              !isHovered ? 'ambient-card-animation' : ''
-            }`}
-            style={{
-              ...getTierGradientStyle(customer.tier),
-              ...(isHovered ? { transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` } : {}),
-              transition: isHovered ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease',
-            }}
-          >
-            {/* Holographic Sheen/Shine Overlay */}
+          {!mounted ? (
             <div 
-              className={`absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-300 ${
-                !isHovered ? 'ambient-sheen-animation' : ''
-              }`}
-              style={{
-                background: isHovered 
-                  ? `radial-gradient(circle at ${sheen.x}% ${sheen.y}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 100%)`
-                  : `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 100%)`,
-                mixBlendMode: 'overlay',
-                opacity: isHovered ? 1 : 0.6,
-              }}
-            />
-            {/* Linear light flare streak */}
-            <div 
-              className={`absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-500 ${
-                !isHovered ? 'ambient-flare-animation' : ''
-              }`}
-              style={{
-                background: `linear-gradient(${105 + (isHovered ? tilt.y * 2 : 0)}deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.2) 48%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.2) 52%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%)`,
-                backgroundSize: '200% 200%',
-                mixBlendMode: 'overlay',
-                opacity: isHovered ? 0.8 : 0.4,
-                ...(isHovered ? { transform: 'none' } : {}),
-              }}
-            />
-
-            <div className="flex justify-between items-start w-full relative z-10">
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Member Card</span>
-                <span className="text-[20px] font-extrabold uppercase tracking-tight mt-1">Corgi Cafe</span>
-              </div>
-              <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border border-white/10">
-                Level {customer.tier}
-              </div>
-            </div>
-
-            {/* Scannable QR Code */}
-            <div className="my-6 flex justify-center relative z-10">
-              <div className="bg-white p-3 rounded-[24px] shadow-[0_8px_16px_rgba(0,0,0,0.06)] border border-black/5">
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrCode)}`}
-                  alt="Member QR Code"
-                  className="w-[160px] h-[160px] object-contain rounded-lg"
-                />
-              </div>
-            </div>
-
-            <div 
-              className="flex justify-between items-end w-full pt-2 border-t mt-2 relative z-10" 
-              style={{ borderColor: customer.tier.toLowerCase() === 'vip' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }}
+              onMouseMove={handleMouseMove}
+              onTouchMove={handleTouchMove}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              onTouchEnd={handleMouseLeave}
+              className={`rounded-[32px] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.12)] border flex flex-col relative overflow-hidden select-none cursor-pointer ambient-card-animation`}
+              style={getTierGradientStyle(customer.tier)}
             >
-              <div className="flex flex-col text-left">
-                <span className="text-[9px] font-bold uppercase tracking-wider opacity-60">Card Holder</span>
-                <span className="text-sm font-bold tracking-wide mt-0.5">{customer.name}</span>
+              {/* Holographic Sheen/Shine Overlay */}
+              <div 
+                className="absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-300 ambient-sheen-animation"
+                style={{
+                  background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 100%)',
+                  mixBlendMode: 'overlay',
+                  opacity: 0.6,
+                }}
+              />
+              {/* Linear light flare streak */}
+              <div 
+                className="absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-500 ambient-flare-animation"
+                style={{
+                  background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.2) 48%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.2) 52%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%)',
+                  backgroundSize: '200% 200%',
+                  mixBlendMode: 'overlay',
+                  opacity: 0.4,
+                }}
+              />
+
+              <div className="flex justify-between items-start w-full relative z-10">
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Member Card</span>
+                  <span className="text-[20px] font-extrabold uppercase tracking-tight mt-1">Corgi Cafe</span>
+                </div>
+                <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border border-white/10">
+                  Level {customer.tier}
+                </div>
               </div>
-              <div className="flex flex-col text-right">
-                <span className="text-[9px] font-bold uppercase tracking-wider opacity-60">Balance</span>
-                <span className="text-[18px] font-black tracking-tight flex items-center gap-1 mt-0.5 justify-end">
-                  <Coins className="w-4 h-4" />
-                  {customer.points.toFixed(0)} PTS
-                </span>
+
+              {/* Scannable QR Code */}
+              <div className="my-6 flex justify-center relative z-10">
+                <div className="bg-white p-3 rounded-[24px] shadow-[0_8px_16px_rgba(0,0,0,0.06)] border border-black/5">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrCode)}`}
+                    alt="Member QR Code"
+                    className="w-[160px] h-[160px] object-contain rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div 
+                className="flex justify-between items-end w-full pt-2 border-t mt-2 relative z-10" 
+                style={{ borderColor: customer.tier.toLowerCase() === 'vip' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }}
+              >
+                <div className="flex flex-col text-left">
+                  <span className="text-[9px] font-bold uppercase tracking-wider opacity-60">Card Holder</span>
+                  <span className="text-sm font-bold tracking-wide mt-0.5">{customer.name}</span>
+                </div>
+                <div className="flex flex-col text-right">
+                  <span className="text-[9px] font-bold uppercase tracking-wider opacity-60">Balance</span>
+                  <span className="text-[18px] font-black tracking-tight flex items-center gap-1 mt-0.5 justify-end">
+                    <Coins className="w-4 h-4" />
+                    {customer.points.toFixed(0)} PTS
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <Scene3D 
+              tier={customer.tier}
+              name={customer.name}
+              points={customer.points}
+              qrCode={qrCode}
+            />
+          )}
         </div>
 
         {/* Dashboard Content */}
@@ -777,6 +779,192 @@ export default function LoyaltyPage() {
           </form>
         )}
       </div>
+    </div>
+  );
+}
+
+function LoyaltyCard3D({ 
+  tier, 
+  name, 
+  points, 
+  qrCode,
+  isHovered,
+  setIsHovered
+}: { 
+  tier: string; 
+  name: string; 
+  points: number; 
+  qrCode: string;
+  isHovered: boolean;
+  setIsHovered: (h: boolean) => void;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
+
+  useEffect(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 648;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const render = () => {
+      // Draw background metallic gradient
+      const grad = ctx.createLinearGradient(0, 0, 1024, 648);
+      const t = tier.toLowerCase();
+      if (t === 'silver') {
+        grad.addColorStop(0, '#d3d3d3');
+        grad.addColorStop(0.3, '#ffffff');
+        grad.addColorStop(0.6, '#a9a9a9');
+        grad.addColorStop(1, '#909090');
+      } else if (t === 'gold') {
+        grad.addColorStop(0, '#c39c43');
+        grad.addColorStop(0.3, '#fbf5b7');
+        grad.addColorStop(0.6, '#b38728');
+        grad.addColorStop(1, '#aa771c');
+      } else if (t === 'vip') {
+        grad.addColorStop(0, '#101018');
+        grad.addColorStop(0.5, '#050508');
+        grad.addColorStop(1, '#1a1a26');
+      } else { // Bronze
+        grad.addColorStop(0, '#bc6c47');
+        grad.addColorStop(0.3, '#e59f7c');
+        grad.addColorStop(0.6, '#9f4924');
+        grad.addColorStop(1, '#7f3412');
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 648);
+
+      // Brushed metal texture lines
+      ctx.strokeStyle = t === 'vip' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 1024; i += 6) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i + (Math.random() - 0.5) * 60, 648);
+        ctx.stroke();
+      }
+
+      // Draw header info
+      ctx.fillStyle = t === 'vip' ? '#f8fafc' : '#3c1c0a';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.fillText('MEMBER CARD', 60, 90);
+
+      ctx.font = 'extrabold 48px sans-serif';
+      ctx.fillText('CORGI CAFE', 60, 160);
+
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText(`LEVEL ${tier.toUpperCase()}`, 780, 90);
+
+      // Cardholder
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillStyle = t === 'vip' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)';
+      ctx.fillText('CARD HOLDER', 60, 510);
+      ctx.font = 'bold 32px sans-serif';
+      ctx.fillStyle = t === 'vip' ? '#ffffff' : '#3c1c0a';
+      ctx.fillText(name.toUpperCase(), 60, 570);
+
+      // Balance
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillStyle = t === 'vip' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)';
+      ctx.fillText('BALANCE', 750, 510);
+      ctx.font = 'black 42px sans-serif';
+      ctx.fillStyle = t === 'vip' ? '#ffffff' : '#3c1c0a';
+      ctx.fillText(`${points.toFixed(0)} PTS`, 750, 570);
+    };
+
+    render();
+
+    const tex = new THREE.CanvasTexture(canvas);
+    setTexture(tex);
+
+    // Load QR Code onto the canvas texture dynamically
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrCode)}`;
+    img.onload = () => {
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(387, 199, 250, 250, 24);
+      } else {
+        ctx.rect(387, 199, 250, 250);
+      }
+      ctx.fill();
+      ctx.drawImage(img, 412, 224, 200, 200);
+      tex.needsUpdate = true;
+    };
+  }, [tier, name, points, qrCode]);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    const t = state.clock.getElapsedTime();
+    if (isHovered) {
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, state.pointer.x * 0.4, 0.1);
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, -state.pointer.y * 0.3, 0.1);
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, 0, 0.1);
+    } else {
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, Math.sin(t * 1.5) * 0.12, 0.05);
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, Math.cos(t * 1.5) * 0.08, 0.05);
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, Math.sin(t * 2) * 0.04, 0.05);
+    }
+  });
+
+  return (
+    <mesh 
+      ref={meshRef} 
+      onPointerOver={() => setIsHovered(true)} 
+      onPointerOut={() => setIsHovered(false)}
+    >
+      <boxGeometry args={[3.4, 2.15, 0.08]} />
+      {texture ? (
+        <meshPhysicalMaterial 
+          map={texture}
+          metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
+          roughness={0.15}
+          clearcoat={1.0}
+          clearcoatRoughness={0.1}
+          envMapIntensity={1.5}
+        />
+      ) : (
+        <meshStandardMaterial color="#bc6c47" />
+      )}
+    </mesh>
+  );
+}
+
+function Scene3D({ 
+  tier, 
+  name, 
+  points, 
+  qrCode 
+}: { 
+  tier: string; 
+  name: string; 
+  points: number; 
+  qrCode: string;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div 
+      className="w-full h-[320px] flex items-center justify-center relative cursor-grab active:cursor-grabbing"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Canvas camera={{ position: [0, 0, 3.2], fov: 45 }}>
+        <ambientLight intensity={0.7} />
+        <directionalLight position={[2, 2, 4]} intensity={1.2} />
+        <pointLight position={[-2, -2, 2]} intensity={0.5} color="#ffffff" />
+        <LoyaltyCard3D 
+          tier={tier}
+          name={name}
+          points={points}
+          qrCode={qrCode}
+          isHovered={isHovered}
+          setIsHovered={setIsHovered}
+        />
+      </Canvas>
     </div>
   );
 }
