@@ -871,16 +871,6 @@ function LoyaltyCard3D({
         ctx.stroke();
       }
 
-      // Draw smooth border stroke outline around the card
-      ctx.strokeStyle = t === 'vip' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(60, 28, 10, 0.25)';
-      ctx.lineWidth = 14;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(7, 7, 1024 - 14, 648 - 14, 49);
-      } else {
-        ctx.rect(7, 7, 1024 - 14, 648 - 14);
-      }
-      ctx.stroke();
 
       // Draw header info
       ctx.fillStyle = t === 'vip' ? '#f8fafc' : '#3c1c0a';
