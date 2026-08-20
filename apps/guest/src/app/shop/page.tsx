@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 
 const MOCK_MERCH_ITEMS = [
+  // 1. Hoodies Category (Bandanas)
   {
     id: "merch-1",
     sku: "BANDANA-GREEN",
@@ -43,6 +44,44 @@ const MOCK_MERCH_ITEMS = [
   },
   {
     id: "merch-2",
+    sku: "BANDANA-CLASSIC",
+    name: "Classic Corgi Bandana",
+    description: "Our signature original design bandana made with durable, lightweight canvas.",
+    price: 18.00,
+    category: "Hoodie",
+    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    options: [
+      { name: "Size", choices: ["S", "M", "L"] }
+    ]
+  },
+  {
+    id: "merch-3",
+    sku: "BANDANA-FOREST",
+    name: "Forest Green Doggie Scarf",
+    description: "Warm forest green cotton blend scarf designed for cozy walks.",
+    price: 14.50,
+    category: "Hoodie",
+    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    options: [
+      { name: "Size", choices: ["S", "M"] }
+    ]
+  },
+  {
+    id: "merch-4",
+    sku: "BANDANA-FLORAL",
+    name: "Retro Floral Bandana",
+    description: "Vintage-inspired floral pattern dog accessory with custom leather brand tag.",
+    price: 16.00,
+    category: "Hoodie",
+    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    options: [
+      { name: "Size", choices: ["S", "M", "L"] }
+    ]
+  },
+
+  // 2. Sneakers Category (Tumblers)
+  {
+    id: "merch-5",
     sku: "TUMBLER-PINK",
     name: "Crimson Wave Tumbler",
     description: "Double-wall insulated travel tumbler to keep your drinks hot or cold.",
@@ -54,7 +93,45 @@ const MOCK_MERCH_ITEMS = [
     ]
   },
   {
-    id: "merch-3",
+    id: "merch-6",
+    sku: "TUMBLER-BLUSH",
+    name: "Blush Insulated Mug",
+    description: "Premium stainless steel travel mug with leak-proof lid and soft pastel grip.",
+    price: 24.00,
+    category: "Sneaker",
+    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    options: [
+      { name: "Volume", choices: ["350ml"] }
+    ]
+  },
+  {
+    id: "merch-7",
+    sku: "TUMBLER-THERMO",
+    name: "Mascot Thermo Bottle",
+    description: "Heavy duty thermos flask featuring direct print sleeping corgi illustration.",
+    price: 32.00,
+    category: "Sneaker",
+    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    options: [
+      { name: "Volume", choices: ["500ml", "750ml"] }
+    ]
+  },
+  {
+    id: "merch-8",
+    sku: "TUMBLER-SHAKER",
+    name: "Signature Pink Shaker",
+    description: "Pastel pink shaker bottle with dynamic filter grid for matcha and protein mixes.",
+    price: 26.00,
+    category: "Sneaker",
+    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    options: [
+      { name: "Volume", choices: ["450ml"] }
+    ]
+  },
+
+  // 3. Caps Category (Apparel)
+  {
+    id: "merch-9",
     sku: "TEE-PINK",
     name: "Signature Pink Tee",
     description: "Classic lightweight organic cotton tee featuring our cute mascot logo on the chest.",
@@ -63,6 +140,42 @@ const MOCK_MERCH_ITEMS = [
     image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
     options: [
       { name: "Size", choices: ["S", "M", "L"] }
+    ]
+  },
+  {
+    id: "merch-10",
+    sku: "HOODIE-PINK-COZY",
+    name: "Cozy Pink Mascot Hoodie",
+    description: "Ultra-soft heavy fleece hoodie with embroidered Corgi emblem on front.",
+    price: 49.90,
+    category: "Face Cap",
+    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+    options: [
+      { name: "Size", choices: ["S", "M", "L", "XL"] }
+    ]
+  },
+  {
+    id: "merch-11",
+    sku: "LONGSLEEVE-PINK",
+    name: "Retro Pink Longsleeve",
+    description: "Relaxed fit lightweight long sleeve shirt with printed sleeve graphics.",
+    price: 34.90,
+    category: "Face Cap",
+    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+    options: [
+      { name: "Size", choices: ["S", "M", "L"] }
+    ]
+  },
+  {
+    id: "merch-12",
+    sku: "CREWNECK-PINK",
+    name: "Summer Cotton Crewneck",
+    description: "Comfortable fleece crewneck sweatshirt, perfect for summer nights.",
+    price: 39.90,
+    category: "Face Cap",
+    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+    options: [
+      { name: "Size", choices: ["S", "M", "L", "XL"] }
     ]
   }
 ];
