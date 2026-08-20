@@ -419,14 +419,14 @@ export default function ShopPage() {
       {/* Main Container */}
       <div className="w-full max-w-[480px] flex-1 bg-white px-5 py-6 flex flex-col gap-6">
         
-        {/* Horizontal Promo Banner Card (Layered background with faded pattern and high-contrast berry text) */}
-        <div className="w-full rounded-[16px] overflow-hidden relative min-h-[140px] shadow-sm flex items-center justify-between p-6">
-          {/* Solid pink background layer */}
-          <div className="absolute inset-0 bg-[#FC8C86] z-0" />
+        {/* Horizontal Promo Banner Card (Layered background with transparent pattern, white base, and brand yellow button) */}
+        <div className="w-full rounded-[16px] border border-gray-100 overflow-hidden relative min-h-[140px] shadow-sm flex items-center justify-between p-6">
+          {/* Solid white background layer */}
+          <div className="absolute inset-0 bg-white z-0" />
           
-          {/* Faded small pattern layer */}
+          {/* Transparent small pattern layer */}
           <div 
-            className="absolute inset-0 z-0 bg-repeat opacity-[0.12]"
+            className="absolute inset-0 z-0 bg-repeat"
             style={{ 
               backgroundImage: "url('/pattern2.svg')",
               backgroundSize: "70px 70px" 
@@ -434,7 +434,7 @@ export default function ShopPage() {
           />
 
           <div className="flex flex-col items-start gap-2.5 z-10 text-left max-w-[60%]">
-            <h2 className="text-[17px] font-bold text-[#5E1715] leading-tight">
+            <h2 className="text-[17px] font-bold text-gray-900 leading-tight">
               Buy 1 hoodie,<br />get 45% off caps
             </h2>
             <button 
@@ -443,7 +443,7 @@ export default function ShopPage() {
                 const capCat = categories.find(c => c.id === "Face Cap");
                 if (capCat) setSelectedStory(capCat);
               }}
-              className="bg-white hover:bg-gray-50 text-[#5E1715] px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none z-10"
+              className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none z-10"
             >
               <span>Shop now</span>
               <ArrowRight className="w-3.5 h-3.5" />
