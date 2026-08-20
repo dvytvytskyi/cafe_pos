@@ -371,10 +371,10 @@ export default function ShopPage() {
   };
 
   const handleCheckout = async () => {
-    if (!bootstrap?.location?.id || merchCart.length === 0) return;
+    if (!bootstrap?.locationId || merchCart.length === 0) return;
     try {
       const order = await createMerchOrder({
-        locationId: bootstrap.location.id,
+        locationId: bootstrap.locationId,
         items: merchCart,
       });
       setCreatedOrderNumber(`MERCH-${order.orderNumber}`);
@@ -962,6 +962,7 @@ export default function ShopPage() {
           <style>{`
             .cube-container {
               perspective: 1200px;
+              transform-style: preserve-3d;
               position: relative;
               width: 100%;
               height: 100%;
@@ -981,20 +982,20 @@ export default function ShopPage() {
               animation: cubePrevIn 0.6s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
             }
             @keyframes cubeNextOut {
-              0% { transform: rotateY(0deg); transform-origin: 0% 50%; opacity: 1; }
-              100% { transform: rotateY(-90deg); transform-origin: 0% 50%; opacity: 0; }
+              0% { transform: translateX(0) rotateY(0deg); transform-origin: 100% 50%; opacity: 1; }
+              100% { transform: translateX(-100%) rotateY(-90deg); transform-origin: 100% 50%; opacity: 0; }
             }
             @keyframes cubeNextIn {
-              0% { transform: rotateY(90deg); transform-origin: 100% 50%; opacity: 0; }
-              100% { transform: rotateY(0deg); transform-origin: 100% 50%; opacity: 1; }
+              0% { transform: translateX(100%) rotateY(90deg); transform-origin: 0% 50%; opacity: 0; }
+              100% { transform: translateX(0) rotateY(0deg); transform-origin: 0% 50%; opacity: 1; }
             }
             @keyframes cubePrevOut {
-              0% { transform: rotateY(0deg); transform-origin: 100% 50%; opacity: 1; }
-              100% { transform: rotateY(90deg); transform-origin: 100% 50%; opacity: 0; }
+              0% { transform: translateX(0) rotateY(0deg); transform-origin: 0% 50%; opacity: 1; }
+              100% { transform: translateX(100%) rotateY(90deg); transform-origin: 0% 50%; opacity: 0; }
             }
             @keyframes cubePrevIn {
-              0% { transform: rotateY(-90deg); transform-origin: 0% 50%; opacity: 0; }
-              100% { transform: rotateY(0deg); transform-origin: 0% 50%; opacity: 1; }
+              0% { transform: translateX(-100%) rotateY(-90deg); transform-origin: 100% 50%; opacity: 0; }
+              100% { transform: translateX(0) rotateY(0deg); transform-origin: 100% 50%; opacity: 1; }
             }
           `}</style>
 
