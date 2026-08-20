@@ -105,7 +105,7 @@ export default function ShopPage() {
   const router = useRouter();
   
   // Local Catalog / Filter states
-  const [activeCategoryTab, setActiveCategoryTab] = useState<string>("All");
+  const [activeCategoryTab, setActiveCategoryTab] = useState<string>("Hoodie");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({});
   const [quantity, setQuantity] = useState(1);
@@ -189,14 +189,12 @@ export default function ShopPage() {
   };
 
   const categories = [
-    { id: "All", label: "All Items", emoji: "🛍️" },
     { id: "Hoodie", label: "Hoodie", emoji: "🧥" },
     { id: "Sneaker", label: "Sneaker", emoji: "👟" },
     { id: "Face Cap", label: "Face Cap", emoji: "🧢" }
   ];
 
   const filteredItems = MOCK_MERCH_ITEMS.filter(item => {
-    if (activeCategoryTab === "All") return true;
     return item.category === activeCategoryTab;
   });
 
