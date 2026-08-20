@@ -421,10 +421,12 @@ export default function ShopPage() {
         
         {/* Horizontal Promo Banner Card (Pink shirt on patterned background) */}
         <div 
-          className="w-full rounded-[16px] p-6 flex items-center justify-between overflow-hidden relative min-h-[140px] shadow-sm bg-cover bg-center"
+          className="w-full rounded-[16px] p-6 flex items-center justify-between overflow-hidden relative min-h-[140px] shadow-sm"
           style={{ 
             backgroundColor: "#FC8C86",
-            backgroundImage: "url('/pattern2.svg')"
+            backgroundImage: "url('/pattern2.svg')",
+            backgroundSize: "100px 100px",
+            backgroundRepeat: "repeat"
           }}
         >
           <div className="flex flex-col items-start gap-2.5 z-10 text-left max-w-[60%]">
