@@ -56,7 +56,7 @@ export function BottomNav() {
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, []);
 
-  if (modalOpen || (foodCart.length > 0 && pathname === '/menu')) return null;
+  if (modalOpen || (foodCart.length > 0 && pathname === '/menu') || (merchCart.length > 0 && pathname === '/shop')) return null;
 
   return (
     <nav 

@@ -412,6 +412,7 @@ export default function ShopPage() {
 
   useEffect(() => {
     if (selectedItem) {
+      document.body.classList.add('item-detail-open');
       setLastSelectedItem(selectedItem);
       setQuantity(1);
       setActiveImageIndex(0);
@@ -425,7 +426,12 @@ export default function ShopPage() {
         initialOptions[opt.name] = opt.choices[0];
       });
       setSelectedOptions(initialOptions);
+    } else {
+      document.body.classList.remove('item-detail-open');
     }
+    return () => {
+      document.body.classList.remove('item-detail-open');
+    };
   }, [selectedItem]);
 
   const handleNextStory = () => {
