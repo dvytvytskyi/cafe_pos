@@ -343,20 +343,8 @@ export default function ShopPage() {
             <div 
               key={item.id} 
               onClick={() => setSelectedItem(item)}
-              className="bg-white border border-gray-100 rounded-[24px] overflow-hidden flex flex-col hover:opacity-98 transition-all cursor-pointer group active:scale-[0.98] relative"
+              className="bg-white border border-gray-100 rounded-[16px] overflow-hidden flex flex-col hover:opacity-98 transition-all cursor-pointer group active:scale-[0.98] relative"
             >
-              {/* Heart icon on top-right */}
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white flex items-center justify-center z-10 border border-gray-100 text-gray-400 hover:text-red-500 transition-colors shadow-sm active:scale-90"
-              >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </button>
-
               {/* Product Image Wrapper */}
               <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative">
                 {item.image ? (
@@ -373,7 +361,7 @@ export default function ShopPage() {
               {/* Product Card Text Details */}
               <div className="p-4 flex flex-col justify-between flex-grow gap-2 text-left">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[13px] font-bold text-gray-900 truncate">
+                  <span className="text-[13px] font-bold text-gray-900 line-clamp-2 min-h-[36px] leading-tight">
                     {item.name}
                   </span>
                   <p className="text-[11px] text-gray-400 font-semibold leading-snug line-clamp-1">
@@ -385,8 +373,8 @@ export default function ShopPage() {
                   <span className="text-[14px] font-bold text-gray-900">
                     {item.price.toFixed(2)}€
                   </span>
-                  <div className="w-8 h-8 rounded-full bg-white border border-gray-150 text-gray-700 flex items-center justify-center transition-all group-hover:bg-gray-50 shadow-sm">
-                    <Plus className="w-4 h-4 text-gray-600" strokeWidth={2.2} />
+                  <div className="w-8 h-8 rounded-full bg-[#FDBD38] hover:bg-[#e5a420] text-white flex items-center justify-center transition-all shadow-sm">
+                    <Plus className="w-4 h-4 text-white" strokeWidth={2.2} />
                   </div>
                 </div>
               </div>
