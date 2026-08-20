@@ -783,7 +783,7 @@ export default function LoyaltyPage() {
   );
 }
 
-function LoyaltyCard3D({ 
+const LoyaltyCard3D = React.memo(({ 
   tier, 
   name, 
   points, 
@@ -797,16 +797,16 @@ function LoyaltyCard3D({
   qrCode: string;
   isHovered: boolean;
   setIsHovered: (h: boolean) => void;
-}) {
+}) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
 
   const getSideColor = (t: string) => {
     const low = t.toLowerCase();
-    if (low === 'silver') return '#a9a9a9';
-    if (low === 'gold') return '#b38728';
-    if (low === 'vip') return '#2a203f';
-    return '#9f4924'; // Bronze
+    if (low === 'silver') return '#e2e2e6';
+    if (low === 'gold') return '#f3e5ab';
+    if (low === 'vip') return '#30303a';
+    return '#e9c4b0'; // Bronze / rose-gold
   };
 
   useEffect(() => {
@@ -821,24 +821,21 @@ function LoyaltyCard3D({
       const grad = ctx.createLinearGradient(0, 0, 1024, 648);
       const t = tier.toLowerCase();
       if (t === 'silver') {
-        grad.addColorStop(0, '#d3d3d3');
-        grad.addColorStop(0.3, '#ffffff');
-        grad.addColorStop(0.6, '#a9a9a9');
-        grad.addColorStop(1, '#909090');
+        grad.addColorStop(0, '#c8c8cc');
+        grad.addColorStop(0.5, '#e2e2e6');
+        grad.addColorStop(1, '#b0b0b5');
       } else if (t === 'gold') {
-        grad.addColorStop(0, '#c39c43');
-        grad.addColorStop(0.3, '#fbf5b7');
-        grad.addColorStop(0.6, '#b38728');
-        grad.addColorStop(1, '#aa771c');
+        grad.addColorStop(0, '#d4af37');
+        grad.addColorStop(0.5, '#f3e5ab');
+        grad.addColorStop(1, '#aa820a');
       } else if (t === 'vip') {
-        grad.addColorStop(0, '#101018');
-        grad.addColorStop(0.5, '#050508');
-        grad.addColorStop(1, '#1a1a26');
-      } else { // Bronze (brighter, premium rose-bronze)
-        grad.addColorStop(0, '#e59f7c');
-        grad.addColorStop(0.35, '#f7d0bd');
-        grad.addColorStop(0.7, '#bc6c47');
-        grad.addColorStop(1, '#9f4924');
+        grad.addColorStop(0, '#1e1e24');
+        grad.addColorStop(0.5, '#30303a');
+        grad.addColorStop(1, '#121216');
+      } else { // Bronze (satin rose-bronze)
+        grad.addColorStop(0, '#d4a387');
+        grad.addColorStop(0.5, '#e9c4b0');
+        grad.addColorStop(1, '#bc8c72');
       }
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1024, 648);
@@ -913,10 +910,12 @@ function LoyaltyCard3D({
       meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, -state.pointer.y * 0.14, 0.015);
       meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, 0, 0.015);
     } else {
-      // Very slow and gentle ambient floating loop
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, Math.sin(t * 0.35) * 0.08, 0.015);
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, Math.cos(t * 0.35) * 0.05, 0.015);
-      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, Math.sin(t * 0.5) * 0.02, 0.015);
+      // Very slow ambient floating loop centered around a permanent tilt to show off thickness
+      const baseRotationX = -10 * (Math.PI / 180);
+      const baseRotationY = 12 * (Math.PI / 180);
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, baseRotationY + Math.sin(t * 0.3) * 0.06, 0.015);
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, baseRotationX + Math.cos(t * 0.3) * 0.04, 0.015);
+      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, Math.sin(t * 0.4) * 0.02, 0.015);
     }
   });
 
@@ -926,27 +925,28 @@ function LoyaltyCard3D({
       onPointerOver={() => setIsHovered(true)} 
       onPointerOut={() => setIsHovered(false)}
     >
-      <boxGeometry args={[2.8, 1.77, 0.08]} />
+      {/* Thicker card geometry (0.14 depth) to feel solid */}
+      <boxGeometry args={[2.8, 1.77, 0.14]} />
       {texture ? (
         <>
-          {/* Edge materials for realistic 3D thickness */}
-          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.9} roughness={0.2} />
-          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.9} roughness={0.2} />
-          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.9} roughness={0.2} />
-          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.9} roughness={0.2} />
-          {/* Front */}
+          {/* Polished edge materials for rich 3D thickness borders */}
+          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.95} roughness={0.15} clearcoat={1.0} clearcoatRoughness={0.1} />
+          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.95} roughness={0.15} clearcoat={1.0} clearcoatRoughness={0.1} />
+          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.95} roughness={0.15} clearcoat={1.0} clearcoatRoughness={0.1} />
+          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.95} roughness={0.15} clearcoat={1.0} clearcoatRoughness={0.1} />
+          {/* Front (Satin Matte texture) */}
           <meshPhysicalMaterial 
             map={texture}
             metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
-            roughness={0.32}
+            roughness={0.42}
             clearcoat={1.0}
             clearcoatRoughness={0.1}
           />
-          {/* Back */}
+          {/* Back (Satin Matte texture) */}
           <meshPhysicalMaterial 
             map={texture}
             metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
-            roughness={0.32}
+            roughness={0.42}
             clearcoat={1.0}
             clearcoatRoughness={0.1}
           />
@@ -956,7 +956,7 @@ function LoyaltyCard3D({
       )}
     </mesh>
   );
-}
+});
 
 function Scene3D({ 
   tier, 
