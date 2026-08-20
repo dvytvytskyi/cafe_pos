@@ -17,7 +17,7 @@ export function withGuestCors(response: NextResponse, req?: Request): NextRespon
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Cookie');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Cookie, Authorization');
   }
   return response;
 }
