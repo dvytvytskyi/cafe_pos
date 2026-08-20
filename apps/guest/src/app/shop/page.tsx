@@ -31,62 +31,38 @@ import {
 const MOCK_MERCH_ITEMS = [
   {
     id: "merch-1",
-    sku: "HOODIE-GREEN",
-    name: "Midnight Bloom Hoodie",
-    description: "Stylish heavy cotton blend hoodie with premium embroidered logos and custom stitching.",
-    price: 80.00,
+    sku: "BANDANA-GREEN",
+    name: "Midnight Bloom Bandana",
+    description: "Premium cotton doggie bandana with direct embroidered mascot logo.",
+    price: 15.00,
     category: "Hoodie",
     image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
     options: [
-      { name: "Size", choices: ["S", "M", "L", "XL"] }
+      { name: "Size", choices: ["S", "M"] }
     ]
   },
   {
     id: "merch-2",
-    sku: "HOODIE-BLUE",
-    name: "Crimson Wave Hoodie",
-    description: "Classic casual hoodie featuring clean minimal branding and premium warm fleece inner lining.",
-    price: 35.00,
-    category: "Hoodie",
+    sku: "TUMBLER-PINK",
+    name: "Crimson Wave Tumbler",
+    description: "Double-wall insulated travel tumbler to keep your drinks hot or cold.",
+    price: 28.00,
+    category: "Sneaker",
     image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
     options: [
-      { name: "Size", choices: ["S", "M", "L", "XL"] }
+      { name: "Volume", choices: ["350ml", "450ml"] }
     ]
   },
   {
     id: "merch-3",
-    sku: "HOODIE-PURPLE",
-    name: "Signature Purple Hoodie",
-    description: "Our signature double-brushed cotton hoodie in vibrant, eye-catching midnight violet.",
-    price: 65.00,
-    category: "Hoodie",
+    sku: "TEE-PINK",
+    name: "Signature Pink Tee",
+    description: "Classic lightweight organic cotton tee featuring our cute mascot logo on the chest.",
+    price: 24.90,
+    category: "Face Cap",
     image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
     options: [
-      { name: "Size", choices: ["S", "M", "L", "XL"] }
-    ]
-  },
-  {
-    id: "merch-4",
-    sku: "CAP-BLUE",
-    name: "Crimson Wave Cap",
-    description: "Premium adjustable baseball cap featuring breathable panels and direct front embroidery.",
-    price: 25.00,
-    category: "Face Cap",
-    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    options: [
-      { name: "Fit", choices: ["Standard Fit", "Flex Fit"] }
-    ]
-  },
-  {
-    id: "merch-5",
-    sku: "CAP-GREEN",
-    name: "Midnight Bloom Cap",
-    description: "Structured 6-panel cap with direct embroidered branding, matching the floral collection.",
-    price: 25.00,
-    category: "Face Cap",
-    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    options: [
-      { name: "Fit", choices: ["Standard Fit", "Flex Fit"] }
+      { name: "Size", choices: ["S", "M", "L"] }
     ]
   }
 ];
@@ -97,21 +73,21 @@ const categories = [
     label: "Hoodies", 
     image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
     storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    tagline: "Midnight Bloom green hoodie. Premium heavy cotton blend."
+    tagline: "Midnight Bloom green bandana. Premium cotton fabric."
   },
   { 
     id: "Sneaker", 
     label: "Sneakers", 
-    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    tagline: "Signature Purple collection. Designed for ultimate look."
+    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    tagline: "Crimson Wave insulated tumbler. Keeps your coffee hot."
   },
   { 
     id: "Face Cap", 
     label: "Caps", 
-    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    tagline: "Crimson Wave blue cap. Classic style for daily fits."
+    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+    tagline: "Signature Pink Tee. Cozy fit with custom details."
   }
 ];
 
@@ -295,7 +271,7 @@ export default function ShopPage() {
       {/* Main Container */}
       <div className="w-full max-w-[480px] flex-1 bg-white px-5 py-6 flex flex-col gap-6">
         
-        {/* Horizontal Promo Banner Card (Midnight Purple Hoodie) */}
+        {/* Horizontal Promo Banner Card (Pink Tumbler) */}
         <div className="w-full bg-gray-100 rounded-[24px] p-6 flex items-center justify-between overflow-hidden relative min-h-[140px]">
           <div className="flex flex-col items-start gap-2.5 z-10 text-left max-w-[60%]">
             <h2 className="text-[17px] font-extrabold text-gray-900 leading-tight">
@@ -315,7 +291,7 @@ export default function ShopPage() {
           </div>
           {/* Purple hoodie image positioned absolute on the right */}
           <img 
-            src="https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp" 
+            src="https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp" 
             alt="Promo hoodie" 
             className="absolute right-[-15px] bottom-[-15px] w-[140px] h-[140px] object-contain rotate-[-12deg] drop-shadow-md"
           />
