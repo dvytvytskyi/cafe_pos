@@ -64,6 +64,13 @@ export default function LoyaltyPage() {
   const [editAllergy, setEditAllergy] = useState('');
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [selectedSticker, setSelectedSticker] = useState<{
+    id: number;
+    name: string;
+    desc: string;
+    path: string;
+    unlocked: boolean;
+  } | null>(null);
 
   // Fetch loyalty status and transaction history
   const loadLoyaltyData = async () => {
@@ -227,19 +234,19 @@ export default function LoyaltyPage() {
     const nextThreshold = getTierThreshold(customer.tier, config);
     const progressPercent = nextThreshold === Infinity ? 100 : Math.min(100, (customer.ltv / nextThreshold) * 100);
 
-    const achievements = [
-      { id: 1, name: 'First Sip', desc: 'Order your first coffee', icon: Coffee, unlocked: true },
-      { id: 2, name: 'Corgi Friend', desc: 'Visit cafe 5 times', icon: Heart, unlocked: true },
-      { id: 3, name: 'Early Bird', desc: 'Order before 9:00 AM', icon: Sun, unlocked: true },
-      { id: 4, name: 'Sweet Tooth', desc: 'Order 3 desserts in 1 order', icon: Cake, unlocked: false },
-      { id: 5, name: 'VIP Club', desc: 'Reach VIP status tier', icon: Crown, unlocked: false },
-      { id: 6, name: 'Local Legend', desc: 'Visit the cafe 50 times', icon: Trophy, unlocked: false },
-      { id: 7, name: 'Salty Dog', desc: 'Try salted caramel latte', icon: Sparkles, unlocked: true },
-      { id: 8, name: 'Eco Champion', desc: 'Use reusable cup 10 times', icon: Leaf, unlocked: false },
-      { id: 9, name: 'Night Owl', desc: 'Order a drink after 10 PM', icon: Moon, unlocked: false },
-      { id: 10, name: 'Menu Master', desc: 'Try all menu categories', icon: BookOpen, unlocked: false },
-      { id: 11, name: 'Sharing is Caring', desc: 'Redeem gift card for friend', icon: Gift, unlocked: true },
-      { id: 12, name: 'Corgi Lover', desc: 'Buy any Corgi merch item', icon: ShoppingBag, unlocked: false }
+    const stickers = [
+      { id: 1, name: 'Coffee Lover', desc: 'Order your first coffee to unlock this sticker!', path: '/stickers/corgi_coffee1.png', unlocked: true },
+      { id: 2, name: 'French Croissant', desc: 'Order a fresh croissant with coffee to unlock this sticker!', path: '/stickers/corgi_croissant_1.png', unlocked: true },
+      { id: 3, name: 'Healthy Smoothie', desc: 'Order a fresh fruit smoothie to unlock this sticker!', path: '/stickers/corgi_smoothie_1.png', unlocked: true },
+      { id: 4, name: 'Fiesta Time', desc: 'Visit the cafe during our Friday Fiesta night to unlock this sticker!', path: '/stickers/corgi_fiesta_1.png', unlocked: true },
+      { id: 5, name: 'Sweet Tooth', desc: 'Order 3 desserts in a single purchase to unlock this sticker!', path: '/stickers/corgi_sweety_1.png', unlocked: true },
+      { id: 6, name: 'Music Lover', desc: 'Tune in and connect to the Corgi Radio channel to unlock this sticker!', path: '/stickers/corgi_music_1.png', unlocked: true },
+      { id: 7, name: 'Happy Birthday', desc: 'Visit the cafe on your birthday to unlock this sticker!', path: '/stickers/corgi_birthday_1.png', unlocked: false },
+      { id: 8, name: 'Easter Bunny', desc: 'Visit the cafe during Easter holidays to unlock this sticker!', path: '/stickers/corgi_easter_1.png', unlocked: false },
+      { id: 9, name: 'Cupid Corgi', desc: "Visit the cafe on Valentine's Day to unlock this sticker!", path: '/stickers/corgi_cupidon_1.png', unlocked: false },
+      { id: 10, name: 'Spooky Corgi', desc: 'Visit the cafe on Halloween day to unlock this sticker!', path: '/stickers/corgi_halloween_1.png', unlocked: false },
+      { id: 11, name: 'Merry Christmas', desc: 'Visit the cafe during Christmas week to unlock this sticker!', path: '/stickers/corgi_hristmas_1.png', unlocked: false },
+      { id: 12, name: 'Workaholic', desc: 'Connect to the cafe Wi-Fi for 5 hours in one visit to unlock this sticker!', path: '/stickers/corgi_laptop1.png', unlocked: false }
     ];
 
     return (
@@ -329,38 +336,42 @@ export default function LoyaltyPage() {
             </div>
           </div>
 
-          {/* Achievements Grid (Borderless & frameless) */}
+          {/* Social Media Stickers Grid */}
           <div className="flex flex-col text-left px-2 mb-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkle className="w-5 h-5 text-[#FDBD38]" />
-              <span className="text-sm font-bold text-gray-800">My Achievements</span>
+            <div className="flex flex-col gap-0.5 mb-4">
+              <div className="flex items-center gap-2">
+                <Sparkle className="w-5 h-5 text-[#FDBD38]" />
+                <span className="text-sm font-bold text-gray-800">Social Media Stickers</span>
+              </div>
+              <span className="text-[10px] text-gray-400 font-bold ml-7">Press on sticker to learn how to open</span>
             </div>
 
             <div className="grid grid-cols-3 gap-y-6 gap-x-3">
-              {achievements.map((ach) => {
-                const IconComponent = ach.icon;
-                return (
-                  <div 
-                    key={ach.id} 
-                    className={`flex flex-col items-center text-center transition-all ${
-                      ach.unlocked 
-                        ? 'opacity-100 text-[#FDBD38]' 
-                        : 'opacity-40 text-gray-400 filter grayscale'
-                    }`}
-                  >
-                    <div className="w-12 h-12 relative flex items-center justify-center">
-                      <IconComponent className="w-7 h-7" />
-                      {!ach.unlocked && (
-                        <div className="absolute bottom-0 right-0 bg-gray-500 text-white rounded-full p-0.5 border border-white">
-                          <Lock className="w-2.5 h-2.5" />
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-800 leading-tight line-clamp-1 mt-1">{ach.name}</span>
-                    <span className="text-[8px] text-gray-400 font-semibold mt-0.5 leading-tight line-clamp-2 max-w-[90px]">{ach.desc}</span>
+              {stickers.map((st) => (
+                <button 
+                  key={st.id} 
+                  onClick={() => setSelectedSticker(st)}
+                  className={`flex flex-col items-center text-center transition-all focus:outline-none cursor-pointer ${
+                    st.unlocked 
+                      ? 'opacity-100' 
+                      : 'opacity-40 filter grayscale'
+                  }`}
+                >
+                  <div className="w-16 h-16 relative flex items-center justify-center mb-1">
+                    <img 
+                      src={st.path} 
+                      alt={st.name} 
+                      className="w-14 h-14 object-contain"
+                    />
+                    {!st.unlocked && (
+                      <div className="absolute bottom-0 right-0 bg-gray-500 text-white rounded-full p-0.5 border border-white">
+                        <Lock className="w-2.5 h-2.5" />
+                      </div>
+                    )}
                   </div>
-                );
-              })}
+                  <span className="text-[10px] font-bold text-gray-800 leading-tight line-clamp-1">{st.name}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -530,6 +541,60 @@ export default function LoyaltyPage() {
             </div>
           </div>
         </div>
+
+        {/* Sticker Detail Modal Overlay */}
+        {selectedSticker && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-6 animate-fadeIn">
+            <div className="bg-white rounded-[32px] w-full max-w-[340px] p-6 shadow-2xl flex flex-col items-center text-center relative border border-gray-100 animate-scaleUp">
+              <button 
+                onClick={() => setSelectedSticker(null)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 absolute top-4 right-4 transition-all active:scale-90 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="w-28 h-28 my-4 relative flex items-center justify-center">
+                <img 
+                  src={selectedSticker.path} 
+                  alt={selectedSticker.name} 
+                  className={`w-24 h-24 object-contain ${
+                    selectedSticker.unlocked ? '' : 'filter grayscale opacity-60'
+                  }`}
+                />
+                {!selectedSticker.unlocked && (
+                  <div className="absolute bottom-1 right-1 bg-gray-500 text-white rounded-full p-1.5 border border-white shadow-sm">
+                    <Lock className="w-3 h-3" />
+                  </div>
+                )}
+              </div>
+
+              <h3 className="text-base font-black text-gray-800 tracking-tight mb-1 uppercase">{selectedSticker.name}</h3>
+              
+              <div className="mb-4">
+                {selectedSticker.unlocked ? (
+                  <span className="bg-emerald-50 text-emerald-600 text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full border border-emerald-100">
+                    Unlocked 🎉
+                  </span>
+                ) : (
+                  <span className="bg-gray-100 text-gray-500 text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full border border-gray-200">
+                    Locked 🔒
+                  </span>
+                )}
+              </div>
+
+              <p className="text-xs font-semibold text-gray-500 leading-relaxed max-w-[240px] mb-4">
+                {selectedSticker.desc}
+              </p>
+
+              <button
+                onClick={() => setSelectedSticker(null)}
+                className="w-full bg-[#FDBD38] hover:opacity-90 text-white py-3 rounded-full font-bold text-sm transition-all active:scale-[0.99] cursor-pointer"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
