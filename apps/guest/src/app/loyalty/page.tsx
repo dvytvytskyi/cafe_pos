@@ -302,16 +302,26 @@ export default function LoyaltyPage() {
                 Hello, {profileName || customer.name}!
               </h1>
             </div>
-            <button
-              onClick={() => setIsProfileOpen(true)}
-              className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/40 shadow-sm active:scale-95 transition-all cursor-pointer flex-shrink-0"
-            >
-              <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
-                alt="Profile Avatar"
-                className="w-full h-full object-cover"
-              />
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Support Button (Exclamation mark) */}
+              <button
+                onClick={() => alert("Support: support@corgicafe.com")}
+                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer flex-shrink-0"
+                title="Support"
+              >
+                <AlertCircle className="w-5 h-5 text-white" />
+              </button>
+              <button
+                onClick={() => setIsProfileOpen(true)}
+                className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/40 shadow-sm active:scale-95 transition-all cursor-pointer flex-shrink-0"
+              >
+                <img 
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
+                  alt="Profile Avatar"
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -328,7 +338,7 @@ export default function LoyaltyPage() {
             >
               {/* Front Side: Profile Info Card */}
               <div 
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-12 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[44px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
               >
                 {/* Left Status Info (Absolute positioned) */}
                 <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
@@ -344,8 +354,8 @@ export default function LoyaltyPage() {
 
                 {/* Central Block: Photo, Name, and ID (One unit, shifted upwards) */}
                 <div className="flex-1 flex flex-col items-center justify-start mt-1">
-                  {/* Photo (twice as large: w-24 h-24) */}
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md mb-1.5 flex-shrink-0">
+                  {/* Photo (w-20 h-20) */}
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md mb-1.5 flex-shrink-0">
                     <img 
                       src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
                       alt="Profile Avatar"
@@ -400,7 +410,7 @@ export default function LoyaltyPage() {
                   </button>
                   <button
                     onClick={() => setIsCardFlipped(true)}
-                    className="w-10 h-10 bg-[#FDBD38] hover:bg-[#e5a420] text-white rounded-[12px] flex items-center justify-center flex-shrink-0 border border-[#FDBD38] hover:border-[#e5a420] active:scale-[0.95] transition-all cursor-pointer"
+                    className="w-9 h-9 bg-[#FDBD38] hover:bg-[#e5a420] text-white rounded-[12px] flex items-center justify-center flex-shrink-0 border border-[#FDBD38] hover:border-[#e5a420] active:scale-[0.95] transition-all cursor-pointer"
                     title="Show QR Code"
                   >
                     <QrCode className="w-5 h-5 text-white" />
@@ -658,14 +668,14 @@ export default function LoyaltyPage() {
                 <div className="bg-amber-50/50 p-5 rounded-[24px] border border-amber-100/50 text-xs leading-relaxed text-[#c29124]">
                   <p className="font-semibold">Calculate how many points you will earn on your next purchase:</p>
                   <div className="flex items-center gap-3 mt-3">
-                    <span className="font-extrabold text-sm text-gray-800">Spent €</span>
+                    <span className="font-bold text-sm text-gray-800">Spent €</span>
                     <input 
                       type="number" 
                       defaultValue={15} 
                       className="w-16 bg-white border border-gray-250 rounded-lg py-1 px-2 text-center font-bold text-gray-800"
                     />
-                    <span className="font-extrabold text-sm text-gray-800">➔</span>
-                    <span className="font-extrabold text-sm text-[#FDBD38] flex items-center gap-1">
+                    <span className="font-bold text-sm text-gray-800">➔</span>
+                    <span className="font-bold text-sm text-[#FDBD38] flex items-center gap-1">
                       <Coins className="w-4 h-4" />
                       {(15 * tierRate).toFixed(0)} PTS
                     </span>
