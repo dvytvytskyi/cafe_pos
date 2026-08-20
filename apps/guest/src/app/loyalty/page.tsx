@@ -28,7 +28,18 @@ import {
   Sparkle,
   History,
   AlertTriangle,
-  X
+  X,
+  Coffee,
+  Heart,
+  Sun,
+  Cake,
+  Crown,
+  Trophy,
+  Sparkles,
+  Leaf,
+  Moon,
+  BookOpen,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function LoyaltyPage() {
@@ -217,18 +228,18 @@ export default function LoyaltyPage() {
     const progressPercent = nextThreshold === Infinity ? 100 : Math.min(100, (customer.ltv / nextThreshold) * 100);
 
     const achievements = [
-      { id: 1, name: 'First Sip', desc: 'Order your first coffee', icon: '☕', unlocked: true },
-      { id: 2, name: 'Corgi Friend', desc: 'Visit cafe 5 times', icon: '🐕', unlocked: true },
-      { id: 3, name: 'Early Bird', desc: 'Order before 9:00 AM', icon: '🌅', unlocked: true },
-      { id: 4, name: 'Sweet Tooth', desc: 'Order 3 desserts in 1 order', icon: '🍰', unlocked: false },
-      { id: 5, name: 'VIP Club', desc: 'Reach VIP status tier', icon: '👑', unlocked: false },
-      { id: 6, name: 'Local Legend', desc: 'Visit the cafe 50 times', icon: '🏆', unlocked: false },
-      { id: 7, name: 'Salty Dog', desc: 'Try salted caramel latte', icon: '🧂', unlocked: true },
-      { id: 8, name: 'Eco Champion', desc: 'Use reusable cup 10 times', icon: '🌱', unlocked: false },
-      { id: 9, name: 'Night Owl', desc: 'Order a drink after 10 PM', icon: '🦉', unlocked: false },
-      { id: 10, name: 'Menu Master', desc: 'Try all menu categories', icon: '📜', unlocked: false },
-      { id: 11, name: 'Sharing is Caring', desc: 'Redeem gift card for friend', icon: '🎁', unlocked: true },
-      { id: 12, name: 'Corgi Lover', desc: 'Buy any Corgi merch item', icon: '👕', unlocked: false }
+      { id: 1, name: 'First Sip', desc: 'Order your first coffee', icon: Coffee, unlocked: true },
+      { id: 2, name: 'Corgi Friend', desc: 'Visit cafe 5 times', icon: Heart, unlocked: true },
+      { id: 3, name: 'Early Bird', desc: 'Order before 9:00 AM', icon: Sun, unlocked: true },
+      { id: 4, name: 'Sweet Tooth', desc: 'Order 3 desserts in 1 order', icon: Cake, unlocked: false },
+      { id: 5, name: 'VIP Club', desc: 'Reach VIP status tier', icon: Crown, unlocked: false },
+      { id: 6, name: 'Local Legend', desc: 'Visit the cafe 50 times', icon: Trophy, unlocked: false },
+      { id: 7, name: 'Salty Dog', desc: 'Try salted caramel latte', icon: Sparkles, unlocked: true },
+      { id: 8, name: 'Eco Champion', desc: 'Use reusable cup 10 times', icon: Leaf, unlocked: false },
+      { id: 9, name: 'Night Owl', desc: 'Order a drink after 10 PM', icon: Moon, unlocked: false },
+      { id: 10, name: 'Menu Master', desc: 'Try all menu categories', icon: BookOpen, unlocked: false },
+      { id: 11, name: 'Sharing is Caring', desc: 'Redeem gift card for friend', icon: Gift, unlocked: true },
+      { id: 12, name: 'Corgi Lover', desc: 'Buy any Corgi merch item', icon: ShoppingBag, unlocked: false }
     ];
 
     return (
@@ -287,10 +298,10 @@ export default function LoyaltyPage() {
         </div>
 
         {/* Dashboard Content */}
-        <div className="max-w-[440px] mx-auto px-6 mt-8 flex flex-col gap-4">
+        <div className="max-w-[440px] mx-auto px-6 mt-8 flex flex-col gap-6">
           
-          {/* Tier Progression Progress Card */}
-          <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex flex-col text-left shadow-sm">
+          {/* Tier Progression Progress Card (Frameless) */}
+          <div className="flex flex-col text-left px-2">
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-2">
                 <Sparkle className="w-5 h-5 text-[#FDBD38]" />
@@ -301,14 +312,14 @@ export default function LoyaltyPage() {
               </span>
             </div>
 
-            <div className="w-full bg-gray-100 h-3.5 rounded-full overflow-hidden relative border border-gray-50/50 mb-2">
+            <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden relative mb-2">
               <div 
                 className="bg-gradient-to-r from-[#FDBD38] to-[#EE635E] h-full rounded-full transition-all duration-700 ease-out" 
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
 
-            <div className="flex justify-between items-center text-[11px] font-bold text-gray-400 mt-1">
+            <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 mt-1">
               <span>Spent: {customer.ltv.toFixed(2)}€</span>
               {nextTier ? (
                 <span>{pointsToNextTier ? `${pointsToNextTier.toFixed(2)}€` : 'Next Level'} to {nextTier}</span>
@@ -326,27 +337,30 @@ export default function LoyaltyPage() {
             </div>
 
             <div className="grid grid-cols-3 gap-y-6 gap-x-3">
-              {achievements.map((ach) => (
-                <div 
-                  key={ach.id} 
-                  className={`flex flex-col items-center text-center transition-all ${
-                    ach.unlocked 
-                      ? 'opacity-100' 
-                      : 'opacity-40 filter grayscale'
-                  }`}
-                >
-                  <div className="text-3xl mb-2 relative flex items-center justify-center w-12 h-12">
-                    <span className="text-3xl">{ach.icon}</span>
-                    {!ach.unlocked && (
-                      <div className="absolute bottom-0 right-0 bg-gray-500 text-white rounded-full p-0.5 border border-white">
-                        <Lock className="w-2.5 h-2.5" />
-                      </div>
-                    )}
+              {achievements.map((ach) => {
+                const IconComponent = ach.icon;
+                return (
+                  <div 
+                    key={ach.id} 
+                    className={`flex flex-col items-center text-center transition-all ${
+                      ach.unlocked 
+                        ? 'opacity-100 text-[#FDBD38]' 
+                        : 'opacity-40 text-gray-400 filter grayscale'
+                    }`}
+                  >
+                    <div className="w-12 h-12 relative flex items-center justify-center">
+                      <IconComponent className="w-7 h-7" />
+                      {!ach.unlocked && (
+                        <div className="absolute bottom-0 right-0 bg-gray-500 text-white rounded-full p-0.5 border border-white">
+                          <Lock className="w-2.5 h-2.5" />
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-800 leading-tight line-clamp-1 mt-1">{ach.name}</span>
+                    <span className="text-[8px] text-gray-400 font-semibold mt-0.5 leading-tight line-clamp-2 max-w-[90px]">{ach.desc}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-gray-800 leading-tight line-clamp-1">{ach.name}</span>
-                  <span className="text-[8px] text-gray-400 font-semibold mt-0.5 leading-tight line-clamp-2 max-w-[90px]">{ach.desc}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
