@@ -509,7 +509,7 @@ export default function ShopPage() {
   return (
     <div className="h-screen overflow-y-auto bg-white flex flex-col items-center select-none overflow-x-hidden pb-[90px] scroll-smooth">
       {/* Sticky Header Container */}
-      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex flex-col w-full pb-4">
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FC8C86] to-[#FA709A] text-gray-900 flex flex-col w-full pb-4">
         <div className="flex items-center justify-between px-4 pt-4 gap-3">
           {/* Back button returning to Menu */}
           <button 
@@ -547,7 +547,7 @@ export default function ShopPage() {
           >
             <ShoppingBag className="w-4 h-4 text-gray-900" strokeWidth={2.2} />
             {merchCart.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-[#FDBD38] text-white text-[9px] font-bold rounded-full border border-white flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-[#FA709A] text-white text-[9px] font-bold rounded-full border border-white flex items-center justify-center">
                 {merchCart.reduce((sum, item) => sum + item.quantity, 0)}
               </span>
             )}
@@ -627,7 +627,7 @@ export default function ShopPage() {
                 {/* Circular Story Ring and Avatar */}
                 <div className={`p-[2.5px] rounded-full transition-all duration-300 ${
                   active 
-                    ? 'bg-gradient-to-tr from-[#FDBD38] to-[#FA709A] scale-102 ring-2 ring-white' 
+                    ? 'bg-gradient-to-tr from-[#FC8C86] to-[#FA709A] scale-102 ring-2 ring-white' 
                     : 'bg-gray-200'
                 }`}>
                   <div className="bg-white p-[2px] rounded-full">
@@ -687,7 +687,7 @@ export default function ShopPage() {
                   <span className="text-[14px] font-bold text-gray-900">
                     {item.price.toFixed(2)}€
                   </span>
-                  <div className="w-8 h-8 rounded-full bg-[#FDBD38] hover:bg-[#e5a420] text-white flex items-center justify-center transition-all shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-[#FC8C86] hover:bg-[#fa7b74] text-white flex items-center justify-center transition-all shadow-sm">
                     <Plus className="w-4 h-4 text-white" strokeWidth={2.2} />
                   </div>
                 </div>
@@ -702,7 +702,7 @@ export default function ShopPage() {
         <div className="fixed bottom-0 left-0 right-0 z-45 p-4 flex justify-center bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none">
           <button 
             onClick={() => setShowCartDrawer(true)}
-            className="w-full max-w-[440px] bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-semibold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none pointer-events-auto"
+            className="w-full max-w-[440px] bg-[#FC8C86] hover:bg-[#fa7b74] text-white py-4 rounded-full font-semibold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none pointer-events-auto"
           >
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-4 h-4 text-white" strokeWidth={2.2} />
@@ -785,7 +785,7 @@ export default function ShopPage() {
                           onClick={() => handleOptionSelect(opt.name, choice)}
                           className={`px-5 py-3 rounded-2xl font-semibold text-[13px] border transition-all cursor-pointer ${
                             active 
-                              ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
+                              ? 'bg-[#FC8C86] border-[#FC8C86] text-white shadow-none' 
                               : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50/50'
                           }`}
                         >
@@ -819,7 +819,7 @@ export default function ShopPage() {
                 
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-semibold text-center text-[15px] transition-all active:scale-[0.98] shadow-none flex justify-between px-6 items-center"
+                  className="flex-1 bg-[#FC8C86] hover:bg-[#fa7b74] text-white py-4 rounded-full font-semibold text-center text-[15px] transition-all active:scale-[0.98] shadow-none flex justify-between px-6 items-center"
                 >
                   <span>Add to bag</span>
                   <span>{(selectedItem.price * quantity).toFixed(2)}€</span>
@@ -913,7 +913,7 @@ export default function ShopPage() {
             {/* Submit checkout CTA button */}
             <button
               onClick={handleCheckout}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-semibold text-center text-[15px] transition-all active:scale-[0.98] shadow-none flex justify-between px-6 items-center mt-2"
+              className="w-full bg-[#FC8C86] hover:bg-[#fa7b74] text-white py-4 rounded-full font-semibold text-center text-[15px] transition-all active:scale-[0.98] shadow-none flex justify-between px-6 items-center mt-2"
             >
               <span>Confirm order</span>
               <span>{cartTotal.toFixed(2)}€</span>
@@ -966,7 +966,7 @@ export default function ShopPage() {
                     }}
                     className={`w-full p-4 rounded-2xl text-left border transition-all flex items-center justify-between ${
                       active 
-                        ? 'bg-[#FDBD38]/10 border-[#FDBD38] text-gray-900' 
+                        ? 'bg-[#FC8C86]/10 border-[#FC8C86] text-gray-900' 
                         : 'bg-white border-gray-100 text-gray-800 hover:bg-gray-50/50'
                     }`}
                   >
@@ -978,7 +978,7 @@ export default function ShopPage() {
                       </div>
                     </div>
                     {active && (
-                      <span className="w-5 h-5 rounded-full bg-[#FDBD38] flex items-center justify-center">
+                      <span className="w-5 h-5 rounded-full bg-[#FC8C86] flex items-center justify-center">
                         <span className="w-2 h-2 rounded-full bg-white" />
                       </span>
                     )}
@@ -1032,7 +1032,7 @@ export default function ShopPage() {
       {showSuccessModal && (
         <div className="fixed inset-0 bg-[#18181b]/60 z-50 flex items-center justify-center p-4 backdrop-blur-[3px]">
           <div className="bg-white w-full max-w-[400px] rounded-3xl p-6 flex flex-col items-center justify-center gap-6 shadow-2xl relative">
-            <div className="w-16 h-16 rounded-full bg-[#FDBD38]/10 flex items-center justify-center text-[#FDBD38]">
+            <div className="w-16 h-16 rounded-full bg-[#FC8C86]/10 flex items-center justify-center text-[#FC8C86]">
               <Check className="w-8 h-8" strokeWidth={3} />
             </div>
             <div className="flex flex-col gap-1.5 text-center">
@@ -1048,7 +1048,7 @@ export default function ShopPage() {
                 setShowSuccessModal(false);
                 router.push('/orders');
               }}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3.5 rounded-full font-semibold text-[14px] text-center transition-all active:scale-[0.98]"
+              className="w-full bg-[#FC8C86] hover:bg-[#fa7b74] text-white py-3.5 rounded-full font-semibold text-[14px] text-center transition-all active:scale-[0.98]"
             >
               Go to Order History
             </button>
@@ -1268,7 +1268,7 @@ export default function ShopPage() {
                       e.stopPropagation();
                       setActiveStoryIndex(null);
                     }}
-                    className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-8 py-3 rounded-full font-bold text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 border-none cursor-pointer z-20"
+                    className="bg-[#FC8C86] hover:bg-[#fa7b74] text-white px-8 py-3 rounded-full font-bold text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 border-none cursor-pointer z-20"
                   >
                     <span>Tap to Shop Now</span>
                     <ArrowRight className="w-4 h-4" strokeWidth={2.2} />
