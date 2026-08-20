@@ -295,14 +295,7 @@ export default function LoyaltyPage() {
             </div>
           </div>
 
-          {/* Logout Button */}
-          <button
-            onClick={handleLogoutClick}
-            className="w-full border border-gray-200 hover:bg-gray-50 text-gray-500 py-3 rounded-full font-semibold text-sm transition-all active:scale-[0.99] flex items-center justify-center gap-2 mt-4 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Log out from account</span>
-          </button>
+
         </div>
       </div>
     );
