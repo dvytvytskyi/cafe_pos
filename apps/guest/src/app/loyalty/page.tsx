@@ -226,9 +226,13 @@ export default function LoyaltyPage() {
                 Hello, {profileName || customer.name}!
               </h1>
             </div>
-            <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 bg-white/20 text-white`}>
-              {customer.tier}
-            </span>
+            <button
+              onClick={handleLogoutClick}
+              title="Log out"
+              className="w-10 h-10 rounded-full flex items-center justify-center border border-white/20 bg-white/20 text-white hover:bg-white/30 active:scale-95 transition-all cursor-pointer"
+            >
+              <User className="w-5 h-5 text-white" />
+            </button>
           </div>
         </div>
 
