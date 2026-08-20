@@ -318,33 +318,33 @@ export default function LoyaltyPage() {
             </div>
           </div>
 
-          {/* Achievements Grid */}
-          <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex flex-col text-left shadow-sm mb-4">
+          {/* Achievements Grid (Borderless & frameless) */}
+          <div className="flex flex-col text-left px-2 mb-4">
             <div className="flex items-center gap-2 mb-4">
               <Sparkle className="w-5 h-5 text-[#FDBD38]" />
               <span className="text-sm font-bold text-gray-800">My Achievements</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-y-6 gap-x-3">
               {achievements.map((ach) => (
                 <div 
                   key={ach.id} 
-                  className={`p-3 rounded-[20px] flex flex-col items-center text-center transition-all ${
+                  className={`flex flex-col items-center text-center transition-all ${
                     ach.unlocked 
-                      ? 'bg-amber-50/50 border border-amber-100/50' 
-                      : 'bg-gray-55/60 border border-gray-100 opacity-60 filter grayscale'
+                      ? 'opacity-100' 
+                      : 'opacity-40 filter grayscale'
                   }`}
                 >
-                  <div className="text-2xl mb-1.5 relative">
-                    {ach.icon}
+                  <div className="text-3xl mb-2 relative flex items-center justify-center w-12 h-12">
+                    <span className="text-3xl">{ach.icon}</span>
                     {!ach.unlocked && (
-                      <div className="absolute -bottom-1 -right-1 bg-gray-500 text-white rounded-full p-0.5 border border-white">
+                      <div className="absolute bottom-0 right-0 bg-gray-500 text-white rounded-full p-0.5 border border-white">
                         <Lock className="w-2.5 h-2.5" />
                       </div>
                     )}
                   </div>
                   <span className="text-[10px] font-bold text-gray-800 leading-tight line-clamp-1">{ach.name}</span>
-                  <span className="text-[8px] text-gray-400 font-semibold mt-0.5 leading-tight line-clamp-2">{ach.desc}</span>
+                  <span className="text-[8px] text-gray-400 font-semibold mt-0.5 leading-tight line-clamp-2 max-w-[90px]">{ach.desc}</span>
                 </div>
               ))}
             </div>
