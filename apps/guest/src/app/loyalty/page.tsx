@@ -367,13 +367,13 @@ export default function LoyaltyPage() {
                 className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)] relative"
               >
                 {/* Left Status Info (Absolute positioned) */}
-                <div className="absolute top-5 left-5 text-left flex flex-col pointer-events-none">
+                <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
                   <span className="text-sm font-bold text-gray-800 tracking-tight uppercase leading-none">{customer.tier}</span>
                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Profile</span>
                 </div>
 
                 {/* Right Spent Info (Absolute positioned) */}
-                <div className="absolute top-5 right-5 text-right flex flex-col pointer-events-none">
+                <div className="absolute top-7 right-5 text-right flex flex-col pointer-events-none">
                   <span className="text-sm font-bold text-[#FDBD38] tracking-tight leading-none">{customer.ltv.toFixed(0)}€</span>
                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Spent</span>
                 </div>
