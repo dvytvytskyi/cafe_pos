@@ -803,7 +803,7 @@ export default function ShopPage() {
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {images.map((imgUrl, index) => (
-                    <div key={index} className="w-full h-full flex-shrink-0 snap-start relative">
+                    <div key={index} className="w-full h-full flex-shrink-0 snap-start snap-always relative">
                       <img 
                         src={imgUrl} 
                         alt={`${lastSelectedItem.name} ${index + 1}`} 
@@ -821,14 +821,14 @@ export default function ShopPage() {
                       <button
                         key={index}
                         onClick={() => scrollToImage(index)}
-                        className={`w-[45px] h-[55px] rounded-lg overflow-hidden bg-white shadow-md transition-all border-2 cursor-pointer flex items-center justify-center p-[1px] ${
+                        className={`w-[45px] h-[55px] rounded-lg overflow-hidden bg-white shadow-md transition-all border-[1.5px] cursor-pointer flex items-center justify-center p-[0.5px] ${
                           active ? 'border-[#EE635E] scale-105' : 'border-transparent'
                         }`}
                       >
                         <img 
                           src={imgUrl} 
                           alt="Thumbnail" 
-                          className="w-full h-full object-cover rounded-[5px]"
+                          className="w-full h-full object-cover rounded-[6px]"
                         />
                       </button>
                     );
