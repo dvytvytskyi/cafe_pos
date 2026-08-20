@@ -802,8 +802,14 @@ export default function ShopPage() {
       </div>
 
       {/* Floating Bottom Cart Bar */}
-      {merchCart.length > 0 && showCartBarInsteadOfNav && (
-        <div className="fixed bottom-0 left-0 right-0 z-45 p-4 flex justify-center bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none">
+      {merchCart.length > 0 && (
+        <div 
+          className={`fixed bottom-0 left-0 right-0 z-45 p-4 flex justify-center bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none transition-all duration-500 ease-in-out transform ${
+            showCartBarInsteadOfNav
+              ? 'translate-y-0 opacity-100'
+              : 'translate-y-20 opacity-0 pointer-events-none'
+          }`}
+        >
           <button 
             onClick={() => setShowCartDrawer(true)}
             className="w-full max-w-[440px] bg-[#EE635E] hover:opacity-90 text-white py-4 rounded-full font-semibold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none pointer-events-auto"
@@ -819,16 +825,21 @@ export default function ShopPage() {
               <MenuIcon className="w-4 h-4 text-white" />
             </div>
 
-            <div className="flex items-center gap-2 pl-2">
-              <ShoppingBag className="w-4 h-4 text-white" strokeWidth={2.2} />
-              <span className="text-[15px] font-semibold text-white">View bag</span>
-            </div>
+            {/* Vertical Divider */}
+            <div className="w-[1px] h-6 bg-white/20 mx-2" />
 
-            <div className="flex items-center gap-3">
-              <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-bold text-white">
-                {merchCart.reduce((sum, item) => sum + item.quantity, 0)} items
-              </span>
-              <span className="text-[15px] font-semibold text-white">{cartTotal.toFixed(2)}€</span>
+            <div className="flex-1 flex justify-between items-center pl-2">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-white" strokeWidth={2.2} />
+                <span className="text-[15px] font-semibold text-white">View bag</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-bold text-white">
+                  {merchCart.reduce((sum, item) => sum + item.quantity, 0)} items
+                </span>
+                <span className="text-[15px] font-semibold text-white">{cartTotal.toFixed(2)}€</span>
+              </div>
             </div>
           </button>
         </div>
