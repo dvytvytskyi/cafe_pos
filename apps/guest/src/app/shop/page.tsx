@@ -970,16 +970,16 @@ export default function ShopPage() {
               background-color: #000;
             }
             .cube-slide-next-out {
-              animation: cubeNextOut 0.6s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+              animation: cubeNextOut 0.4s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
             }
             .cube-slide-next-in {
-              animation: cubeNextIn 0.6s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+              animation: cubeNextIn 0.4s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
             }
             .cube-slide-prev-out {
-              animation: cubePrevOut 0.6s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+              animation: cubePrevOut 0.4s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
             }
             .cube-slide-prev-in {
-              animation: cubePrevIn 0.6s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+              animation: cubePrevIn 0.4s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
             }
             @keyframes cubeNextOut {
               0% { transform: translateX(0) rotateY(0deg); transform-origin: 100% 50%; opacity: 1; }
