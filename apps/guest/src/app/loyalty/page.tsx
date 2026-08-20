@@ -70,6 +70,8 @@ export default function LoyaltyPage() {
   const [promoCode, setPromoCode] = useState('');
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [isAddPointsOpen, setIsAddPointsOpen] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoSuccess, setPromoSuccess] = useState<boolean>(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedSticker, setSelectedSticker] = useState<{
     id: number;
@@ -97,9 +99,19 @@ export default function LoyaltyPage() {
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return;
     setIsApplyingPromo(true);
+    setPromoError(null);
+    setPromoSuccess(false);
+
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 850));
     const code = promoCode.trim().toUpperCase();
+
+    if (code.length !== 8) {
+      setPromoError('Code must consist of exactly 8 characters.');
+      setIsApplyingPromo(false);
+      return;
+    }
+
     if (code === 'CORGI100' || code === 'COFFEE50' || code === 'FREE50' || code === 'BONUS') {
       const addedPoints = code === 'CORGI100' ? 100 : 50;
       if (loyalty) {
@@ -119,12 +131,15 @@ export default function LoyaltyPage() {
           orderId: undefined
         };
         setTransactions([newTx, ...transactions]);
-        alert(`Successfully added ${addedPoints} points! 🎉`);
+        setPromoSuccess(true);
+        setPromoCode('');
+        setTimeout(() => {
+          setIsAddPointsOpen(false);
+          setPromoSuccess(false);
+        }, 1500);
       }
-      setPromoCode('');
-      setIsAddPointsOpen(false);
     } else {
-      alert('Invalid promo code. Try "CORGI100" or "COFFEE50"!');
+      setPromoError('Invalid promo code. Try "CORGI100" or "COFFEE50"!');
     }
     setIsApplyingPromo(false);
   };
@@ -328,7 +343,7 @@ export default function LoyaltyPage() {
         {/* Flipping 3D QR Card */}
         <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
           <div 
-            className={`w-full relative cursor-pointer transition-all duration-300 ${isAddPointsOpen ? 'h-[295px]' : 'h-[240px]'}`}
+            className="w-full h-[240px] relative cursor-pointer"
             style={{ perspective: '1000px' }}
           >
             <div 
@@ -372,30 +387,10 @@ export default function LoyaltyPage() {
                   </span>
                 </div>
 
-                {/* Collapsible Add Points Code Field */}
-                {isAddPointsOpen && (
-                  <div className="w-full flex gap-2 items-center px-1 mb-2 animate-fadeIn relative z-10">
-                    <input 
-                      type="text" 
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      placeholder="Code (e.g. CORGI100)" 
-                      className="flex-1 border border-gray-200 rounded-[10px] py-1.5 px-3 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#FDBD38]"
-                    />
-                    <button 
-                      onClick={handleApplyPromo}
-                      disabled={isApplyingPromo}
-                      className="bg-[#FDBD38] hover:bg-[#c29124] text-white px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
-                    >
-                      {isApplyingPromo ? '...' : 'Claim'}
-                    </button>
-                  </div>
-                )}
-
                 {/* Footer Buttons: Add Points, History, and QR Code Toggle */}
                 <div className="flex gap-2 relative z-10 w-full items-center">
                   <button
-                    onClick={() => setIsAddPointsOpen(!isAddPointsOpen)}
+                    onClick={() => setIsAddPointsOpen(true)}
                     className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-2.5 rounded-[12px] font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer border border-[#FDBD38] hover:border-[#e5a420]"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -689,6 +684,98 @@ export default function LoyaltyPage() {
             </div>
           </div>
         </div>
+
+        {/* Beautiful Add Points Promo Code Modal */}
+        {isAddPointsOpen && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px] p-4 animate-fadeIn"
+            onClick={() => {
+              setIsAddPointsOpen(false);
+              setPromoError(null);
+              setPromoSuccess(false);
+              setPromoCode('');
+            }}
+          >
+            <div 
+              className="w-full max-w-[340px] bg-white rounded-[28px] p-6 shadow-2xl relative border border-gray-100 flex flex-col items-center animate-scaleUp"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button 
+                onClick={() => {
+                  setIsAddPointsOpen(false);
+                  setPromoError(null);
+                  setPromoSuccess(false);
+                  setPromoCode('');
+                }}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-all active:scale-90 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Title Header */}
+              <div className="text-center mt-2 mb-4 w-full">
+                <span className="text-base font-bold text-gray-800 uppercase tracking-wider block">Add Points</span>
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 block">Enter Alphanumeric Code</span>
+              </div>
+
+              {/* Description */}
+              <p className="text-[11px] text-gray-400 text-center font-bold mb-4 leading-relaxed px-1">
+                Enter your 8-character promo code (letters and digits) to instantly claim your points.
+              </p>
+
+              {/* Success / Error Inline Messages */}
+              {promoSuccess && (
+                <div className="w-full bg-emerald-50 text-emerald-600 rounded-[12px] p-3 text-[11px] font-bold mb-4 text-center border border-emerald-100 flex items-center justify-center gap-1.5 animate-fadeIn">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <span>Success! Points claimed successfully.</span>
+                </div>
+              )}
+              {promoError && (
+                <div className="w-full bg-rose-50 text-rose-600 rounded-[12px] p-3 text-[11px] font-bold mb-4 text-center border border-rose-100 flex items-center justify-center gap-1.5 animate-fadeIn">
+                  <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                  <span>{promoError}</span>
+                </div>
+              )}
+
+              {/* Character Input */}
+              <div className="w-full flex flex-col gap-2">
+                <input 
+                  type="text" 
+                  maxLength={8}
+                  value={promoCode}
+                  onChange={(e) => {
+                    setPromoError(null);
+                    setPromoCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+                  }}
+                  placeholder="CORGI100" 
+                  className="w-full border-2 border-gray-100 focus:border-[#FDBD38] focus:outline-none rounded-[16px] py-2.5 text-center text-lg font-bold text-gray-800 tracking-[0.2em] uppercase placeholder:tracking-normal placeholder:text-gray-300 transition-colors"
+                />
+                
+                {/* Character length indicator */}
+                <div className="flex justify-between items-center text-[9px] font-bold text-gray-400 px-1 mt-0.5">
+                  <span>Try: CORGI100 / COFFEE50</span>
+                  <span className={promoCode.length === 8 ? 'text-emerald-500' : ''}>
+                    {promoCode.length}/8 chars
+                  </span>
+                </div>
+              </div>
+
+              {/* Submit Action Button */}
+              <button 
+                onClick={handleApplyPromo}
+                disabled={isApplyingPromo || promoCode.length !== 8 || promoSuccess}
+                className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:bg-gray-100 disabled:text-gray-300 text-white py-3 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer mt-5"
+              >
+                {isApplyingPromo ? (
+                  <span>Claiming...</span>
+                ) : (
+                  <span>Claim Points</span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Points History Drawer Sheet (80dvh slide-up from bottom) */}
         <div className={`fixed inset-0 z-50 flex justify-center items-end bg-black/40 transition-opacity duration-300 ${
