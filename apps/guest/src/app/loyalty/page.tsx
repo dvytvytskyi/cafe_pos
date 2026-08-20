@@ -310,10 +310,7 @@ export default function LoyaltyPage() {
           {/* Tier Progression Progress Card (Frameless) */}
           <div className="flex flex-col text-left px-2">
             <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center gap-2">
-                <Sparkle className="w-5 h-5 text-[#FDBD38]" />
-                <span className="text-sm font-bold text-gray-800">Tier Progress</span>
-              </div>
+              <span className="text-sm font-bold text-gray-800">Tier Progress</span>
               <span className="text-xs font-bold text-[#FDBD38]">
                 {tierRate}x Points Rate
               </span>
@@ -339,11 +336,8 @@ export default function LoyaltyPage() {
           {/* Social Media Stickers Grid */}
           <div className="flex flex-col text-left px-2 mb-4">
             <div className="flex flex-col gap-0.5 mb-4">
-              <div className="flex items-center gap-2">
-                <Sparkle className="w-5 h-5 text-[#FDBD38]" />
-                <span className="text-sm font-bold text-gray-800">Social Media Stickers</span>
-              </div>
-              <span className="text-[10px] text-gray-400 font-bold ml-7">Press on sticker to learn how to open</span>
+              <span className="text-sm font-bold text-gray-800">Social Media Stickers</span>
+              <span className="text-[10px] text-gray-400 font-bold">Press on sticker to learn how to open</span>
             </div>
 
             <div className="grid grid-cols-3 gap-y-6 gap-x-3">
