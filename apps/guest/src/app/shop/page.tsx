@@ -419,22 +419,22 @@ export default function ShopPage() {
       {/* Main Container */}
       <div className="w-full max-w-[480px] flex-1 bg-white px-5 py-6 flex flex-col gap-6">
         
-        {/* Horizontal Promo Banner Card (Layered background with transparent pattern, white base, and brand yellow button) */}
-        <div className="w-full rounded-[16px] border border-gray-100 overflow-hidden relative min-h-[140px] shadow-sm flex items-center justify-between p-6">
-          {/* Solid white background layer */}
-          <div className="absolute inset-0 bg-white z-0" />
-          
-          {/* Transparent small pattern layer */}
-          <div 
-            className="absolute inset-0 z-0 bg-repeat"
-            style={{ 
-              backgroundImage: "url('/pattern2.svg')",
-              backgroundSize: "70px 70px" 
-            }}
-          />
+        {/* Horizontal Promo Banner Card (Pink background with smooth bottom white wave, white font, and white button) */}
+        <div className="w-full rounded-[16px] overflow-hidden relative min-h-[140px] shadow-sm flex items-center justify-between p-6">
+          {/* Background layer: Pink base with organic white wave at the bottom */}
+          <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 bg-[#FC8C86]" />
+            <svg 
+              className="absolute bottom-0 left-0 w-full h-[55px] text-white fill-current translate-y-[1px]" 
+              viewBox="0 0 1440 320" 
+              preserveAspectRatio="none"
+            >
+              <path d="M0,96 C288,192 576,96 864,160 C1152,224 1344,160 1440,128 L1440,320 L0,320 Z" />
+            </svg>
+          </div>
 
           <div className="flex flex-col items-start gap-2.5 z-10 text-left max-w-[60%]">
-            <h2 className="text-[17px] font-bold text-gray-900 leading-tight">
+            <h2 className="text-[17px] font-bold text-white leading-tight">
               Buy 1 hoodie,<br />get 45% off caps
             </h2>
             <button 
@@ -443,7 +443,7 @@ export default function ShopPage() {
                 const capCat = categories.find(c => c.id === "Face Cap");
                 if (capCat) setSelectedStory(capCat);
               }}
-              className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none z-10"
+              className="bg-white hover:bg-gray-50 text-[#FC8C86] px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none z-10"
             >
               <span>Shop now</span>
               <ArrowRight className="w-3.5 h-3.5" />
