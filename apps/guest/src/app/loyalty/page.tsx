@@ -1,9 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { RoundedBox } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useEffect, useState } from 'react';
 import { useGuest } from '@/lib/guest-context';
 import {
   requestOtp,
@@ -35,10 +32,7 @@ import {
 
 export default function LoyaltyPage() {
   const { isLoggedIn, profileName, refreshAuth } = useGuest();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+
   const [phone, setPhone] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
@@ -178,101 +172,7 @@ export default function LoyaltyPage() {
     }
   };
 
-  // Holographic card states
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [sheen, setSheen] = useState({ x: 50, y: 50 });
-  const [isHovered, setIsHovered] = useState(false);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const xc = rect.width / 2;
-    const yc = rect.height / 2;
-    
-    const rotateX = -(y - yc) / (rect.height / 15);
-    const rotateY = (x - xc) / (rect.width / 15);
-    
-    const sheenX = (x / rect.width) * 100;
-    const sheenY = (y / rect.height) * 100;
-    
-    setTilt({ x: rotateX, y: rotateY });
-    setSheen({ x: sheenX, y: sheenY });
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    if (e.touches.length === 0) return;
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    
-    if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
-      handleMouseLeave();
-      return;
-    }
-    
-    const xc = rect.width / 2;
-    const yc = rect.height / 2;
-    
-    const rotateX = -(y - yc) / (rect.height / 15);
-    const rotateY = (x - xc) / (rect.width / 15);
-    
-    const sheenX = (x / rect.width) * 100;
-    const sheenY = (y / rect.height) * 100;
-    
-    setTilt({ x: rotateX, y: rotateY });
-    setSheen({ x: sheenX, y: sheenY });
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setTilt({ x: 0, y: 0 });
-    setSheen({ x: 50, y: 50 });
-  };
-
-  // Helper to determine tier gradient background style
-  const getTierGradientStyle = (tier: string) => {
-    const t = tier.toLowerCase();
-    if (t === 'silver') {
-      return {
-        background: 'linear-gradient(135deg, #d3d3d3 0%, #ffffff 20%, #a9a9a9 40%, #e0e0e0 60%, #ffffff 80%, #909090 100%)',
-        color: '#2d3748',
-        borderColor: 'rgba(255, 255, 255, 0.4)',
-        textShadow: '0 1px 1px rgba(255,255,255,0.6)',
-      };
-    }
-    if (t === 'gold') {
-      return {
-        background: 'linear-gradient(135deg, #c39c43 0%, #fbf5b7 20%, #b38728 40%, #fef8cc 60%, #aa771c 80%, #ffd700 100%)',
-        color: '#4a3712',
-        borderColor: 'rgba(255, 255, 255, 0.4)',
-        textShadow: '0 1px 1px rgba(255,255,255,0.6)',
-      };
-    }
-    if (t === 'vip') {
-      return {
-        background: 'linear-gradient(135deg, #0f0f16 0%, #201b2d 30%, #08060c 50%, #2a203f 70%, #030205 100%)',
-        color: '#e2e8f0',
-        borderColor: 'rgba(139, 92, 246, 0.5)',
-        textShadow: '0 -1px 1px rgba(0,0,0,0.8)',
-      };
-    }
-    // Bronze
-    return {
-      background: 'linear-gradient(135deg, #bc6c47 0%, #e59f7c 20%, #9f4924 40%, #f4b899 60%, #7f3412 80%, #bc6c47 100%)',
-      color: '#4c1d07',
-      borderColor: 'rgba(255, 255, 255, 0.4)',
-      textShadow: '0 1px 1px rgba(255,255,255,0.6)',
-    };
-  };
 
   // Helper to determine tier badge border / color
   const getTierGradient = (tier: string) => {
@@ -332,142 +232,35 @@ export default function LoyaltyPage() {
           </div>
         </div>
 
-        {/* Style block for auto-oscillating holographic effects */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes card-float-ambient {
-            0% {
-              transform: perspective(1000px) rotateX(1.5deg) rotateY(-2deg) translateY(0px);
-            }
-            50% {
-              transform: perspective(1000px) rotateX(-2deg) rotateY(2.5deg) translateY(-6px);
-            }
-            100% {
-              transform: perspective(1000px) rotateX(1.5deg) rotateY(-2deg) translateY(0px);
-            }
-          }
-
-          @keyframes sheen-ambient {
-            0% {
-              background-position: 0% 0%;
-              opacity: 0.55;
-            }
-            50% {
-              background-position: 100% 100%;
-              opacity: 0.75;
-            }
-            100% {
-              background-position: 0% 0%;
-              opacity: 0.55;
-            }
-          }
-
-          @keyframes flare-ambient {
-            0% {
-              transform: rotate(25deg) translate(-80%, -80%);
-              opacity: 0.3;
-            }
-            50% {
-              transform: rotate(25deg) translate(80%, 80%);
-              opacity: 0.7;
-            }
-            100% {
-              transform: rotate(25deg) translate(-80%, -80%);
-              opacity: 0.3;
-            }
-          }
-
-          .ambient-card-animation {
-            animation: card-float-ambient 6s ease-in-out infinite;
-          }
-
-          .ambient-sheen-animation {
-            background-size: 200% 200%;
-            animation: sheen-ambient 8s ease-in-out infinite;
-          }
-
-          .ambient-flare-animation {
-            animation: flare-ambient 7s ease-in-out infinite;
-          }
-        ` }} />
-
-        {/* Floating Digital Member Card */}
-        <div className="px-6 -mt-14 relative z-10 max-w-[480px] mx-auto" style={{ perspective: '1000px' }}>
-          {!mounted ? (
-            <div 
-              onMouseMove={handleMouseMove}
-              onTouchMove={handleTouchMove}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-              onTouchEnd={handleMouseLeave}
-              className={`rounded-[32px] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.12)] border flex flex-col relative overflow-hidden select-none cursor-pointer ambient-card-animation`}
-              style={getTierGradientStyle(customer.tier)}
-            >
-              {/* Holographic Sheen/Shine Overlay */}
-              <div 
-                className="absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-300 ambient-sheen-animation"
-                style={{
-                  background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 100%)',
-                  mixBlendMode: 'overlay',
-                  opacity: 0.6,
-                }}
+        {/* Simple QR Code & Points Panel */}
+        <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
+          <div className="bg-white rounded-[32px] p-6 shadow-md border border-gray-150/60 flex flex-col items-center">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400">Scannable Member Code</span>
+            
+            {/* QR Code */}
+            <div className="my-6 bg-gray-50 p-4 rounded-[24px] border border-gray-100 shadow-inner">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrCode)}`}
+                alt="Member QR Code"
+                className="w-[180px] h-[180px] object-contain rounded-lg"
               />
-              {/* Linear light flare streak */}
-              <div 
-                className="absolute inset-0 pointer-events-none rounded-[32px] transition-opacity duration-500 ambient-flare-animation"
-                style={{
-                  background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.2) 48%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.2) 52%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%)',
-                  backgroundSize: '200% 200%',
-                  mixBlendMode: 'overlay',
-                  opacity: 0.4,
-                }}
-              />
+            </div>
 
-              <div className="flex justify-between items-start w-full relative z-10">
-                <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Member Card</span>
-                  <span className="text-[20px] font-extrabold uppercase tracking-tight mt-1">Corgi Cafe</span>
-                </div>
-                <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border border-white/10">
-                  Level {customer.tier}
-                </div>
+            {/* Loyalty points details */}
+            <div className="w-full flex justify-between items-center border-t border-gray-100 pt-5 mt-2">
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Member Tier</span>
+                <span className="text-lg font-black text-gray-800 mt-1 uppercase tracking-tight">{customer.tier}</span>
               </div>
-
-              {/* Scannable QR Code */}
-              <div className="my-6 flex justify-center relative z-10">
-                <div className="bg-white p-3 rounded-[24px] shadow-[0_8px_16px_rgba(0,0,0,0.06)] border border-black/5">
-                  <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrCode)}`}
-                    alt="Member QR Code"
-                    className="w-[160px] h-[160px] object-contain rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div 
-                className="flex justify-between items-end w-full pt-2 border-t mt-2 relative z-10" 
-                style={{ borderColor: customer.tier.toLowerCase() === 'vip' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }}
-              >
-                <div className="flex flex-col text-left">
-                  <span className="text-[9px] font-bold uppercase tracking-wider opacity-60">Card Holder</span>
-                  <span className="text-sm font-bold tracking-wide mt-0.5">{customer.name}</span>
-                </div>
-                <div className="flex flex-col text-right">
-                  <span className="text-[9px] font-bold uppercase tracking-wider opacity-60">Balance</span>
-                  <span className="text-[18px] font-black tracking-tight flex items-center gap-1 mt-0.5 justify-end">
-                    <Coins className="w-4 h-4" />
-                    {customer.points.toFixed(0)} PTS
-                  </span>
-                </div>
+              <div className="flex flex-col text-right">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Balance</span>
+                <span className="text-2xl font-black text-[#FDBD38] flex items-center gap-1.5 mt-0.5 justify-end leading-none">
+                  <Coins className="w-5 h-5 text-[#FDBD38]" />
+                  {customer.points.toFixed(0)} <span className="text-xs font-bold text-gray-400">PTS</span>
+                </span>
               </div>
             </div>
-          ) : (
-            <Scene3D 
-              tier={customer.tier}
-              name={customer.name}
-              points={customer.points}
-              qrCode={qrCode}
-            />
-          )}
+          </div>
         </div>
 
         {/* Dashboard Content */}
@@ -784,235 +577,3 @@ export default function LoyaltyPage() {
   );
 }
 
-function LoyaltyCard3D({ 
-  tier, 
-  name, 
-  points, 
-  qrCode,
-  isHovered,
-  setIsHovered
-}: { 
-  tier: string; 
-  name: string; 
-  points: number; 
-  qrCode: string;
-  isHovered: boolean;
-  setIsHovered: (h: boolean) => void;
-}) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
-
-  const getSideColor = (t: string) => {
-    const low = t.toLowerCase();
-    if (low === 'silver') return '#e2e2e6';
-    if (low === 'gold') return '#f3e5ab';
-    if (low === 'vip') return '#30303a';
-    return '#e9c4b0'; // Bronze / rose-gold
-  };
-
-  useEffect(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 648;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const render = () => {
-      // Clear canvas so outer corners are transparent
-      ctx.clearRect(0, 0, 1024, 648);
-
-      // Draw background metallic gradient inside a rounded rectangle
-      const grad = ctx.createLinearGradient(0, 0, 1024, 648);
-      const t = tier.toLowerCase();
-      if (t === 'silver') {
-        grad.addColorStop(0, '#d8d8dc');
-        grad.addColorStop(0.5, '#f3f3f6');
-        grad.addColorStop(1, '#c8c8cd');
-      } else if (t === 'gold') {
-        grad.addColorStop(0, '#e4c86a');
-        grad.addColorStop(0.5, '#fbf4cc');
-        grad.addColorStop(1, '#cfa43b');
-      } else if (t === 'vip') {
-        grad.addColorStop(0, '#2c2c35');
-        grad.addColorStop(0.5, '#454552');
-        grad.addColorStop(1, '#202026');
-      } else { // Bronze (bright premium rose-bronze)
-        grad.addColorStop(0, '#f0c3aa');
-        grad.addColorStop(0.5, '#fdf0e6');
-        grad.addColorStop(1, '#d8a78c');
-      }
-
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(0, 0, 1024, 648, 56);
-      } else {
-        ctx.rect(0, 0, 1024, 648);
-      }
-      ctx.fill();
-
-      // Clip everything to the rounded card body
-      ctx.save();
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(0, 0, 1024, 648, 56);
-      } else {
-        ctx.rect(0, 0, 1024, 648);
-      }
-      ctx.clip();
-
-      // Brushed metal texture lines
-      ctx.strokeStyle = t === 'vip' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 1024; i += 6) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i + (Math.random() - 0.5) * 60, 648);
-        ctx.stroke();
-      }
-
-
-      // Draw header info
-      ctx.fillStyle = t === 'vip' ? '#f8fafc' : '#3c1c0a';
-      ctx.font = 'bold 32px sans-serif';
-      ctx.fillText('MEMBER CARD', 60, 90);
-
-      ctx.font = 'extrabold 48px sans-serif';
-      ctx.fillText('CORGI CAFE', 60, 160);
-
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(`LEVEL ${tier.toUpperCase()}`, 780, 90);
-
-      // Cardholder
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillStyle = t === 'vip' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)';
-      ctx.fillText('CARD HOLDER', 60, 510);
-      ctx.font = 'bold 32px sans-serif';
-      ctx.fillStyle = t === 'vip' ? '#ffffff' : '#3c1c0a';
-      ctx.fillText(name.toUpperCase(), 60, 570);
-
-      // Balance
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillStyle = t === 'vip' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)';
-      ctx.fillText('BALANCE', 750, 510);
-      ctx.font = 'black 42px sans-serif';
-      ctx.fillStyle = t === 'vip' ? '#ffffff' : '#3c1c0a';
-      ctx.fillText(`${points.toFixed(0)} PTS`, 750, 570);
-
-      ctx.restore();
-    };
-
-    render();
-
-    const tex = new THREE.CanvasTexture(canvas);
-    setTexture(tex);
-
-    // Load QR Code onto the canvas texture dynamically
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrCode)}`;
-    img.onload = () => {
-      ctx.save();
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(0, 0, 1024, 648, 56);
-      } else {
-        ctx.rect(0, 0, 1024, 648);
-      }
-      ctx.clip();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(387, 199, 250, 250, 24);
-      } else {
-        ctx.rect(387, 199, 250, 250);
-      }
-      ctx.fill();
-      ctx.drawImage(img, 412, 224, 200, 200);
-      ctx.restore();
-
-      tex.needsUpdate = true;
-    };
-  }, [tier, name, points, qrCode]);
-
-  useFrame((state) => {
-    if (!meshRef.current) return;
-    const t = state.clock.getElapsedTime();
-    if (isHovered) {
-      // Extra slow, heavy tracking with high inertia
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, state.pointer.x * 0.15, 0.015);
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, -state.pointer.y * 0.12, 0.015);
-      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, 0, 0.015);
-    } else {
-      // Gentle ambient floating loop with very small tilt to prevent clipping
-      const baseRotationX = -3 * (Math.PI / 180);
-      const baseRotationY = 4 * (Math.PI / 180);
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, baseRotationY + Math.sin(t * 0.3) * 0.04, 0.015);
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, baseRotationX + Math.cos(t * 0.3) * 0.03, 0.015);
-      meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, Math.sin(t * 0.4) * 0.01, 0.015);
-    }
-  });
-
-  return (
-    <mesh 
-      ref={meshRef} 
-      onPointerOver={() => setIsHovered(true)} 
-      onPointerOut={() => setIsHovered(false)}
-    >
-      <planeGeometry args={[2.8, 1.77]} />
-      {texture ? (
-        <meshPhysicalMaterial 
-          map={texture}
-          emissive="#666666"
-          emissiveMap={texture}
-          transparent={true}
-          metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
-          roughness={0.42}
-          clearcoat={1.0}
-          clearcoatRoughness={0.1}
-          side={THREE.DoubleSide}
-        />
-      ) : (
-        <meshStandardMaterial color={getSideColor(tier)} transparent={true} />
-      )}
-    </mesh>
-  );
-}
-
-function Scene3D({ 
-  tier, 
-  name, 
-  points, 
-  qrCode 
-}: { 
-  tier: string; 
-  name: string; 
-  points: number; 
-  qrCode: string;
-}) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <div 
-      className="w-full h-[320px] flex items-center justify-center relative cursor-grab active:cursor-grabbing"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <Canvas camera={{ position: [0, 0, 3.5], fov: 45 }}>
-        {/* Soft, fully bright ambient and directional studio lights */}
-        <ambientLight intensity={1.3} />
-        <directionalLight position={[10, 10, 10]} intensity={1.6} />
-        <directionalLight position={[-10, -10, 5]} intensity={0.6} color="#ffffff" />
-        <LoyaltyCard3D 
-          tier={tier}
-          name={name}
-          points={points}
-          qrCode={qrCode}
-          isHovered={isHovered}
-          setIsHovered={setIsHovered}
-        />
-      </Canvas>
-    </div>
-  );
-}
