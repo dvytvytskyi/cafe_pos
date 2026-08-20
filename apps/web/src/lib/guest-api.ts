@@ -2,9 +2,14 @@ import { NextResponse } from 'next/server';
 import { GuestValidationError } from '@/lib/guest-validation';
 import { GuestRateLimitError } from '@/lib/guest-rate-limit';
 
-const GUEST_ORIGINS = (
-  process.env.GUEST_APP_ORIGINS || 'http://localhost:3001,http://127.0.0.1:3001'
-).split(',');
+const GUEST_ORIGINS = [
+  'http://localhost:3001',
+  'http://localhost:3003',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:3003',
+  'https://app.corgicafe.es',
+  ...(process.env.GUEST_APP_ORIGINS ? process.env.GUEST_APP_ORIGINS.split(',') : []),
+];
 
 export function withGuestCors(response: NextResponse, req?: Request): NextResponse {
   const origin = req?.headers.get('origin');
