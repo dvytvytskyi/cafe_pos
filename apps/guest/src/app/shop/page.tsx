@@ -91,6 +91,30 @@ const MOCK_MERCH_ITEMS = [
   }
 ];
 
+const categories = [
+  { 
+    id: "Hoodie", 
+    label: "Hoodies", 
+    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    tagline: "Midnight Bloom green hoodie. Premium heavy cotton blend."
+  },
+  { 
+    id: "Sneaker", 
+    label: "Sneakers", 
+    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+    tagline: "Signature Purple collection. Designed for ultimate look."
+  },
+  { 
+    id: "Face Cap", 
+    label: "Caps", 
+    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    tagline: "Crimson Wave blue cap. Classic style for daily fits."
+  }
+];
+
 export default function ShopPage() {
   const { 
     bootstrap, 
@@ -109,6 +133,10 @@ export default function ShopPage() {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({});
   const [quantity, setQuantity] = useState(1);
+
+  // Instagram Lookbook Story states
+  const [selectedStory, setSelectedStory] = useState<any | null>(null);
+  const [storyProgress, setStoryProgress] = useState(0);
 
   // Modals visibility
   const [showOrderModeModal, setShowOrderModeModal] = useState(false);
@@ -131,6 +159,27 @@ export default function ShopPage() {
       setSelectedOptions(initialOptions);
     }
   }, [selectedItem]);
+
+  // Instagram Story automatic progress bar timer
+  useEffect(() => {
+    let interval: any;
+    if (selectedStory) {
+      setStoryProgress(0);
+      interval = setInterval(() => {
+        setStoryProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setSelectedStory(null);
+            return 100;
+          }
+          return prev + 1; // Increments to 100 over 4 seconds (100 * 40ms)
+        });
+      }, 40);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [selectedStory]);
 
   const handleOptionSelect = (optionName: string, choice: string) => {
     setSelectedOptions(prev => ({
@@ -187,12 +236,6 @@ export default function ShopPage() {
       default: return '🥗';
     }
   };
-
-  const categories = [
-    { id: "Hoodie", label: "Hoodie", emoji: "🧥" },
-    { id: "Sneaker", label: "Sneaker", emoji: "👟" },
-    { id: "Face Cap", label: "Face Cap", emoji: "🧢" }
-  ];
 
   const filteredItems = MOCK_MERCH_ITEMS.filter(item => {
     return item.category === activeCategoryTab;
@@ -259,7 +302,11 @@ export default function ShopPage() {
               Buy 1 hoodie,<br />get 45% off caps
             </h2>
             <button 
-              onClick={() => setActiveCategoryTab("Face Cap")}
+              onClick={() => {
+                setActiveCategoryTab("Face Cap");
+                const capCat = categories.find(c => c.id === "Face Cap");
+                if (capCat) setSelectedStory(capCat);
+              }}
               className="bg-white hover:bg-gray-50 text-gray-900 px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none"
             >
               <span>Shop now</span>
@@ -274,24 +321,39 @@ export default function ShopPage() {
           />
         </div>
 
-        {/* Horizontal Category Filtering Tabs */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-none py-1">
+        {/* Horizontal Instagram-like Stories Categories list */}
+        <div className="flex gap-4 overflow-x-auto scrollbar-none py-2 px-1">
           {categories.map((cat) => {
             const active = activeCategoryTab === cat.id;
             return (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategoryTab(cat.id)}
-                className={`rounded-full py-1.5 pl-1.5 pr-4 flex items-center gap-2 border-none transition-all active:scale-[0.98] whitespace-nowrap ${
-                  active 
-                    ? 'bg-black text-white' 
-                    : 'bg-[#F4F4F5] text-gray-900 hover:bg-[#E4E4E7]'
-                }`}
+                onClick={() => {
+                  setActiveCategoryTab(cat.id);
+                  setSelectedStory(cat);
+                }}
+                className="flex flex-col items-center flex-shrink-0 active:scale-95 transition-all outline-none border-none bg-transparent cursor-pointer"
               >
-                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-sm shadow-sm">
-                  {cat.emoji}
+                {/* Circular Story Ring and Avatar */}
+                <div className={`p-[2.5px] rounded-full transition-all duration-300 ${
+                  active 
+                    ? 'bg-gradient-to-tr from-[#FDBD38] to-[#FA709A] scale-102 ring-2 ring-white' 
+                    : 'bg-gray-200'
+                }`}>
+                  <div className="bg-white p-[2px] rounded-full">
+                    <img 
+                      src={cat.image} 
+                      alt={cat.label} 
+                      className="w-14 h-14 rounded-full object-cover" 
+                    />
+                  </div>
                 </div>
-                <span className="font-semibold text-[13px]">
+                {/* Story Label Text */}
+                <span className={`text-[11.5px] mt-1.5 transition-all ${
+                  active 
+                    ? 'font-bold text-gray-900' 
+                    : 'font-medium text-gray-500'
+                }`}>
                   {cat.label}
                 </span>
               </button>
@@ -335,7 +397,7 @@ export default function ShopPage() {
               {/* Product Card Text Details */}
               <div className="p-4 flex flex-col justify-between flex-grow gap-2 text-left">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[13.5px] font-bold text-gray-900 truncate">
+                  <span className="text-[13px] font-bold text-gray-900 truncate">
                     {item.name}
                   </span>
                   <p className="text-[11px] text-gray-400 font-semibold leading-snug line-clamp-1">
@@ -391,7 +453,7 @@ export default function ShopPage() {
             {/* Close Cross Button */}
             <button 
               onClick={() => setSelectedItem(null)}
-              className="absolute top-5 left-5 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center text-black hover:bg-white transition-all z-50 shadow-sm cursor-pointer"
+              className="absolute top-5 left-5 w-9 h-9 bg-white/95 rounded-full flex items-center justify-center text-black hover:bg-white transition-all z-50 shadow-sm cursor-pointer"
             >
               <X className="w-4 h-4" strokeWidth={1.8} />
             </button>
@@ -711,6 +773,73 @@ export default function ShopPage() {
               className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3.5 rounded-full font-semibold text-[14px] text-center transition-all active:scale-[0.98]"
             >
               Go to Order History
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Fullscreen Instagram Lookbook Story Modal */}
+      {selectedStory && (
+        <div 
+          className="fixed inset-0 bg-[#09090b] z-55 flex flex-col justify-between p-4"
+          onClick={() => setSelectedStory(null)}
+        >
+          {/* Top Progress bar and Header */}
+          <div className="w-full flex flex-col gap-3 z-10">
+            {/* Progress Bar Container */}
+            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-white transition-all duration-[40ms] ease-linear" 
+                style={{ width: `${storyProgress}%` }}
+              />
+            </div>
+
+            {/* Story Header */}
+            <div className="flex items-center justify-between text-white px-1">
+              <div className="flex items-center gap-2.5">
+                <img 
+                  src={selectedStory.image} 
+                  alt={selectedStory.label} 
+                  className="w-8 h-8 rounded-full object-cover border border-white/20"
+                />
+                <div className="flex flex-col text-left">
+                  <span className="text-sm font-bold leading-tight">{selectedStory.label} Lookbook</span>
+                  <span className="text-[10px] text-white/50 font-medium leading-none">Corgi Shop</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedStory(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border-none cursor-pointer"
+              >
+                <X className="w-4 h-4" strokeWidth={2} />
+              </button>
+            </div>
+          </div>
+
+          {/* Central Vertical Cover lookbook Photo */}
+          <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b]">
+            <img 
+              src={selectedStory.storyImage} 
+              alt="Story lookbook" 
+              className="w-full h-full object-cover opacity-90"
+            />
+          </div>
+
+          {/* Bottom Swipe up action / Title Tagline */}
+          <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
+            <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%]">
+              {selectedStory.tagline}
+            </p>
+            
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedStory(null);
+              }}
+              className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-8 py-3 rounded-full font-bold text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 border-none cursor-pointer"
+            >
+              <span>Tap to Shop Now</span>
+              <ArrowRight className="w-4 h-4" strokeWidth={2.2} />
             </button>
           </div>
         </div>
