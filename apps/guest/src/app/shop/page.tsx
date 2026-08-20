@@ -259,7 +259,10 @@ export default function ShopPage() {
   const [quantity, setQuantity] = useState(1);
 
   // Instagram Lookbook Story states
-  const [selectedStory, setSelectedStory] = useState<any | null>(null);
+  const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
+  const [prevStoryIndex, setPrevStoryIndex] = useState<number | null>(null);
+  const [animType, setAnimType] = useState<'next' | 'prev' | null>(null);
+  const [isStoryAnimating, setIsStoryAnimating] = useState(false);
   const [storyProgress, setStoryProgress] = useState(0);
 
   // Modals visibility
@@ -284,26 +287,64 @@ export default function ShopPage() {
     }
   }, [selectedItem]);
 
+  const handleNextStory = () => {
+    if (activeStoryIndex === null || isStoryAnimating) return;
+    if (activeStoryIndex < categories.length - 1) {
+      setPrevStoryIndex(activeStoryIndex);
+      setAnimType('next');
+      setIsStoryAnimating(true);
+      setActiveStoryIndex(activeStoryIndex + 1);
+      setActiveCategoryTab(categories[activeStoryIndex + 1].id);
+      setStoryProgress(0);
+      setTimeout(() => {
+        setIsStoryAnimating(false);
+        setAnimType(null);
+      }, 600);
+    } else {
+      setActiveStoryIndex(null);
+      setStoryProgress(0);
+    }
+  };
+
+  const handlePrevStory = () => {
+    if (activeStoryIndex === null || isStoryAnimating) return;
+    if (activeStoryIndex > 0) {
+      setPrevStoryIndex(activeStoryIndex);
+      setAnimType('prev');
+      setIsStoryAnimating(true);
+      setActiveStoryIndex(activeStoryIndex - 1);
+      setActiveCategoryTab(categories[activeStoryIndex - 1].id);
+      setStoryProgress(0);
+      setTimeout(() => {
+        setIsStoryAnimating(false);
+        setAnimType(null);
+      }, 600);
+    } else {
+      setActiveStoryIndex(null);
+      setStoryProgress(0);
+    }
+  };
+
   // Instagram Story automatic progress bar timer
   useEffect(() => {
-    let interval: any;
-    if (selectedStory) {
+    if (activeStoryIndex === null || isStoryAnimating) {
       setStoryProgress(0);
-      interval = setInterval(() => {
-        setStoryProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setSelectedStory(null);
-            return 100;
-          }
-          return prev + 1; // Increments to 100 over 4 seconds (100 * 40ms)
-        });
-      }, 40);
+      return;
     }
+    setStoryProgress(0);
+    const interval = setInterval(() => {
+      setStoryProgress((prev) => {
+        if (prev >= 100) {
+          handleNextStory();
+          return 0;
+        }
+        return prev + 1; // Increments to 100 over 4 seconds (100 * 40ms)
+      });
+    }, 40);
     return () => {
-      if (interval) clearInterval(interval);
+      clearInterval(interval);
     };
-  }, [selectedStory]);
+  }, [activeStoryIndex, isStoryAnimating]);
 
   const handleOptionSelect = (optionName: string, choice: string) => {
     setSelectedOptions(prev => ({
@@ -440,8 +481,14 @@ export default function ShopPage() {
             <button 
               onClick={() => {
                 setActiveCategoryTab("Face Cap");
-                const capCat = categories.find(c => c.id === "Face Cap");
-                if (capCat) setSelectedStory(capCat);
+                const idx = categories.findIndex(c => c.id === "Face Cap");
+                if (idx !== -1) {
+                  setActiveStoryIndex(idx);
+                  setPrevStoryIndex(null);
+                  setAnimType(null);
+                  setIsStoryAnimating(false);
+                  setStoryProgress(0);
+                }
               }}
               className="bg-white hover:bg-gray-50 text-[#FC8C86] px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none z-10"
             >
@@ -466,7 +513,14 @@ export default function ShopPage() {
                 key={cat.id}
                 onClick={() => {
                   setActiveCategoryTab(cat.id);
-                  setSelectedStory(cat);
+                  const idx = categories.findIndex(c => c.label === cat.label);
+                  if (idx !== -1) {
+                    setActiveStoryIndex(idx);
+                    setPrevStoryIndex(null);
+                    setAnimType(null);
+                    setIsStoryAnimating(false);
+                    setStoryProgress(0);
+                  }
                 }}
                 className="flex flex-col items-center flex-shrink-0 active:scale-95 transition-all outline-none border-none bg-transparent cursor-pointer"
               >
@@ -903,68 +957,201 @@ export default function ShopPage() {
       )}
 
       {/* 5. Fullscreen Instagram Lookbook Story Modal */}
-      {selectedStory && (
-        <div 
-          className="fixed inset-0 bg-[#09090b] z-55 flex flex-col justify-between p-4"
-          onClick={() => setSelectedStory(null)}
-        >
-          {/* Top Progress bar and Header */}
-          <div className="w-full flex flex-col gap-3 z-10">
-            {/* Progress Bar Container */}
-            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-white transition-all duration-[40ms] ease-linear" 
-                style={{ width: `${storyProgress}%` }}
-              />
-            </div>
+      {activeStoryIndex !== null && (
+        <div className="fixed inset-0 bg-black z-55 flex flex-col justify-between">
+          <style>{`
+            .cube-container {
+              perspective: 1200px;
+              position: relative;
+              width: 100%;
+              height: 100%;
+              overflow: hidden;
+              background-color: #000;
+            }
+            .cube-slide-next-out {
+              animation: cubeNextOut 0.6s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+            .cube-slide-next-in {
+              animation: cubeNextIn 0.6s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+            .cube-slide-prev-out {
+              animation: cubePrevOut 0.6s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+            .cube-slide-prev-in {
+              animation: cubePrevIn 0.6s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+            @keyframes cubeNextOut {
+              0% { transform: rotateY(0deg); transform-origin: 0% 50%; opacity: 1; }
+              100% { transform: rotateY(-90deg); transform-origin: 0% 50%; opacity: 0; }
+            }
+            @keyframes cubeNextIn {
+              0% { transform: rotateY(90deg); transform-origin: 100% 50%; opacity: 0; }
+              100% { transform: rotateY(0deg); transform-origin: 100% 50%; opacity: 1; }
+            }
+            @keyframes cubePrevOut {
+              0% { transform: rotateY(0deg); transform-origin: 100% 50%; opacity: 1; }
+              100% { transform: rotateY(90deg); transform-origin: 100% 50%; opacity: 0; }
+            }
+            @keyframes cubePrevIn {
+              0% { transform: rotateY(-90deg); transform-origin: 0% 50%; opacity: 0; }
+              100% { transform: rotateY(0deg); transform-origin: 0% 50%; opacity: 1; }
+            }
+          `}</style>
 
-            {/* Story Header */}
-            <div className="flex items-center justify-between text-white px-1">
-              <div className="flex items-center gap-2.5">
-                <img 
-                  src={selectedStory.image} 
-                  alt={selectedStory.label} 
-                  className="w-8 h-8 rounded-full object-cover border border-white/20"
-                />
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-bold leading-tight">{selectedStory.label} Lookbook</span>
-                  <span className="text-[10px] text-white/50 font-medium leading-none">Corgi Shop</span>
+          <div className="cube-container">
+            {isStoryAnimating && prevStoryIndex !== null ? (
+              <>
+                {/* Outgoing slide */}
+                <div 
+                  className={`absolute inset-0 w-full h-full flex flex-col justify-between p-4 bg-[#09090b] ${
+                    animType === 'next' ? 'cube-slide-next-out' : 'cube-slide-prev-out'
+                  }`}
+                  style={{ backfaceVisibility: 'hidden' }}
+                >
+                  <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b] z-0">
+                    <img 
+                      src={categories[prevStoryIndex].storyImage} 
+                      alt="Story lookbook" 
+                      className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
+                    />
+                  </div>
+                  <div className="w-full flex flex-col gap-3 z-10">
+                    <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                      <div className="h-full bg-white w-full" />
+                    </div>
+                    <div className="flex items-center justify-between text-white px-1">
+                      <div className="flex items-center gap-2.5">
+                        <img 
+                          src={categories[prevStoryIndex].image} 
+                          alt={categories[prevStoryIndex].label} 
+                          className="w-8 h-8 rounded-full object-cover border border-white/20"
+                        />
+                        <div className="flex flex-col text-left">
+                          <span className="text-sm font-bold leading-tight">{categories[prevStoryIndex].label} Lookbook</span>
+                          <span className="text-[10px] text-white/50 font-medium leading-none">Corgi Shop</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
+                    <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%] select-none">
+                      {categories[prevStoryIndex].tagline}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Incoming slide */}
+                <div 
+                  className={`absolute inset-0 w-full h-full flex flex-col justify-between p-4 bg-[#09090b] ${
+                    animType === 'next' ? 'cube-slide-next-in' : 'cube-slide-prev-in'
+                  }`}
+                  style={{ backfaceVisibility: 'hidden' }}
+                >
+                  <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b] z-0">
+                    <img 
+                      src={categories[activeStoryIndex].storyImage} 
+                      alt="Story lookbook" 
+                      className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
+                    />
+                  </div>
+                  <div className="w-full flex flex-col gap-3 z-10">
+                    <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                      <div className="h-full bg-white w-0" />
+                    </div>
+                    <div className="flex items-center justify-between text-white px-1">
+                      <div className="flex items-center gap-2.5">
+                        <img 
+                          src={categories[activeStoryIndex].image} 
+                          alt={categories[activeStoryIndex].label} 
+                          className="w-8 h-8 rounded-full object-cover border border-white/20"
+                        />
+                        <div className="flex flex-col text-left">
+                          <span className="text-sm font-bold leading-tight">{categories[activeStoryIndex].label} Lookbook</span>
+                          <span className="text-[10px] text-white/50 font-medium leading-none">Corgi Shop</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
+                    <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%] select-none">
+                      {categories[activeStoryIndex].tagline}
+                    </p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* Active slide (interactive, responds to clicks) */
+              <div 
+                className="absolute inset-0 w-full h-full flex flex-col justify-between p-4 bg-[#09090b]"
+                style={{ backfaceVisibility: 'hidden' }}
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const clickX = e.clientX - rect.left;
+                  if (clickX < rect.width * 0.3) {
+                    handlePrevStory();
+                  } else {
+                    handleNextStory();
+                  }
+                }}
+              >
+                <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b] z-0">
+                  <img 
+                    src={categories[activeStoryIndex].storyImage} 
+                    alt="Story lookbook" 
+                    className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
+                  />
+                </div>
+
+                <div className="w-full flex flex-col gap-3 z-10">
+                  <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-white transition-all duration-[40ms] ease-linear" 
+                      style={{ width: `${storyProgress}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-white px-1">
+                    <div className="flex items-center gap-2.5">
+                      <img 
+                        src={categories[activeStoryIndex].image} 
+                        alt={categories[activeStoryIndex].label} 
+                        className="w-8 h-8 rounded-full object-cover border border-white/20"
+                      />
+                      <div className="flex flex-col text-left">
+                        <span className="text-sm font-bold leading-tight">{categories[activeStoryIndex].label} Lookbook</span>
+                        <span className="text-[10px] text-white/50 font-medium leading-none">Corgi Shop</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveStoryIndex(null);
+                      }}
+                      className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border-none cursor-pointer z-20"
+                    >
+                      <X className="w-4 h-4" strokeWidth={2} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
+                  <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%] select-none">
+                    {categories[activeStoryIndex].tagline}
+                  </p>
+                  
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveStoryIndex(null);
+                    }}
+                    className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-8 py-3 rounded-full font-bold text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 border-none cursor-pointer z-20"
+                  >
+                    <span>Tap to Shop Now</span>
+                    <ArrowRight className="w-4 h-4" strokeWidth={2.2} />
+                  </button>
                 </div>
               </div>
-              <button 
-                onClick={() => setSelectedStory(null)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border-none cursor-pointer"
-              >
-                <X className="w-4 h-4" strokeWidth={2} />
-              </button>
-            </div>
-          </div>
-
-          {/* Central Vertical Cover lookbook Photo */}
-          <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b]">
-            <img 
-              src={selectedStory.storyImage} 
-              alt="Story lookbook" 
-              className="w-full h-full object-cover opacity-90"
-            />
-          </div>
-
-          {/* Bottom Swipe up action / Title Tagline */}
-          <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
-            <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%]">
-              {selectedStory.tagline}
-            </p>
-            
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedStory(null);
-              }}
-              className="bg-[#FDBD38] hover:bg-[#e5a420] text-white px-8 py-3 rounded-full font-bold text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 border-none cursor-pointer"
-            >
-              <span>Tap to Shop Now</span>
-              <ArrowRight className="w-4 h-4" strokeWidth={2.2} />
-            </button>
+            )}
           </div>
         </div>
       )}
