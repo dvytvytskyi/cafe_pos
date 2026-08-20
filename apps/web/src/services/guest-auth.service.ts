@@ -72,15 +72,14 @@ export class GuestAuthService {
   private async createSession(customerId: string, phone: string, name: string) {
     await prisma.guestSession.deleteMany({ where: { expiresAt: { lt: new Date() } } });
 
-    const rawToken = generateGuestSessionToken();
-    const tokenHash = hashGuestToken(rawToken);
+    const jwt = signGuestJwt({ sub: customerId, phone, name });
+    const tokenHash = hashGuestToken(jwt);
     const expiresAt = new Date(Date.now() + GUEST_SESSION_TTL_SECONDS * 1000);
 
     await prisma.guestSession.create({
       data: { customerId, tokenHash, expiresAt },
     });
 
-    const jwt = signGuestJwt({ sub: customerId, phone, name });
     return { token: jwt, customerId };
   }
 
