@@ -309,9 +309,13 @@ export default function LoyaltyPage() {
     return (
       <div className="h-screen overflow-y-auto bg-gray-50 pb-[90px] relative scroll-smooth">
         {/* Profile Header */}
-        <div className="bg-[#FDBD38] text-white px-6 pt-10 pb-20 rounded-b-[40px] shadow-lg relative">
+        <div className="bg-[#FDBD38] text-white px-6 pt-10 pb-20 rounded-b-[24px] shadow-lg relative">
           <div className="max-w-[440px] mx-auto flex items-center justify-between">
-            <div className="flex flex-col text-left">
+            <div 
+              onClick={() => setIsProfileOpen(true)}
+              className="flex flex-col text-left cursor-pointer hover:opacity-90 transition-opacity active:scale-[0.98] select-none"
+              title="Open Profile Settings"
+            >
               <span className="text-[11px] font-bold uppercase tracking-widest text-white/80">Loyalty Club</span>
               <h1 className="text-[26px] font-bold mt-1 tracking-tight leading-none">
                 Hello, {profileName || customer.name}!
@@ -325,16 +329,6 @@ export default function LoyaltyPage() {
                 title="Support"
               >
                 <AlertCircle className="w-5 h-5 text-white" />
-              </button>
-              <button
-                onClick={() => setIsProfileOpen(true)}
-                className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/40 shadow-sm active:scale-95 transition-all cursor-pointer flex-shrink-0"
-              >
-                <img 
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
-                  alt="Profile Avatar"
-                  className="w-full h-full object-cover"
-                />
               </button>
             </div>
           </div>
@@ -353,7 +347,7 @@ export default function LoyaltyPage() {
             >
               {/* Front Side: Profile Info Card */}
               <div 
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[22px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[16px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
               >
                 {/* Left Status Info (Absolute positioned) */}
                 <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
