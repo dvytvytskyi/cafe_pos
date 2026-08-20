@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
+import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGuest } from '@/lib/guest-context';
 import {
@@ -920,41 +921,26 @@ const LoyaltyCard3D = React.memo(({
   });
 
   return (
-    <mesh 
-      ref={meshRef} 
+    <RoundedBox 
+      ref={meshRef as any}
+      args={[2.8, 1.77, 0.16]} 
+      radius={0.05} 
+      smoothness={8}
       onPointerOver={() => setIsHovered(true)} 
       onPointerOut={() => setIsHovered(false)}
     >
-      {/* Thicker card geometry (0.14 depth) to feel solid */}
-      <boxGeometry args={[2.8, 1.77, 0.14]} />
       {texture ? (
-        <>
-          {/* Polished edge materials for rich 3D thickness borders */}
-          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.95} roughness={0.15} clearcoat={1.0} clearcoatRoughness={0.1} />
-          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.95} roughness={0.15} clearcoat={1.0} clearcoatRoughness={0.1} />
-          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.95} roughness={0.15} clearcoat={1.0} clearcoatRoughness={0.1} />
-          <meshPhysicalMaterial color={getSideColor(tier)} metalness={0.95} roughness={0.15} clearcoat={1.0} clearcoatRoughness={0.1} />
-          {/* Front (Satin Matte texture) */}
-          <meshPhysicalMaterial 
-            map={texture}
-            metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
-            roughness={0.42}
-            clearcoat={1.0}
-            clearcoatRoughness={0.1}
-          />
-          {/* Back (Satin Matte texture) */}
-          <meshPhysicalMaterial 
-            map={texture}
-            metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
-            roughness={0.42}
-            clearcoat={1.0}
-            clearcoatRoughness={0.1}
-          />
-        </>
+        <meshPhysicalMaterial 
+          map={texture}
+          metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
+          roughness={0.42}
+          clearcoat={1.0}
+          clearcoatRoughness={0.1}
+        />
       ) : (
         <meshStandardMaterial color={getSideColor(tier)} />
       )}
-    </mesh>
+    </RoundedBox>
   );
 });
 
@@ -978,10 +964,10 @@ function Scene3D({
       onMouseLeave={() => setIsHovered(false)}
     >
       <Canvas camera={{ position: [0, 0, 3.2], fov: 45 }}>
-        {/* Soft, bright ambient and studio directional lights */}
-        <ambientLight intensity={1.2} />
-        <directionalLight position={[10, 10, 10]} intensity={1.5} />
-        <directionalLight position={[-10, -10, 5]} intensity={0.4} color="#ffffff" />
+        {/* Soft, rich ambient and directional lights for high-contrast metal reflections */}
+        <ambientLight intensity={0.45} />
+        <directionalLight position={[10, 10, 10]} intensity={0.8} />
+        <directionalLight position={[-10, -10, 5]} intensity={0.2} color="#ffffff" />
         <LoyaltyCard3D 
           tier={tier}
           name={name}
