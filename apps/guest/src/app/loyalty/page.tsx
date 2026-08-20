@@ -317,7 +317,7 @@ export default function LoyaltyPage() {
         {/* Flipping 3D QR Card */}
         <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
           <div 
-            className="w-full h-[280px] relative cursor-pointer"
+            className="w-full h-[260px] relative cursor-pointer"
             style={{ perspective: '1000px' }}
           >
             <div 
@@ -333,16 +333,16 @@ export default function LoyaltyPage() {
                 <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Scannable Member Code</span>
                 
                 {/* QR Code */}
-                <div className="my-2 bg-gray-50 p-3 rounded-[20px] shadow-inner">
+                <div className="my-1.5 bg-gray-50 p-2.5 rounded-[20px] shadow-inner">
                   <img 
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrCode)}`}
                     alt="Member QR Code"
-                    className="w-[120px] h-[120px] object-contain rounded-lg"
+                    className="w-[110px] h-[110px] object-contain rounded-lg"
                   />
                 </div>
 
                 {/* Loyalty points details */}
-                <div className="w-full flex justify-between items-center border-t border-gray-100 pt-3">
+                <div className="w-full flex justify-between items-center border-t border-gray-100 pt-2.5">
                   <div className="flex flex-col text-left">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Member Tier</span>
                     <span className="text-base font-bold text-gray-800 uppercase tracking-tight leading-none mt-1">{customer.tier}</span>
@@ -378,10 +378,10 @@ export default function LoyaltyPage() {
                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Spent</span>
                 </div>
 
-                {/* Central Block: Photo, Name, and ID (One unit) */}
-                <div className="flex-1 flex flex-col items-center justify-center mt-3 mb-2">
+                {/* Central Block: Photo, Name, and ID (One unit, shifted upwards) */}
+                <div className="flex-1 flex flex-col items-center justify-start mt-1">
                   {/* Photo (twice as large: w-24 h-24) */}
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md mb-2 flex-shrink-0">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md mb-1.5 flex-shrink-0">
                     <img 
                       src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
                       alt="Profile Avatar"
@@ -389,7 +389,7 @@ export default function LoyaltyPage() {
                     />
                   </div>
                   {/* Name */}
-                  <h2 className="text-lg font-bold text-gray-900 tracking-tight uppercase leading-tight mb-0.5">
+                  <h2 className="text-base font-bold text-gray-900 tracking-tight uppercase leading-tight mb-0.5">
                     {profileName || customer.name}
                   </h2>
                   {/* ID */}
