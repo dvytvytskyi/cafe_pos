@@ -10,6 +10,7 @@ import {
   getLoyalty,
   getLoyaltyTransactions,
   updateProfile,
+  getProfile,
 } from '@/lib/api-client';
 import type { GuestLoyaltyResponse, GuestLoyaltyTransaction } from '@corgi/contracts';
 import { 
@@ -98,8 +99,18 @@ export default function LoyaltyPage() {
     try {
       const res = await verifyOtp(phone, otpCode);
       if (res.ok) {
-        await refreshAuth();
-        setOtpSent(false);
+        // Fetch profile to see if profile needs completion (if name is 'Guest')
+        try {
+          const profile = await getProfile();
+          if (profile.name === 'Guest' || profile.email?.endsWith('@guest.corgi.local')) {
+            setNeedRegister(true);
+          } else {
+            await refreshAuth();
+            setOtpSent(false);
+          }
+        } catch {
+          setNeedRegister(true);
+        }
       } else {
         setNeedRegister(true);
       }
