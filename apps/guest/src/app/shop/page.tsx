@@ -734,11 +734,11 @@ export default function ShopPage() {
       {/* 1. Item Details Bottom Sheet Modal */}
       {selectedItem && (
         <div 
-          className="fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center backdrop-blur-[3px]"
+          className="fixed inset-0 bg-[#18181b]/60 z-50 transition-all duration-300 flex items-center justify-center backdrop-blur-[3px]"
           onClick={() => setSelectedItem(null)}
         >
           <div 
-            className="w-full max-w-[480px] bg-white rounded-t-[16px] overflow-hidden transition-transform duration-300 ease-out transform flex flex-col shadow-2xl relative"
+            className="w-full max-w-[480px] h-screen bg-white transition-transform duration-300 ease-out transform flex flex-col shadow-2xl relative overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Cross Button */}
@@ -750,7 +750,7 @@ export default function ShopPage() {
             </button>
 
             {/* Product Cover Image */}
-            <div className="w-full h-72 bg-gray-50 flex items-center justify-center overflow-hidden">
+            <div className="w-full h-96 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
               {selectedItem.image ? (
                 <img 
                   src={selectedItem.image} 
@@ -763,7 +763,7 @@ export default function ShopPage() {
             </div>
 
             {/* Content Details Block */}
-            <div className="px-6 py-6 flex flex-col gap-5 text-left bg-white">
+            <div className="px-6 py-6 flex flex-col gap-5 text-left bg-white flex-1">
               <div className="flex justify-between items-start gap-3">
                 <div className="flex flex-col gap-0.5">
                   <h2 className="text-[20px] font-bold text-gray-900 uppercase tracking-tight leading-none">
