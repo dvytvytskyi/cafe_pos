@@ -338,7 +338,7 @@ export default function LoyaltyPage() {
             >
               {/* Front Side: Profile Info Card */}
               <div 
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[38px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[30px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
               >
                 {/* Left Status Info (Absolute positioned) */}
                 <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
@@ -409,7 +409,10 @@ export default function LoyaltyPage() {
                     <span>History</span>
                   </button>
                   <button
-                    onClick={() => setIsCardFlipped(true)}
+                    onClick={() => {
+                      setIsCardFlipped(true);
+                      setIsAddPointsOpen(false);
+                    }}
                     className="w-9 h-9 bg-[#FDBD38] hover:bg-[#e5a420] text-white rounded-[12px] flex items-center justify-center flex-shrink-0 border border-[#FDBD38] hover:border-[#e5a420] active:scale-[0.95] transition-all cursor-pointer"
                     title="Show QR Code"
                   >
