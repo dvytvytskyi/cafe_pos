@@ -825,21 +825,21 @@ function LoyaltyCard3D({
       const grad = ctx.createLinearGradient(0, 0, 1024, 648);
       const t = tier.toLowerCase();
       if (t === 'silver') {
-        grad.addColorStop(0, '#c8c8cc');
-        grad.addColorStop(0.5, '#e2e2e6');
-        grad.addColorStop(1, '#b0b0b5');
+        grad.addColorStop(0, '#d8d8dc');
+        grad.addColorStop(0.5, '#f3f3f6');
+        grad.addColorStop(1, '#c8c8cd');
       } else if (t === 'gold') {
-        grad.addColorStop(0, '#d4af37');
-        grad.addColorStop(0.5, '#f3e5ab');
-        grad.addColorStop(1, '#aa820a');
+        grad.addColorStop(0, '#e4c86a');
+        grad.addColorStop(0.5, '#fbf4cc');
+        grad.addColorStop(1, '#cfa43b');
       } else if (t === 'vip') {
-        grad.addColorStop(0, '#1e1e24');
-        grad.addColorStop(0.5, '#30303a');
-        grad.addColorStop(1, '#121216');
-      } else { // Bronze (satin rose-bronze)
-        grad.addColorStop(0, '#d4a387');
-        grad.addColorStop(0.5, '#e9c4b0');
-        grad.addColorStop(1, '#bc8c72');
+        grad.addColorStop(0, '#2c2c35');
+        grad.addColorStop(0.5, '#454552');
+        grad.addColorStop(1, '#202026');
+      } else { // Bronze (bright premium rose-bronze)
+        grad.addColorStop(0, '#f0c3aa');
+        grad.addColorStop(0.5, '#fdf0e6');
+        grad.addColorStop(1, '#d8a78c');
       }
 
       ctx.fillStyle = grad;
@@ -998,10 +998,10 @@ function Scene3D({
       onMouseLeave={() => setIsHovered(false)}
     >
       <Canvas camera={{ position: [0, 0, 3.5], fov: 45 }}>
-        {/* Soft, rich ambient and directional lights for high-contrast metal reflections */}
-        <ambientLight intensity={0.45} />
-        <directionalLight position={[10, 10, 10]} intensity={0.8} />
-        <directionalLight position={[-10, -10, 5]} intensity={0.2} color="#ffffff" />
+        {/* Soft, fully bright ambient and directional studio lights */}
+        <ambientLight intensity={1.3} />
+        <directionalLight position={[10, 10, 10]} intensity={1.6} />
+        <directionalLight position={[-10, -10, 5]} intensity={0.6} color="#ffffff" />
         <LoyaltyCard3D 
           tier={tier}
           name={name}
