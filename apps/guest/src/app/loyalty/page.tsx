@@ -264,7 +264,7 @@ export default function LoyaltyPage() {
         </div>
 
         {/* Dashboard Content */}
-        <div className="max-w-[440px] mx-auto px-6 mt-8 flex flex-col gap-6">
+        <div className="max-w-[440px] mx-auto px-6 mt-8 flex flex-col gap-4">
           
           {/* Tier Progression Progress Card */}
           <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex flex-col text-left shadow-sm">
