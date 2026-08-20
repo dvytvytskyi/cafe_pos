@@ -879,7 +879,7 @@ export default function LoyaltyPage() {
                       <div key={tx.id} className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
                         <div className="flex items-center gap-3">
                           <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${
-                            isEarn ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'
+                            isEarn ? 'bg-amber-50 text-[#c29124]' : 'bg-gray-50 text-gray-700'
                           }`}>
                             {isEarn ? '+' : '-'}
                           </div>
@@ -892,7 +892,7 @@ export default function LoyaltyPage() {
                         </div>
                         <div className="flex flex-col items-end">
                           <span className={`text-sm font-bold ${
-                            isEarn ? 'text-emerald-600' : 'text-orange-600'
+                            isEarn ? 'text-[#c29124]' : 'text-gray-700'
                           }`}>
                             {isEarn ? '+' : '-'}{tx.points.toFixed(0)} PTS
                           </span>
