@@ -234,7 +234,7 @@ export default function LoyaltyPage() {
 
         {/* Simple QR Code & Points Panel */}
         <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
-          <div className="bg-white rounded-[24px] p-6 shadow-md flex flex-col items-center">
+          <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400">Scannable Member Code</span>
             
             {/* QR Code */}
@@ -267,7 +267,7 @@ export default function LoyaltyPage() {
         <div className="max-w-[440px] mx-auto px-6 mt-8 flex flex-col gap-6">
           
           {/* Tier Progression Progress Card */}
-          <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex flex-col text-left shadow-sm">
+          <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex flex-col text-left shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]">
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-2">
                 <Sparkle className="w-5 h-5 text-[#FDBD38]" />
@@ -296,7 +296,7 @@ export default function LoyaltyPage() {
           </div>
 
           {/* Allergy notes Update Form */}
-          <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex flex-col text-left shadow-sm">
+          <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex flex-col text-left shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]">
             <div className="flex items-center gap-2 mb-3">
               <Activity className="w-5 h-5 text-[#EE635E]" />
               <span className="text-sm font-bold text-gray-800">Guest Health & Profile</span>
@@ -342,7 +342,7 @@ export default function LoyaltyPage() {
           </div>
 
           {/* Chronological Points Transaction History */}
-          <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex flex-col text-left shadow-sm">
+          <div className="bg-white p-5 rounded-[24px] border border-gray-100 flex flex-col text-left shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]">
             <div className="flex items-center gap-2 mb-4 border-b border-gray-50 pb-2.5">
               <History className="w-5 h-5 text-gray-700" />
               <span className="text-sm font-bold text-gray-800">Points History</span>
