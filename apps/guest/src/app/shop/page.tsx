@@ -821,8 +821,8 @@ export default function ShopPage() {
                       <button
                         key={index}
                         onClick={() => scrollToImage(index)}
-                        className={`w-[45px] h-[55px] rounded-lg overflow-hidden bg-white/90 hover:bg-white shadow-md transition-all border-2 cursor-pointer flex items-center justify-center p-[1px] ${
-                          active ? 'border-black scale-105' : 'border-transparent opacity-60'
+                        className={`w-[45px] h-[55px] rounded-lg overflow-hidden bg-white shadow-md transition-all border-2 cursor-pointer flex items-center justify-center p-[1px] ${
+                          active ? 'border-[#EE635E] scale-105' : 'border-transparent'
                         }`}
                       >
                         <img 
