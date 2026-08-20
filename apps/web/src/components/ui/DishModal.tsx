@@ -674,7 +674,7 @@ export default function DishModal({
 
                     {/* Popular Tags List */}
                     <div className="space-y-1.5">
-                      <span className="text-[11px] font-black uppercase tracking-wider text-gray-400 block">Popular Tags:</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block">Popular Tags:</span>
                       <div className="flex flex-wrap gap-1.5">
                         {popularTags.map(pTag => {
                           const isSelected = tags.includes(pTag);
@@ -828,14 +828,14 @@ export default function DishModal({
                   <div className="flex flex-col gap-3.5 bg-gray-50 border border-gray-150 p-4 rounded-2xl">
                     {!activePreviewCategoryName ? (
                       <>
-                        <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider block">Link modifier category immediately</span>
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Link modifier category immediately</span>
                         <div className="flex flex-wrap gap-2">
                           {AVAILABLE_MODIFIER_CATEGORIES.map(category => (
                             <button
                               key={category.name}
                               type="button"
                               onClick={() => setActivePreviewCategoryName(category.name)}
-                              className="px-3 py-1.5 rounded-xl border border-orange-200 bg-orange-50/50 hover:bg-orange-50 text-[12px] font-black text-corgi cursor-pointer transition-all active:scale-[0.98] flex items-center gap-1.5"
+                              className="px-3 py-1.5 rounded-xl border border-orange-200 bg-orange-50/50 hover:bg-orange-50 text-[12px] font-bold text-corgi cursor-pointer transition-all active:scale-[0.98] flex items-center gap-1.5"
                             >
                               <Plus size={12} className="stroke-[3px]" /> {category.name}
                             </button>
@@ -849,7 +849,7 @@ export default function DishModal({
                         return (
                           <div className="space-y-3 animate-in fade-in duration-200">
                             <div>
-                              <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider block">Preview modifier category</span>
+                              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Preview modifier category</span>
                               <h4 className="text-[13px] font-bold text-gray-900 mt-1">Import items from "{previewCat.name}" category?</h4>
                             </div>
                             
@@ -863,7 +863,7 @@ export default function DishModal({
                                     <div className="flex items-center gap-2">
                                       <span className="text-gray-400">€{formatPriceDisplay(parsePriceInput(sel.price))}</span>
                                       {isDuplicate && (
-                                        <span className="text-[9px] font-black uppercase bg-red-50 text-red-500 border border-red-100 px-1.5 py-0.5 rounded">Duplicate (will skip)</span>
+                                        <span className="text-[9px] font-bold uppercase bg-red-50 text-red-500 border border-red-100 px-1.5 py-0.5 rounded">Duplicate (will skip)</span>
                                       )}
                                     </div>
                                   </div>
@@ -876,7 +876,7 @@ export default function DishModal({
                               <button
                                 type="button"
                                 onClick={() => setActivePreviewCategoryName(null)}
-                                className="px-3.5 py-2 bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs font-black rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                                className="px-3.5 py-2 bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs font-bold rounded-xl cursor-pointer transition-all active:scale-[0.98]"
                               >
                                 Decline
                               </button>
@@ -911,7 +911,7 @@ export default function DishModal({
                                   
                                   setActivePreviewCategoryName(null);
                                 }}
-                                className="px-4 py-2 bg-corgi hover:bg-orange-600 text-white text-xs font-black rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+                                className="px-4 py-2 bg-corgi hover:bg-orange-600 text-white text-xs font-bold rounded-xl cursor-pointer transition-all active:scale-[0.98]"
                               >
                                 Add
                               </button>

@@ -412,7 +412,7 @@ export default function OrderTerminalModal({
             key={cat.id}
             data-testid={`pos-category-${cat.id}`}
             onClick={() => setActiveCategory(cat.id)}
-            className={`py-2 px-1 rounded-xl font-black text-xs text-center transition-colors cursor-pointer truncate ${
+            className={`py-2 px-1 rounded-xl font-bold text-xs text-center transition-colors cursor-pointer truncate ${
               activeCategory === cat.id
                 ? 'bg-corgi text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200/60'
@@ -458,17 +458,17 @@ export default function OrderTerminalModal({
             </div>
             <div className="p-3 flex-1 flex flex-col justify-between">
               <div className="min-h-[36px] flex flex-col justify-start">
-                <h4 className="font-extrabold text-gray-900 text-xs line-clamp-2 leading-tight" title={item.name}>
+                <h4 className="font-bold text-gray-900 text-xs line-clamp-2 leading-tight" title={item.name}>
                   {item.name}
                 </h4>
               </div>
-              <span className="text-xs font-black text-corgi mt-0.5 block">{money(item.price)}</span>
+              <span className="text-xs font-bold text-corgi mt-0.5 block">{money(item.price)}</span>
               <div className="mt-2">
                 <div className="flex gap-1 flex-wrap min-h-[16px] mb-1 items-center">
                   {item.allergens?.map((alg: string) => (
                     <span
                       key={alg}
-                      className={`text-[8px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded border ${
+                      className={`text-[8px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded border ${
                         alg === 'gluten-free'
                           ? 'bg-green-50 text-green-700 border-green-200'
                           : alg === 'dairy'
@@ -490,7 +490,7 @@ export default function OrderTerminalModal({
                       <button
                         key={sz}
                         onClick={() => requestAddItem(item, sz)}
-                        className="flex-1 py-1 bg-gray-50 hover:bg-corgi border border-gray-100 hover:border-corgi hover:text-white rounded-lg text-[10px] font-black text-gray-700 transition-all cursor-pointer active:scale-95 text-center"
+                        className="flex-1 py-1 bg-gray-50 hover:bg-corgi border border-gray-100 hover:border-corgi hover:text-white rounded-lg text-[10px] font-bold text-gray-700 transition-all cursor-pointer active:scale-95 text-center"
                       >
                         {sz}
                       </button>
@@ -500,7 +500,7 @@ export default function OrderTerminalModal({
                   <button
                     data-testid={`pos-menu-item-${item.id}`}
                     onClick={() => requestAddItem(item)}
-                    className="w-full py-1.5 bg-gray-50 hover:bg-corgi border border-gray-200 hover:border-corgi hover:text-white rounded-xl text-[10px] font-black text-gray-700 transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1"
+                    className="w-full py-1.5 bg-gray-50 hover:bg-corgi border border-gray-200 hover:border-corgi hover:text-white rounded-xl text-[10px] font-bold text-gray-700 transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1"
                   >
                     <Plus size={10} /> Add to Order
                   </button>
@@ -522,7 +522,7 @@ export default function OrderTerminalModal({
           {/* Header */}
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-black text-gray-900">Table {tableName}</h2>
+              <h2 className="text-xl font-bold text-gray-900">Table {tableName}</h2>
               <p className="text-sm font-medium text-gray-500 capitalize">{currentStatus}</p>
             </div>
             <button 
@@ -543,7 +543,7 @@ export default function OrderTerminalModal({
         <div className="w-[380px] lg:w-[450px] bg-gray-50 flex flex-col h-full shrink-0 border-l border-gray-200">
           <div className="p-5 border-b border-gray-200 bg-white flex flex-col gap-3 shrink-0">
             <div className="flex justify-between items-center">
-              <h3 className="font-black text-lg text-gray-900">Current Order</h3>
+              <h3 className="font-bold text-lg text-gray-900">Current Order</h3>
             </div>
             
             {/* Guest Selector Component */}
@@ -578,7 +578,7 @@ export default function OrderTerminalModal({
                 }}
                 className="bg-orange-50/30 border border-orange-100/60 rounded-2xl p-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-200 shadow-sm"
               >
-                <div className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Quick Register Guest</div>
+                <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Quick Register Guest</div>
                 <input
                   type="text"
                   placeholder="Guest name (required)..."
@@ -655,7 +655,7 @@ export default function OrderTerminalModal({
                   <div className="absolute left-0 right-0 top-full mt-2 bg-white/95 backdrop-blur-md border border-gray-100 rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] z-30 max-h-64 overflow-y-auto py-1.5 divide-y divide-gray-100/60 animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* Header for recent/VIP suggestion */}
                     {guestSearchQuery === '' && (
-                      <div className="px-4 py-2 text-[9px] font-black text-gray-400 uppercase tracking-widest bg-gray-50/30 flex items-center gap-1">
+                      <div className="px-4 py-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50/30 flex items-center gap-1">
                         VIP & Frequent Guests
                       </div>
                     )}
@@ -681,7 +681,7 @@ export default function OrderTerminalModal({
                               className="w-full text-left px-4 py-3 hover:bg-gray-50/85 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99] group"
                             >
                               <div className="flex flex-col">
-                                <span className="text-xs font-extrabold text-gray-900 group-hover:text-corgi transition-colors">{guest.name}</span>
+                                <span className="text-xs font-bold text-gray-900 group-hover:text-corgi transition-colors">{guest.name}</span>
                                 <span className="text-[10px] font-bold text-gray-400 mt-0.5">{guest.phone}</span>
                               </div>
                             </button>
@@ -771,13 +771,13 @@ export default function OrderTerminalModal({
                     <div key={item.id} className="bg-white p-3.5 rounded-2xl border border-gray-150 flex flex-col gap-2">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="font-extrabold text-sm text-gray-900 leading-tight line-clamp-2" title={item.name}>
+                          <div className="font-bold text-sm text-gray-900 leading-tight line-clamp-2" title={item.name}>
                             {baseName}
                           </div>
                           {(size || allergenIcons.length > 0) && (
                             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                               {size && (
-                                <span className="text-[9px] font-black bg-gray-50 text-gray-600 px-1 py-0.5 rounded border border-gray-200/60 uppercase tracking-wider select-none">
+                                <span className="text-[9px] font-bold bg-gray-50 text-gray-600 px-1 py-0.5 rounded border border-gray-200/60 uppercase tracking-wider select-none">
                                   Size: {size}
                                 </span>
                               )}
@@ -803,7 +803,7 @@ export default function OrderTerminalModal({
                           >
                             {deleteConfirmItemId === item.id ? <Trash2 size={14} /> : <Minus size={16} />}
                           </button>
-                          <span className="font-extrabold w-4 text-center text-gray-950 text-sm select-none">{item.quantity}</span>
+                          <span className="font-bold w-4 text-center text-gray-950 text-sm select-none">{item.quantity}</span>
                           <button 
                             onClick={() => handlePlusClick(item.id)} 
                             className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-gray-600 border border-gray-200/50 hover:text-corgi cursor-pointer"
@@ -832,7 +832,7 @@ export default function OrderTerminalModal({
                                 setEditingCommentId(null);
                               }
                             }}
-                            className="flex-1 bg-gray-50/70 focus:bg-white border border-gray-200 focus:border-corgi focus:ring-2 focus:ring-corgi/20 rounded-xl px-3 py-2 text-xs text-gray-900 placeholder-gray-400 font-extrabold outline-none transition-all"
+                            className="flex-1 bg-gray-50/70 focus:bg-white border border-gray-200 focus:border-corgi focus:ring-2 focus:ring-corgi/20 rounded-xl px-3 py-2 text-xs text-gray-900 placeholder-gray-400 font-bold outline-none transition-all"
                             autoFocus
                           />
                           <button 
@@ -863,7 +863,7 @@ export default function OrderTerminalModal({
                               </button>
                             )}
                           </div>
-                          <span className="font-black text-gray-950">{money(item.price * item.quantity)}</span>
+                          <span className="font-bold text-gray-950">{money(item.price * item.quantity)}</span>
                         </div>
                       )}
                     </div>
@@ -893,8 +893,8 @@ export default function OrderTerminalModal({
             </div>
             
             <div className="flex justify-between items-center mb-6 pt-3 border-t border-gray-100">
-              <span className="text-xl font-black text-gray-900">Total</span>
-              <span className="text-3xl font-black text-gray-900" data-testid="pos-order-total">{money(total)}</span>
+              <span className="text-xl font-bold text-gray-900">Total</span>
+              <span className="text-3xl font-bold text-gray-900" data-testid="pos-order-total">{money(total)}</span>
             </div>
 
             <div className="flex gap-2">
@@ -906,7 +906,7 @@ export default function OrderTerminalModal({
                     }
                   }}
                   disabled={orderItems.length === 0 || isSentToKitchen || isReady}
-                  className={`flex-1 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] ${
+                  className={`flex-1 py-3.5 rounded-2xl font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] ${
                     isReady
                       ? 'bg-green-50 text-green-700 border border-green-200/80 cursor-default pointer-events-none'
                       : isSentToKitchen
@@ -926,7 +926,7 @@ export default function OrderTerminalModal({
                     }
                   }}
                   disabled={orderItems.length === 0 || isSentToKitchen || isReady}
-                  className="flex-1 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] bg-white border-2 border-gray-200 hover:border-gray-900 text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 py-3.5 rounded-2xl font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] bg-white border-2 border-gray-200 hover:border-gray-900 text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ShoppingBag size={20} />
                   Takeaway
@@ -938,7 +938,7 @@ export default function OrderTerminalModal({
                     setIsSentToKitchen(true);
                   }}
                   disabled={orderItems.length === 0 || isSentToKitchen || isReady || !!initialOrder?.paid}
-                  className="flex-1 py-3.5 bg-corgi hover:brightness-105 text-white rounded-2xl font-black transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] text-xs sm:text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 py-3.5 bg-corgi hover:brightness-105 text-white rounded-2xl font-bold transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] text-xs sm:text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <CreditCard size={20} />
                   <span>Checkout</span>
@@ -955,11 +955,11 @@ export default function OrderTerminalModal({
           data-testid="pos-modifier-picker"
         >
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5">
-            <h3 className="text-lg font-black text-gray-900">{modifierPickerItem.name}</h3>
+            <h3 className="text-lg font-bold text-gray-900">{modifierPickerItem.name}</h3>
             <p className="text-sm text-gray-500 font-medium">Choose modifiers (optional)</p>
             {getCategoryModifierGroups(modifierPickerItem.categoryId || activeCategory).map((group) => (
               <div key={group.id} className="space-y-2">
-                <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider">{group.name}</span>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{group.name}</span>
                 <div className="flex flex-wrap gap-2">
                   {group.options.map((option) => {
                     const selected = selectedModifiers[group.id] === option.id;

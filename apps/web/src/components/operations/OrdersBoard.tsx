@@ -223,7 +223,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
                   <div className="p-3 pb-2">
                     <div className="flex justify-between items-center mb-1.5">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-[15px] font-black text-gray-900 leading-none">{orderLabel(order)}</h4>
+                        <h4 className="text-[15px] font-bold text-gray-900 leading-none">{orderLabel(order)}</h4>
                         <div className="scale-[0.8] origin-left">
                           <SourceBadge source={order.source} />
                         </div>
@@ -256,7 +256,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
                     </div>
                     
                     <div>
-                      <h4 className="text-lg font-black text-gray-900">{orderLabel(order)}</h4>
+                      <h4 className="text-lg font-bold text-gray-900">{orderLabel(order)}</h4>
                       <p className="text-sm font-semibold text-gray-500">{order.customerName}</p>
                       {order.deliveryId && <p className="text-xs text-gray-400 mt-1 flex items-center gap-1"><MapPin size={10}/> Courier ID: {order.deliveryId}</p>}
                       <div className="flex items-center justify-between mt-3 text-[11px] font-bold">
@@ -284,7 +284,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
                           <div className="space-y-3 mb-3">
                             {hasKitchen && (
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-wider text-orange-600 mb-1">Kitchen</p>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-orange-600 mb-1">Kitchen</p>
                                 <div className="space-y-1">
                                   {grouped.kitchen.map((line, lineIdx) => (
                                     <p key={`${order.id}-kitchen-${lineIdx}`} className="text-[13px] font-bold text-gray-700">{line}</p>
@@ -294,7 +294,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
                             )}
                             {hasBar && (
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-wider text-blue-600 mb-1">Bar</p>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Bar</p>
                                 <div className="space-y-1">
                                   {grouped.bar.map((line, lineIdx) => (
                                     <p key={`${order.id}-bar-${lineIdx}`} className="text-[13px] font-bold text-gray-700">{line}</p>
@@ -321,7 +321,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
                     })()}
                     <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                       <span className="font-bold text-gray-900">Total</span>
-                      <span className="font-black text-gray-900 text-lg">€{order.total.toFixed(2)}</span>
+                      <span className="font-bold text-gray-900 text-lg">€{order.total.toFixed(2)}</span>
                     </div>
                   </div>
                 )}
@@ -396,7 +396,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between p-6 border-b border-gray-100 bg-white z-10 shrink-0 gap-4 w-full">
         {/* Title and Description */}
         <div className="flex flex-col sm:flex-row sm:items-baseline xl:flex-col xl:items-start justify-between gap-2 shrink-0">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight whitespace-nowrap">Active Orders</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight whitespace-nowrap">Active Orders</h1>
           <p className="text-sm text-gray-500 font-medium whitespace-nowrap">Manage POS and Delivery Aggregator orders.</p>
         </div>
         
@@ -566,7 +566,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
             >
               <div className="flex items-center gap-3 text-red-500 mb-4">
                 <AlertCircle size={24} />
-                <h3 className="text-xl font-black text-gray-900">Cancel Order?</h3>
+                <h3 className="text-xl font-bold text-gray-900">Cancel Order?</h3>
               </div>
               <p className="text-gray-500 font-medium mb-6 leading-relaxed">
                 Are you sure you want to cancel order <span className="font-bold text-gray-900">{orderToCancel ? getOrderDisplayLabel(orders.find(o => o.id === orderToCancel) ?? { id: orderToCancel }) : ''}</span>? This action cannot be undone.

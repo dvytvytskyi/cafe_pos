@@ -240,7 +240,7 @@ export default function ShopPage() {
             >
               <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
               <div className="flex items-center gap-1.5 text-xs text-gray-900 min-w-0">
-                <span className="font-extrabold tracking-tight truncate max-w-[110px]">
+                <span className="font-bold tracking-tight truncate max-w-[110px]">
                   {selectedStore === 'pedralbes' ? 'Pedralbes Centre' : 'Eixample Cafe'}
                 </span>
                 <span className="text-gray-300 font-light flex-shrink-0">|</span>
@@ -274,7 +274,7 @@ export default function ShopPage() {
         {/* Horizontal Promo Banner Card (Pink shirt on red background) */}
         <div className="w-full bg-[#FC8C86] rounded-[16px] p-6 flex items-center justify-between overflow-hidden relative min-h-[140px] shadow-sm">
           <div className="flex flex-col items-start gap-2.5 z-10 text-left max-w-[60%]">
-            <h2 className="text-[17px] font-extrabold text-white leading-tight">
+            <h2 className="text-[17px] font-bold text-white leading-tight">
               Buy 1 hoodie,<br />get 45% off caps
             </h2>
             <button 
@@ -382,7 +382,7 @@ export default function ShopPage() {
                 </div>
 
                 <div className="flex justify-between items-center mt-1">
-                  <span className="text-[14px] font-black text-gray-900">
+                  <span className="text-[14px] font-bold text-gray-900">
                     {item.price.toFixed(2)}€
                   </span>
                   <div className="w-8 h-8 rounded-full bg-white border border-gray-150 text-gray-700 flex items-center justify-center transition-all group-hover:bg-gray-50 shadow-sm">

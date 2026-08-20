@@ -125,12 +125,12 @@ function KpiCard({
       className="bg-white p-4 rounded-2xl border border-gray-100 relative overflow-hidden"
     >
       <div className="flex items-center justify-between mb-2">
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{label}</p>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</p>
         <div className={`w-7 h-7 rounded-lg ${accent} text-white flex items-center justify-center opacity-90`}>
           {icon}
         </div>
       </div>
-      <p className="text-2xl font-black text-gray-900 tracking-tight">{value}</p>
+      <p className="text-2xl font-bold text-gray-900 tracking-tight">{value}</p>
       <p className="text-[11px] font-medium text-gray-500 mt-1">{sub}</p>
       {progress !== undefined && progress > 0 && (
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100">

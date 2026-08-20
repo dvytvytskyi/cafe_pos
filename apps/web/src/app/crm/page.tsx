@@ -415,27 +415,27 @@ function CrmPageContent() {
         {/* CRM Top Headers & Stats */}
          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6 shrink-0">
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Loyalty & CRM</h1>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Loyalty & CRM</h1>
             <p className="text-sm font-medium text-gray-500 mt-1">Manage client data, loyalty rewards, and guest segments.</p>
           </div>
           
           {/* Quick Dashboard Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto shrink-0">
             <div className="bg-gray-50 border border-gray-105 rounded-xl px-3.5 py-2 flex flex-col justify-center min-w-[110px]">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Total Guests</span>
-              <span className="text-base font-black text-gray-900">{totalGuests}</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Total Guests</span>
+              <span className="text-base font-bold text-gray-900">{totalGuests}</span>
             </div>
             <div className="bg-gray-50 border border-gray-105 rounded-xl px-3.5 py-2 flex flex-col justify-center min-w-[110px]">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-0.5">VIP & Gold</span>
-              <span className="text-base font-black text-corgi">{vipCount}</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">VIP & Gold</span>
+              <span className="text-base font-bold text-corgi">{vipCount}</span>
             </div>
             <div className="bg-gray-50 border border-gray-105 rounded-xl px-3.5 py-2 flex flex-col justify-center min-w-[110px]">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Total LTV</span>
-              <span className="text-base font-black text-gray-900">€{totalLTV}</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Total LTV</span>
+              <span className="text-base font-bold text-gray-900">€{totalLTV}</span>
             </div>
             <div className="bg-gray-50 border border-gray-105 rounded-xl px-3.5 py-2 flex flex-col justify-center min-w-[110px]">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Total Points</span>
-              <span className="text-base font-black text-gray-900">{totalPoints} pts</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Total Points</span>
+              <span className="text-base font-bold text-gray-900">{totalPoints} pts</span>
             </div>
           </div>
         </div>
@@ -464,7 +464,7 @@ function CrmPageContent() {
                 <button
                   data-testid="crm-add-guest-btn"
                   onClick={() => { resetForm(); setIsAddOpen(true); }}
-                  className="bg-corgi hover:bg-corgi/90 text-white rounded-xl px-4 py-2.5 text-xs font-black flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer shrink-0"
+                  className="bg-corgi hover:bg-corgi/90 text-white rounded-xl px-4 py-2.5 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer shrink-0"
                 >
                   <UserPlus size={14} className="stroke-[2.5px]" />
                   <span>Add</span>
@@ -516,7 +516,7 @@ function CrmPageContent() {
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         {/* Avatar initials fallback */}
-                        <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 font-black text-sm flex items-center justify-center border border-gray-200/50 shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 font-bold text-sm flex items-center justify-center border border-gray-200/50 shrink-0">
                           {guest.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -525,7 +525,7 @@ function CrmPageContent() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
-                        <span className={`text-[9px] font-black px-2 py-0.5 rounded ${getTierStyles(guest.tier)}`}>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${getTierStyles(guest.tier)}`}>
                           {guest.tier} ({cashbackRate}%)
                         </span>
                         <span className="text-[11px] font-bold text-gray-500">
@@ -551,7 +551,7 @@ function CrmPageContent() {
                   {/* Profile Header Details */}
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-3xl bg-gray-100 text-gray-700 font-black text-2xl flex items-center justify-center border-2 border-gray-200/40">
+                      <div className="w-16 h-16 rounded-3xl bg-gray-100 text-gray-700 font-bold text-2xl flex items-center justify-center border-2 border-gray-200/40">
                         {selectedGuest.name.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
@@ -625,7 +625,7 @@ function CrmPageContent() {
                           <Coins size={14} className="text-amber-500" />
                           <span>Balance</span>
                         </div>
-                        <div className="text-lg font-black text-gray-900">{formatLoyaltyPoints(selectedGuest.points)} pts</div>
+                        <div className="text-lg font-bold text-gray-900">{formatLoyaltyPoints(selectedGuest.points)} pts</div>
                       </div>
                       <button 
                         onClick={() => { setAdjustError(null); setIsAdjustPointsOpen(true); }}
@@ -642,7 +642,7 @@ function CrmPageContent() {
                     
                     {/* Left Column: Basic Information */}
                     <div className="space-y-6">
-                      <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Customer Details</h3>
+                      <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Customer Details</h3>
                       
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
@@ -686,7 +686,7 @@ function CrmPageContent() {
                       {/* General Notes */}
                       {selectedGuest.notes && (
                         <div className="border border-gray-100 rounded-xl p-3.5 bg-gray-50/50">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1">Staff Notes</span>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Staff Notes</span>
                           <p className="text-[13px] font-medium text-gray-600 leading-relaxed">{selectedGuest.notes}</p>
                         </div>
                       )}
@@ -697,7 +697,7 @@ function CrmPageContent() {
                       
                       {/* Allergy Alert Card */}
                       <div className="space-y-3">
-                        <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Health & Allergies</h3>
+                        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Health & Allergies</h3>
                         {selectedGuest.allergyNotes ? (
                           <div className="bg-amber-50 border border-amber-100 text-amber-900 p-4 rounded-xl flex gap-3 items-start">
                             <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={18} />
@@ -718,7 +718,7 @@ function CrmPageContent() {
 
                       {/* Favorite Dishes */}
                       <div className="space-y-3">
-                        <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Favorite Items</h3>
+                        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Favorite Items</h3>
                         {selectedGuest.favoriteDishes.length > 0 ? (
                           <div className="flex flex-wrap gap-2">
                             {selectedGuest.favoriteDishes.map((dish, i) => (
@@ -740,7 +740,7 @@ function CrmPageContent() {
 
                   {/* Guest Purchase History */}
                   <div className="mt-8 pt-8 border-t border-gray-100 space-y-4">
-                    <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                       <Clock size={12} />
                       <span>Purchase History</span>
                     </h3>
@@ -779,7 +779,7 @@ function CrmPageContent() {
                                   <td className="py-3 px-3 font-bold text-green-600">
                                     {order.customerPointsEarned ? `+${formatLoyaltyPoints(order.customerPointsEarned)}` : '0'}
                                   </td>
-                                  <td className="py-3 px-3 text-right font-black text-gray-950">
+                                  <td className="py-3 px-3 text-right font-bold text-gray-950">
                                     €{order.total.toFixed(2)}
                                   </td>
                                 </tr>
@@ -878,13 +878,13 @@ function CrmPageContent() {
               ].map(tier => (
                 <div key={tier.name} className={`border rounded-3xl p-6 flex flex-col gap-4 shadow-sm ${tier.style}`}>
                   <div className="flex justify-between items-center">
-                    <span className="font-black text-lg">{tier.name}</span>
+                    <span className="font-bold text-lg">{tier.name}</span>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white shadow-sm border border-gray-100">
                       {tier.threshold}
                     </span>
                   </div>
                   <div>
-                    <div className="text-3xl font-black">{tier.rate}</div>
+                    <div className="text-3xl font-bold">{tier.rate}</div>
                     <span className="text-[11px] font-bold opacity-75 mt-1 block">Cashback Points Rate</span>
                   </div>
                 </div>
@@ -915,7 +915,7 @@ function CrmPageContent() {
                 className="relative bg-white rounded-3xl p-6 shadow-2xl w-full max-w-md max-h-[85vh] overflow-y-auto"
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-black text-gray-900">Add New Guest</h3>
+                  <h3 className="text-lg font-bold text-gray-900">Add New Guest</h3>
                   <button onClick={() => setIsAddOpen(false)} className="p-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={20} /></button>
                 </div>
                 
@@ -1036,7 +1036,7 @@ function CrmPageContent() {
                 className="relative bg-white rounded-3xl p-6 shadow-2xl w-full max-w-md max-h-[85vh] overflow-y-auto"
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-black text-gray-900">Edit Guest Profile</h3>
+                  <h3 className="text-lg font-bold text-gray-900">Edit Guest Profile</h3>
                   <button onClick={() => setIsEditOpen(false)} className="p-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={20} /></button>
                 </div>
                 
@@ -1155,7 +1155,7 @@ function CrmPageContent() {
                 className="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-sm flex flex-col items-center"
               >
                 <div className="w-full flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-black text-gray-900">Loyalty Pass</h3>
+                  <h3 className="text-lg font-bold text-gray-900">Loyalty Pass</h3>
                   <button onClick={() => setIsQrOpen(false)} className="p-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg cursor-pointer"><X size={20} /></button>
                 </div>
 
@@ -1168,7 +1168,7 @@ function CrmPageContent() {
 
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-[10px] font-black tracking-widest text-orange-400 uppercase block mb-1">Corgi Club</span>
+                      <span className="text-[10px] font-bold tracking-widest text-orange-400 uppercase block mb-1">Corgi Club</span>
                       <h4 className="text-base font-bold truncate max-w-[200px]">{selectedGuest.name}</h4>
                     </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getTierStyles(selectedGuest.tier)}`}>
@@ -1183,7 +1183,7 @@ function CrmPageContent() {
                     </div>
                     <div className="text-right">
                       <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block">Balance</span>
-                      <span className="text-lg font-black text-amber-400 flex items-center gap-0.5 justify-end">
+                      <span className="text-lg font-bold text-amber-400 flex items-center gap-0.5 justify-end">
                         <Coins size={14} />
                         {formatLoyaltyPoints(selectedGuest.points)}
                       </span>
@@ -1276,7 +1276,7 @@ function CrmPageContent() {
                 className="bg-white p-6 rounded-3xl shadow-xl w-full max-w-md"
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-black text-gray-900">Adjust Points Balance</h3>
+                  <h3 className="text-lg font-bold text-gray-900">Adjust Points Balance</h3>
                   <button 
                     onClick={() => setIsAdjustPointsOpen(false)} 
                     className="w-8 h-8 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-gray-100 hover:text-gray-800 transition-all border border-transparent hover:border-gray-200 cursor-pointer"
@@ -1287,10 +1287,10 @@ function CrmPageContent() {
                 
                 <form onSubmit={handleAdjustPoints} className="space-y-4">
                   <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
                       Current Balance — {selectedGuest.name}
                     </span>
-                    <span className="text-xl font-black text-gray-900" data-testid="crm-adjust-current-balance">
+                    <span className="text-xl font-bold text-gray-900" data-testid="crm-adjust-current-balance">
                       {formatLoyaltyPoints(selectedGuest.points)} pts
                     </span>
                   </div>
@@ -1301,7 +1301,7 @@ function CrmPageContent() {
                       onClick={() => setAdjustType('add')}
                       className={`flex-1 py-2.5 rounded-xl text-xs transition-all cursor-pointer border ${
                         adjustType === 'add' 
-                          ? 'bg-orange-50/50 border-orange-200 text-corgi shadow-sm font-black' 
+                          ? 'bg-orange-50/50 border-orange-200 text-corgi shadow-sm font-bold' 
                           : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50 font-bold'
                       }`}
                     >
@@ -1313,7 +1313,7 @@ function CrmPageContent() {
                       data-testid="crm-adjust-subtract"
                       className={`flex-1 py-2.5 rounded-xl text-xs transition-all cursor-pointer border ${
                         adjustType === 'subtract' 
-                          ? 'bg-gray-900 border-gray-900 text-white shadow-sm font-black' 
+                          ? 'bg-gray-900 border-gray-900 text-white shadow-sm font-bold' 
                           : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50 font-bold'
                       }`}
                     >
@@ -1322,7 +1322,7 @@ function CrmPageContent() {
                   </div>
  
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Points Amount *</label>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Points Amount *</label>
                     <input
                       type="number"
                       step="1"
@@ -1338,7 +1338,7 @@ function CrmPageContent() {
                   </div>
  
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Reason / Comment *</label>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Reason / Comment *</label>
                     <textarea
                       required
                       data-testid="crm-adjust-reason"
@@ -1357,7 +1357,7 @@ function CrmPageContent() {
                     <button 
                       type="button"
                       onClick={() => setIsAdjustPointsOpen(false)} 
-                      className="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-xs font-black rounded-xl text-gray-600 cursor-pointer transition-all active:scale-[0.98]"
+                      className="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-xs font-bold rounded-xl text-gray-600 cursor-pointer transition-all active:scale-[0.98]"
                     >
                       Cancel
                     </button>
@@ -1365,7 +1365,7 @@ function CrmPageContent() {
                       type="submit"
                       disabled={isSaving}
                       data-testid="crm-adjust-submit"
-                      className={`px-5 py-2.5 text-xs font-black text-white rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-sm disabled:opacity-50 ${
+                      className={`px-5 py-2.5 text-xs font-bold text-white rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-sm disabled:opacity-50 ${
                         adjustType === 'add' ? 'bg-corgi hover:bg-corgi/90' : 'bg-gray-900 hover:bg-gray-900/90'
                       }`}
                     >

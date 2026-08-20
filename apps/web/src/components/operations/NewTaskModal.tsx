@@ -355,7 +355,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
               <button
                 type="button"
                 onClick={handleMarkComplete}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:border-corgi hover:text-corgi bg-white transition-all active:scale-[0.98] cursor-pointer text-xs font-black group"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:border-corgi hover:text-corgi bg-white transition-all active:scale-[0.98] cursor-pointer text-xs font-bold group"
               >
                 <Check size={14} className="text-gray-400 group-hover:text-corgi transition-colors stroke-[2.5px]" />
                 <span>Mark complete</span>
@@ -368,7 +368,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                   type="button"
                   onClick={() => void handleShare()}
                   disabled={isDraftTask}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:border-corgi hover:text-corgi bg-white transition-all active:scale-[0.98] cursor-pointer text-xs font-black mr-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:border-corgi hover:text-corgi bg-white transition-all active:scale-[0.98] cursor-pointer text-xs font-bold mr-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Share size={13} />
                   <span>{shareCopied ? 'Copied!' : 'Share'}</span>
@@ -560,7 +560,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                     handleSave();
                   }
                 }}
-                className={`w-full bg-transparent border-0 px-0 py-2 text-[26px] font-black text-gray-900 focus:outline-none focus:ring-0 placeholder:text-gray-300 mb-1 tracking-tight ${titleError ? 'text-red-600' : ''}`}
+                className={`w-full bg-transparent border-0 px-0 py-2 text-[26px] font-bold text-gray-900 focus:outline-none focus:ring-0 placeholder:text-gray-300 mb-1 tracking-tight ${titleError ? 'text-red-600' : ''}`}
                 placeholder="Task Title..."
                 autoFocus
                 maxLength={TASK_TITLE_MAX}
@@ -577,7 +577,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
               <div className="space-y-3 mb-8">
                 {/* People / Assignees */}
                 <div className="flex items-start min-h-[32px] relative">
-                  <div className="w-[140px] h-[32px] flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider shrink-0">
+                  <div className="w-[140px] h-[32px] flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
                     <Users size={14} /> People
                   </div>
                   <div className="flex-1 flex flex-wrap gap-2 py-1">
@@ -652,7 +652,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
 
                 {/* Location (Custom Field) */}
                 <div className="flex items-start min-h-[32px] relative">
-                  <div className="w-[140px] h-[32px] flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider shrink-0">
+                  <div className="w-[140px] h-[32px] flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
                     <FileText size={14} /> Location
                   </div>
                   <div className="flex-1 flex flex-wrap gap-2 py-1">
@@ -729,7 +729,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
 
                 {/* Timeline Date */}
                 <div className="flex items-start min-h-[32px]">
-                  <div className="w-[140px] h-[32px] flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider shrink-0">
+                  <div className="w-[140px] h-[32px] flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
                     <Clock size={14} /> Timeline Date
                   </div>
                   <div className="flex-1 py-1 relative">
@@ -754,7 +754,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                 
                 {/* Tags */}
                 <div className="flex items-start min-h-[32px] relative">
-                  <div className="w-[140px] h-[32px] flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider shrink-0">
+                  <div className="w-[140px] h-[32px] flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
                     <Filter size={14} /> Tags
                   </div>
                   <div className="flex-1 flex flex-wrap gap-2 py-1">
@@ -786,7 +786,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
 
               {/* Description Box with Rich Text Toolbar */}
               <div className="flex flex-col flex-1 min-h-[250px] mb-4">
-                 <div className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 px-1">Description</div>
+                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Description</div>
                  <div className="flex flex-col flex-1 border border-gray-150 rounded-2xl bg-white focus-within:border-corgi transition-all">
                    <div
                      id="description-editor"
@@ -890,7 +890,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
               
               {/* Attachments */}
               <div className="mb-4">
-                 <div className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 px-1">Attachments</div>
+                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Attachments</div>
                  <label className="border-2 border-dashed border-gray-150 rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50/50 hover:border-corgi/40 transition-colors cursor-pointer group block w-full bg-gray-55/20">
                    <input 
                      type="file" 

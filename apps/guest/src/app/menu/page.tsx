@@ -672,7 +672,7 @@ export default function MenuPage() {
             >
               <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
               <div className="flex items-center gap-1.5 text-xs text-gray-900 min-w-0">
-                <span className="font-extrabold tracking-tight truncate max-w-[110px]">
+                <span className="font-bold tracking-tight truncate max-w-[110px]">
                   {selectedStore === 'pedralbes' ? 'Pedralbes Centre' : 'Eixample Cafe'}
                 </span>
                 <span className="text-gray-300 font-light flex-shrink-0">|</span>
@@ -737,7 +737,7 @@ export default function MenuPage() {
                   key={category.id}
                   onClick={() => handleCategoryClick(category.id)}
                   className={`flex-shrink-0 text-sm font-semibold tracking-tight pb-1 relative transition-colors ${
-                    isSelected ? 'text-black font-extrabold' : 'text-gray-400 hover:text-black'
+                    isSelected ? 'text-black font-bold' : 'text-gray-400 hover:text-black'
                   }`}
                 >
                   <span>{category.name}</span>
@@ -761,7 +761,7 @@ export default function MenuPage() {
           {filteredItems.length === 0 && menu ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-white rounded-3xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] animate-fadeIn my-4">
               <span className="text-5xl mb-4">🐕</span>
-              <h3 className="text-lg font-black text-gray-900 mb-1 uppercase tracking-tight">No dishes found</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-1 uppercase tracking-tight">No dishes found</h3>
               <p className="text-xs text-gray-400 font-medium max-w-[280px] leading-relaxed mb-6">
                 We couldn't find any items matching your active search or filters. Try modifying them.
               </p>
@@ -792,7 +792,7 @@ export default function MenuPage() {
                 >
                   {/* Category Title Heading */}
                   {!isFirstCategory && (
-                    <h2 className="text-lg font-black uppercase tracking-wider text-black">
+                    <h2 className="text-lg font-bold uppercase tracking-wider text-black">
                       {category.name}
                     </h2>
                   )}
@@ -872,7 +872,7 @@ export default function MenuPage() {
                             {/* Item information area */}
                             <div className="p-6 bg-white flex flex-col gap-3 text-left">
                               <div className="flex flex-col gap-1">
-                                <h3 className="font-extrabold text-[15px] text-black uppercase tracking-tight leading-snug truncate w-full">
+                                <h3 className="font-bold text-[15px] text-black uppercase tracking-tight leading-snug truncate w-full">
                                   {item.name}
                                 </h3>
                                 <p className="text-[11px] text-gray-400 font-normal leading-relaxed line-clamp-2">
@@ -882,10 +882,10 @@ export default function MenuPage() {
 
                               {/* Price and tag row */}
                               <div className="flex items-center justify-between mt-1 pt-1">
-                                <span className="text-[15px] font-extrabold text-black">
+                                <span className="text-[15px] font-bold text-black">
                                   {item.basePrice.toFixed(2)}€
                                 </span>
-                                <span className="border border-gray-200 rounded-[6px] px-2 py-0.5 text-[9px] font-extrabold text-gray-400 tracking-wide uppercase">
+                                <span className="border border-gray-200 rounded-[6px] px-2 py-0.5 text-[9px] font-bold text-gray-400 tracking-wide uppercase">
                                   {dietaryTag}
                                 </span>
                               </div>
@@ -965,7 +965,7 @@ export default function MenuPage() {
               {/* Header & Description Combo Block */}
               <div className="flex flex-col text-left gap-2.5">
                 <div className="flex flex-col">
-                  <h2 className="text-[20px] font-extrabold tracking-tight leading-none text-black uppercase">
+                  <h2 className="text-[20px] font-bold tracking-tight leading-none text-black uppercase">
                     {selectedItem?.name}
                   </h2>
                   <div className="text-[16px] font-bold text-black mt-1">
@@ -989,7 +989,7 @@ export default function MenuPage() {
                 <div className="flex flex-col gap-6 mt-4 border-t border-gray-100 pt-6">
                   {selectedItem.modifierGroups.map((group) => (
                      <div key={group.id} className="flex flex-col text-left">
-                       <h3 className="text-[13px] font-black text-gray-900 uppercase tracking-wider mb-4">
+                       <h3 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider mb-4">
                          {group.name}
                        </h3>
                        <div className="flex flex-wrap gap-5">
@@ -1013,7 +1013,7 @@ export default function MenuPage() {
                                    }`}
                                  />
                                  {isSelected && (
-                                   <div className="absolute -top-1 -right-1 bg-[#FDBD38] text-black w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold shadow-sm border border-white">
+                                   <div className="absolute -top-1 -right-1 bg-[#FDBD38] text-black w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm border border-white">
                                      ✓
                                    </div>
                                  )}
@@ -1022,7 +1022,7 @@ export default function MenuPage() {
                                  {option.name}
                                </span>
                                <span className="w-4 border-t border-gray-250 my-1 group-hover:border-gray-400 transition-colors"></span>
-                               <span className="text-[11px] font-extrabold text-gray-900 opacity-80">
+                               <span className="text-[11px] font-bold text-gray-900 opacity-80">
                                  +{option.price.toFixed(2)}€
                                </span>
                              </button>
@@ -1040,8 +1040,8 @@ export default function MenuPage() {
               {/* Total and Quantity Row */}
               <div className="flex items-center justify-between mb-5 pt-3">
                 <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total</span>
-                  <span className="text-[20px] font-extrabold text-black mt-0.5">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</span>
+                  <span className="text-[20px] font-bold text-black mt-0.5">
                     <span key={totalPrice} className="animate-pop inline-block">
                       {totalPrice.toFixed(2)}€
                     </span>
@@ -1057,7 +1057,7 @@ export default function MenuPage() {
                   >
                     <Minus size={14} strokeWidth={2.5} />
                   </button>
-                  <div className="w-[42px] h-[34px] border border-black rounded-xl flex items-center justify-center text-[14px] font-black text-black overflow-hidden">
+                  <div className="w-[42px] h-[34px] border border-black rounded-xl flex items-center justify-center text-[14px] font-bold text-black overflow-hidden">
                     <span key={quantity} className="animate-pop inline-block">
                       {String(quantity).padStart(2, '0')}
                     </span>
@@ -1130,17 +1130,17 @@ export default function MenuPage() {
                 <div key={item.id} className="flex-shrink-0 w-[135px] bg-white rounded-xl overflow-hidden flex flex-col border border-gray-100">
                   <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
                   <div className="bg-white p-2 flex flex-col justify-between flex-grow gap-1.5">
-                    <span className="text-[10px] font-black text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
+                    <span className="text-[10px] font-bold text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
                       {item.name}
                     </span>
                     <div className="flex items-center justify-between mt-0.5">
-                      <span className="text-[10px] font-extrabold text-gray-900">{item.price.toFixed(2)}€</span>
+                      <span className="text-[10px] font-bold text-gray-900">{item.price.toFixed(2)}€</span>
                       <button 
                         onClick={() => handleAddUpsellItem(item)}
                         className="w-5 h-5 bg-corgi text-white hover:bg-[#e5a420] rounded-md flex items-center justify-center transition-all duration-150 active:scale-90 cursor-pointer"
                       >
                         {count > 0 ? (
-                          <span className="text-[9px] font-black">{count}</span>
+                          <span className="text-[9px] font-bold">{count}</span>
                         ) : (
                           <Plus size={10} strokeWidth={3} className="text-white" />
                         )}
@@ -1167,17 +1167,17 @@ export default function MenuPage() {
                 <div key={item.id} className="flex-shrink-0 w-[135px] bg-white rounded-xl overflow-hidden flex flex-col border border-gray-100">
                   <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
                   <div className="bg-white p-2 flex flex-col justify-between flex-grow gap-1.5">
-                    <span className="text-[10px] font-black text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
+                    <span className="text-[10px] font-bold text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
                       {item.name}
                     </span>
                     <div className="flex items-center justify-between mt-0.5">
-                      <span className="text-[10px] font-extrabold text-gray-900">{item.price.toFixed(2)}€</span>
+                      <span className="text-[10px] font-bold text-gray-900">{item.price.toFixed(2)}€</span>
                       <button 
                         onClick={() => handleAddUpsellItem(item)}
                         className="w-5 h-5 bg-corgi text-white hover:bg-[#e5a420] rounded-md flex items-center justify-center transition-all duration-150 active:scale-90 cursor-pointer"
                       >
                         {count > 0 ? (
-                          <span className="text-[9px] font-black">{count}</span>
+                          <span className="text-[9px] font-bold">{count}</span>
                         ) : (
                           <Plus size={10} strokeWidth={3} className="text-white" />
                         )}
@@ -1280,7 +1280,7 @@ export default function MenuPage() {
           {/* Totals */}
           <div className="flex items-center justify-between text-sm border-t border-gray-100 pt-4 text-gray-900">
             <span className="font-semibold">Total</span>
-            <span className="font-extrabold text-base text-black">{cartTotal.toFixed(2)}€</span>
+            <span className="font-bold text-base text-black">{cartTotal.toFixed(2)}€</span>
           </div>
 
           {/* Place Order button */}
@@ -1310,7 +1310,7 @@ export default function MenuPage() {
           {/* Header Block */}
           <div className="flex justify-between items-start w-full">
             <div className="flex flex-col">
-              <h2 className="text-[28px] font-extrabold tracking-tight leading-none text-black uppercase">
+              <h2 className="text-[28px] font-bold tracking-tight leading-none text-black uppercase">
                 {authMode === 'login' ? 'WELCOME BACK!' : 'CREATE ACCOUNT'}
               </h2>
               
@@ -2109,7 +2109,7 @@ export default function MenuPage() {
           </div>
           
           <div className="flex flex-col items-center justify-center gap-1.5 text-center">
-            <h2 className="text-[20px] font-black text-black uppercase tracking-tight leading-tight">
+            <h2 className="text-[20px] font-bold text-black uppercase tracking-tight leading-tight">
               Order Created!
             </h2>
             <span className="text-[14px] font-bold text-gray-800">

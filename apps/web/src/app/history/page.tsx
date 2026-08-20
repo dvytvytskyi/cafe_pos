@@ -199,7 +199,7 @@ function HistoryPageContent() {
         {/* CRM-Style Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-6 shrink-0">
           <div className="flex-1 min-w-0 pr-4 sm:pr-6">
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-tight">Order History & Archive</h1>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight">Order History & Archive</h1>
             <p className="text-sm font-medium text-gray-500 mt-1.5 leading-relaxed">Review, inspect, print and manage past cafe transactions.</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto shrink-0 mt-1 sm:mt-0">
@@ -234,7 +234,7 @@ function HistoryPageContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Sales</span>
-                <span className="text-lg font-black text-gray-900">€{totalVolume.toFixed(2)}</span>
+                <span className="text-lg font-bold text-gray-900">€{totalVolume.toFixed(2)}</span>
               </div>
             </div>
 
@@ -245,7 +245,7 @@ function HistoryPageContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Avg Ticket</span>
-                <span className="text-lg font-black text-gray-900">€{avgOrderValue.toFixed(2)}</span>
+                <span className="text-lg font-bold text-gray-900">€{avgOrderValue.toFixed(2)}</span>
               </div>
             </div>
 
@@ -256,7 +256,7 @@ function HistoryPageContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Taxes (10%)</span>
-                <span className="text-lg font-black text-gray-900">€{totalTax.toFixed(2)}</span>
+                <span className="text-lg font-bold text-gray-900">€{totalTax.toFixed(2)}</span>
               </div>
             </div>
 
@@ -267,7 +267,7 @@ function HistoryPageContent() {
               </div>
               <div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Void/Cancel Rate</span>
-                <span className="text-lg font-black text-gray-900">{cancelRate.toFixed(1)}%</span>
+                <span className="text-lg font-bold text-gray-900">{cancelRate.toFixed(1)}%</span>
               </div>
             </div>
           </div>
@@ -394,7 +394,7 @@ function HistoryPageContent() {
             ) : (
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-100 bg-white text-[10px] font-black uppercase text-gray-400 tracking-wider sticky top-0 z-10">
+                  <tr className="border-b border-gray-100 bg-white text-[10px] font-bold uppercase text-gray-400 tracking-wider sticky top-0 z-10">
                     <th className="px-6 py-4">Order ID</th>
                     <th className="px-6 py-4">Time</th>
                     <th className="px-6 py-4">Customer</th>
@@ -413,7 +413,7 @@ function HistoryPageContent() {
                         className="hover:bg-gray-50 transition-colors cursor-pointer group"
                         onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
                       >
-                        <td className="px-6 py-4 text-xs font-black text-gray-900">
+                        <td className="px-6 py-4 text-xs font-bold text-gray-900">
                           <div className="flex items-center gap-2">
                             <ChevronDown 
                               size={16} 
@@ -456,7 +456,7 @@ function HistoryPageContent() {
                             <span className="text-gray-400 font-semibold">None</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-xs font-black text-gray-900">€{order.total.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-xs font-bold text-gray-900">€{order.total.toFixed(2)}</td>
                         <td className="px-6 py-4">{getStatusBadge(order)}</td>
                         <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <button
@@ -482,7 +482,7 @@ function HistoryPageContent() {
                                 <div className="py-4 px-12 flex flex-col lg:flex-row gap-8">
                                   {/* Left: Order Items */}
                                   <div className="flex-1">
-                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-3">Order Items</h4>
+                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Order Items</h4>
                                     {order.items.length === 0 ? (
                                       <div className="text-gray-400 text-xs italic bg-white p-3 rounded-xl border border-dashed border-gray-200 inline-block">No items in this order</div>
                                     ) : (
@@ -490,7 +490,7 @@ function HistoryPageContent() {
                                         {order.items.map((item, i) => (
                                           <div key={i} className="py-2.5 px-4 bg-white border border-gray-100 rounded-xl flex justify-between items-center transition-all">
                                             <div className="flex items-center gap-3">
-                                              <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center text-[10px] font-black text-gray-600 shrink-0">
+                                              <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 shrink-0">
                                                 {item.quantity}x
                                               </div>
                                               <div>
@@ -500,7 +500,7 @@ function HistoryPageContent() {
                                                 )}
                                               </div>
                                             </div>
-                                            <span className="font-black text-sm text-gray-900">
+                                            <span className="font-bold text-sm text-gray-900">
                                               €{(item.price * item.quantity).toFixed(2)}
                                             </span>
                                           </div>
@@ -512,7 +512,7 @@ function HistoryPageContent() {
                                   {/* Right: Payment Info */}
                                   <div className="w-full lg:w-1/3 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
                                     <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-                                      <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Payment Info</h4>
+                                      <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Payment Info</h4>
                                       {order.paid ? (
                                         <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
                                           <CheckCircle2 size={12} /> Paid
@@ -527,12 +527,12 @@ function HistoryPageContent() {
                                     <div className="space-y-3">
                                       <div className="flex justify-between items-center text-xs">
                                         <span className="font-semibold text-gray-500">Amount Paid</span>
-                                        <span className="font-black text-gray-900">€{(order.amountPaid || order.total).toFixed(2)}</span>
+                                        <span className="font-bold text-gray-900">€{(order.amountPaid || order.total).toFixed(2)}</span>
                                       </div>
                                       
                                       <div className="flex justify-between items-center text-xs">
                                         <span className="font-semibold text-gray-500">Tip</span>
-                                        <span className="font-black text-gray-900">
+                                        <span className="font-bold text-gray-900">
                                           {order.tip?.amountAdded ? `€${order.tip.amountAdded.toFixed(2)}` : '€0.00'}
                                         </span>
                                       </div>
@@ -547,7 +547,7 @@ function HistoryPageContent() {
                                           </span>
                                           <div className="text-right space-y-1">
                                             {order.payments.map((p, i) => (
-                                              <div key={i} className="font-black text-gray-900 uppercase text-[10px]">
+                                              <div key={i} className="font-bold text-gray-900 uppercase text-[10px]">
                                                 {p.method} <span className="text-gray-400 font-medium ml-1">€{p.amount.toFixed(2)}</span>
                                               </div>
                                             ))}
@@ -633,7 +633,7 @@ function HistoryPageContent() {
             >
               {/* Header */}
               <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <h3 className="font-black text-gray-900 flex items-center gap-2">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
                   <ReceiptText size={18} className="text-gray-400" /> 
                   Receipt Preview
                 </h3>
@@ -649,7 +649,7 @@ function HistoryPageContent() {
               <div className="flex-1 overflow-y-auto p-6 bg-gray-100/50">
                 <div className="bg-white p-6 shadow-sm border border-gray-200 font-mono text-xs text-gray-800 mx-auto max-w-[280px]">
                   <div className="text-center mb-6">
-                    <h2 className="text-xl font-black mb-1">CORGI CAFE</h2>
+                    <h2 className="text-xl font-bold mb-1">CORGI CAFE</h2>
                     <p className="text-gray-500">123 Baker Street, London</p>
                     <p className="text-gray-500">VAT: GB123456789</p>
                   </div>
@@ -686,7 +686,7 @@ function HistoryPageContent() {
                         <span>€{receiptOrder.tip.amountAdded.toFixed(2)}</span>
                       </div>
                     ) : null}
-                    <div className="flex justify-between font-black text-sm pt-2 border-t border-gray-800 mt-2">
+                    <div className="flex justify-between font-bold text-sm pt-2 border-t border-gray-800 mt-2">
                       <span>TOTAL</span>
                       <span>€{(receiptOrder.total + (receiptOrder.tip?.amountAdded || 0)).toFixed(2)}</span>
                     </div>

@@ -50,7 +50,7 @@ function SummaryCard({
         <p className="text-[13px] text-gray-500 font-medium mt-0.5">{location}</p>
       </div>
       <div className="flex items-end gap-3 mt-2">
-        <span className="text-4xl font-black text-gray-900">{total > 0 ? avg.toFixed(1) : '—'}</span>
+        <span className="text-4xl font-bold text-gray-900">{total > 0 ? avg.toFixed(1) : '—'}</span>
         <div className="flex flex-col pb-1">
           <div className="flex text-yellow-400">
             {[1, 2, 3, 4, 5].map((i) => (

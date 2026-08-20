@@ -243,7 +243,7 @@ export default function StaffSchedulePage() {
                     onClick={() => setExpandedId(expandedId === emp.id ? null : emp.id)}
                   >
                     <div className="flex justify-between items-start mb-4">
-                      <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-700 font-black text-lg border border-gray-200 shrink-0">
+                      <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-lg border border-gray-200 shrink-0">
                         {emp.avatarInitials}
                       </div>
                       <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors shrink-0">
@@ -251,7 +251,7 @@ export default function StaffSchedulePage() {
                       </div>
                     </div>
                     <div className="mb-4">
-                      <h3 className="font-black text-gray-900 text-lg truncate">{emp.name}</h3>
+                      <h3 className="font-bold text-gray-900 text-lg truncate">{emp.name}</h3>
                       <p className="text-xs font-semibold text-gray-500 mt-1 flex flex-wrap items-center gap-2">
                         <span className="truncate">
                           {emp.position} · {emp.section}
@@ -267,8 +267,8 @@ export default function StaffSchedulePage() {
                       </p>
                     </div>
                     <div className="mt-auto border-t border-gray-50 pt-4">
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Default hours</p>
-                      <p className="text-base font-black text-gray-900">
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Default hours</p>
+                      <p className="text-base font-bold text-gray-900">
                         {emp.scheduleStart} - {emp.scheduleEnd}
                       </p>
                     </div>
@@ -299,7 +299,7 @@ export default function StaffSchedulePage() {
                             >
                               <span className="text-[9px] font-bold text-gray-500 mb-1">{day}</span>
                               {shift ? (
-                                <span className="text-[10px] leading-tight font-black text-gray-900 text-center">
+                                <span className="text-[10px] leading-tight font-bold text-gray-900 text-center">
                                   {shift.startTime.split(':')[0]}
                                   <br />|<br />
                                   {shift.endTime.split(':')[0]}
@@ -314,7 +314,7 @@ export default function StaffSchedulePage() {
 
                       {empShifts.length > 0 && (
                         <div className="space-y-2 mb-4" onClick={(e) => e.stopPropagation()}>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Shift times</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Shift times</p>
                           {empShifts.map((shift) => (
                             <div key={shift.dayOfWeek} className="flex items-center gap-2">
                               <span className="text-xs font-bold text-gray-600 w-8">{DAY_LABELS[shift.dayOfWeek]}</span>

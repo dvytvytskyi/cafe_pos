@@ -195,24 +195,24 @@ export default function StaffAdminPage() {
                 <div className="absolute -right-4 -bottom-4 opacity-5 text-gray-900">
                   <User size={80} />
                 </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Active Staff</p>
-                <p className="text-3xl font-black text-gray-900">{activeCount}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Active Staff</p>
+                <p className="text-3xl font-bold text-gray-900">{activeCount}</p>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-gray-100">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Floor</p>
-                <p className="text-3xl font-black text-gray-900">{salaCount}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Floor</p>
+                <p className="text-3xl font-bold text-gray-900">{salaCount}</p>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-gray-100">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Kitchen</p>
-                <p className="text-3xl font-black text-gray-900">{cocinaCount}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Kitchen</p>
+                <p className="text-3xl font-bold text-gray-900">{cocinaCount}</p>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-gray-100">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Bar</p>
-                <p className="text-3xl font-black text-gray-900">{barCount}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Bar</p>
+                <p className="text-3xl font-bold text-gray-900">{barCount}</p>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-gray-100 relative overflow-hidden bg-gray-50/50">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Total Staff</p>
-                <p className="text-3xl font-black text-gray-500">{totalCount}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Staff</p>
+                <p className="text-3xl font-bold text-gray-500">{totalCount}</p>
               </div>
             </div>
 
@@ -278,25 +278,25 @@ export default function StaffAdminPage() {
                   <table className="w-full text-left border-collapse min-w-max" data-testid="staff-table">
                     <thead>
                       <tr className="border-b border-gray-100 bg-white">
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                           Employee
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                           Position
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                           ID/NIE
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                           Phone
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                           Email
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                           Start Date
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                           Schedule
                         </th>
                         <th className="py-3 px-6"></th>
@@ -311,7 +311,7 @@ export default function StaffAdminPage() {
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-black text-sm shrink-0 border border-gray-200">
+                              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-sm shrink-0 border border-gray-200">
                                 {emp.avatarInitials}
                               </div>
                               <div>

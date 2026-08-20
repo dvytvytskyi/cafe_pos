@@ -308,7 +308,7 @@ export default function SettingsView() {
                         setPosSettings({ ...posSettings, verifactuEnabled: next });
                         saveReceiptLayout({ verifactuEnabled: next });
                       }}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase border ${
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase border ${
                         posSettings?.verifactuEnabled
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : 'bg-gray-100 text-gray-500 border-gray-200'
@@ -437,7 +437,7 @@ export default function SettingsView() {
                                 reloadDiscountPresets();
                               }
                             }}
-                            className="w-full bg-gray-50 border border-transparent rounded-xl px-3 py-2 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
+                            className="w-full bg-gray-50 border border-transparent rounded-xl px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
                         </div>
                         
@@ -638,7 +638,7 @@ export default function SettingsView() {
                       <div key={promo.id} className="p-5 border border-gray-100 rounded-3xl bg-white shadow-sm flex flex-col justify-between gap-4">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-100 text-purple-700 border border-purple-200">
                               Active Promo
                             </span>
                             <h3 className="font-bold text-base text-gray-950 mt-1.5">{promo.name}</h3>
@@ -677,11 +677,11 @@ export default function SettingsView() {
 
                         <div className="space-y-1.5 text-xs font-semibold text-gray-600">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-black text-gray-850">Discount:</span>
-                            <span className="font-black text-saturated-green text-sm">{promo.discountPercent}% OFF</span>
+                            <span className="font-bold text-gray-850">Discount:</span>
+                            <span className="font-bold text-saturated-green text-sm">{promo.discountPercent}% OFF</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <span className="font-black text-gray-850">Schedule:</span>
+                            <span className="font-bold text-gray-850">Schedule:</span>
                             <span>
                               {promo.activeDays.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')} @ {promo.startHour.toString().padStart(2, '0')}:00 - {promo.endHour.toString().padStart(2, '0')}:00
                             </span>
@@ -787,7 +787,7 @@ export default function SettingsView() {
                           <p className="text-xs text-gray-400 mt-1 font-semibold">Copy this code and share it with the customer.</p>
                         </div>
                         <div className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 w-full max-w-sm justify-between">
-                          <span className="font-black text-gray-900 tracking-wider text-base">{newlyCreatedGiftCard.code}</span>
+                          <span className="font-bold text-gray-900 tracking-wider text-base">{newlyCreatedGiftCard.code}</span>
                           <button
                             onClick={() => navigator.clipboard.writeText(newlyCreatedGiftCard.code)}
                             className="text-gray-450 hover:text-gray-700 flex items-center gap-1 text-[11px] font-bold cursor-pointer"
@@ -796,7 +796,7 @@ export default function SettingsView() {
                           </button>
                         </div>
                         <div className="text-xs font-semibold text-gray-500 mt-1">
-                          Value: <span className="font-black text-gray-850">€{newlyCreatedGiftCard.initialBalance.toFixed(2)}</span> • Expires: {new Date(newlyCreatedGiftCard.expiryDate).toLocaleDateString()}
+                          Value: <span className="font-bold text-gray-850">€{newlyCreatedGiftCard.initialBalance.toFixed(2)}</span> • Expires: {new Date(newlyCreatedGiftCard.expiryDate).toLocaleDateString()}
                         </div>
                         <button
                           onClick={() => setIsGeneratingGiftCard(false)}
@@ -823,7 +823,7 @@ export default function SettingsView() {
                 <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                   <table className="w-full text-left border-collapse bg-white">
                     <thead>
-                      <tr className="border-b border-gray-100 bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                      <tr className="border-b border-gray-100 bg-gray-50/50 text-[10px] font-bold uppercase text-gray-400 tracking-wider">
                         <th className="px-6 py-4">Card Code</th>
                         <th className="px-6 py-4">Status</th>
                         <th className="px-6 py-4">Balance</th>
@@ -844,9 +844,9 @@ export default function SettingsView() {
                           const linkedGuest = guests.find(g => g.id === gc.customerId);
                           return (
                             <tr key={gc.id} className="hover:bg-gray-50/30 transition-colors">
-                              <td className="px-6 py-4 font-black text-gray-900 tracking-wide" data-testid={`giftcard-code-${gc.id}`}>{gc.code}</td>
+                              <td className="px-6 py-4 font-bold text-gray-900 tracking-wide" data-testid={`giftcard-code-${gc.id}`}>{gc.code}</td>
                               <td className="px-6 py-4">
-                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${
                                   gc.status === 'active' 
                                     ? 'bg-green/10 text-saturated-green border-green/20' 
                                     : gc.status === 'redeemed'
@@ -856,7 +856,7 @@ export default function SettingsView() {
                                   {gc.status}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 font-black">
+                              <td className="px-6 py-4 font-bold">
                                 €{gc.balance.toFixed(2)} <span className="text-[10px] text-gray-400 font-bold">/ €{gc.initialBalance.toFixed(2)}</span>
                               </td>
                               <td className="px-6 py-4 text-gray-500">
@@ -925,7 +925,7 @@ export default function SettingsView() {
                   {/* Bronze Tier Card */}
                   <div className="p-6 border border-gray-100 rounded-3xl bg-white shadow-sm flex flex-col gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-700 flex items-center justify-center font-black">B</div>
+                      <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-700 flex items-center justify-center font-bold">B</div>
                       <div>
                         <h3 className="font-bold text-gray-900 text-sm">Bronze Tier</h3>
                         <p className="text-[10px] text-gray-400 font-semibold">Entry level tier for new customers</p>
@@ -944,7 +944,7 @@ export default function SettingsView() {
                               const val = parseFloat(e.target.value) / 100 || 0;
                               setLoyaltyConfig({ ...loyaltyConfig, bronzeRate: val });
                             }}
-                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
+                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">%</span>
                         </div>
@@ -966,7 +966,7 @@ export default function SettingsView() {
                   {/* Silver Tier Card */}
                   <div className="p-6 border border-gray-100 rounded-3xl bg-white shadow-sm flex flex-col gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-gray-100 text-gray-700 flex items-center justify-center font-black">S</div>
+                      <div className="w-10 h-10 rounded-2xl bg-gray-100 text-gray-700 flex items-center justify-center font-bold">S</div>
                       <div>
                         <h3 className="font-bold text-gray-900 text-sm">Silver Tier</h3>
                         <p className="text-[10px] text-gray-400 font-semibold">Mid-tier tier for frequent customers</p>
@@ -985,7 +985,7 @@ export default function SettingsView() {
                               const val = parseFloat(e.target.value) / 100 || 0;
                               setLoyaltyConfig({ ...loyaltyConfig, silverRate: val });
                             }}
-                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
+                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">%</span>
                         </div>
@@ -1001,7 +1001,7 @@ export default function SettingsView() {
                               const val = parseInt(e.target.value) || 0;
                               setLoyaltyConfig({ ...loyaltyConfig, silverThreshold: val });
                             }}
-                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
+                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">€</span>
                         </div>
@@ -1012,7 +1012,7 @@ export default function SettingsView() {
                   {/* Gold Tier Card */}
                   <div className="p-6 border border-gray-100 rounded-3xl bg-white shadow-sm flex flex-col gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center font-black">G</div>
+                      <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold">G</div>
                       <div>
                         <h3 className="font-bold text-gray-900 text-sm">Gold Tier</h3>
                         <p className="text-[10px] text-gray-400 font-semibold">Premium tier for highly valuable loyal guests</p>
@@ -1031,7 +1031,7 @@ export default function SettingsView() {
                               const val = parseFloat(e.target.value) / 100 || 0;
                               setLoyaltyConfig({ ...loyaltyConfig, goldRate: val });
                             }}
-                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
+                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">%</span>
                         </div>
@@ -1047,7 +1047,7 @@ export default function SettingsView() {
                               const val = parseInt(e.target.value) || 0;
                               setLoyaltyConfig({ ...loyaltyConfig, goldThreshold: val });
                             }}
-                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
+                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">€</span>
                         </div>
@@ -1058,7 +1058,7 @@ export default function SettingsView() {
                   {/* VIP Tier Card */}
                   <div className="p-6 border border-gray-100 rounded-3xl bg-white shadow-sm flex flex-col gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-purple-950/20 text-purple-900 flex items-center justify-center font-black">V</div>
+                      <div className="w-10 h-10 rounded-2xl bg-purple-950/20 text-purple-900 flex items-center justify-center font-bold">V</div>
                       <div>
                         <h3 className="font-bold text-gray-900 text-sm">VIP Tier</h3>
                         <p className="text-[10px] text-gray-400 font-semibold">Elite tier for top tier brand advocates</p>
@@ -1077,7 +1077,7 @@ export default function SettingsView() {
                               const val = parseFloat(e.target.value) / 100 || 0;
                               setLoyaltyConfig({ ...loyaltyConfig, vipRate: val });
                             }}
-                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
+                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">%</span>
                         </div>
@@ -1093,7 +1093,7 @@ export default function SettingsView() {
                               const val = parseInt(e.target.value) || 0;
                               setLoyaltyConfig({ ...loyaltyConfig, vipThreshold: val });
                             }}
-                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
+                            className="w-full bg-gray-50 border border-transparent rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all" 
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">€</span>
                         </div>

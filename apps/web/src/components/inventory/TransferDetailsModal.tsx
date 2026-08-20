@@ -119,7 +119,7 @@ export default function TransferDetailsModal({ transfer, isOpen, onClose, onUpda
                 </div>
                 <div className="text-right flex flex-col items-end">
                   <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Quantity</span>
-                  <span className="text-xl font-black text-gray-900">{transfer.quantity}</span>
+                  <span className="text-xl font-bold text-gray-900">{transfer.quantity}</span>
                 </div>
               </div>
             </section>

@@ -160,7 +160,7 @@ export default function ShiftPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-6 shrink-0">
           <div className="flex-1 min-w-0 pr-4 sm:pr-6">
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-tight">Cash Register & Shifts</h1>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight">Cash Register & Shifts</h1>
             <p className="text-sm font-medium text-gray-500 mt-1.5 leading-relaxed">Manage shift opening, cash drawer audits, and Z-Reports.</p>
           </div>
           
@@ -223,7 +223,7 @@ export default function ShiftPage() {
                 <div className="w-16 h-16 rounded-full bg-beige flex items-center justify-center text-brown mb-6 border border-darker-beige/40">
                   <Lock size={28} />
                 </div>
-                <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-2">Shift is Closed</h2>
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">Shift is Closed</h2>
                 <p className="text-sm text-gray-500 font-medium mb-8 leading-relaxed">Open a new shift to unlock table ordering, delivery checkouts, and print tickets.</p>
                 
                 <form onSubmit={handleOpenShift} className="w-full space-y-5 text-left">
@@ -289,16 +289,16 @@ export default function ShiftPage() {
                   {/* Shift Summary Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="bg-gray-50/50 border border-gray-200/60 rounded-[1.5rem] p-5">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Expected Cash</span>
-                      <span className="text-2xl font-black text-gray-900">€{liveExpectedCash.toFixed(2)}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Expected Cash</span>
+                      <span className="text-2xl font-bold text-gray-900">€{liveExpectedCash.toFixed(2)}</span>
                     </div>
                     <div className="bg-white border border-gray-200/60 rounded-[1.5rem] p-5">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Cash Float</span>
-                      <span className="text-2xl font-black text-gray-900">€{activeShift.floatAmount.toFixed(2)}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Cash Float</span>
+                      <span className="text-2xl font-bold text-gray-900">€{activeShift.floatAmount.toFixed(2)}</span>
                     </div>
                     <div className="bg-white border border-gray-200/60 rounded-[1.5rem] p-5 sm:col-span-2 lg:col-span-1">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Cash / Card Sales</span>
-                      <span className="text-2xl font-black text-gray-900">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Cash / Card Sales</span>
+                      <span className="text-2xl font-bold text-gray-900">
                         €{activeShift.cashSales.toFixed(2)} <span className="text-gray-300 font-medium">/</span> €{activeShift.cardSales.toFixed(2)}
                       </span>
                     </div>
@@ -313,7 +313,7 @@ export default function ShiftPage() {
                     
                     <form onSubmit={handleAddAdjustment} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5 sm:p-6 pb-2 border-b border-gray-100">
                       <div className="relative">
-                        <label className="text-[10px] font-black text-gray-400 uppercase block mb-2">Action</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2">Action</label>
                         <select
                           value={adjType}
                           onChange={e => setAdjType(e.target.value as 'in' | 'out')}
@@ -327,7 +327,7 @@ export default function ShiftPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase block mb-2">Amount (€)</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2">Amount (€)</label>
                         <input
                           type="text"
                           inputMode="decimal"
@@ -339,7 +339,7 @@ export default function ShiftPage() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase block mb-2">Reason / Description</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2">Reason / Description</label>
                         <div className="flex gap-2 w-full">
                           <input
                             type="text"
@@ -361,7 +361,7 @@ export default function ShiftPage() {
 
                     {/* Adjustments List */}
                     <div className="space-y-3 p-5 sm:p-6">
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-4">Adjustments History</div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-4">Adjustments History</div>
                       {activeShift.adjustments.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 text-sm font-semibold bg-gray-50/30 rounded-2xl border border-dashed border-gray-200">No adjustments yet</div>
                       ) : (
@@ -377,7 +377,7 @@ export default function ShiftPage() {
                                   <span className="text-[11px] font-medium text-gray-400 mt-0.5 block">{formatShiftAdjustmentTime(adj.time)}</span>
                                 </div>
                               </div>
-                              <span className={`font-black text-base ${adj.type === 'in' ? 'text-emerald-600' : 'text-red-500'}`}>
+                              <span className={`font-bold text-base ${adj.type === 'in' ? 'text-emerald-600' : 'text-red-500'}`}>
                                 {adj.type === 'in' ? '+' : '-'}€{adj.amount.toFixed(2)}
                               </span>
                             </div>
@@ -400,15 +400,15 @@ export default function ShiftPage() {
 
                   <form onSubmit={handleCloseShift} className="space-y-4">
                     <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 block">Actual Cash in Drawer</label>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Actual Cash in Drawer</label>
                       <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 font-black text-xl">€</div>
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 font-bold text-xl">€</div>
                         <input
                           type="text"
                           inputMode="decimal"
                           value={actualCashInput}
                           onChange={e => handleCurrencyChange(e, setActualCashInput)}
-                          className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl pl-10 pr-4 py-4 text-xl font-black text-gray-900 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/20 transition-all"
+                          className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl pl-10 pr-4 py-4 text-xl font-bold text-gray-900 outline-none hover:border-gray-300 focus:border-corgi focus:ring-4 focus:ring-corgi/20 transition-all"
                           placeholder="0.00"
                           required
                         />
@@ -476,7 +476,7 @@ export default function ShiftPage() {
               ) : (
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-white text-[10px] font-black uppercase text-gray-400 tracking-wider sticky top-0 z-10">
+                    <tr className="border-b border-gray-100 bg-white text-[10px] font-bold uppercase text-gray-400 tracking-wider sticky top-0 z-10">
                       <th className="px-6 py-4">Shift ID</th>
                       <th className="px-6 py-4">Status</th>
                       <th className="px-6 py-4">Opened</th>
@@ -498,12 +498,12 @@ export default function ShiftPage() {
                           className="hover:bg-beige/10 transition-colors cursor-pointer group"
                           onClick={() => setExpandedHistoryId(expandedHistoryId === s.id ? null : s.id)}
                         >
-                          <td className="px-6 py-4 font-black text-gray-900 flex items-center gap-2">
+                          <td className="px-6 py-4 font-bold text-gray-900 flex items-center gap-2">
                             <ChevronDown size={14} className={`text-gray-400 transition-transform ${expandedHistoryId === s.id ? 'rotate-180' : 'group-hover:text-gray-900'}`} />
                             {s.id}
                           </td>
                         <td className="px-6 py-4">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${
                             s.status === 'open' 
                               ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50' 
                               : 'bg-gray-100 text-gray-500 border-gray-200'
@@ -530,7 +530,7 @@ export default function ShiftPage() {
                         </td>
                         <td className="px-6 py-4">
                           {s.shortageOverage !== undefined ? (
-                            <span className={`font-black ${
+                            <span className={`font-bold ${
                               s.shortageOverage === 0 
                                 ? 'text-gray-600' 
                                 : s.shortageOverage > 0 
@@ -557,7 +557,7 @@ export default function ShiftPage() {
                                 className="overflow-hidden"
                               >
                                 <div className="py-4 px-12">
-                                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-3">Adjustments History</h4>
+                                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Adjustments History</h4>
                                   {s.adjustments.length === 0 ? (
                                     <div className="text-gray-400 text-xs italic bg-white p-3 rounded-xl border border-dashed border-gray-200 inline-block">No drawer adjustments recorded in this shift</div>
                                   ) : (
@@ -573,7 +573,7 @@ export default function ShiftPage() {
                                               <span className="text-[10px] font-medium text-gray-400 mt-0.5 block">{formatShiftAdjustmentTime(adj.time)}</span>
                                             </div>
                                           </div>
-                                          <span className={`font-black text-sm ${adj.type === 'in' ? 'text-emerald-600' : 'text-red-500'}`}>
+                                          <span className={`font-bold text-sm ${adj.type === 'in' ? 'text-emerald-600' : 'text-red-500'}`}>
                                             {adj.type === 'in' ? '+' : '-'}€{adj.amount.toFixed(2)}
                                           </span>
                                         </div>

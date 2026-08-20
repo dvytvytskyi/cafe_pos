@@ -3320,7 +3320,7 @@
     --tw-leading: var(--leading-tight);
     line-height: var(--leading-tight);
   }
-  .font-black {
+  .font-bold {
     --tw-font-weight: var(--font-weight-black);
     font-weight: var(--font-weight-black);
   }
@@ -3328,7 +3328,7 @@
     --tw-font-weight: var(--font-weight-bold);
     font-weight: var(--font-weight-bold);
   }
-  .font-extrabold {
+  .font-bold {
     --tw-font-weight: var(--font-weight-extrabold);
     font-weight: var(--font-weight-extrabold);
   }

@@ -304,7 +304,7 @@ function EMenuContent() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-[32px] p-6 max-w-sm w-full text-center shadow-xl space-y-6"
             >
-              <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl font-black">
+              <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
                 ✓
               </div>
               <div className="space-y-2">
@@ -320,7 +320,7 @@ function EMenuContent() {
                     <Sparkles size={20} />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
                       Loyalty linked
                     </span>
                     <span className="text-sm font-bold text-amber-900">{linkedGuest.name}</span>
@@ -339,15 +339,15 @@ function EMenuContent() {
       </AnimatePresence>
 
       <header className="p-4 bg-white border-b border-gray-100 sticky top-0 z-20 flex justify-between items-center shadow-sm">
-        <span className="text-xl font-black tracking-tight text-gray-950 uppercase">🐾 Corgi Cafe</span>
-        <span className="bg-corgi text-black font-black text-xs px-3 py-1.5 rounded-full shadow-sm">
+        <span className="text-xl font-bold tracking-tight text-gray-950 uppercase">🐾 Corgi Cafe</span>
+        <span className="bg-corgi text-black font-bold text-xs px-3 py-1.5 rounded-full shadow-sm">
           {tableId.toUpperCase()}
         </span>
       </header>
 
       <div className="px-4 py-6 bg-white border-b border-gray-150 flex flex-col gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-gray-950">Self-Order & Pay</h1>
+          <h1 className="text-2xl font-bold text-gray-950">Self-Order & Pay</h1>
           <p className="text-xs text-gray-500 font-medium mt-1">
             Scan the QR on your table, order favorites, pay with the waiter.
           </p>
@@ -389,7 +389,7 @@ function EMenuContent() {
                 <button
                   key={alg}
                   onClick={() => toggleAllergen(alg)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide border cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide border cursor-pointer ${
                     excludedAllergens.includes(alg)
                       ? 'bg-red-600 border-red-600 text-white'
                       : 'bg-white border-gray-200 text-gray-500'
@@ -444,8 +444,8 @@ function EMenuContent() {
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-0.5">
-                    <h3 className="font-extrabold text-sm text-gray-900 leading-tight">{dish.name}</h3>
-                    <span className="font-extrabold text-xs text-gray-950 shrink-0 ml-2">
+                    <h3 className="font-bold text-sm text-gray-900 leading-tight">{dish.name}</h3>
+                    <span className="font-bold text-xs text-gray-950 shrink-0 ml-2">
                       €{dish.basePrice.toFixed(2)}
                     </span>
                   </div>
@@ -458,7 +458,7 @@ function EMenuContent() {
                     {dish.allergens.map((alg) => (
                       <span
                         key={alg}
-                        className="text-[8px] font-black uppercase bg-red-50 text-red-700 px-1.5 py-0.5 rounded-md"
+                        className="text-[8px] font-bold uppercase bg-red-50 text-red-700 px-1.5 py-0.5 rounded-md"
                       >
                         {alg}
                       </span>
@@ -493,7 +493,7 @@ function EMenuContent() {
                   <img src={selectedDish.image} alt={selectedDish.name} className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-gray-950">{selectedDish.name}</h2>
+                  <h2 className="text-lg font-bold text-gray-950">{selectedDish.name}</h2>
                   <p className="text-xs text-gray-400 font-semibold">€{selectedDish.basePrice.toFixed(2)}</p>
                 </div>
               </div>
@@ -514,7 +514,7 @@ function EMenuContent() {
                         <button
                           key={opt.id}
                           onClick={() => setSelectedMilk(opt.id)}
-                          className={`py-2 px-1 text-center rounded-xl text-[11px] font-black transition-all border ${
+                          className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold transition-all border ${
                             selectedMilk === opt.id
                               ? 'bg-black border-black text-white shadow'
                               : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'
@@ -574,10 +574,10 @@ function EMenuContent() {
             className="w-full bg-black hover:bg-gray-800 text-white flex items-center justify-between px-6 py-4 rounded-2xl shadow-xl transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <div className="bg-corgi text-black font-black text-xs w-6 h-6 rounded-full flex items-center justify-center">
+              <div className="bg-corgi text-black font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center">
                 {cart.reduce((acc, c) => acc + c.quantity, 0)}
               </div>
-              <span className="text-xs font-extrabold uppercase tracking-wider">View Cart</span>
+              <span className="text-xs font-bold uppercase tracking-wider">View Cart</span>
             </div>
             <span className="text-sm font-bold">€{getSubtotal().toFixed(2)}</span>
           </button>
@@ -596,7 +596,7 @@ function EMenuContent() {
             >
               <div>
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-lg font-black text-gray-950">Cart Summary</h2>
+                  <h2 className="text-lg font-bold text-gray-950">Cart Summary</h2>
                   <button
                     onClick={() => setIsCartOpen(false)}
                     className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-900 cursor-pointer"
@@ -609,7 +609,7 @@ function EMenuContent() {
                   {cart.map((c, i) => (
                     <div key={i} className="flex justify-between items-center">
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-extrabold text-sm text-gray-900 truncate">{c.dish.name}</h4>
+                        <h4 className="font-bold text-sm text-gray-900 truncate">{c.dish.name}</h4>
                         {c.notes && (
                           <p className="text-[10px] text-amber-800 font-semibold italic">{c.notes}</p>
                         )}
@@ -624,7 +624,7 @@ function EMenuContent() {
                         >
                           <Minus size={12} />
                         </button>
-                        <span className="text-xs font-extrabold text-gray-950">{c.quantity}</span>
+                        <span className="text-xs font-bold text-gray-950">{c.quantity}</span>
                         <button
                           onClick={() => updateCartQty(i, 1)}
                           className="w-7 h-7 rounded-xl bg-gray-50 border border-gray-150 flex items-center justify-center text-gray-500 hover:bg-gray-100 cursor-pointer"
@@ -653,7 +653,7 @@ function EMenuContent() {
                           setTipPercent(opt.val);
                           if (opt.val !== null) setCustomTip('');
                         }}
-                        className={`py-2 text-center rounded-xl text-[11px] font-black transition-all border ${
+                        className={`py-2 text-center rounded-xl text-[11px] font-bold transition-all border ${
                           tipPercent === opt.val
                             ? 'bg-black border-black text-white shadow'
                             : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'
@@ -684,12 +684,12 @@ function EMenuContent() {
                   {linkedGuest ? (
                     <div className="flex items-center justify-between p-3.5 bg-amber-50/50 border border-amber-100 rounded-2xl">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-corgi/15 text-corgi flex items-center justify-center font-black text-xs uppercase">
+                        <div className="w-8 h-8 rounded-lg bg-corgi/15 text-corgi flex items-center justify-center font-bold text-xs uppercase">
                           {linkedGuest.tier[0]}
                         </div>
                         <div>
                           <span className="text-xs font-bold text-gray-950 block">{linkedGuest.name}</span>
-                          <span className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wider">
+                          <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">
                             {linkedGuest.tier} tier
                           </span>
                         </div>
@@ -712,7 +712,7 @@ function EMenuContent() {
                       />
                       <button
                         onClick={handleLinkGuest}
-                        className="px-4 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-extrabold cursor-pointer active:scale-95 transition-all shadow-sm"
+                        className="px-4 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold cursor-pointer active:scale-95 transition-all shadow-sm"
                       >
                         Link
                       </button>
@@ -731,7 +731,7 @@ function EMenuContent() {
                     <span>Tip:</span>
                     <span>€{getTipAmount().toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between font-black text-gray-950 text-base pt-1">
+                  <div className="flex justify-between font-bold text-gray-950 text-base pt-1">
                     <span>Total:</span>
                     <span>€{getTotal().toFixed(2)}</span>
                   </div>

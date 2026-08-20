@@ -39,9 +39,9 @@ const SourceBadge = ({ source }: { source: OrderSource }) => {
     case 'ubereats':
       return <img src="https://1000logos.net/wp-content/uploads/2021/04/Uber-Eats-logo.png" alt="Uber Eats" width={64} height={26} className="h-[26px] w-auto object-contain" />;
     case 'dine_in':
-      return <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 font-black text-[13px] rounded-xl"><Store size={16} /> DINE-IN</div>;
+      return <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 font-bold text-[13px] rounded-xl"><Store size={16} /> DINE-IN</div>;
     case 'takeaway':
-      return <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 font-black text-[13px] rounded-xl"><ShoppingBag size={16} /> TAKEAWAY</div>;
+      return <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 font-bold text-[13px] rounded-xl"><ShoppingBag size={16} /> TAKEAWAY</div>;
   }
 };
 
@@ -590,7 +590,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
             <div className="space-y-2.5 text-xs text-gray-300">
               {kitchenPrintNotification.barItems.length > 0 && (
                 <div>
-                  <div className="font-extrabold text-[10px] text-gray-400 uppercase tracking-wider mb-1">📟 Bar Printer (Drinks)</div>
+                  <div className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1">📟 Bar Printer (Drinks)</div>
                   <ul className="list-disc pl-4 space-y-0.5">
                     {kitchenPrintNotification.barItems.map((it, i) => <li key={i}>{it}</li>)}
                   </ul>
@@ -598,7 +598,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               )}
               {kitchenPrintNotification.kitchenItems.length > 0 && (
                 <div>
-                  <div className="font-extrabold text-[10px] text-gray-400 uppercase tracking-wider mb-1">🍳 Kitchen Printer (Food)</div>
+                  <div className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-1">🍳 Kitchen Printer (Food)</div>
                   <ul className="list-disc pl-4 space-y-0.5">
                     {kitchenPrintNotification.kitchenItems.map((it, i) => <li key={i}>{it}</li>)}
                   </ul>
@@ -617,7 +617,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
 
       {/* Order Items */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100">
-        <h3 className="text-gray-900 font-black mb-3">Order Summary</h3>
+        <h3 className="text-gray-900 font-bold mb-3">Order Summary</h3>
         {order.items.length === 0 ? (
           <div className="text-center py-6 text-gray-400 font-medium">No items left</div>
         ) : (
@@ -644,7 +644,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                         >
                           {deleteConfirmIdx === idx ? <Trash2 size={12} /> : <Minus size={12} />}
                         </button>
-                        <span className="font-extrabold w-4 text-center text-gray-900 text-xs select-none">{item.quantity}</span>
+                        <span className="font-bold w-4 text-center text-gray-900 text-xs select-none">{item.quantity}</span>
                         <button 
                           onClick={() => handlePlusClick(idx)} 
                           className="w-7 h-7 flex items-center justify-center rounded-lg bg-white text-gray-600 border border-gray-200/50 hover:text-corgi cursor-pointer"
@@ -679,7 +679,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                               setEditingCommentIdx(null);
                             }
                           }}
-                          className="flex-1 bg-gray-50/70 focus:bg-white border border-gray-200 focus:border-corgi focus:ring-2 focus:ring-corgi/20 rounded-xl px-3 py-2 text-xs text-gray-900 placeholder-gray-400 font-extrabold outline-none transition-all"
+                          className="flex-1 bg-gray-50/70 focus:bg-white border border-gray-200 focus:border-corgi focus:ring-2 focus:ring-corgi/20 rounded-xl px-3 py-2 text-xs text-gray-900 placeholder-gray-400 font-bold outline-none transition-all"
                           autoFocus
                         />
                         <button 
@@ -704,7 +704,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                           !order.paid && (
                             <button
                               onClick={() => setEditingCommentIdx(idx)}
-                              className="text-[10px] text-gray-500 hover:text-corgi hover:bg-orange-50/40 border border-gray-200/60 rounded-md px-1.5 py-0.5 w-fit flex items-center gap-1 cursor-pointer transition-colors font-extrabold"
+                              className="text-[10px] text-gray-500 hover:text-corgi hover:bg-orange-50/40 border border-gray-200/60 rounded-md px-1.5 py-0.5 w-fit flex items-center gap-1 cursor-pointer transition-colors font-bold"
                             >
                               <MessageSquare size={10} /> Add Prep Note
                             </button>
@@ -735,7 +735,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
 
         {order.payments && order.payments.length > 0 && (
           <div className="pt-3 mt-3 border-t border-gray-100 space-y-1.5">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Payment Methods</span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Payment Methods</span>
             {order.payments.map((p, i) => (
               <div key={i} className="flex justify-between items-center text-sm">
                 <span className="font-bold text-gray-600 flex items-center gap-1.5">
@@ -745,7 +745,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                   {p.method === 'giftcard' && <Gift size={13} className="text-purple-500" />}
                   {paymentMethodLabel(p.method)}
                 </span>
-                <span className="font-black text-gray-900">€{p.amount.toFixed(2)}</span>
+                <span className="font-bold text-gray-900">€{p.amount.toFixed(2)}</span>
               </div>
             ))}
           </div>
@@ -786,7 +786,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         {order.readyByTime && (
           <div className="flex justify-between items-center pt-3 border-t border-gray-100">
             <span className="text-orange-600 font-medium text-sm">Target Ready Time</span>
-            <span className="text-orange-600 font-black">{order.readyByTime}</span>
+            <span className="text-orange-600 font-bold">{order.readyByTime}</span>
           </div>
         )}
       </div>
@@ -795,7 +795,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       {order.orderedBy !== 'app' && (
         <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-gray-900 font-black text-sm flex items-center gap-1.5">
+            <span className="text-gray-900 font-bold text-sm flex items-center gap-1.5">
               <Users size={16} className="text-gray-400" />
               CRM & Loyalty
             </span>
@@ -854,7 +854,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-gray-50 p-2 rounded-lg">
                     <span className="text-gray-400 font-semibold block text-[10px]">Points Balance</span>
-                    <span className="font-black text-gray-900 flex items-center gap-0.5 mt-0.5">
+                    <span className="font-bold text-gray-900 flex items-center gap-0.5 mt-0.5">
                       <Coins size={12} className="text-amber-500" />
                       {formatLoyaltyPoints(guest.points)}
                     </span>
@@ -862,7 +862,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                   {isPrimary ? (
                     <div className="bg-gray-50 p-2 rounded-lg">
                       <span className="text-gray-400 font-semibold block text-[10px]">Est. Cashback</span>
-                      <span className="font-black text-green-600 flex items-center gap-0.5 mt-0.5">
+                      <span className="font-bold text-green-600 flex items-center gap-0.5 mt-0.5">
                         <Sparkles size={12} className="text-green-500" />
                         +€{estCashback}
                       </span>
@@ -870,7 +870,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                   ) : (
                     <div className="bg-gray-50 p-2 rounded-lg">
                       <span className="text-gray-400 font-semibold block text-[10px]">Linked Guest</span>
-                      <span className="font-black text-gray-500 flex items-center gap-0.5 mt-0.5 text-[10px]">
+                      <span className="font-bold text-gray-500 flex items-center gap-0.5 mt-0.5 text-[10px]">
                         Loyalty on checkout
                       </span>
                     </div>
@@ -942,12 +942,12 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 Tip{order.tip.type === 'percent' ? ` (${order.tip.value}%)` : ''} · +€{order.tip.amountAdded.toFixed(2)}
               </span>
             )}
-            <span className="font-black text-gray-900 text-3xl leading-none pt-0.5">€{order.total.toFixed(2)}</span>
+            <span className="font-bold text-gray-900 text-3xl leading-none pt-0.5">€{order.total.toFixed(2)}</span>
           </div>
           {(order.amountPaid || 0) > 0 && (
             <div className="flex flex-col items-end">
               <span className="font-bold text-green-600 text-sm mb-1">Paid: €{(order.amountPaid || 0).toFixed(2)}</span>
-              <span className="font-black text-corgi text-xl leading-none">Rem: €{remainingBalance.toFixed(2)}</span>
+              <span className="font-bold text-corgi text-xl leading-none">Rem: €{remainingBalance.toFixed(2)}</span>
             </div>
           )}
         </div>
@@ -1039,7 +1039,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         {order.status === 'incoming' && (
           <button 
             onClick={() => { onUpdateStatus(order.id, 'preparing'); onClose(); }}
-            className="w-full py-4 bg-gray-900 text-white rounded-xl font-black text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
           >
             Start Preparing
           </button>
@@ -1050,7 +1050,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               onUpdateStatus(order.id, getStatusAfterPreparing(order.source)); 
               onClose(); 
             }}
-            className="w-full py-4 bg-gray-900 text-white rounded-xl font-black text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
           >
             <ShoppingBag size={20} /> {(order.source === 'glovo' || order.source === 'ubereats') ? 'Mark as Ready' : order.source === 'takeaway' ? 'Complete Order' : 'Mark as Served'}
           </button>
@@ -1058,7 +1058,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         {order.status === 'ready' && (
           <button 
             onClick={() => { onUpdateStatus(order.id, 'completed'); onClose(); }}
-            className="w-full py-4 bg-gray-900 text-white rounded-xl font-black text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
           >
             Handed to Courier/Guest
           </button>
@@ -1066,7 +1066,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         {order.status === 'served' && order.paid && (
           <button 
             onClick={() => { onUpdateStatus(order.id, 'completed'); onClose(); }}
-            className="w-full py-4 bg-gray-900 text-white rounded-xl font-black text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold text-lg hover:bg-gray-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
           >
             <CheckCircle2 size={20} /> Complete Order
           </button>
@@ -1136,7 +1136,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
             <div className="mb-4 bg-blue-50 border border-blue-100 rounded-xl p-4 animate-in fade-in">
               <span className="text-xs font-bold text-blue-800 block mb-1">Partial payment received</span>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-black text-blue-900">
+                <span className="text-sm font-bold text-blue-900">
                   Paid €{(order.amountPaid || 0).toFixed(2)} · Remaining €{remainingBalance.toFixed(2)}
                 </span>
               </div>
@@ -1159,7 +1159,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
             <div className="mb-4 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-2 animate-in fade-in">
               <CheckCircle2 size={20} className="text-green-600 shrink-0" />
               <div>
-                <span className="text-sm font-black text-green-800 block">Payment complete</span>
+                <span className="text-sm font-bold text-green-800 block">Payment complete</span>
                 <span className="text-xs font-semibold text-green-700">Total paid: €{order.total.toFixed(2)}</span>
               </div>
             </div>
@@ -1248,7 +1248,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
 
           {showGiftCardInput && (
             <div className="mb-4 p-4 border border-purple-100 rounded-2xl bg-purple-50/20 text-left animate-in fade-in slide-in-from-bottom-2">
-              <label className="text-[10px] font-black text-purple-700 uppercase tracking-wider block mb-1.5">Redeem Gift Card Code</label>
+              <label className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block mb-1.5">Redeem Gift Card Code</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -1298,13 +1298,13 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       className="flex flex-col h-full"
     >
       <div className="flex-1 p-6 bg-gray-50/50 flex flex-col items-center justify-center space-y-4">
-        <div className="text-3xl font-black text-gray-900 mb-6">Split Bill</div>
+        <div className="text-3xl font-bold text-gray-900 mb-6">Split Bill</div>
         
         <button 
           onClick={() => setView('split_amount')}
           className="w-full max-w-xs p-5 bg-white border-2 border-gray-100 hover:border-gray-300 rounded-3xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
         >
-          <span className="font-black text-lg text-gray-900">Split by Amount</span>
+          <span className="font-bold text-lg text-gray-900">Split by Amount</span>
           <span className="text-sm font-medium text-gray-500 text-center">Divide the total equally among multiple people</span>
         </button>
 
@@ -1312,7 +1312,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
           onClick={() => setView('split_dishes')}
           className="w-full max-w-xs p-5 bg-white border-2 border-gray-100 hover:border-gray-300 rounded-3xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
         >
-          <span className="font-black text-lg text-gray-900">Split by Dishes</span>
+          <span className="font-bold text-lg text-gray-900">Split by Dishes</span>
           <span className="text-sm font-medium text-gray-500 text-center">Select specific items to pay for separately</span>
         </button>
       </div>
@@ -1348,7 +1348,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               setView('split_bill');
             }
           }} className="p-2 -ml-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 cursor-pointer"><ChevronLeft size={20}/></button>
-          <h3 className="text-xl font-black text-gray-900">Split Payment</h3>
+          <h3 className="text-xl font-bold text-gray-900">Split Payment</h3>
         </div>
         
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 flex flex-col items-center">
@@ -1375,20 +1375,20 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
 
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm w-full max-w-sm mb-6 text-center">
             <div className="text-gray-500 font-medium mb-1">Total Remaining</div>
-            <div className="text-3xl font-black text-gray-900 mb-6">€{remainingBalance.toFixed(2)}</div>
+            <div className="text-3xl font-bold text-gray-900 mb-6">€{remainingBalance.toFixed(2)}</div>
             
             {splitAmountType === 'ways' ? (
               <>
                 <div className="text-gray-500 font-medium mb-3">How many ways?</div>
                 <div className="flex items-center justify-center gap-4 mb-6">
                   <button onClick={() => setSplitWays(Math.max(2, splitWays - 1))} className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-colors cursor-pointer font-bold text-xl">-</button>
-                  <span className="text-3xl font-black text-gray-900 w-12 text-center">{splitWays}</span>
+                  <span className="text-3xl font-bold text-gray-900 w-12 text-center">{splitWays}</span>
                   <button onClick={() => setSplitWays(splitWays + 1)} className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-colors cursor-pointer font-bold text-xl">+</button>
                 </div>
 
                 <div className="p-4 bg-orange-50 rounded-2xl">
                   <div className="text-sm font-bold text-orange-700 mb-1">Amount per person</div>
-                  <div className="text-3xl font-black text-orange-600">€{payAmount.toFixed(2)}</div>
+                  <div className="text-3xl font-bold text-orange-600">€{payAmount.toFixed(2)}</div>
                 </div>
               </>
             ) : (
@@ -1409,7 +1409,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                     <div className="text-gray-500 font-medium mb-3 text-left">Payment {customSplits.length + 1} Amount</div>
                     <div className="relative max-w-[200px] mx-auto mb-2">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <span className="text-gray-400 font-black text-2xl">€</span>
+                        <span className="text-gray-400 font-bold text-2xl">€</span>
                       </div>
                       <input
                         type="text"
@@ -1429,7 +1429,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                           }
                         }}
                         placeholder="0,00"
-                        className="block w-full pl-10 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl text-2xl font-black text-gray-900 text-center focus:border-corgi focus:ring-0 transition-all outline-none"
+                        className="block w-full pl-10 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl text-2xl font-bold text-gray-900 text-center focus:border-corgi focus:ring-0 transition-all outline-none"
                       />
                     </div>
                   </>
@@ -1511,7 +1511,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     >
       <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-white">
         <button onClick={() => setView('split_amount')} className="p-2 -ml-2 rounded-full hover:bg-gray-100"><ChevronLeft size={20}/></button>
-        <h3 className="text-xl font-black text-gray-900">Generated Splits</h3>
+        <h3 className="text-xl font-bold text-gray-900">Generated Splits</h3>
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 space-y-3">
@@ -1521,7 +1521,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${split.paid ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-400 font-bold'}`}>
                 {split.paid ? <CheckCircle2 size={20} /> : idx + 1}
               </div>
-              <span className={`font-black text-xl ${split.paid ? 'text-green-700' : 'text-gray-900'}`}>€{split.amount.toFixed(2)}</span>
+              <span className={`font-bold text-xl ${split.paid ? 'text-green-700' : 'text-gray-900'}`}>€{split.amount.toFixed(2)}</span>
             </div>
             
             {!split.paid && (
@@ -1555,7 +1555,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               setGeneratedSplits([]);
               setView('default');
             }}
-            className="w-full py-4 bg-corgi text-white rounded-2xl font-black text-lg hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-4 bg-corgi text-white rounded-2xl font-bold text-lg hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
           >
             <CheckCircle2 size={24} /> Finish Checkout
           </button>
@@ -1565,7 +1565,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               setGeneratedSplits([]);
               setView('default');
             }}
-            className="w-full py-4 bg-white border-2 border-gray-200 text-gray-600 rounded-2xl font-black text-lg hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-4 bg-white border-2 border-gray-200 text-gray-600 rounded-2xl font-bold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
           >
             Cancel Remaining Splits
           </button>
@@ -1593,7 +1593,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     >
       <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-white">
         <button onClick={() => setView('split_bill')} className="p-2 -ml-2 rounded-full hover:bg-gray-100"><ChevronLeft size={20}/></button>
-        <h3 className="text-xl font-black text-gray-900">Select Items to Pay</h3>
+        <h3 className="text-xl font-bold text-gray-900">Select Items to Pay</h3>
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 space-y-2">
@@ -1613,7 +1613,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 <div className="text-xs font-bold text-gray-400">Qty: {item.quantity}</div>
               </div>
             </div>
-            <div className="font-black text-gray-900 text-lg">€{(item.price * item.quantity).toFixed(2)}</div>
+            <div className="font-bold text-gray-900 text-lg">€{(item.price * item.quantity).toFixed(2)}</div>
           </button>
         ))}
       </div>
@@ -1621,12 +1621,12 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       <div className="p-6 bg-white border-t border-gray-100 shrink-0">
         <div className="flex justify-between items-center mb-4 px-2">
           <span className="font-medium text-gray-500">Selected Total</span>
-          <span className="font-black text-2xl text-purple-600">€{selectedTotal.toFixed(2)}</span>
+          <span className="font-bold text-2xl text-purple-600">€{selectedTotal.toFixed(2)}</span>
         </div>
         <button 
           disabled={selectedDishes.size === 0}
           onClick={() => setView('checkout_split_dishes')}
-          className="w-full py-4 bg-purple-600 text-white rounded-2xl font-black text-lg hover:bg-purple-700 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+          className="w-full py-4 bg-purple-600 text-white rounded-2xl font-bold text-lg hover:bg-purple-700 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
         >
           Next €{selectedTotal.toFixed(2)}
         </button>
@@ -1642,8 +1642,8 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       className="flex flex-col h-full"
     >
       <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 flex flex-col items-center justify-center">
-        <h3 className="text-xl font-black text-gray-900 mb-2">Split Sub-bill</h3>
-        <div className="text-5xl font-black text-corgi mb-8">€{selectedTotal.toFixed(2)}</div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Split Sub-bill</h3>
+        <div className="text-5xl font-bold text-corgi mb-8">€{selectedTotal.toFixed(2)}</div>
         
         <div className="w-full max-w-sm mb-8 space-y-2 text-left bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
           <div className="text-sm font-bold text-gray-500 mb-3 border-b border-gray-100 pb-2">Selected Items</div>
@@ -1702,7 +1702,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         
         <button 
           onClick={() => setView('split_dishes')}
-          className="w-full py-4 bg-white border-2 border-gray-200 text-gray-600 rounded-2xl font-black text-lg hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full py-4 bg-white border-2 border-gray-200 text-gray-600 rounded-2xl font-bold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
         >
           Cancel Split
         </button>
@@ -1743,7 +1743,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     >
       <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-white">
         <button onClick={() => setView('default')} className="p-2 -ml-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 cursor-pointer transition-colors"><ChevronLeft size={24}/></button>
-        <h3 className="text-xl font-black text-gray-900">Apply Discount</h3>
+        <h3 className="text-xl font-bold text-gray-900">Apply Discount</h3>
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 space-y-6">
@@ -1859,7 +1859,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     >
       <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-white">
         <button onClick={() => setView('default')} className="p-2 -ml-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 cursor-pointer transition-colors"><ChevronLeft size={24}/></button>
-        <h3 className="text-xl font-black text-gray-900">Add Gratuity (Tip)</h3>
+        <h3 className="text-xl font-bold text-gray-900">Add Gratuity (Tip)</h3>
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 space-y-6">
@@ -1997,7 +1997,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     >
       <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-white">
         <button onClick={() => setView('default')} className="p-2 -ml-2 rounded-full hover:bg-gray-100"><ChevronLeft size={20}/></button>
-        <h3 className="text-xl font-black text-gray-900">Send Receipt</h3>
+        <h3 className="text-xl font-bold text-gray-900">Send Receipt</h3>
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 flex flex-col">
@@ -2064,7 +2064,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         <button 
           disabled={receiptEmails.length === 0 && (!currentEmailInput || !currentEmailInput.includes('@'))}
           onClick={handleSendReceipt}
-          className="w-full py-4 bg-corgi text-white rounded-2xl font-black text-lg hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+          className="w-full py-4 bg-corgi text-white rounded-2xl font-bold text-lg hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
         >
           <Send size={20} /> Send Receipt
         </button>
@@ -2076,7 +2076,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col h-full">
       <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-white">
         <button onClick={() => setView('default')} className="p-2 -ml-2 rounded-full hover:bg-gray-100"><ChevronLeft size={20}/></button>
-        <h3 className="text-xl font-black text-gray-900">Refund Items</h3>
+        <h3 className="text-xl font-bold text-gray-900">Refund Items</h3>
       </div>
       <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-gray-50/50">
         {order.items.map((item, idx) => {
@@ -2091,13 +2091,13 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               </div>
               <div className="flex items-center gap-2">
                 <button type="button" onClick={() => setRefundSelections(s => ({ ...s, [idx]: Math.max(0, sel - 1) }))} className="w-8 h-8 rounded-lg bg-gray-100 font-bold">-</button>
-                <span className="w-6 text-center font-black">{sel}</span>
+                <span className="w-6 text-center font-bold">{sel}</span>
                 <button type="button" onClick={() => setRefundSelections(s => ({ ...s, [idx]: Math.min(maxQty, sel + 1) }))} className="w-8 h-8 rounded-lg bg-gray-100 font-bold">+</button>
               </div>
             </div>
           );
         })}
-        <div className="text-right font-black text-lg text-gray-900 pt-2">Refund total: €{refundTotalSelected.toFixed(2)}</div>
+        <div className="text-right font-bold text-lg text-gray-900 pt-2">Refund total: €{refundTotalSelected.toFixed(2)}</div>
       </div>
       <div className="p-6 border-t border-gray-100 bg-white">
         <button type="button" disabled={refundTotalSelected <= 0} onClick={() => setView('refund_confirm')} className="w-full py-4 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-bold">
@@ -2111,10 +2111,10 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col h-full">
       <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-white">
         <button onClick={() => setView('refund_select')} className="p-2 -ml-2 rounded-full hover:bg-gray-100"><ChevronLeft size={20}/></button>
-        <h3 className="text-xl font-black text-gray-900">Confirm Refund</h3>
+        <h3 className="text-xl font-bold text-gray-900">Confirm Refund</h3>
       </div>
       <div className="flex-1 p-6 space-y-4 bg-gray-50/50">
-        <div className="text-3xl font-black text-red-600 text-center">€{refundTotalSelected.toFixed(2)}</div>
+        <div className="text-3xl font-bold text-red-600 text-center">€{refundTotalSelected.toFixed(2)}</div>
         <div>
           <label className="label-corgi">Reason (required)</label>
           <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} className="input-corgi resize-none" placeholder="Wrong item, customer complaint..." />
@@ -2146,7 +2146,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     >
       <div className="flex items-center gap-3 text-amber-600 mb-6">
         <AlertTriangle size={32} />
-        <h3 className="text-2xl font-black text-gray-900">Free Table?</h3>
+        <h3 className="text-2xl font-bold text-gray-900">Free Table?</h3>
       </div>
       <p className="text-gray-500 font-medium mb-6 text-[15px] leading-relaxed">
         Release table <span className="font-bold text-gray-900">{tableName || order.customerName || 'this table'}</span> and mark it as available?
@@ -2180,7 +2180,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     >
       <div className="flex items-center gap-3 text-red-500 mb-6">
         <AlertCircle size={32} />
-        <h3 className="text-2xl font-black text-gray-900">Cancel Order?</h3>
+        <h3 className="text-2xl font-bold text-gray-900">Cancel Order?</h3>
       </div>
       <p className="text-gray-500 font-medium mb-6 text-[15px] leading-relaxed">
         Are you sure you want to cancel order <span className="font-bold text-gray-900">{getOrderDisplayLabel(order)}</span>? 
@@ -2355,29 +2355,29 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               {/* Header block */}
               <div className="flex justify-between items-start pb-6 border-b border-gray-100">
                 <div>
-                  <h1 className="text-2xl font-black text-gray-950 uppercase tracking-tight">Corgi Cafe S.L.</h1>
-                  <p className="text-[10px] text-corgi font-black mt-0.5">{receiptConfig.header}</p>
+                  <h1 className="text-2xl font-bold text-gray-950 uppercase tracking-tight">Corgi Cafe S.L.</h1>
+                  <p className="text-[10px] text-corgi font-bold mt-0.5">{receiptConfig.header}</p>
                   <p className="text-[10px] text-gray-500 font-semibold mt-1">NIF: B-99214951</p>
                   <p className="text-[10px] text-gray-500 font-semibold">Carrer del Corgi 24, Barcelona</p>
                 </div>
                 <div className="text-right">
-                  <span className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded-lg text-[10px] font-black uppercase tracking-wider block mb-2">Factura simplificada</span>
-                  <div className="text-[10px] font-bold text-gray-500">Invoice: <span className="text-gray-950 font-black">{formattedInvoiceNumber}</span></div>
-                  <div className="text-[10px] font-bold text-gray-500 mt-0.5">Date: <span className="text-gray-950 font-black">{new Date().toLocaleDateString()}</span></div>
+                  <span className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded-lg text-[10px] font-bold uppercase tracking-wider block mb-2">Factura simplificada</span>
+                  <div className="text-[10px] font-bold text-gray-500">Invoice: <span className="text-gray-950 font-bold">{formattedInvoiceNumber}</span></div>
+                  <div className="text-[10px] font-bold text-gray-500 mt-0.5">Date: <span className="text-gray-950 font-bold">{new Date().toLocaleDateString()}</span></div>
                 </div>
               </div>
 
               {/* Corporate Customer details block */}
               <div className="grid grid-cols-2 gap-4 py-6 border-b border-gray-100">
                 <div>
-                  <div className="font-extrabold text-[10px] text-gray-400 uppercase tracking-wider mb-2">Emisor (Sender)</div>
+                  <div className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-2">Emisor (Sender)</div>
                   <div className="font-bold text-gray-950">Corgi Cafe S.L.</div>
                   <div className="text-gray-500 font-medium mt-0.5">Carrer del Corgi 24, Barcelona</div>
                   <div className="text-gray-500 font-medium">Spain</div>
                 </div>
                 <div>
-                  <div className="font-extrabold text-[10px] text-gray-400 uppercase tracking-wider mb-2">Receptor (Client)</div>
-                  <div className="font-black text-gray-950">{companyName}</div>
+                  <div className="font-bold text-[10px] text-gray-400 uppercase tracking-wider mb-2">Receptor (Client)</div>
+                  <div className="font-bold text-gray-950">{companyName}</div>
                   <div className="text-gray-500 font-bold mt-0.5">NIF: {taxId}</div>
                   <div className="text-gray-500 font-medium mt-0.5 whitespace-pre-wrap">{companyAddress}</div>
                 </div>
@@ -2386,7 +2386,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               {/* Items Table */}
               <table className="w-full text-left mt-6 border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-250 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                  <tr className="border-b border-gray-250 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     <th className="py-2.5">Description</th>
                     <th className="py-2.5 text-center w-12">Qty</th>
                     <th className="py-2.5 text-right w-24">Price</th>
@@ -2431,7 +2431,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                       <span>€{alcoholVatAmount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-2 border-t border-gray-150 font-black text-gray-950 text-lg">
+                  <div className="flex justify-between pt-2 border-t border-gray-150 font-bold text-gray-950 text-lg">
                     <span>Total Factura:</span>
                     <span>€{order.total.toFixed(2)}</span>
                   </div>
@@ -2442,7 +2442,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
               {receiptConfig.veriFactuActive && (
                 <div className="flex justify-between items-end bg-[#FAF7F3] p-4 rounded-2xl border border-gray-100">
                   <div className="max-w-[320px] space-y-1 text-left">
-                    <span className="text-[10px] font-black uppercase text-amber-800 tracking-wider flex items-center gap-1">
+                    <span className="text-[10px] font-bold uppercase text-amber-800 tracking-wider flex items-center gap-1">
                       <CheckCircle2 size={12} /> Factura verificable en la sede de la AEAT
                     </span>
                     <p className="text-[10px] text-gray-400 font-bold">VERI*FACTU Compliance system</p>
@@ -2460,9 +2460,9 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                         <div className="w-4 h-4 bg-gray-900 rounded-sm"></div>
                         <div className="w-4 h-4 bg-gray-900 rounded-sm"></div>
                       </div>
-                      <span className="z-10 text-[8px] font-black text-gray-900 tracking-tight bg-white px-1 shadow-sm rounded-sm">AEAT</span>
+                      <span className="z-10 text-[8px] font-bold text-gray-900 tracking-tight bg-white px-1 shadow-sm rounded-sm">AEAT</span>
                     </div>
-                    <span className="text-[8px] font-extrabold text-gray-450 uppercase tracking-widest">Verify QR</span>
+                    <span className="text-[8px] font-bold text-gray-450 uppercase tracking-widest">Verify QR</span>
                   </div>
                 </div>
               )}
@@ -2500,7 +2500,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10">
               <div>
-                <h2 className="text-2xl font-black text-gray-900 tracking-tight">{getOrderDisplayLabel(order)}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{getOrderDisplayLabel(order)}</h2>
                 <div className="flex items-center gap-3 mt-2">
                   <SourceBadge source={order.source} />
                   <span className={`px-2 py-1 rounded-lg text-xs font-bold ${order.paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -2552,7 +2552,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 >
                   <div className="flex justify-between items-center mb-4 shrink-0">
                     <div>
-                      <h3 className="text-lg font-black text-gray-900">Add loyalty guest</h3>
+                      <h3 className="text-lg font-bold text-gray-900">Add loyalty guest</h3>
                       <p className="text-xs font-semibold text-gray-500">Link guest profiles for loyalty tracking. You can add multiple guests.</p>
                     </div>
                     <button 
@@ -2573,7 +2573,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                         value={crmSearchQuery}
                         onChange={e => setCrmSearchQuery(e.target.value)}
                         placeholder="Search guests by name or phone number..."
-                        className="w-full bg-gray-50/60 border border-gray-200 focus:border-corgi focus:bg-white focus:ring-2 focus:ring-corgi/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-extrabold text-gray-950 outline-none transition-all"
+                        className="w-full bg-gray-50/60 border border-gray-200 focus:border-corgi focus:bg-white focus:ring-2 focus:ring-corgi/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-bold text-gray-950 outline-none transition-all"
                       />
                     </div>
 
@@ -2583,7 +2583,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                         <button
                           key={tier}
                           onClick={() => setSelectedTierFilter(tier)}
-                          className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
+                          className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                             selectedTierFilter === tier
                               ? 'bg-corgi text-white'
                               : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200/60'
@@ -2627,11 +2627,11 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                               className="p-3.5 bg-white border border-gray-200/80 hover:border-corgi hover:shadow-md rounded-2xl flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5"
                             >
                               <div className="flex items-start gap-2.5">
-                                <div className="w-9 h-9 rounded-xl bg-orange-50 text-corgi flex items-center justify-center font-black text-xs shrink-0 border border-orange-100/50">
+                                <div className="w-9 h-9 rounded-xl bg-orange-50 text-corgi flex items-center justify-center font-bold text-xs shrink-0 border border-orange-100/50">
                                   {guest.name.split(' ').map(n => n[0]).join('')}
                                 </div>
                                 <div className="min-w-0">
-                                  <span className="font-extrabold text-sm text-gray-950 block truncate" title={guest.name}>
+                                  <span className="font-bold text-sm text-gray-950 block truncate" title={guest.name}>
                                     {guest.name}
                                   </span>
                                   <span className="text-[10px] text-gray-400 font-bold block">
@@ -2641,7 +2641,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                               </div>
 
                               <div className="mt-3.5 pt-2.5 border-t border-gray-100 flex justify-between items-center">
-                                <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
                                   guest.tier === 'VIP' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
                                   guest.tier === 'Gold' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
                                   guest.tier === 'Silver' ? 'bg-gray-100 text-gray-700 border border-gray-200' :

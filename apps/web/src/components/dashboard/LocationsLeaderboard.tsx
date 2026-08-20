@@ -87,7 +87,7 @@ export default function LocationsLeaderboard({ compare = false, locations = [] }
                   <span class="text-[9px] font-bold text-green-700 uppercase tracking-wider">${loc.activeTables} / ${loc.totalTables} Live</span>
                 </div>
               </div>
-              <div class="text-2xl font-black text-gray-900 mb-4 tracking-tight">${formatEuro(loc.revenue)}</div>
+              <div class="text-2xl font-bold text-gray-900 mb-4 tracking-tight">${formatEuro(loc.revenue)}</div>
             </div>
           </div>
           <div class="marker-pill flex items-center gap-2 px-3 py-1.5 rounded-full shadow-md mb-1.5 bg-white text-gray-900 border border-gray-200 transition-all duration-300">

@@ -72,7 +72,7 @@ export default function PosSyncStatus() {
         {!online ? 'Offline' : pending > 0 ? `Sync (${pending})` : 'Synced'}
       </span>
       {pending > 0 && online && (
-        <span className="sm:hidden flex h-5 min-w-5 items-center justify-center rounded-full bg-corgi px-1 text-[10px] font-black text-gray-900">
+        <span className="sm:hidden flex h-5 min-w-5 items-center justify-center rounded-full bg-corgi px-1 text-[10px] font-bold text-gray-900">
           {pending}
         </span>
       )}

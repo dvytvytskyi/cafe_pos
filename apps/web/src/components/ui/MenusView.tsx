@@ -277,7 +277,7 @@ export default function MenusView() {
       {/* Left Sidebar: Categories */}
       <div className="w-full xl:w-72 shrink-0 flex flex-col border-b xl:border-b-0 xl:border-r border-gray-100 pb-6 mb-6 xl:pb-0 xl:mb-0 xl:pr-6 xl:mr-6 xl:overflow-y-auto">
         <div className="flex items-center justify-between mb-4 xl:mb-8 mt-2">
-          <h3 className="text-[12px] font-extrabold text-gray-400 tracking-widest uppercase">Categories</h3>
+          <h3 className="text-[12px] font-bold text-gray-400 tracking-widest uppercase">Categories</h3>
           <button 
             onClick={() => setIsAddingCategory(true)}
             className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-corgi hover:text-white hover:border-corgi transition-all cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
@@ -877,7 +877,7 @@ export default function MenusView() {
                     <div className="p-5 flex flex-col flex-1">
                       <div className="flex justify-between items-start gap-4 mb-2">
                         <h3 className="text-[17px] font-bold text-gray-900 leading-tight group-hover:text-corgi transition-colors">{dish.name}</h3>
-                        <span className="text-[16px] font-extrabold text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg shrink-0">€{formatPriceDisplay(dish.basePrice)}</span>
+                        <span className="text-[16px] font-bold text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg shrink-0">€{formatPriceDisplay(dish.basePrice)}</span>
                       </div>
                       <p className="text-[14px] text-gray-500 font-medium line-clamp-2 leading-relaxed flex-1">{dish.description}</p>
                       {dish.allergens.length > 0 && (
@@ -937,7 +937,7 @@ export default function MenusView() {
                     </div>
 
                     <div className="flex items-center gap-5 shrink-0 pl-2">
-                      <span className="text-[15px] font-extrabold text-gray-900 bg-gray-50 px-3 py-1.5 rounded-xl">€{formatPriceDisplay(dish.basePrice)}</span>
+                      <span className="text-[15px] font-bold text-gray-900 bg-gray-50 px-3 py-1.5 rounded-xl">€{formatPriceDisplay(dish.basePrice)}</span>
                       
                       <div className="w-px h-8 bg-gray-100 mx-1"></div>
 

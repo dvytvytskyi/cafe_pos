@@ -241,7 +241,7 @@ export default function HomePage() {
 
         {/* Hero Headline Text */}
         <div className="mb-2">
-          <h1 className="text-3xl font-extrabold tracking-tight leading-none mb-1">
+          <h1 className="text-3xl font-bold tracking-tight leading-none mb-1">
             LOVE AT FIRST BITE.
           </h1>
           <p className="text-sm text-gray-200 font-medium">
@@ -294,7 +294,7 @@ export default function HomePage() {
             /* Inline Mode Selector (Replaces Auth Cards on "Order now" click) */
              <div className="p-6 pb-2 transition-all duration-500 ease-out transform translate-y-0 opacity-100">
                <div className="flex justify-between items-center pb-2">
-                 <h2 className="text-xl font-black tracking-tight uppercase text-gray-900">ORDER NOW</h2>
+                 <h2 className="text-xl font-bold tracking-tight uppercase text-gray-900">ORDER NOW</h2>
                </div>
                
                {/* Active Location Selection or Add Delivery Address */}
@@ -574,7 +574,7 @@ export default function HomePage() {
                 🥝
               </div>
               <div>
-                <h4 className="font-extrabold text-base tracking-tight leading-tight uppercase">
+                <h4 className="font-bold text-base tracking-tight leading-tight uppercase">
                   {isLoggedIn ? profileName : 'NOT LOGGED IN'}
                 </h4>
                 {isLoggedIn ? (
@@ -816,7 +816,7 @@ export default function HomePage() {
           {/* Header Block */}
           <div className="flex justify-between items-start w-full">
             <div className="flex flex-col pl-[25px]">
-              <h2 className="text-[28px] font-extrabold tracking-tight leading-none text-black uppercase">
+              <h2 className="text-[28px] font-bold tracking-tight leading-none text-black uppercase">
                 {authMode === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'}
               </h2>
               <span className="text-[12px] text-gray-500 font-bold uppercase tracking-wider mt-1.5">

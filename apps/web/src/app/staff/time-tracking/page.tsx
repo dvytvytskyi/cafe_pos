@@ -131,7 +131,7 @@ export default function TimeTrackingPage() {
                 <ChevronLeft size={16} />
               </button>
               <div className="text-center min-w-[140px]">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-0.5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
                   {isToday ? "Today's date" : 'Selected date'}
                 </p>
                 <p className="font-bold text-gray-900 text-sm" data-testid="time-tracking-date">
@@ -176,32 +176,32 @@ export default function TimeTrackingPage() {
           <div className="w-full space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="bg-white p-5 rounded-2xl border border-gray-100">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Active Staff</p>
-                <p className="text-3xl font-black text-gray-900" data-testid="time-tracking-active-count">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Active Staff</p>
+                <p className="text-3xl font-bold text-gray-900" data-testid="time-tracking-active-count">
                   {activeStaff}
                 </p>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-gray-100">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">On Shift</p>
-                <p className="text-3xl font-black text-gray-900" data-testid="time-tracking-on-shift-count">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">On Shift</p>
+                <p className="text-3xl font-bold text-gray-900" data-testid="time-tracking-on-shift-count">
                   {onShiftCount}
                 </p>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-gray-100">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Pending</p>
-                <p className="text-3xl font-black text-gray-900" data-testid="time-tracking-pending-count">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Pending</p>
+                <p className="text-3xl font-bold text-gray-900" data-testid="time-tracking-pending-count">
                   {pendingCount}
                 </p>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-gray-100">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Finished</p>
-                <p className="text-3xl font-black text-gray-900" data-testid="time-tracking-finished-count">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Finished</p>
+                <p className="text-3xl font-bold text-gray-900" data-testid="time-tracking-finished-count">
                   {finishedCount}
                 </p>
               </div>
               <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100">
-                <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider mb-1">Hours Today</p>
-                <p className="text-3xl font-black text-amber-600" data-testid="time-tracking-hours-today">
+                <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-1">Hours Today</p>
+                <p className="text-3xl font-bold text-amber-600" data-testid="time-tracking-hours-today">
                   {totalHoursToday.toFixed(1)}
                   <span className="text-sm font-bold text-amber-400 ml-1">h</span>
                 </p>
@@ -219,25 +219,25 @@ export default function TimeTrackingPage() {
                   <table className="w-full text-left border-collapse min-w-max" data-testid="time-tracking-table">
                     <thead>
                       <tr className="border-b border-gray-100 bg-gray-50/50">
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                           Employee
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
                           Status
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
                           Check In
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
                           Time In
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
                           Time Out
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center whitespace-nowrap">
                           Check Out
                         </th>
-                        <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">
+                        <th className="py-3 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">
                           Hours
                         </th>
                       </tr>
@@ -255,7 +255,7 @@ export default function TimeTrackingPage() {
                           >
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-black text-sm shrink-0 border border-gray-200">
+                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-sm shrink-0 border border-gray-200">
                                   {emp.avatarInitials}
                                 </div>
                                 <div>
@@ -338,7 +338,7 @@ export default function TimeTrackingPage() {
                             </td>
                             <td className="px-6 py-4 text-right">
                               <span
-                                className={`font-black text-sm ${entry.totalHours > 0 ? 'text-orange-500' : 'text-gray-400'}`}
+                                className={`font-bold text-sm ${entry.totalHours > 0 ? 'text-orange-500' : 'text-gray-400'}`}
                                 data-testid={`time-tracking-hours-${emp.id}`}
                               >
                                 {entry.totalHours.toFixed(2)} <span className="text-[10px]">h</span>

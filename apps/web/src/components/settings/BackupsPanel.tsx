@@ -143,7 +143,7 @@ export default function BackupsPanel() {
         <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-left border-collapse bg-white">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 tracking-wider">
+              <tr className="border-b border-gray-100 bg-gray-50/50 text-[10px] font-bold uppercase text-gray-400 tracking-wider">
                 <th className="px-4 py-3">Filename</th>
                 <th className="px-4 py-3">Size</th>
                 <th className="px-4 py-3">Created</th>

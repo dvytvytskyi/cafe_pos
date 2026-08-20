@@ -138,7 +138,7 @@ export default function AuditPanel() {
         <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-left border-collapse bg-white">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 tracking-wider">
+              <tr className="border-b border-gray-100 bg-gray-50/50 text-[10px] font-bold uppercase text-gray-400 tracking-wider">
                 <th className="px-4 py-3">Time</th>
                 <th className="px-4 py-3">Action</th>
                 <th className="px-4 py-3">User</th>
@@ -162,7 +162,7 @@ export default function AuditPanel() {
                     <td className="px-4 py-3">
                       <span
                         data-testid={`audit-action-${log.action}`}
-                        className="px-2 py-0.5 rounded bg-gray-100 text-gray-800 text-[10px] font-black uppercase"
+                        className="px-2 py-0.5 rounded bg-gray-100 text-gray-800 text-[10px] font-bold uppercase"
                       >
                         {ACTION_LABELS[log.action] ?? log.action}
                       </span>

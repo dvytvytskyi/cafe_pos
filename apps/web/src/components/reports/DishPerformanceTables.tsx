@@ -7,7 +7,7 @@ export function DishPerformanceTables({ dishes = [] }: { dishes?: DishAbcRow[] }
   return (
     <div data-testid="dish-performance-tables" className="border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white w-full">
       <div className="flex flex-col gap-1 mb-6">
-        <h3 className="text-xl font-black text-gray-900 tracking-tight">Dish Popularity</h3>
+        <h3 className="text-xl font-bold text-gray-900 tracking-tight">Dish Popularity</h3>
         <p className="text-sm font-medium text-gray-500">ABC analysis by revenue for the selected period.</p>
       </div>
 
@@ -28,7 +28,7 @@ export function DishPerformanceTables({ dishes = [] }: { dishes?: DishAbcRow[] }
                   <td className="py-2 px-4 text-[13px] font-bold text-gray-900">{dish.name}</td>
                   <td className="py-2 px-4 text-[13px] font-bold text-gray-900 text-right">€{dish.revenue.toFixed(2)}</td>
                   <td className="py-2 px-4 text-[13px] text-gray-600 text-right">{dish.quantity}</td>
-                  <td className="py-2 px-4 text-[13px] font-black text-right">{dish.abcClass}</td>
+                  <td className="py-2 px-4 text-[13px] font-bold text-right">{dish.abcClass}</td>
                 </tr>
               ))}
               {topDishes.length === 0 && (

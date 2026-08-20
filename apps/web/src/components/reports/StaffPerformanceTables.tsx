@@ -49,7 +49,7 @@ export function StaffPerformanceTables({ staffByLocation }: StaffPerformanceTabl
   return (
     <div className="border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white w-full">
       <div className="flex flex-col gap-1 mb-6">
-        <h3 className="text-xl font-black text-gray-900 tracking-tight">Staff Performance</h3>
+        <h3 className="text-xl font-bold text-gray-900 tracking-tight">Staff Performance</h3>
         <p className="text-sm font-medium text-gray-500">
           Sales attributed to staff on shift during each order.
         </p>

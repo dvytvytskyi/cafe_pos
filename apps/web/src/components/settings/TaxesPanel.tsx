@@ -91,7 +91,7 @@ export default function TaxesPanel() {
             data-testid="tax-rate-food"
             value={form.food}
             onChange={(e) => updateField('food', e.target.value)}
-            className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all"
+            className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all"
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -104,7 +104,7 @@ export default function TaxesPanel() {
             data-testid="tax-rate-alcohol"
             value={form.alcohol}
             onChange={(e) => updateField('alcohol', e.target.value)}
-            className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-black text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all"
+            className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all"
           />
         </div>
       </div>

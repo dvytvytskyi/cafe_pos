@@ -62,7 +62,7 @@ export default function ActiveTablesCard({ data }: ActiveTablesCardProps) {
       </div>
 
       <div className={`transition-all duration-150 ${isAnimating ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
-        <div className="text-2xl font-black text-white">
+        <div className="text-2xl font-bold text-white">
           {current.active}{' '}
           <span className="text-lg font-bold text-white/70">/ {current.total}</span>
         </div>

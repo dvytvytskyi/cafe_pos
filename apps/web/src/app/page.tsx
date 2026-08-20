@@ -193,7 +193,7 @@ export default function Home() {
                 <AnimatePresence mode="popLayout" initial={false}>
                   {ordersViewMode === 'total' ? (
                     <motion.div key="total" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                      <div className="text-2xl font-black text-gray-900" data-testid="home-kpi-orders">
+                      <div className="text-2xl font-bold text-gray-900" data-testid="home-kpi-orders">
                         {orderCount.toLocaleString('en-GB')}
                       </div>
                       <div className="text-xs font-bold text-green-500 mt-2">live from API</div>
@@ -228,7 +228,7 @@ export default function Home() {
                 <AnimatePresence mode="popLayout" initial={false}>
                   {ticketViewMode === 'total' ? (
                     <motion.div key="total" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                      <div className="text-2xl font-black text-gray-900" data-testid="home-kpi-avg-ticket">
+                      <div className="text-2xl font-bold text-gray-900" data-testid="home-kpi-avg-ticket">
                         {formatEuro(avgTicket)}
                       </div>
                       <div className="text-xs font-bold text-green-500 mt-2">live from API</div>
@@ -263,7 +263,7 @@ export default function Home() {
                 <AnimatePresence mode="popLayout" initial={false}>
                   {signupsViewMode === 'total' ? (
                     <motion.div key="total" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                      <div className="text-2xl font-black text-gray-900">{signupsTotal}</div>
+                      <div className="text-2xl font-bold text-gray-900">{signupsTotal}</div>
                       {growthText(signupGrowth) && (
                         <div className="text-xs font-bold text-green-500 mt-2">{growthText(signupGrowth)}</div>
                       )}

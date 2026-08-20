@@ -310,7 +310,7 @@ export function PaymentGaugeChart({
           <Doughnut data={gaugeData} options={gaugeOptions} />
         </div>
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center z-10 w-full">
-          <span className={`${compare ? 'text-2xl' : 'text-3xl'} font-black text-gray-900 leading-none`}>
+          <span className={`${compare ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 leading-none`}>
             €{breakdown.total.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </span>
           <span className="text-xs font-medium text-gray-500 mt-1 leading-none">Total Sales</span>

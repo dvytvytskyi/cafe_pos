@@ -30,7 +30,7 @@ export function FinancialSummaries({ report }: { report?: FinancialReport | null
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-xl font-black text-gray-900 tracking-tight">Financial & Tax Ledger</h3>
+            <h3 className="text-xl font-bold text-gray-900 tracking-tight">Financial & Tax Ledger</h3>
           </div>
           <p className="text-sm font-medium text-gray-500">VERI*FACTU compliant append-only ledger and tax summaries.</p>
         </div>
@@ -43,13 +43,13 @@ export function FinancialSummaries({ report }: { report?: FinancialReport | null
         <div className="p-5 rounded-2xl bg-white border border-gray-100 flex flex-col gap-4 relative overflow-hidden">
           <div className="flex flex-col relative z-10">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Revenue</p>
-            <h4 data-testid="reports-total-revenue" className="text-xl font-black text-gray-900">
+            <h4 data-testid="reports-total-revenue" className="text-xl font-bold text-gray-900">
               €{(summary?.grossRevenue ?? 0).toFixed(2)}
             </h4>
           </div>
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 relative z-10">
             <span className="text-xs font-bold text-gray-500">Closed Receipts</span>
-            <span className="text-sm font-black text-gray-900">{summary?.orderCount ?? 0}</span>
+            <span className="text-sm font-bold text-gray-900">{summary?.orderCount ?? 0}</span>
           </div>
         </div>
 
@@ -57,11 +57,11 @@ export function FinancialSummaries({ report }: { report?: FinancialReport | null
         <div className="p-5 rounded-2xl bg-white border border-gray-100 flex flex-col gap-4 relative overflow-hidden">
           <div className="flex flex-col relative z-10">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Void / Cancelled</p>
-            <h4 className="text-xl font-black text-gray-900">€{(summary?.voidAmount ?? 0).toFixed(2)}</h4>
+            <h4 className="text-xl font-bold text-gray-900">€{(summary?.voidAmount ?? 0).toFixed(2)}</h4>
           </div>
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 relative z-10">
             <span className="text-xs font-bold text-gray-500">Transactions</span>
-            <span className="text-sm font-black text-gray-900">{summary?.voidCount ?? 0} ({voidRate}%)</span>
+            <span className="text-sm font-bold text-gray-900">{summary?.voidCount ?? 0} ({voidRate}%)</span>
           </div>
         </div>
 
@@ -69,16 +69,16 @@ export function FinancialSummaries({ report }: { report?: FinancialReport | null
         <div className="p-5 rounded-2xl bg-white border border-gray-100 flex flex-col gap-4 relative overflow-hidden">
           <div className="flex flex-col relative z-10">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Tax Collection</p>
-            <h4 className="text-xl font-black text-gray-900">€{(summary?.taxTotal ?? 0).toFixed(2)}</h4>
+            <h4 className="text-xl font-bold text-gray-900">€{(summary?.taxTotal ?? 0).toFixed(2)}</h4>
           </div>
           <div className="flex flex-col gap-1 mt-auto pt-2 border-t border-gray-100 relative z-10">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-gray-500">Base Imponible</span>
-              <span className="text-[11px] font-black text-gray-900">€{(summary?.netRevenue ?? 0).toFixed(2)}</span>
+              <span className="text-[11px] font-bold text-gray-900">€{(summary?.netRevenue ?? 0).toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-gray-500">IVA 10% (F&B)</span>
-              <span className="text-[11px] font-black text-gray-900">€{(summary?.taxTotal ?? 0).toFixed(2)}</span>
+              <span className="text-[11px] font-bold text-gray-900">€{(summary?.taxTotal ?? 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -87,11 +87,11 @@ export function FinancialSummaries({ report }: { report?: FinancialReport | null
         <div className="p-5 rounded-2xl bg-white border border-gray-100 flex flex-col gap-4 relative overflow-hidden">
           <div className="flex flex-col relative z-10">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">AEAT Sync</p>
-            <h4 className="text-xl font-black text-gray-900">Active</h4>
+            <h4 className="text-xl font-bold text-gray-900">Active</h4>
           </div>
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 relative z-10">
             <span className="text-xs font-bold text-gray-500">Pending</span>
-            <span className="text-sm font-black text-gray-900">{pendingCount} Receipts</span>
+            <span className="text-sm font-bold text-gray-900">{pendingCount} Receipts</span>
           </div>
         </div>
 
@@ -173,7 +173,7 @@ export function FinancialSummaries({ report }: { report?: FinancialReport | null
                     </span>
                   </td>
                   <td className="py-3 px-5 whitespace-nowrap text-right">
-                    <span className="text-[13px] font-black text-gray-900">
+                    <span className="text-[13px] font-bold text-gray-900">
                       €{entry.amount.toFixed(2)}
                     </span>
                   </td>

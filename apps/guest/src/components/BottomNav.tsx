@@ -79,7 +79,7 @@ export function BottomNav() {
               <span className="relative">
                 <Icon size={18} strokeWidth={active ? 2.6 : 2.1} />
                 {count > 0 && (
-                  <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-corgi px-0.5 text-[8px] font-black text-gray-900 shadow-sm border border-white">
+                  <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-corgi px-0.5 text-[8px] font-bold text-gray-900 shadow-sm border border-white">
                     {count}
                   </span>
                 )}

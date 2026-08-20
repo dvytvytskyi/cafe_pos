@@ -102,7 +102,7 @@ export default function TeamMemberEditView({
         </button>
 
         <div
-          className={`w-16 h-16 rounded-full border-2 border-white shadow-sm flex items-center justify-center text-lg font-black ${avatarColor(member.name)}`}
+          className={`w-16 h-16 rounded-full border-2 border-white shadow-sm flex items-center justify-center text-lg font-bold ${avatarColor(member.name)}`}
         >
           {member.avatarInitials || initials(member.name)}
         </div>

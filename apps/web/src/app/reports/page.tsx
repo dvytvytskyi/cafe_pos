@@ -245,7 +245,7 @@ export default function ReportsPage() {
           <div className="border border-gray-100 rounded-3xl p-6 flex flex-col hover:border-gray-200 transition-colors bg-white">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
               <div>
-                <h3 className="text-xl font-black text-gray-900 tracking-tight">Revenue Comparison</h3>
+                <h3 className="text-xl font-bold text-gray-900 tracking-tight">Revenue Comparison</h3>
                 <p className="text-sm font-medium text-gray-500 mt-1">
                   {activePeriodLabel}
                   {selectedLocation !== ALL_BRANCHES ? ` · ${selectedLocation}` : ' · All Branches'}
@@ -306,7 +306,7 @@ export default function ReportsPage() {
                   <div className="flex items-baseline gap-2">
                     <span
                       data-testid="reports-gross-volume"
-                      className="text-3xl font-black text-gray-900 tracking-tight"
+                      className="text-3xl font-bold text-gray-900 tracking-tight"
                     >
                       {formatEuro(report?.summary.grossRevenue ?? 0)}
                     </span>
@@ -329,7 +329,7 @@ export default function ReportsPage() {
                         <span className="text-sm font-bold text-gray-500">Gross (Prev Period)</span>
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-gray-400 tracking-tight">
+                        <span className="text-2xl font-bold text-gray-400 tracking-tight">
                           {formatEuro(report.previousSummary.grossRevenue)}
                         </span>
                       </div>
