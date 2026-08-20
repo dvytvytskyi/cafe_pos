@@ -220,7 +220,7 @@ export default function ShopPage() {
   const cartTotal = merchCart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
 
   return (
-    <div className="h-screen overflow-y-auto bg-gray-50 flex flex-col items-center select-none overflow-x-hidden pb-[90px] scroll-smooth">
+    <div className="h-screen overflow-y-auto bg-white flex flex-col items-center select-none overflow-x-hidden pb-[90px] scroll-smooth">
       {/* Sticky Header Container */}
       <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex flex-col w-full pb-4">
         <div className="flex items-center justify-between px-4 pt-4 gap-3">
