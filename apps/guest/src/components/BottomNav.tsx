@@ -72,7 +72,7 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex min-h-9 min-w-9 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[9px] font-extrabold uppercase tracking-wider transition-colors ${
+              className={`flex min-h-9 min-w-9 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-colors ${
                 active ? 'text-corgi' : 'text-gray-400 hover:text-gray-600'
               }`}
             >

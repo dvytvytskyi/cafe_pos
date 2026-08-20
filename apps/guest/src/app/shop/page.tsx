@@ -277,7 +277,7 @@ export default function ShopPage() {
         </div>
 
         {/* Horizontal Category Filtering Tabs */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+        <div className="flex gap-2 overflow-x-auto scrollbar-none py-1">
           {categories.map((cat) => {
             const active = activeCategoryTab === cat.id;
             return (
