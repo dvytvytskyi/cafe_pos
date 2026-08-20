@@ -31,62 +31,63 @@ import {
 const MOCK_MERCH_ITEMS = [
   {
     id: "merch-1",
-    sku: "BEAN-01",
-    name: "House Blend Beans 1kg",
-    description: "Our signature house blend coffee beans. Medium roast with notes of rich chocolate, caramel sweetness, and toasted hazelnut.",
-    price: 18.00,
-    category: "Beans",
-    image: "/corgi_mug.jpg",
+    sku: "HOODIE-GREEN",
+    name: "Midnight Bloom Hoodie",
+    description: "Stylish heavy cotton blend hoodie with premium embroidered logos and custom stitching.",
+    price: 80.00,
+    category: "Hoodie",
+    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
     options: [
-      { name: "Grind Type", choices: ["Whole Beans", "Filter Grind", "Espresso Grind"] }
+      { name: "Size", choices: ["S", "M", "L", "XL"] }
     ]
   },
   {
     id: "merch-2",
-    sku: "CUP-8OZ",
-    name: "Classic Mascot Tee",
-    description: "A premium heavyweight 100% organic cotton t-shirt featuring our cute mascot. Relaxed fit, ultra comfortable, and built to last.",
-    price: 24.90,
-    category: "Apparel",
-    image: "/corgi_tee.jpg",
+    sku: "HOODIE-BLUE",
+    name: "Crimson Wave Hoodie",
+    description: "Classic casual hoodie featuring clean minimal branding and premium warm fleece inner lining.",
+    price: 35.00,
+    category: "Hoodie",
+    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
     options: [
-      { name: "Size", choices: ["S", "M", "L", "XL"] },
-      { name: "Color", choices: ["White", "Black"] }
+      { name: "Size", choices: ["S", "M", "L", "XL"] }
     ]
   },
   {
     id: "merch-3",
-    sku: "HOODIE-01",
-    name: "Mascot Cozy Hoodie",
-    description: "Ultra-soft cotton blend hoodie with a cozy brushed fleece interior and an embroidered Corgi emblem on the chest.",
-    price: 49.90,
-    category: "Apparel",
-    image: "/corgi_hoodie.jpg",
+    sku: "HOODIE-PURPLE",
+    name: "Signature Purple Hoodie",
+    description: "Our signature double-brushed cotton hoodie in vibrant, eye-catching midnight violet.",
+    price: 65.00,
+    category: "Hoodie",
+    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
     options: [
       { name: "Size", choices: ["S", "M", "L", "XL"] }
     ]
   },
   {
     id: "merch-4",
-    sku: "MUG-01",
-    name: "Ceramic Mascot Mug",
-    description: "Handmade ceramic mug with a cozy round shape. Features a cute sleeping corgi print, perfect for your daily espresso.",
-    price: 15.00,
-    category: "Drinkware",
-    image: "/corgi_mug.jpg",
+    sku: "CAP-BLUE",
+    name: "Crimson Wave Cap",
+    description: "Premium adjustable baseball cap featuring breathable panels and direct front embroidery.",
+    price: 25.00,
+    category: "Face Cap",
+    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
     options: [
-      { name: "Volume", choices: ["250ml", "350ml"] }
+      { name: "Fit", choices: ["Standard Fit", "Flex Fit"] }
     ]
   },
   {
     id: "merch-5",
-    sku: "TOTE-01",
-    name: "Canvas Minimalist Tote",
-    description: "Durable natural canvas tote bag with extra long shoulder straps, decorated with a minimal line-art drawing of a sitting corgi.",
-    price: 12.50,
-    category: "Accessories",
-    image: "/corgi_tote.jpg",
-    options: []
+    sku: "CAP-GREEN",
+    name: "Midnight Bloom Cap",
+    description: "Structured 6-panel cap with direct embroidered branding, matching the floral collection.",
+    price: 25.00,
+    category: "Face Cap",
+    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    options: [
+      { name: "Fit", choices: ["Standard Fit", "Flex Fit"] }
+    ]
   }
 ];
 
@@ -187,7 +188,12 @@ export default function ShopPage() {
     }
   };
 
-  const categories = ["All", "Apparel", "Drinkware", "Accessories", "Beans"];
+  const categories = [
+    { id: "All", label: "All Items", emoji: "🛍️" },
+    { id: "Hoodie", label: "Hoodie", emoji: "🧥" },
+    { id: "Sneaker", label: "Sneaker", emoji: "👟" },
+    { id: "Face Cap", label: "Face Cap", emoji: "🧢" }
+  ];
 
   const filteredItems = MOCK_MERCH_ITEMS.filter(item => {
     if (activeCategoryTab === "All") return true;
@@ -198,9 +204,9 @@ export default function ShopPage() {
 
   return (
     <div className="h-screen overflow-y-auto bg-gray-50 flex flex-col items-center select-none overflow-x-hidden pb-[90px] scroll-smooth">
-      {/* Premium Sticky Header Container */}
-      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex flex-col w-full">
-        <div className="flex items-center justify-between px-4 pt-4 pb-3 gap-3">
+      {/* Sticky Header Container */}
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex flex-col w-full pb-4">
+        <div className="flex items-center justify-between px-4 pt-4 gap-3">
           {/* Back button returning to Menu */}
           <button 
             onClick={() => router.push('/menu')}
@@ -243,36 +249,53 @@ export default function ShopPage() {
             )}
           </button>
         </div>
-
-        {/* Hero Title Section */}
-        <div className="px-5 pt-1.5 pb-5 text-center flex flex-col gap-0.5">
-          <h1 className="text-[20px] font-black uppercase tracking-widest text-gray-900 leading-none">
-            Corgi PWA Shop
-          </h1>
-          <span className="text-[9px] font-bold text-gray-800/60 uppercase tracking-widest leading-none">
-            Exclusive Coffee Culture Merch
-          </span>
-        </div>
       </div>
 
       {/* Main Container */}
       <div className="w-full max-w-[480px] flex-1 bg-white px-5 py-6 flex flex-col gap-6">
         
+        {/* Horizontal Promo Banner Card (Midnight Purple Hoodie) */}
+        <div className="w-full bg-gray-100 rounded-[24px] p-6 flex items-center justify-between overflow-hidden relative min-h-[140px]">
+          <div className="flex flex-col items-start gap-2.5 z-10 text-left max-w-[60%]">
+            <h2 className="text-[17px] font-extrabold text-gray-900 leading-tight">
+              Buy 1 hoodie,<br />get 45% off caps
+            </h2>
+            <button 
+              onClick={() => setActiveCategoryTab("Face Cap")}
+              className="bg-white hover:bg-gray-50 text-gray-900 px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none"
+            >
+              <span>Shop now</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          {/* Purple hoodie image positioned absolute on the right */}
+          <img 
+            src="https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp" 
+            alt="Promo hoodie" 
+            className="absolute right-[-15px] bottom-[-15px] w-[140px] h-[140px] object-contain rotate-[-12deg] drop-shadow-md"
+          />
+        </div>
+
         {/* Horizontal Category Filtering Tabs */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
           {categories.map((cat) => {
-            const active = activeCategoryTab === cat;
+            const active = activeCategoryTab === cat.id;
             return (
               <button
-                key={cat}
-                onClick={() => setActiveCategoryTab(cat)}
-                className={`px-4 py-2.5 rounded-full font-semibold text-[13px] whitespace-nowrap transition-all ${
+                key={cat.id}
+                onClick={() => setActiveCategoryTab(cat.id)}
+                className={`rounded-full py-1.5 pl-1.5 pr-4 flex items-center gap-2 border-none transition-all active:scale-[0.98] whitespace-nowrap ${
                   active 
-                    ? 'bg-[#FDBD38] text-white shadow-sm' 
-                    : 'bg-gray-100 hover:bg-gray-150 text-gray-500'
+                    ? 'bg-black text-white' 
+                    : 'bg-[#F4F4F5] text-gray-900 hover:bg-[#E4E4E7]'
                 }`}
               >
-                {cat}
+                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-sm shadow-sm">
+                  {cat.emoji}
+                </div>
+                <span className="font-semibold text-[13px]">
+                  {cat.label}
+                </span>
               </button>
             );
           })}
@@ -284,8 +307,20 @@ export default function ShopPage() {
             <div 
               key={item.id} 
               onClick={() => setSelectedItem(item)}
-              className="bg-white border border-gray-100 rounded-3xl overflow-hidden flex flex-col hover:opacity-98 transition-all cursor-pointer group active:scale-[0.98]"
+              className="bg-white border border-gray-100 rounded-[24px] overflow-hidden flex flex-col hover:opacity-98 transition-all cursor-pointer group active:scale-[0.98] relative"
             >
+              {/* Heart icon on top-right */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white flex items-center justify-center z-10 border border-gray-100 text-gray-400 hover:text-red-500 transition-colors shadow-sm active:scale-90"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </button>
+
               {/* Product Image Wrapper */}
               <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative">
                 {item.image ? (
@@ -297,29 +332,25 @@ export default function ShopPage() {
                 ) : (
                   <ShoppingBag className="w-12 h-12 text-gray-300" strokeWidth={1} />
                 )}
-                {/* Visual indicator category badge */}
-                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-gray-500 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  {item.category}
-                </span>
               </div>
 
               {/* Product Card Text Details */}
               <div className="p-4 flex flex-col justify-between flex-grow gap-2 text-left">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[14px] font-semibold text-gray-900 truncate">
+                  <span className="text-[13.5px] font-bold text-gray-900 truncate">
                     {item.name}
                   </span>
-                  <p className="text-[11px] text-gray-400 font-medium leading-snug line-clamp-2">
+                  <p className="text-[11px] text-gray-400 font-semibold leading-snug line-clamp-1">
                     {item.description}
                   </p>
                 </div>
 
                 <div className="flex justify-between items-center mt-1">
-                  <span className="text-[14px] font-bold text-gray-900">
+                  <span className="text-[14px] font-black text-gray-900">
                     {item.price.toFixed(2)}€
                   </span>
-                  <div className="w-8 h-8 rounded-full bg-[#FDBD38] text-white flex items-center justify-center transition-all group-hover:bg-[#e5a420]">
-                    <Plus className="w-4 h-4 text-white" strokeWidth={2.2} />
+                  <div className="w-8 h-8 rounded-full bg-white border border-gray-150 text-gray-700 flex items-center justify-center transition-all group-hover:bg-gray-50 shadow-sm">
+                    <Plus className="w-4 h-4 text-gray-600" strokeWidth={2.2} />
                   </div>
                 </div>
               </div>
