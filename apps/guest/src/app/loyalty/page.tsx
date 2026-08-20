@@ -732,19 +732,46 @@ export default function LoyaltyPage() {
                 </div>
               )}
 
-              {/* Character Input */}
+              {/* Character Input (Divided into 8 visual slots) */}
               <div className="w-full flex flex-col gap-2">
-                <input 
-                  type="text" 
-                  maxLength={8}
-                  value={promoCode}
-                  onChange={(e) => {
-                    setPromoError(null);
-                    setPromoCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
-                  }}
-                  placeholder="CORGI100" 
-                  className="w-full border-2 border-gray-100 focus:border-[#FDBD38] focus:outline-none rounded-[16px] py-2.5 text-center text-lg font-bold text-gray-800 tracking-[0.2em] uppercase placeholder:tracking-normal placeholder:text-gray-300 transition-colors"
-                />
+                <div className="flex justify-between gap-1 w-full my-2 relative">
+                  {/* Visual Slots */}
+                  {Array.from({ length: 8 }).map((_, idx) => {
+                    const char = promoCode[idx] || '';
+                    const isFocused = idx === promoCode.length && !isApplyingPromo && !promoSuccess;
+                    return (
+                      <div 
+                        key={idx}
+                        className={`w-8 h-10 rounded-[10px] border-2 flex items-center justify-center text-sm font-bold text-gray-805 transition-all relative ${
+                          char 
+                            ? 'border-[#FDBD38] bg-amber-50/10' 
+                            : isFocused 
+                              ? 'border-[#FDBD38] ring-2 ring-[#FDBD38]/20 bg-white' 
+                              : 'border-gray-100 bg-gray-50/30'
+                        }`}
+                      >
+                        {char}
+                        {/* Blinking cursor */}
+                        {isFocused && (
+                          <span className="w-[1.5px] h-4 bg-[#FDBD38] animate-pulse" />
+                        )}
+                      </div>
+                    );
+                  })}
+                  {/* Hidden Overlay Input */}
+                  <input 
+                    type="text" 
+                    maxLength={8}
+                    value={promoCode}
+                    onChange={(e) => {
+                      setPromoError(null);
+                      setPromoCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+                    }}
+                    disabled={isApplyingPromo || promoSuccess}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-text select-text"
+                    autoFocus
+                  />
+                </div>
                 
                 {/* Character length indicator */}
                 <div className="flex justify-between items-center text-[9px] font-bold text-gray-400 px-1 mt-0.5">
