@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useGuest } from '@/lib/guest-context';
 import { getMenu, createOrder } from '@/lib/api-client';
 import type { GuestMenuResponse, GuestMenuItem } from '@corgi/contracts';
+import Link from 'next/link';
 import { 
   ArrowLeft, 
   ChevronDown, 
@@ -26,7 +27,11 @@ import {
   CreditCard,
   HelpCircle,
   AlertCircle,
-  MessageSquare
+  MessageSquare,
+  Menu as MenuIcon,
+  Coffee,
+  Gift,
+  ClipboardList
 } from 'lucide-react';
 
 const foodImages = [
@@ -307,6 +312,7 @@ export default function MenuPage() {
   const [selectedModifiers, setSelectedModifiers] = useState<any[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [showUpsellModal, setShowUpsellModal] = useState(false);
+  const [showNavPopup, setShowNavPopup] = useState(false);
 
   useEffect(() => {
     if (selectedItem) {
@@ -923,26 +929,81 @@ export default function MenuPage() {
 
       {/* Floating Bottom Cart Bar */}
       {foodCart.length > 0 && !selectedItem && !showUpsellModal && !showOrderDetails && (
-        <div className="fixed bottom-6 left-6 right-6 z-40 max-w-[432px] mx-auto animate-slideUp">
-          <button 
-            onClick={() => setShowCartOverlay(true)}
-            className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white p-4 rounded-full font-bold flex items-center justify-between shadow-2xl active:scale-[0.99] transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-full flex items-center justify-center">
-                <ShoppingBag className="w-5 h-5 text-white" />
+        <>
+          <div className="fixed bottom-0 left-0 right-0 z-45 p-4 flex justify-center bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none">
+            <button 
+              onClick={() => setShowCartOverlay(true)}
+              className="w-full max-w-[440px] bg-[#FDBD38] hover:bg-[#e5a420] text-white py-4 rounded-full font-semibold flex items-center justify-between px-6 transition-all active:scale-[0.99] shadow-none pointer-events-auto"
+            >
+              {/* Menu Navigation Button on the left */}
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowNavPopup(!showNavPopup);
+                }}
+                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/35 px-3.5 py-1.5 rounded-full transition-colors cursor-pointer z-50 border border-white/10"
+              >
+                <MenuIcon className="w-3.5 h-3.5 text-white" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-white pr-1 select-none">Menu</span>
               </div>
-              <span className="text-sm font-medium">View ordered items ({foodCart.length})</span>
+
+              <div className="flex items-center gap-2 pl-2">
+                <ShoppingBag className="w-4 h-4 text-white" strokeWidth={2.2} />
+                <span className="text-[15px] font-semibold text-white">View bag</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-bold text-white">
+                  {foodCart.reduce((sum, item) => sum + item.quantity, 0)} items
+                </span>
+                <span className="text-[15px] font-semibold text-white">{cartTotal.toFixed(2)}€</span>
+              </div>
+            </button>
+          </div>
+
+          {/* Navigation Popup Menu */}
+          {showNavPopup && (
+            <div 
+              className="fixed bottom-24 left-6 right-6 z-50 max-w-[400px] mx-auto bg-white/95 backdrop-blur-md border border-gray-100 rounded-[22px] shadow-[0_8px_30px_rgba(0,0,0,0.15)] p-4 flex flex-col gap-3 animate-fadeIn text-left"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                <span className="text-[11px] text-gray-400 font-extrabold uppercase tracking-wider">Navigate To</span>
+                <button 
+                  onClick={() => setShowNavPopup(false)}
+                  className="text-[11px] font-bold text-[#EE635E] hover:opacity-80"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { href: '/menu', icon: Coffee, label: 'Menu', activeColor: 'text-corgi bg-corgi/10' },
+                  { href: '/shop', icon: ShoppingBag, label: 'Shop', activeColor: 'text-[#EE635E] bg-[#EE635E]/10' },
+                  { href: '/loyalty', icon: Gift, label: 'Loyalty', activeColor: 'text-corgi bg-corgi/10' },
+                  { href: '/orders', icon: ClipboardList, label: 'Orders', activeColor: 'text-corgi bg-corgi/10' }
+                ].map((tab) => {
+                  const isActive = tab.href === '/menu';
+                  return (
+                    <Link
+                      key={tab.href}
+                      href={tab.href}
+                      onClick={() => setShowNavPopup(false)}
+                      className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl transition-all ${
+                        isActive 
+                          ? `${tab.activeColor} scale-102` 
+                          : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <tab.icon size={20} strokeWidth={isActive ? 2.8 : 2} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">{tab.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-            
-            <div className="flex items-center gap-1.5">
-              <span className="text-base font-bold bg-white/20 px-3 py-1 rounded-full text-xs">
-                {cartTotal.toFixed(2)}€
-              </span>
-              <ArrowRight className="w-5 h-5 text-white" />
-            </div>
-          </button>
-        </div>
+          )}
+        </>
       )}
 
       {/* Item Customization Sheet (Bottom sheet overlay modal) */}
@@ -1054,63 +1115,48 @@ export default function MenuPage() {
               )}
             </div>
 
-            {/* Footer nested inside the scrollable content view */}
-            <div className="px-6 pb-6 pt-2 bg-white mt-auto border-t border-gray-100">
-              {/* Total and Quantity Row */}
-              <div className="flex items-center justify-between mb-5 pt-3">
-                <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</span>
-                  <span className="text-[20px] font-bold text-black mt-0.5">
-                    <span key={totalPrice} className="animate-pop inline-block">
-                      {totalPrice.toFixed(2)}€
-                    </span>
-                  </span>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer"
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus size={14} strokeWidth={2.5} />
-                  </button>
-                  <div className="w-[42px] h-[34px] border border-black rounded-xl flex items-center justify-center text-[14px] font-bold text-black overflow-hidden">
-                    <span key={quantity} className="animate-pop inline-block">
-                      {String(quantity).padStart(2, '0')}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer"
-                    aria-label="Increase quantity"
-                  >
-                    <Plus size={14} strokeWidth={2.5} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Fixed Bottom Footer */}
           <div className="px-6 pb-4 pt-2 flex-shrink-0 bg-transparent">
-            {/* Add to bag button */}
-            <button 
-              onClick={handleAddToCart}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3 pl-6 pr-4 rounded-full font-bold flex items-center justify-between active:scale-[0.98] transition-all duration-100 shadow-md shadow-black/10"
-            >
-              <span className="text-base font-semibold">+ Add to bag</span>
-              <div className="bg-white/20 px-6 py-2 rounded-full text-white text-base font-bold overflow-hidden">
-                <span key={totalPrice} className="animate-pop inline-block">
-                  {totalPrice.toFixed(2)}€
+            {/* Unified Quantity Selector & Add to Bag CTA Button */}
+            <div className="w-full bg-[#FDBD38] text-white p-2 rounded-full flex items-center shadow-none mt-2 transition-all hover:opacity-[0.98]">
+              {/* Standalone Quantity selectors */}
+              <div className="flex items-center gap-2">
+                <button 
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="w-10 h-10 hover:bg-white/10 active:scale-95 rounded-full flex items-center justify-center text-white cursor-pointer transition-colors"
+                >
+                  <Minus className="w-4 h-4" strokeWidth={3.2} />
+                </button>
+                <span className="text-[16px] font-bold text-white w-5 text-center select-none">
+                  {quantity}
                 </span>
+                <button 
+                  type="button"
+                  onClick={() => setQuantity((q) => q + 1)}
+                  className="w-10 h-10 hover:bg-white/10 active:scale-95 rounded-full flex items-center justify-center text-white cursor-pointer transition-colors"
+                >
+                  <Plus className="w-4 h-4" strokeWidth={3.2} />
+                </button>
               </div>
-            </button>
+
+              {/* Vertical Divider */}
+              <div className="w-[1px] h-8 bg-white/20 mx-2" />
+
+              {/* Primary Add to bag trigger */}
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="flex-1 flex justify-between items-center pl-3 pr-4 py-2 text-white font-semibold text-[15px] cursor-pointer active:scale-[0.99] transition-all"
+              >
+                <span>Add to bag</span>
+                <span className="font-extrabold text-[16px]">{totalPrice.toFixed(2)}€</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
       {/* Upsell Bottom Sheet Overlay */}
       <div 
