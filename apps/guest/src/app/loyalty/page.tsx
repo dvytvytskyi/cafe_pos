@@ -317,7 +317,7 @@ export default function LoyaltyPage() {
         {/* Flipping 3D QR Card */}
         <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
           <div 
-            className="w-full h-[260px] relative cursor-pointer"
+            className="w-full h-[240px] relative cursor-pointer"
             style={{ perspective: '1000px' }}
           >
             <div 
