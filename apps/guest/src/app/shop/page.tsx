@@ -201,6 +201,41 @@ const categories = [
     image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
     storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
     tagline: "Signature Pink Tee. Cozy fit with custom details."
+  },
+  { 
+    id: "Sneaker", 
+    label: "Matcha Set", 
+    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    tagline: "New Matcha Insulated Sets. Limited edition release."
+  },
+  { 
+    id: "Hoodie", 
+    label: "Doggie Style", 
+    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    tagline: "Cozy accessories for your pets. Made with love."
+  },
+  { 
+    id: "Face Cap", 
+    label: "Streetwear", 
+    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+    tagline: "Limited drop summer streetwear. Soft pastel fabrics."
+  },
+  { 
+    id: "Sneaker", 
+    label: "Drinkware", 
+    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+    tagline: "Pastel drinkware & accessories. Keep hydrated in style."
+  },
+  { 
+    id: "Hoodie", 
+    label: "New Drops", 
+    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+    tagline: "Weekly fresh merchandise drop. Be first to grab yours!"
   }
 ];
 
@@ -410,8 +445,8 @@ export default function ShopPage() {
           />
         </div>
 
-        {/* Horizontal Instagram-like Stories Categories list */}
-        <div className="flex gap-4 overflow-x-auto scrollbar-none py-2 px-1">
+        {/* Horizontal Instagram-like Stories Categories list (Edge-to-edge scrollable, clipped by the screen boundary) */}
+        <div className="flex flex-row flex-nowrap gap-4 overflow-x-auto scrollbar-none -mx-5 px-5 py-2">
           {categories.map((cat) => {
             const active = activeCategoryTab === cat.id;
             return (
