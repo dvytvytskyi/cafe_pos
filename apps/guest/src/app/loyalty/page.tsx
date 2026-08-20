@@ -964,6 +964,8 @@ function LoyaltyCard3D({
       {texture ? (
         <meshPhysicalMaterial 
           map={texture}
+          emissive="#666666"
+          emissiveMap={texture}
           transparent={true}
           metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
           roughness={0.42}
