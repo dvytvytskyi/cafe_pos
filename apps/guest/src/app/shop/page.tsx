@@ -1018,32 +1018,37 @@ export default function ShopPage() {
                 </div>
               </div>
 
-              {/* Quantity selector and Add to bag CTA Button */}
-              <div className="flex gap-4 items-center pt-2 mt-2">
-                <div className="flex items-center gap-4 bg-gray-100 rounded-full px-4 py-3">
+              {/* Unified Quantity Selector & Add to Bag CTA Button */}
+              <div className="w-full bg-[#EE635E] text-white p-2 rounded-full flex items-center shadow-none mt-4 transition-all hover:opacity-[0.98]">
+                {/* Standalone Quantity selectors */}
+                <div className="flex items-center gap-2">
                   <button 
                     onClick={() => quantity > 1 && setQuantity(quantity - 1)}
-                    className="p-0.5 hover:bg-white rounded-full transition-colors text-black"
+                    className="w-10 h-10 hover:bg-white/10 active:scale-95 rounded-full flex items-center justify-center text-white cursor-pointer transition-colors"
                   >
-                    <Minus className="w-4 h-4" strokeWidth={2.2} />
+                    <Minus className="w-4 h-4" strokeWidth={3.2} />
                   </button>
-                  <span className="text-base font-bold text-gray-900 w-4 text-center">
+                  <span className="text-[16px] font-bold text-white w-5 text-center select-none">
                     {quantity}
                   </span>
                   <button 
                     onClick={() => setQuantity(quantity + 1)}
-                    className="p-0.5 hover:bg-white rounded-full transition-colors text-black"
+                    className="w-10 h-10 hover:bg-white/10 active:scale-95 rounded-full flex items-center justify-center text-white cursor-pointer transition-colors"
                   >
-                    <Plus className="w-4 h-4" strokeWidth={2.2} />
+                    <Plus className="w-4 h-4" strokeWidth={3.2} />
                   </button>
                 </div>
-                
+
+                {/* Vertical Divider */}
+                <div className="w-[1px] h-8 bg-white/20 mx-2" />
+
+                {/* Primary Add to bag trigger */}
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-[#EE635E] hover:opacity-90 text-white py-4 rounded-full font-semibold text-center text-[15px] transition-all active:scale-[0.98] shadow-none flex justify-between px-6 items-center"
+                  className="flex-1 flex justify-between items-center pl-3 pr-4 py-2 text-white font-semibold text-[15px] cursor-pointer active:scale-[0.99] transition-all"
                 >
                   <span>Add to bag</span>
-                  <span>{getDetailsTotalPrice().toFixed(2)}€</span>
+                  <span className="font-extrabold text-[16px]">{getDetailsTotalPrice().toFixed(2)}€</span>
                 </button>
               </div>
             </div>
