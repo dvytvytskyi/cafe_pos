@@ -185,57 +185,125 @@ const categories = [
     id: "Hoodie", 
     label: "Hoodies", 
     image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    tagline: "Midnight Bloom green bandana. Premium cotton fabric."
+    slides: [
+      {
+        storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+        tagline: "Midnight Bloom green bandana. Premium cotton fabric."
+      },
+      {
+        storyImage: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop",
+        tagline: "Ultra soft oversized streetwear hoodies in classic beige."
+      },
+      {
+        storyImage: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=600&auto=format&fit=crop",
+        tagline: "Midnight Bloom Drop: Pastel aesthetics for active days."
+      }
+    ]
   },
   { 
     id: "Sneaker", 
     label: "Sneakers", 
     image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    tagline: "Crimson Wave insulated tumbler. Keeps your coffee hot."
+    slides: [
+      {
+        storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+        tagline: "Crimson Wave insulated tumbler. Keeps your coffee hot."
+      },
+      {
+        storyImage: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=600&auto=format&fit=crop",
+        tagline: "Retro chunky sneakers. Premium cushion for everyday steps."
+      }
+    ]
   },
   { 
     id: "Face Cap", 
     label: "Caps", 
     image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    tagline: "Signature Pink Tee. Cozy fit with custom details."
+    slides: [
+      {
+        storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+        tagline: "Signature Pink Tee. Cozy fit with custom details."
+      },
+      {
+        storyImage: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=600&auto=format&fit=crop",
+        tagline: "Minimalist cotton baseball caps. Vintage washed colors."
+      }
+    ]
   },
   { 
     id: "Sneaker", 
     label: "Matcha Set", 
     image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    tagline: "New Matcha Insulated Sets. Limited edition release."
+    slides: [
+      {
+        storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+        tagline: "New Matcha Insulated Sets. Limited edition release."
+      },
+      {
+        storyImage: "https://images.unsplash.com/photo-1536256263959-770b48d82b0a?q=80&w=600&auto=format&fit=crop",
+        tagline: "Organic ceremonial grade matcha whisks & bowls."
+      }
+    ]
   },
   { 
     id: "Hoodie", 
     label: "Doggie Style", 
     image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    tagline: "Cozy accessories for your pets. Made with love."
+    slides: [
+      {
+        storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+        tagline: "Cozy accessories for your pets. Made with love."
+      },
+      {
+        storyImage: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?q=80&w=600&auto=format&fit=crop",
+        tagline: "Doggie sweaters to keep your best friend stylishly warm."
+      }
+    ]
   },
   { 
     id: "Face Cap", 
     label: "Streetwear", 
     image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    tagline: "Limited drop summer streetwear. Soft pastel fabrics."
+    slides: [
+      {
+        storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
+        tagline: "Limited drop summer streetwear. Soft pastel fabrics."
+      },
+      {
+        storyImage: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=600&auto=format&fit=crop",
+        tagline: "Oversized graphic tees & streetwear essentials."
+      }
+    ]
   },
   { 
     id: "Sneaker", 
     label: "Drinkware", 
     image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    tagline: "Pastel drinkware & accessories. Keep hydrated in style."
+    slides: [
+      {
+        storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
+        tagline: "Pastel drinkware & accessories. Keep hydrated in style."
+      },
+      {
+        storyImage: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=600&auto=format&fit=crop",
+        tagline: "Thermal water bottles & tumblers with matte finishes."
+      }
+    ]
   },
   { 
     id: "Hoodie", 
     label: "New Drops", 
     image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    tagline: "Weekly fresh merchandise drop. Be first to grab yours!"
+    slides: [
+      {
+        storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
+        tagline: "Weekly fresh merchandise drop. Be first to grab yours!"
+      },
+      {
+        storyImage: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=600&auto=format&fit=crop",
+        tagline: "Don't miss out on our limited collectibles drops."
+      }
+    ]
   }
 ];
 
@@ -260,6 +328,7 @@ export default function ShopPage() {
 
   // Instagram Lookbook Story states
   const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
+  const [activeSlideIndex, setActiveSlideIndex] = useState<number>(0);
   const [prevStoryIndex, setPrevStoryIndex] = useState<number | null>(null);
   const [animType, setAnimType] = useState<'next' | 'prev' | null>(null);
   const [isStoryAnimating, setIsStoryAnimating] = useState(false);
@@ -294,12 +363,13 @@ export default function ShopPage() {
       setAnimType('next');
       setIsStoryAnimating(true);
       setActiveStoryIndex(activeStoryIndex + 1);
+      setActiveSlideIndex(0);
       setActiveCategoryTab(categories[activeStoryIndex + 1].id);
       setStoryProgress(0);
       setTimeout(() => {
         setIsStoryAnimating(false);
         setAnimType(null);
-      }, 600);
+      }, 400);
     } else {
       setActiveStoryIndex(null);
       setStoryProgress(0);
@@ -313,15 +383,37 @@ export default function ShopPage() {
       setAnimType('prev');
       setIsStoryAnimating(true);
       setActiveStoryIndex(activeStoryIndex - 1);
+      setActiveSlideIndex(categories[activeStoryIndex - 1].slides.length - 1);
       setActiveCategoryTab(categories[activeStoryIndex - 1].id);
       setStoryProgress(0);
       setTimeout(() => {
         setIsStoryAnimating(false);
         setAnimType(null);
-      }, 600);
+      }, 400);
     } else {
       setActiveStoryIndex(null);
       setStoryProgress(0);
+    }
+  };
+
+  const handleNextSlide = () => {
+    if (activeStoryIndex === null || isStoryAnimating) return;
+    const currentCategory = categories[activeStoryIndex];
+    if (activeSlideIndex < currentCategory.slides.length - 1) {
+      setActiveSlideIndex(prev => prev + 1);
+      setStoryProgress(0);
+    } else {
+      handleNextStory();
+    }
+  };
+
+  const handlePrevSlide = () => {
+    if (activeStoryIndex === null || isStoryAnimating) return;
+    if (activeSlideIndex > 0) {
+      setActiveSlideIndex(prev => prev - 1);
+      setStoryProgress(0);
+    } else {
+      handlePrevStory();
     }
   };
 
@@ -335,8 +427,14 @@ export default function ShopPage() {
     const interval = setInterval(() => {
       setStoryProgress((prev) => {
         if (prev >= 100) {
-          handleNextStory();
-          return 0;
+          const currentCategory = categories[activeStoryIndex];
+          if (activeSlideIndex < currentCategory.slides.length - 1) {
+            setActiveSlideIndex((curr) => curr + 1);
+            return 0;
+          } else {
+            handleNextStory();
+            return 0;
+          }
         }
         return prev + 1; // Increments to 100 over 4 seconds (100 * 40ms)
       });
@@ -344,7 +442,7 @@ export default function ShopPage() {
     return () => {
       clearInterval(interval);
     };
-  }, [activeStoryIndex, isStoryAnimating]);
+  }, [activeStoryIndex, activeSlideIndex, isStoryAnimating]);
 
   const handleOptionSelect = (optionName: string, choice: string) => {
     setSelectedOptions(prev => ({
@@ -484,6 +582,7 @@ export default function ShopPage() {
                 const idx = categories.findIndex(c => c.id === "Face Cap");
                 if (idx !== -1) {
                   setActiveStoryIndex(idx);
+                  setActiveSlideIndex(0);
                   setPrevStoryIndex(null);
                   setAnimType(null);
                   setIsStoryAnimating(false);
@@ -516,6 +615,7 @@ export default function ShopPage() {
                   const idx = categories.findIndex(c => c.label === cat.label);
                   if (idx !== -1) {
                     setActiveStoryIndex(idx);
+                    setActiveSlideIndex(0);
                     setPrevStoryIndex(null);
                     setAnimType(null);
                     setIsStoryAnimating(false);
@@ -1011,14 +1111,21 @@ export default function ShopPage() {
                 >
                   <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b] z-0">
                     <img 
-                      src={categories[prevStoryIndex].storyImage} 
+                      src={categories[prevStoryIndex].slides[animType === 'next' ? categories[prevStoryIndex].slides.length - 1 : 0].storyImage} 
                       alt="Story lookbook" 
                       className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
                     />
                   </div>
                   <div className="w-full flex flex-col gap-3 z-10">
-                    <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-white w-full" />
+                    <div className="w-full flex gap-1.5 z-10">
+                      {categories[prevStoryIndex].slides.map((_, slideIdx) => {
+                        const width = animType === 'next' ? '100%' : '0%';
+                        return (
+                          <div key={slideIdx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+                            <div className="h-full bg-white" style={{ width }} />
+                          </div>
+                        );
+                      })}
                     </div>
                     <div className="flex items-center justify-between text-white px-1">
                       <div className="flex items-center gap-2.5">
@@ -1036,7 +1143,7 @@ export default function ShopPage() {
                   </div>
                   <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
                     <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%] select-none">
-                      {categories[prevStoryIndex].tagline}
+                      {categories[prevStoryIndex].slides[animType === 'next' ? categories[prevStoryIndex].slides.length - 1 : 0].tagline}
                     </p>
                   </div>
                 </div>
@@ -1050,14 +1157,21 @@ export default function ShopPage() {
                 >
                   <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b] z-0">
                     <img 
-                      src={categories[activeStoryIndex].storyImage} 
+                      src={categories[activeStoryIndex].slides[activeSlideIndex].storyImage} 
                       alt="Story lookbook" 
                       className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
                     />
                   </div>
                   <div className="w-full flex flex-col gap-3 z-10">
-                    <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-white w-0" />
+                    <div className="w-full flex gap-1.5 z-10">
+                      {categories[activeStoryIndex].slides.map((_, slideIdx) => {
+                        const width = slideIdx < activeSlideIndex ? '100%' : '0%';
+                        return (
+                          <div key={slideIdx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+                            <div className="h-full bg-white" style={{ width }} />
+                          </div>
+                        );
+                      })}
                     </div>
                     <div className="flex items-center justify-between text-white px-1">
                       <div className="flex items-center gap-2.5">
@@ -1075,7 +1189,7 @@ export default function ShopPage() {
                   </div>
                   <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
                     <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%] select-none">
-                      {categories[activeStoryIndex].tagline}
+                      {categories[activeStoryIndex].slides[activeSlideIndex].tagline}
                     </p>
                   </div>
                 </div>
@@ -1089,26 +1203,35 @@ export default function ShopPage() {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const clickX = e.clientX - rect.left;
                   if (clickX < rect.width * 0.3) {
-                    handlePrevStory();
+                    handlePrevSlide();
                   } else {
-                    handleNextStory();
+                    handleNextSlide();
                   }
                 }}
               >
                 <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b] z-0">
                   <img 
-                    src={categories[activeStoryIndex].storyImage} 
+                    src={categories[activeStoryIndex].slides[activeSlideIndex].storyImage} 
                     alt="Story lookbook" 
                     className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
                   />
                 </div>
 
                 <div className="w-full flex flex-col gap-3 z-10">
-                  <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-white transition-all duration-[40ms] ease-linear" 
-                      style={{ width: `${storyProgress}%` }}
-                    />
+                  <div className="w-full flex gap-1.5 z-10">
+                    {categories[activeStoryIndex].slides.map((_, slideIdx) => {
+                      let width = '0%';
+                      if (slideIdx < activeSlideIndex) width = '100%';
+                      else if (slideIdx === activeSlideIndex) width = `${storyProgress}%`;
+                      return (
+                        <div key={slideIdx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-white transition-all duration-[40ms] ease-linear" 
+                            style={{ width }}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div className="flex items-center justify-between text-white px-1">
@@ -1137,7 +1260,7 @@ export default function ShopPage() {
 
                 <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
                   <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%] select-none">
-                    {categories[activeStoryIndex].tagline}
+                    {categories[activeStoryIndex].slides[activeSlideIndex].tagline}
                   </p>
                   
                   <button 
