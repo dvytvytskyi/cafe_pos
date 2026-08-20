@@ -327,7 +327,33 @@ export default function ShopPage() {
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lastSelectedItem, setLastSelectedItem] = useState<any | null>(null);
+  const [selectedAddons, setSelectedAddons] = useState<Record<string, number>>({});
   const imageScrollRef = useRef<HTMLDivElement>(null);
+
+  const ADDONS = [
+    {
+      id: 'addon-giftbox',
+      name: 'Premium Gift Box',
+      price: 4.00,
+      image: 'https://optim.tildacdn.com/stor3766-3735-4962-a663-303362346637/-/format/webp/12011235.jpg.webp'
+    },
+    {
+      id: 'addon-stickers',
+      name: 'Mascot Stickers Pack',
+      price: 3.00,
+      image: 'https://optim.tildacdn.com/stor3932-6134-4537-a137-373464316263/-/format/webp/84660139.jpg.webp'
+    }
+  ];
+
+  const getDetailsTotalPrice = () => {
+    if (!lastSelectedItem) return 0;
+    const baseTotal = lastSelectedItem.price * quantity;
+    const addonsTotal = ADDONS.reduce((acc, addon) => {
+      const q = selectedAddons[addon.id] || 0;
+      return acc + (addon.price * q);
+    }, 0);
+    return baseTotal + addonsTotal;
+  };
 
   const getItemImages = (item: any): string[] => {
     if (!item) return [];
@@ -389,6 +415,7 @@ export default function ShopPage() {
       setLastSelectedItem(selectedItem);
       setQuantity(1);
       setActiveImageIndex(0);
+      setSelectedAddons({});
       if (imageScrollRef.current) {
         imageScrollRef.current.scrollTop = 0;
       }
@@ -510,6 +537,19 @@ export default function ShopPage() {
       name: displayName,
       unitPrice: selectedItem.price,
       quantity: quantity,
+    });
+
+    ADDONS.forEach(addon => {
+      const q = selectedAddons[addon.id] || 0;
+      if (q > 0) {
+        addMerchToCart({
+          merchSkuId: addon.id,
+          itemType: 'merch',
+          name: addon.name,
+          unitPrice: addon.price,
+          quantity: q,
+        });
+      }
     });
 
     setSelectedItem(null);
@@ -889,6 +929,95 @@ export default function ShopPage() {
                 </div>
               ))}
 
+              {/* Add-ons Section */}
+              <div className="flex flex-col gap-3 mt-1.5 pt-1.5 border-t border-gray-100">
+                <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider pl-1">
+                  Add-ons
+                </span>
+                <div className="flex gap-4 overflow-x-auto scrollbar-none py-2 -mx-1 px-1">
+                  {ADDONS.map((addon) => {
+                    const q = selectedAddons[addon.id] || 0;
+                    const isSelected = q > 0;
+                    return (
+                      <div 
+                        key={addon.id} 
+                        className={`relative w-[130px] flex-shrink-0 bg-gray-50/70 border rounded-[20px] p-3.5 flex flex-col items-center gap-2.5 transition-all text-center select-none ${
+                          isSelected ? 'border-[#EE635E] bg-[#EE635E]/5' : 'border-gray-150/70'
+                        }`}
+                      >
+                        {/* Top-right Pink Checkmark Circle Badge */}
+                        {isSelected && (
+                          <span className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#EE635E] text-white flex items-center justify-center shadow-md animate-pop z-10">
+                            <Check className="w-3.5 h-3.5" strokeWidth={3.5} />
+                          </span>
+                        )}
+
+                        {/* Round Image at Top */}
+                        <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white shadow-sm border border-gray-100/50 flex-shrink-0 flex items-center justify-center">
+                          <img 
+                            src={addon.image} 
+                            alt={addon.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Title and Price */}
+                        <div className="flex flex-col gap-0.5 min-h-[36px] justify-center">
+                          <span className="text-[12px] font-bold text-gray-900 leading-tight">
+                            {addon.name}
+                          </span>
+                          <span className="text-[11px] font-extrabold text-[#EE635E] mt-0.5">
+                            + {addon.price.toFixed(2)}€
+                          </span>
+                        </div>
+
+                        {/* Bottom Quantity Selector or Add Button */}
+                        <div className="w-full mt-1.5 z-20">
+                          {!isSelected ? (
+                            <button
+                              onClick={() => setSelectedAddons(prev => ({ ...prev, [addon.id]: 1 }))}
+                              className="w-full py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-full font-bold text-[11px] text-gray-700 cursor-pointer shadow-sm active:scale-95 transition-all"
+                            >
+                              + Add
+                            </button>
+                          ) : (
+                            <div className="flex items-center justify-between bg-white border border-[#EE635E]/20 rounded-full px-2.5 py-1 z-20 shadow-sm">
+                              <button 
+                                onClick={() => {
+                                  setSelectedAddons(prev => {
+                                    const next = { ...prev };
+                                    if (next[addon.id] <= 1) {
+                                      delete next[addon.id];
+                                    } else {
+                                      next[addon.id]--;
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className="p-0.5 hover:bg-gray-50 rounded-full transition-colors text-gray-500 cursor-pointer"
+                              >
+                                <Minus className="w-3 h-3" strokeWidth={2.5} />
+                              </button>
+                              <span className="text-xs font-bold text-gray-900">
+                                {q}
+                              </span>
+                              <button 
+                                onClick={() => {
+                                  setSelectedAddons(prev => ({ ...prev, [addon.id]: (prev[addon.id] || 0) + 1 }));
+                                }}
+                                className="p-0.5 hover:bg-gray-50 rounded-full transition-colors text-gray-500 cursor-pointer"
+                              >
+                                <Plus className="w-3 h-3" strokeWidth={2.5} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Quantity selector and Add to bag CTA Button */}
               <div className="flex gap-4 items-center pt-2 mt-2">
                 <div className="flex items-center gap-4 bg-gray-100 rounded-full px-4 py-3">
@@ -914,7 +1043,7 @@ export default function ShopPage() {
                   className="flex-1 bg-[#EE635E] hover:opacity-90 text-white py-4 rounded-full font-semibold text-center text-[15px] transition-all active:scale-[0.98] shadow-none flex justify-between px-6 items-center"
                 >
                   <span>Add to bag</span>
-                  <span>{(lastSelectedItem.price * quantity).toFixed(2)}€</span>
+                  <span>{getDetailsTotalPrice().toFixed(2)}€</span>
                 </button>
               </div>
             </div>
