@@ -90,7 +90,7 @@ export default function OrdersPage() {
           <p>Status: {selectedOrder.status}</p>
           <p>Paid: {selectedOrder.paid ? 'Yes' : 'No'}</p>
           <p>Total: {selectedOrder.total.toFixed(2)}€</p>
-          <p>Tip: {selectedOrder.tipValue} ({selectedOrder.tipType || 'none'})</p>
+          <p>Tip: {(selectedOrder as any).tipValue} ({(selectedOrder as any).tipType || 'none'})</p>
 
           <h3>Items:</h3>
           <ul>

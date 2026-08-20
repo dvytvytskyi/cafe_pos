@@ -300,6 +300,7 @@ export class DashboardRepository {
       revenueByDay,
       dishes,
       staff: [],
+      staffByLocation: [],
       ledger: [],
       revenueByLocation,
       revenueByDayByLocation,

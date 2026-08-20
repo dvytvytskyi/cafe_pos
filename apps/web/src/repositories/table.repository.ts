@@ -161,7 +161,7 @@ export class TableRepository {
       orderBy: { number: 'asc' },
     });
 
-    const meta = (location?.layoutMetadata || {}) as Record<string, RoomLayoutMeta>;
+    const meta = (location?.layoutMetadata || {}) as unknown as Record<string, RoomLayoutMeta>;
 
     // Identify unique rooms from tables and metadata keys
     const roomsMap = new Map<string, Room>();

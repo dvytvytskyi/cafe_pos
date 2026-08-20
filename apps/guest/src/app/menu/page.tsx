@@ -50,6 +50,7 @@ const getFoodImage = (name: string, categoryName: string) => {
 };
 
 const MOCK_MENU: GuestMenuResponse = {
+  locale: "en",
   categories: [
     { id: "cat-coffee", name: "Coffee" },
     { id: "cat-brunch", name: "Brunch" },
@@ -60,10 +61,13 @@ const MOCK_MENU: GuestMenuResponse = {
     {
       id: "item-1",
       categoryId: "cat-coffee",
+      categoryName: "Coffee",
       name: "Bacon & Egg Bagel",
       description: "A freshly toasted artisanal bagel loaded with organic pasture-raised fried egg, thick-cut crispy bacon, melted local cheddar, and our homemade signature herb garlic sauce.",
+      image: "",
       basePrice: 7.50,
       allergens: ["gluten", "eggs", "milk", "sesame"],
+      tags: [],
       modifierGroups: [
         {
           id: "mod-bagel-extras",
@@ -80,10 +84,13 @@ const MOCK_MENU: GuestMenuResponse = {
     {
       id: "item-2",
       categoryId: "cat-coffee",
+      categoryName: "Coffee",
       name: "Corgi Signature Espresso",
       description: "Our signature house blend coffee prepared with double shot espresso, organic whole milk, and topped with our secret recipe sweet cream for a rich, velvety finish.",
+      image: "",
       basePrice: 4.50,
       allergens: ["milk"],
+      tags: [],
       modifierGroups: [
         {
           id: "mod-milk",
@@ -101,10 +108,13 @@ const MOCK_MENU: GuestMenuResponse = {
     {
       id: "item-3",
       categoryId: "cat-brunch",
+      categoryName: "Brunch",
       name: "Avocado Toast",
       description: "Slices of toasted sourdough loaded with creamy smashed avocado, drizzled with premium cold-pressed extra virgin olive oil, toasted pumpkin seeds, pine nuts, fresh cucumbers, radishes, and a touch of flaky Maldon salt.",
+      image: "",
       basePrice: 6.75,
       allergens: ["gluten", "nuts"],
+      tags: [],
       modifierGroups: [
         {
           id: "mod-fancy-bread",
@@ -121,10 +131,13 @@ const MOCK_MENU: GuestMenuResponse = {
     {
       id: "item-4",
       categoryId: "cat-brunch",
+      categoryName: "Brunch",
       name: "Brunch Plate",
       description: "A hearty plate featuring two organic eggs cooked to your liking, roasted cherry tomatoes, freshly toasted sourdough bread, fragrant garden herbs, and a crisp side salad dressed with house vinaigrette.",
+      image: "",
       basePrice: 12.50,
       allergens: ["gluten", "eggs"],
+      tags: [],
       modifierGroups: [
         {
           id: "mod-extras",
@@ -142,10 +155,13 @@ const MOCK_MENU: GuestMenuResponse = {
     {
       id: "item-5",
       categoryId: "cat-pastry",
+      categoryName: "Pastry",
       name: "Butter Croissant",
       description: "Flaky, multi-layered French butter pastry crafted with Normandy butter, baked fresh in-house every morning until golden brown and crispy on the outside, soft on the inside.",
+      image: "",
       basePrice: 2.80,
       allergens: ["gluten", "milk", "eggs"],
+      tags: [],
       modifierGroups: [
         {
           id: "mod-croissant-spread",
@@ -162,10 +178,13 @@ const MOCK_MENU: GuestMenuResponse = {
     {
       id: "item-6",
       categoryId: "cat-drinks",
+      categoryName: "Drinks",
       name: "Matcha Latte",
       description: "Vibrant, premium organic stone-ground Japanese ceremonial grade matcha whisked to perfection and served with warm, velvety steamed organic oat milk.",
+      image: "",
       basePrice: 4.80,
       allergens: ["gluten"],
+      tags: [],
       modifierGroups: [
         {
           id: "mod-matcha-sweetener",
@@ -1917,9 +1936,9 @@ export default function MenuPage() {
                           <span className="text-[11px] text-gray-400 font-semibold mt-1">
                             ({cartItem.unitPrice.toFixed(2)}€) × {cartItem.quantity}
                           </span>
-                          {cartItem.comment && (
+                          {cartItem.comments && (
                             <span className="text-[11px] text-gray-400 font-normal italic mt-0.5">
-                              "{cartItem.comment}"
+                              "{cartItem.comments}"
                             </span>
                           )}
                         </div>

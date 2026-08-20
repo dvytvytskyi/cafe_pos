@@ -274,9 +274,9 @@ export class MenuRepository {
       const price = validateDishPrice(data.price);
       if (price !== currentItem.price) {
         updateData.price = price;
-        const history = (currentItem.priceHistory || []) as PriceRecord[];
+        const history = (currentItem.priceHistory || []) as unknown as PriceRecord[];
         history.push({ price: currentItem.price, date: new Date().toISOString() });
-        updateData.priceHistory = history;
+        updateData.priceHistory = history as any;
       }
     }
 

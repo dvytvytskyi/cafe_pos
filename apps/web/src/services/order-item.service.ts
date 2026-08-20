@@ -46,7 +46,7 @@ export class OrderItemService {
             quantity: item.quantity,
             comments: item.comments ?? null,
             menuItemId: item.menuItemId ?? null,
-            modifierSnapshot: item.modifierSnapshot ?? null,
+            modifierSnapshot: (item.modifierSnapshot ?? null) as any,
             soldByStaffId: item.soldByStaffId ?? null,
             guestIndex: item.guestIndex ?? null,
             itemType: 'food',

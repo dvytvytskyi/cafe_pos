@@ -333,6 +333,13 @@ export default function ShopPage() {
   const [animType, setAnimType] = useState<'next' | 'prev' | null>(null);
   const [isStoryAnimating, setIsStoryAnimating] = useState(false);
   const [storyProgress, setStoryProgress] = useState(0);
+  const [viewedStories, setViewedStories] = useState<string[]>([]);
+
+  const markStoryAsViewed = (catId: string) => {
+    if (!viewedStories.includes(catId)) {
+      setViewedStories(prev => [...prev, catId]);
+    }
+  };
 
   // Modals visibility
   const [showOrderModeModal, setShowOrderModeModal] = useState(false);
@@ -364,6 +371,7 @@ export default function ShopPage() {
       setIsStoryAnimating(true);
       setActiveStoryIndex(activeStoryIndex + 1);
       setActiveSlideIndex(0);
+      markStoryAsViewed(categories[activeStoryIndex + 1].id);
       setActiveCategoryTab(categories[activeStoryIndex + 1].id);
       setStoryProgress(0);
       setTimeout(() => {
@@ -384,6 +392,7 @@ export default function ShopPage() {
       setIsStoryAnimating(true);
       setActiveStoryIndex(activeStoryIndex - 1);
       setActiveSlideIndex(categories[activeStoryIndex - 1].slides.length - 1);
+      markStoryAsViewed(categories[activeStoryIndex - 1].id);
       setActiveCategoryTab(categories[activeStoryIndex - 1].id);
       setStoryProgress(0);
       setTimeout(() => {
@@ -606,6 +615,7 @@ export default function ShopPage() {
         {/* Horizontal Instagram-like Stories Categories list (Edge-to-edge scrollable, clipped by the screen boundary) */}
         <div className="flex flex-row flex-nowrap gap-4 overflow-x-auto scrollbar-none -mx-5 px-5 py-2">
           {categories.map((cat) => {
+            const isViewed = viewedStories.includes(cat.id);
             const active = activeCategoryTab === cat.id;
             return (
               <button
@@ -616,6 +626,7 @@ export default function ShopPage() {
                   if (idx !== -1) {
                     setActiveStoryIndex(idx);
                     setActiveSlideIndex(0);
+                    markStoryAsViewed(cat.id);
                     setPrevStoryIndex(null);
                     setAnimType(null);
                     setIsStoryAnimating(false);
@@ -627,8 +638,10 @@ export default function ShopPage() {
                 {/* Circular Story Ring and Avatar */}
                 <div className={`p-[2.5px] rounded-full transition-all duration-300 ${
                   active 
-                    ? 'bg-[#FC8C86] scale-102 ring-2 ring-white' 
-                    : 'bg-gray-200'
+                    ? 'scale-102 ring-2 ring-white' 
+                    : ''
+                } ${
+                  isViewed ? 'bg-gray-200' : 'bg-[#FC8C86]'
                 }`}>
                   <div className="bg-white p-[2px] rounded-full">
                     <img 
