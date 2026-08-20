@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = validateGuestRegisterInput(body);
     const { token } = await guestAuthService.registerAfterOtp(body.phone, body.code, data);
-    const response = guestJson({ ok: true }, { status: 200 }, req);
+    const response = guestJson({ ok: true, token }, { status: 200 }, req);
     response.headers.set('Set-Cookie', buildGuestSessionCookie(token));
     return response;
   } catch (error) {

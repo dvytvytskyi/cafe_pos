@@ -99,6 +99,9 @@ export default function LoyaltyPage() {
     try {
       const res = await verifyOtp(phone, otpCode);
       if (res.ok) {
+        if (res.token) {
+          localStorage.setItem('corgi_guest_session_token', res.token);
+        }
         // Fetch profile to see if profile needs completion (if name is 'Guest')
         try {
           const profile = await getProfile();

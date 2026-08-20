@@ -87,6 +87,12 @@ export function buildClearGuestSessionCookie(): string {
 }
 
 export function getGuestTokenFromRequest(req: Request): string | null {
+  // 1. Check Authorization header
+  const authHeader = req.headers.get('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+  // 2. Fallback to cookie
   const cookieHeader = req.headers.get('cookie');
   if (!cookieHeader) return null;
   for (const part of cookieHeader.split(';')) {

@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { token } = await guestAuthService.verifyOtpAndLogin(body.phone, body.code);
-    const response = guestJson({ ok: true }, { status: 200 }, req);
+    const response = guestJson({ ok: true, token }, { status: 200 }, req);
     response.headers.set('Set-Cookie', buildGuestSessionCookie(token));
     return response;
   } catch (error) {

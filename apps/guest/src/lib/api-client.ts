@@ -13,11 +13,17 @@ import type {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 async function guestFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  let token: string | null = null;
+  if (typeof window !== 'undefined') {
+    token = localStorage.getItem('corgi_guest_session_token');
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...(init?.headers || {}),
     },
   });
@@ -131,7 +137,7 @@ export function requestOtp(phone: string) {
 }
 
 export function verifyOtp(phone: string, code: string) {
-  return guestFetch<{ ok: boolean }>('/api/guest/auth/otp/verify', {
+  return guestFetch<{ ok: boolean; token?: string }>('/api/guest/auth/otp/verify', {
     method: 'POST',
     body: JSON.stringify({ phone, code }),
   });
@@ -144,13 +150,16 @@ export function registerGuest(data: {
   email: string;
   allergyNotes?: string;
 }) {
-  return guestFetch<{ ok: boolean }>('/api/guest/auth/register', {
+  return guestFetch<{ ok: boolean; token?: string }>('/api/guest/auth/register', {
     method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
 export function logoutGuest() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('corgi_guest_session_token');
+  }
   return guestFetch<{ ok: boolean }>('/api/guest/auth/logout', { method: 'POST' });
 }
 
