@@ -317,7 +317,7 @@ export default function LoyaltyPage() {
         {/* Flipping 3D QR Card */}
         <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
           <div 
-            className="w-full h-[290px] relative cursor-pointer"
+            className="w-full h-[280px] relative cursor-pointer"
             style={{ perspective: '1000px' }}
           >
             <div 
@@ -364,80 +364,76 @@ export default function LoyaltyPage() {
                   if (target.closest('button') || target.closest('input') || target.closest('select')) return;
                   setIsCardFlipped(false);
                 }}
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)]"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)] relative"
               >
-                <div className="flex flex-col w-full h-full justify-between">
-                  {/* Header Row: Left Tier, Center Photo, Right spent */}
-                  <div className="flex justify-between items-start w-full">
-                    {/* Left Status */}
-                    <div className="flex flex-col text-left">
-                      <span className="text-sm font-bold text-gray-800 tracking-tight uppercase leading-none">{customer.tier}</span>
-                      <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Profile</span>
-                    </div>
+                {/* Left Status Info (Absolute positioned) */}
+                <div className="absolute top-5 left-5 text-left flex flex-col pointer-events-none">
+                  <span className="text-sm font-bold text-gray-800 tracking-tight uppercase leading-none">{customer.tier}</span>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Profile</span>
+                </div>
 
-                    {/* Center Avatar */}
-                    <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-md -mt-1">
-                      <img 
-                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
-                        alt="Profile Avatar"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                {/* Right Spent Info (Absolute positioned) */}
+                <div className="absolute top-5 right-5 text-right flex flex-col pointer-events-none">
+                  <span className="text-sm font-bold text-[#FDBD38] tracking-tight leading-none">{customer.ltv.toFixed(0)}€</span>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Spent</span>
+                </div>
 
-                    {/* Right Spent */}
-                    <div className="flex flex-col text-right">
-                      <span className="text-sm font-bold text-[#FDBD38] tracking-tight leading-none">{customer.ltv.toFixed(0)}€</span>
-                      <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Spent</span>
-                    </div>
+                {/* Central Block: Photo, Name, and ID (One unit) */}
+                <div className="flex-1 flex flex-col items-center justify-center mt-3 mb-2">
+                  {/* Photo (twice as large: w-24 h-24) */}
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md mb-2 flex-shrink-0">
+                    <img 
+                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
+                      alt="Profile Avatar"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
+                  {/* Name */}
+                  <h2 className="text-lg font-bold text-gray-900 tracking-tight uppercase leading-tight mb-0.5">
+                    {profileName || customer.name}
+                  </h2>
+                  {/* ID */}
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider leading-none">
+                    Loyalty ID: #{customer.id.slice(-8).toUpperCase()}
+                  </span>
+                </div>
 
-                  {/* Name & Subtitle */}
-                  <div className="flex flex-col items-center text-center my-1.5">
-                    <h2 className="text-lg font-bold text-gray-900 tracking-tight uppercase mb-0.5 leading-tight">
-                      {profileName || customer.name}
-                    </h2>
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider leading-none">
-                      Loyalty ID: #{customer.id.slice(-8).toUpperCase()}
-                    </span>
-                  </div>
-
-                  {/* Collapsible Add Points Code Field */}
-                  {isAddPointsOpen && (
-                    <div className="w-full flex gap-2 items-center px-1 mb-2 animate-fadeIn">
-                      <input 
-                        type="text" 
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
-                        placeholder="Code (e.g. CORGI100)" 
-                        className="w-full border border-gray-200 rounded-[10px] py-1.5 px-3 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#FDBD38]"
-                      />
-                      <button 
-                        onClick={handleApplyPromo}
-                        disabled={isApplyingPromo}
-                        className="bg-[#FDBD38] hover:bg-[#c29124] text-white px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
-                      >
-                        {isApplyingPromo ? '...' : 'Claim'}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Footer Buttons: Add Points & History */}
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setIsAddPointsOpen(!isAddPointsOpen)}
-                      className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-2.5 rounded-[12px] font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer border border-[#FDBD38] hover:border-[#e5a420]"
+                {/* Collapsible Add Points Code Field */}
+                {isAddPointsOpen && (
+                  <div className="w-full flex gap-2 items-center px-1 mb-2 animate-fadeIn relative z-10">
+                    <input 
+                      type="text" 
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value)}
+                      placeholder="Code (e.g. CORGI100)" 
+                      className="flex-1 border border-gray-200 rounded-[10px] py-1.5 px-3 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#FDBD38]"
+                    />
+                    <button 
+                      onClick={handleApplyPromo}
+                      disabled={isApplyingPromo}
+                      className="bg-[#FDBD38] hover:bg-[#c29124] text-white px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add Points</span>
-                    </button>
-                    <button
-                      onClick={() => setIsHistoryOpen(true)}
-                      className="flex-1 bg-white hover:bg-gray-55 text-gray-700 py-2.5 rounded-[12px] font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer border border-gray-250 shadow-sm"
-                    >
-                      <History className="w-3.5 h-3.5 text-gray-500" />
-                      <span>History</span>
+                      {isApplyingPromo ? '...' : 'Claim'}
                     </button>
                   </div>
+                )}
+
+                {/* Footer Buttons: Add Points & History (No border on history button) */}
+                <div className="flex gap-3 relative z-10">
+                  <button
+                    onClick={() => setIsAddPointsOpen(!isAddPointsOpen)}
+                    className="flex-1 bg-[#FDBD38] hover:bg-[#e5a420] text-white py-2.5 rounded-[12px] font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer border border-[#FDBD38] hover:border-[#e5a420]"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Points</span>
+                  </button>
+                  <button
+                    onClick={() => setIsHistoryOpen(true)}
+                    className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2.5 rounded-[12px] font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <History className="w-3.5 h-3.5 text-gray-500" />
+                    <span>History</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -521,10 +517,10 @@ export default function LoyaltyPage() {
             isProfileOpen ? 'translate-y-0' : 'translate-y-full'
           }`}>
             {/* Drawer Header */}
-            <div className="px-6 pt-12 pb-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0 bg-gray-55/50">
+            <div className="px-6 pt-12 pb-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0 bg-gray-50/50">
               <button 
                 onClick={() => setIsProfileOpen(false)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-550 transition-all active:scale-90 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-all active:scale-90 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -544,7 +540,7 @@ export default function LoyaltyPage() {
             <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6">
               
               {/* Profile Avatar & Tier Banner */}
-              <div className="flex flex-col items-center text-center bg-gray-55/40 p-5 rounded-[24px] border border-gray-100">
+              <div className="flex flex-col items-center text-center bg-gray-50/40 p-5 rounded-[24px] border border-gray-100">
                 <div className="relative mb-3">
                   <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-md">
                     <img 
@@ -689,7 +685,7 @@ export default function LoyaltyPage() {
             <div className="px-6 pt-12 pb-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0 bg-gray-50/50">
               <button 
                 onClick={() => setIsHistoryOpen(false)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-550 transition-all active:scale-90 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-all active:scale-90 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -754,7 +750,7 @@ export default function LoyaltyPage() {
             <div className="bg-white rounded-[32px] w-full max-w-[340px] p-6 shadow-2xl flex flex-col items-center text-center relative border border-gray-100 animate-scaleUp">
               <button 
                 onClick={() => setSelectedSticker(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-550 transition-all active:scale-90 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 absolute top-4 right-4 transition-all active:scale-90 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
