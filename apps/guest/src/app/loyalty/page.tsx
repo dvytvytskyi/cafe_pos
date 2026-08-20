@@ -338,7 +338,7 @@ export default function LoyaltyPage() {
             >
               {/* Front Side: Profile Info Card */}
               <div 
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[44px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[38px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
               >
                 {/* Left Status Info (Absolute positioned) */}
                 <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
@@ -354,8 +354,8 @@ export default function LoyaltyPage() {
 
                 {/* Central Block: Photo, Name, and ID (One unit, shifted upwards) */}
                 <div className="flex-1 flex flex-col items-center justify-start mt-1">
-                  {/* Photo (w-20 h-20) */}
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md mb-1.5 flex-shrink-0">
+                  {/* Photo (w-24 h-24) */}
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md mb-1.5 flex-shrink-0">
                     <img 
                       src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
                       alt="Profile Avatar"
