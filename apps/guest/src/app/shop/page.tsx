@@ -325,6 +325,55 @@ export default function ShopPage() {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({});
   const [quantity, setQuantity] = useState(1);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [lastSelectedItem, setLastSelectedItem] = useState<any | null>(null);
+  const imageScrollRef = useRef<HTMLDivElement>(null);
+
+  const getItemImages = (item: any): string[] => {
+    if (!item) return [];
+    const base = item.image || '';
+    if (item.categoryName === 'Hoodie') {
+      return [
+        base,
+        'https://optim.tildacdn.com/stor3034-6330-4131-a237-333534346162/-/format/webp/96517017.jpg.webp',
+        'https://optim.tildacdn.com/stor3638-3430-4133-b838-663866383637/-/format/webp/91517017.jpg.webp',
+        'https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp'
+      ];
+    }
+    if (item.categoryName === 'Sneakers') {
+      return [
+        base,
+        'https://optim.tildacdn.com/stor6161-6336-4138-b638-306263383063/-/format/webp/69517017.jpg.webp',
+        'https://optim.tildacdn.com/stor3163-3661-4638-b062-663435343466/-/format/webp/11517017.jpg.webp',
+        'https://optim.tildacdn.com/stor3865-3866-4139-b935-643531393963/-/format/webp/49517017.jpg.webp'
+      ];
+    }
+    return [
+      base,
+      'https://optim.tildacdn.com/stor3638-3430-4133-b838-663866383637/-/format/webp/91517017.jpg.webp',
+      'https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp',
+      'https://optim.tildacdn.com/stor3034-6330-4131-a237-333534346162/-/format/webp/96517017.jpg.webp'
+    ];
+  };
+
+  const handleImageScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const index = Math.round(container.scrollTop / container.clientHeight);
+    if (index !== activeImageIndex && index >= 0 && index < 4) {
+      setActiveImageIndex(index);
+    }
+  };
+
+  const scrollToImage = (index: number) => {
+    if (imageScrollRef.current) {
+      const containerHeight = imageScrollRef.current.clientHeight;
+      imageScrollRef.current.scrollTo({
+        top: index * containerHeight,
+        behavior: 'smooth'
+      });
+      setActiveImageIndex(index);
+    }
+  };
 
   // Instagram Lookbook Story states
   const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
@@ -353,7 +402,12 @@ export default function ShopPage() {
 
   useEffect(() => {
     if (selectedItem) {
+      setLastSelectedItem(selectedItem);
       setQuantity(1);
+      setActiveImageIndex(0);
+      if (imageScrollRef.current) {
+        imageScrollRef.current.scrollTop = 0;
+      }
       // Initialize selected options with the first choices
       const initialOptions: { [key: string]: string } = {};
       (selectedItem.options || []).forEach((opt: any) => {
@@ -731,60 +785,99 @@ export default function ShopPage() {
         </div>
       )}
 
-      {/* 1. Item Details Bottom Sheet Modal */}
-      {selectedItem && (
+      {/* 1. Item Details Fullscreen Modal */}
+      <div 
+        className={`fixed inset-0 bg-[#18181b]/60 z-50 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[3px] ${
+          selectedItem ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setSelectedItem(null)}
+      >
         <div 
-          className="fixed inset-0 bg-[#18181b]/60 z-50 transition-all duration-300 flex items-center justify-center backdrop-blur-[3px]"
-          onClick={() => setSelectedItem(null)}
+          className={`w-full max-w-[480px] h-screen bg-white transition-transform duration-300 ease-out transform flex flex-col shadow-2xl relative overflow-y-auto ${
+            selectedItem ? 'translate-y-0' : 'translate-y-full'
+          }`}
+          onClick={(e) => e.stopPropagation()}
         >
-          <div 
-            className="w-full max-w-[480px] h-screen bg-white transition-transform duration-300 ease-out transform flex flex-col shadow-2xl relative overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+          {/* Close Back Button */}
+          <button 
+            onClick={() => setSelectedItem(null)}
+            className="absolute top-5 left-5 w-10 h-10 bg-white/95 rounded-full flex items-center justify-center text-gray-900 hover:bg-white transition-all z-50 shadow-md cursor-pointer active:scale-95"
           >
-            {/* Close Cross Button */}
-            <button 
-              onClick={() => setSelectedItem(null)}
-              className="absolute top-5 left-5 w-9 h-9 bg-white/95 rounded-full flex items-center justify-center text-black hover:bg-white transition-all z-50 shadow-sm cursor-pointer"
-            >
-              <X className="w-4 h-4" strokeWidth={1.8} />
-            </button>
+            <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
+          </button>
 
-            {/* Product Cover Image */}
-            <div className="w-full h-96 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
-              {selectedItem.image ? (
-                <img 
-                  src={selectedItem.image} 
-                  alt={selectedItem.name} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <ShoppingBag className="w-20 h-20 text-gray-300" strokeWidth={1} />
-              )}
-            </div>
+          {/* Product Cover Vertical Gallery */}
+          {lastSelectedItem && (() => {
+            const images = getItemImages(lastSelectedItem);
+            return (
+              <div className="relative w-full h-[380px] flex-shrink-0 bg-gray-50 flex">
+                {/* Vertical Swiper/Scroll view */}
+                <div 
+                  ref={imageScrollRef}
+                  onScroll={handleImageScroll}
+                  className="w-full h-full overflow-y-auto snap-y snap-mandatory scroll-smooth scrollbar-none flex flex-col"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {images.map((imgUrl, index) => (
+                    <div key={index} className="w-full h-full flex-shrink-0 snap-start relative">
+                      <img 
+                        src={imgUrl} 
+                        alt={`${lastSelectedItem.name} ${index + 1}`} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
 
-            {/* Content Details Block */}
+                {/* Vertical Thumbnails List on the right */}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30">
+                  {images.map((imgUrl, index) => {
+                    const active = activeImageIndex === index;
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => scrollToImage(index)}
+                        className={`w-[45px] h-[55px] rounded-lg overflow-hidden bg-white/90 hover:bg-white shadow-md transition-all border-2 cursor-pointer flex items-center justify-center p-[1px] ${
+                          active ? 'border-black scale-105' : 'border-transparent opacity-60'
+                        }`}
+                      >
+                        <img 
+                          src={imgUrl} 
+                          alt="Thumbnail" 
+                          className="w-full h-full object-cover rounded-[5px]"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Content Details Block */}
+          {lastSelectedItem && (
             <div className="px-6 py-6 flex flex-col gap-5 text-left bg-white flex-1">
               <div className="flex justify-between items-start gap-3">
                 <div className="flex flex-col gap-0.5">
-                  <h2 className="text-[20px] font-bold text-gray-900 uppercase tracking-tight leading-none">
-                    {selectedItem.name}
+                  <h2 className="text-[20px] font-bold text-gray-900 uppercase tracking-tight leading-none animate-fadeIn">
+                    {lastSelectedItem.name}
                   </h2>
                   <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mt-1">
-                    SKU: {selectedItem.sku}
+                    SKU: {lastSelectedItem.sku}
                   </span>
                 </div>
                 <span className="text-[20px] font-bold text-gray-900">
-                  {selectedItem.price.toFixed(2)}€
+                  {lastSelectedItem.price.toFixed(2)}€
                 </span>
               </div>
 
               {/* Description */}
               <p className="text-[13px] text-gray-500 font-medium leading-relaxed">
-                {selectedItem.description}
+                {lastSelectedItem.description}
               </p>
 
               {/* Dynamic Modifiers Options */}
-              {(selectedItem.options || []).map((opt: any) => (
+              {(lastSelectedItem.options || []).map((opt: any) => (
                 <div key={opt.name} className="flex flex-col gap-2.5">
                   <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider pl-1">
                     {opt.name}
@@ -798,7 +891,7 @@ export default function ShopPage() {
                           onClick={() => handleOptionSelect(opt.name, choice)}
                           className={`px-5 py-3 rounded-2xl font-semibold text-[13px] border transition-all cursor-pointer ${
                             active 
-                              ? 'bg-[#EE635E] border-[#EE635E] text-white shadow-none' 
+                              ? 'bg-[#EE635E] border-[#EE635E] text-white shadow-none animate-pop' 
                               : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50/50'
                           }`}
                         >
@@ -835,13 +928,13 @@ export default function ShopPage() {
                   className="flex-1 bg-[#EE635E] hover:opacity-90 text-white py-4 rounded-full font-semibold text-center text-[15px] transition-all active:scale-[0.98] shadow-none flex justify-between px-6 items-center"
                 >
                   <span>Add to bag</span>
-                  <span>{(selectedItem.price * quantity).toFixed(2)}€</span>
+                  <span>{(lastSelectedItem.price * quantity).toFixed(2)}€</span>
                 </button>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* 2. Unified Cart / Bag Modal Drawer */}
       {showCartDrawer && (
