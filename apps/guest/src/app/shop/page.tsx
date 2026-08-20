@@ -332,27 +332,11 @@ export default function ShopPage() {
   const getItemImages = (item: any): string[] => {
     if (!item) return [];
     const base = item.image || '';
-    if (item.categoryName === 'Hoodie') {
-      return [
-        base,
-        'https://optim.tildacdn.com/stor3034-6330-4131-a237-333534346162/-/format/webp/96517017.jpg.webp',
-        'https://optim.tildacdn.com/stor3638-3430-4133-b838-663866383637/-/format/webp/91517017.jpg.webp',
-        'https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp'
-      ];
-    }
-    if (item.categoryName === 'Sneakers') {
-      return [
-        base,
-        'https://optim.tildacdn.com/stor6161-6336-4138-b638-306263383063/-/format/webp/69517017.jpg.webp',
-        'https://optim.tildacdn.com/stor3163-3661-4638-b062-663435343466/-/format/webp/11517017.jpg.webp',
-        'https://optim.tildacdn.com/stor3865-3866-4139-b935-643531393963/-/format/webp/49517017.jpg.webp'
-      ];
-    }
     return [
       base,
-      'https://optim.tildacdn.com/stor3638-3430-4133-b838-663866383637/-/format/webp/91517017.jpg.webp',
       'https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp',
-      'https://optim.tildacdn.com/stor3034-6330-4131-a237-333534346162/-/format/webp/96517017.jpg.webp'
+      'https://optim.tildacdn.com/stor3739-3364-4261-b461-303831643236/-/format/webp/25245024.jpg.webp',
+      'https://optim.tildacdn.com/stor6539-6437-4337-b332-333736623135/-/format/webp/99869443.jpg.webp'
     ];
   };
 
