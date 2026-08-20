@@ -272,7 +272,7 @@ export default function ShopPage() {
       <div className="w-full max-w-[480px] flex-1 bg-white px-5 py-6 flex flex-col gap-6">
         
         {/* Horizontal Promo Banner Card (Pink shirt on red background) */}
-        <div className="w-full bg-[#EE635E] rounded-[16px] p-6 flex items-center justify-between overflow-hidden relative min-h-[140px] shadow-sm">
+        <div className="w-full bg-[#FC8C86] rounded-[16px] p-6 flex items-center justify-between overflow-hidden relative min-h-[140px] shadow-sm">
           <div className="flex flex-col items-start gap-2.5 z-10 text-left max-w-[60%]">
             <h2 className="text-[17px] font-extrabold text-white leading-tight">
               Buy 1 hoodie,<br />get 45% off caps
@@ -283,7 +283,7 @@ export default function ShopPage() {
                 const capCat = categories.find(c => c.id === "Face Cap");
                 if (capCat) setSelectedStory(capCat);
               }}
-              className="bg-white hover:bg-gray-50 text-[#EE635E] px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none"
+              className="bg-white hover:bg-gray-50 text-[#FC8C86] px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none"
             >
               <span>Shop now</span>
               <ArrowRight className="w-3.5 h-3.5" />
