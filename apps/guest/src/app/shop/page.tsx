@@ -941,24 +941,28 @@ export default function ShopPage() {
                     return (
                       <div 
                         key={addon.id} 
-                        className={`relative w-[130px] flex-shrink-0 bg-gray-50/70 border rounded-[20px] p-3.5 flex flex-col items-center gap-2.5 transition-all text-center select-none ${
-                          isSelected ? 'border-[#EE635E] bg-[#EE635E]/5' : 'border-gray-150/70'
-                        }`}
+                        onClick={() => {
+                          if (!isSelected) {
+                            setSelectedAddons(prev => ({ ...prev, [addon.id]: 1 }));
+                          }
+                        }}
+                        className="relative w-[110px] flex-shrink-0 flex flex-col items-center gap-2.5 transition-all text-center select-none cursor-pointer"
                       >
-                        {/* Top-right Pink Checkmark Circle Badge */}
-                        {isSelected && (
-                          <span className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#EE635E] text-white flex items-center justify-center shadow-md animate-pop z-10">
-                            <Check className="w-3.5 h-3.5" strokeWidth={3.5} />
-                          </span>
-                        )}
-
-                        {/* Round Image at Top */}
-                        <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white shadow-sm border border-gray-100/50 flex-shrink-0 flex items-center justify-center">
-                          <img 
-                            src={addon.image} 
-                            alt={addon.name} 
-                            className="w-full h-full object-cover"
-                          />
+                        {/* Round Image at Top with Checkmark Badge */}
+                        <div className="relative">
+                          <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white shadow-sm border border-gray-100 flex-shrink-0 flex items-center justify-center">
+                            <img 
+                              src={addon.image} 
+                              alt={addon.name} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          {/* Top-right Pink Checkmark Circle Badge */}
+                          {isSelected && (
+                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#EE635E] text-white flex items-center justify-center shadow-md animate-pop z-10">
+                              <Check className="w-3.5 h-3.5" strokeWidth={3.5} />
+                            </span>
+                          )}
                         </div>
 
                         {/* Title and Price */}
@@ -971,17 +975,13 @@ export default function ShopPage() {
                           </span>
                         </div>
 
-                        {/* Bottom Quantity Selector or Add Button */}
-                        <div className="w-full mt-1.5 z-20">
-                          {!isSelected ? (
-                            <button
-                              onClick={() => setSelectedAddons(prev => ({ ...prev, [addon.id]: 1 }))}
-                              className="w-full py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-full font-bold text-[11px] text-gray-700 cursor-pointer shadow-sm active:scale-95 transition-all"
-                            >
-                              + Add
-                            </button>
-                          ) : (
-                            <div className="flex items-center justify-between bg-white border border-[#EE635E]/20 rounded-full px-2.5 py-1 z-20 shadow-sm">
+                        {/* Bottom Quantity Selector (only if selected) */}
+                        {isSelected && (
+                          <div 
+                            className="w-full mt-0.5 z-20"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-between bg-white border border-[#EE635E]/20 rounded-full px-2 py-0.5 z-20 shadow-sm">
                               <button 
                                 onClick={() => {
                                   setSelectedAddons(prev => {
@@ -998,7 +998,7 @@ export default function ShopPage() {
                               >
                                 <Minus className="w-3 h-3" strokeWidth={2.5} />
                               </button>
-                              <span className="text-xs font-bold text-gray-900">
+                              <span className="text-[11px] font-bold text-gray-900">
                                 {q}
                               </span>
                               <button 
@@ -1010,8 +1010,8 @@ export default function ShopPage() {
                                 <Plus className="w-3 h-3" strokeWidth={2.5} />
                               </button>
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
