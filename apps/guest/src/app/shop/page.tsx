@@ -419,8 +419,14 @@ export default function ShopPage() {
       {/* Main Container */}
       <div className="w-full max-w-[480px] flex-1 bg-white px-5 py-6 flex flex-col gap-6">
         
-        {/* Horizontal Promo Banner Card (Pink shirt on red background) */}
-        <div className="w-full bg-[#FC8C86] rounded-[16px] p-6 flex items-center justify-between overflow-hidden relative min-h-[140px] shadow-sm">
+        {/* Horizontal Promo Banner Card (Pink shirt on patterned background) */}
+        <div 
+          className="w-full rounded-[16px] p-6 flex items-center justify-between overflow-hidden relative min-h-[140px] shadow-sm bg-cover bg-center"
+          style={{ 
+            backgroundColor: "#FC8C86",
+            backgroundImage: "url('/pattern2.svg')"
+          }}
+        >
           <div className="flex flex-col items-start gap-2.5 z-10 text-left max-w-[60%]">
             <h2 className="text-[17px] font-bold text-white leading-tight">
               Buy 1 hoodie,<br />get 45% off caps
