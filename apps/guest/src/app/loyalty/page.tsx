@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
@@ -784,7 +784,7 @@ export default function LoyaltyPage() {
   );
 }
 
-const LoyaltyCard3D = React.memo(({ 
+function LoyaltyCard3D({ 
   tier, 
   name, 
   points, 
@@ -798,7 +798,7 @@ const LoyaltyCard3D = React.memo(({
   qrCode: string;
   isHovered: boolean;
   setIsHovered: (h: boolean) => void;
-}) => {
+}) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
 
@@ -809,6 +809,37 @@ const LoyaltyCard3D = React.memo(({
     if (low === 'vip') return '#30303a';
     return '#e9c4b0'; // Bronze / rose-gold
   };
+
+  // Create rounded rectangle geometry with thickness and bevels
+  const geometry = useMemo(() => {
+    const shape = new THREE.Shape();
+    const width = 2.8;
+    const height = 1.77;
+    const radius = 0.16; // large corner radius
+    const x = -width / 2;
+    const y = -height / 2;
+
+    shape.moveTo(x, y + radius);
+    shape.lineTo(x, y + height - radius);
+    shape.quadraticCurveTo(x, y + height, x + radius, y + height);
+    shape.lineTo(x + width - radius, y + height);
+    shape.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
+    shape.lineTo(x + width, y + radius);
+    shape.quadraticCurveTo(x + width, y, x + width - radius, y);
+    shape.lineTo(x + radius, y);
+    shape.quadraticCurveTo(x, y, x, y + radius);
+
+    const extrudeSettings = {
+      depth: 0.03, // Thin credit card thickness
+      bevelEnabled: true,
+      bevelSegments: 4,
+      steps: 1,
+      bevelSize: 0.015, // Prominent visible bevel edge
+      bevelThickness: 0.015
+    };
+
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  }, []);
 
   useEffect(() => {
     const canvas = document.createElement('canvas');
@@ -850,6 +881,17 @@ const LoyaltyCard3D = React.memo(({
         ctx.lineTo(i + (Math.random() - 0.5) * 60, 648);
         ctx.stroke();
       }
+
+      // Draw smooth border stroke outline around the card
+      ctx.strokeStyle = t === 'vip' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(60, 28, 10, 0.25)';
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(14, 14, 1024 - 28, 648 - 28, 48);
+      } else {
+        ctx.rect(14, 14, 1024 - 28, 648 - 28);
+      }
+      ctx.stroke();
 
       // Draw header info
       ctx.fillStyle = t === 'vip' ? '#f8fafc' : '#3c1c0a';
@@ -920,29 +962,44 @@ const LoyaltyCard3D = React.memo(({
     }
   });
 
+  // Construct front/back and side materials
+  const materials = useMemo(() => {
+    if (!texture) {
+      return [
+        new THREE.MeshStandardMaterial({ color: getSideColor(tier) }),
+        new THREE.MeshStandardMaterial({ color: getSideColor(tier) })
+      ];
+    }
+
+    const frontMat = new THREE.MeshPhysicalMaterial({
+      map: texture,
+      metalness: tier.toLowerCase() === 'vip' ? 0.95 : 0.85,
+      roughness: 0.42,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1
+    });
+
+    const sideMat = new THREE.MeshPhysicalMaterial({
+      color: getSideColor(tier),
+      metalness: 0.95,
+      roughness: 0.15,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1
+    });
+
+    return [frontMat, sideMat];
+  }, [texture, tier]);
+
   return (
-    <RoundedBox 
-      ref={meshRef as any}
-      args={[2.8, 1.77, 0.16]} 
-      radius={0.05} 
-      smoothness={8}
+    <mesh 
+      ref={meshRef} 
+      geometry={geometry}
+      material={materials}
       onPointerOver={() => setIsHovered(true)} 
       onPointerOut={() => setIsHovered(false)}
-    >
-      {texture ? (
-        <meshPhysicalMaterial 
-          map={texture}
-          metalness={tier.toLowerCase() === 'vip' ? 0.95 : 0.85}
-          roughness={0.42}
-          clearcoat={1.0}
-          clearcoatRoughness={0.1}
-        />
-      ) : (
-        <meshStandardMaterial color={getSideColor(tier)} />
-      )}
-    </RoundedBox>
+    />
   );
-});
+};
 
 function Scene3D({ 
   tier, 
