@@ -844,15 +844,18 @@ export default function LoyaltyPage() {
             isHistoryOpen ? 'translate-y-0' : 'translate-y-full'
           }`}>
             {/* Drawer Header */}
-            <div className="px-6 pt-12 pb-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0 bg-gray-50/50">
+            <div className="px-6 pt-8 pb-4 border-b border-gray-100 flex items-start justify-between flex-shrink-0 bg-white">
+              <div className="flex flex-col text-left">
+                <span className="text-xl font-bold text-gray-900 uppercase tracking-tight">Points History</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Your transaction logs</span>
+              </div>
               <button 
                 onClick={() => setIsHistoryOpen(false)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-all active:scale-90 cursor-pointer"
+                className="text-gray-800 hover:text-gray-900 transition-colors p-1 cursor-pointer active:scale-90"
+                title="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" strokeWidth={2.2} />
               </button>
-              <span className="font-bold text-sm text-gray-805 tracking-widest uppercase">Points History</span>
-              <div className="w-8 h-8" />
             </div>
 
             {/* Drawer Body Container (Scrollable) */}
