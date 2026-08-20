@@ -821,14 +821,16 @@ export default function ShopPage() {
                       <button
                         key={index}
                         onClick={() => scrollToImage(index)}
-                        className={`w-[45px] h-[55px] rounded-lg overflow-hidden bg-white shadow-md transition-all border-[1.5px] cursor-pointer flex items-center justify-center p-[0.5px] ${
-                          active ? 'border-[#EE635E] scale-105' : 'border-transparent'
+                        className={`w-[45px] h-[55px] rounded-lg overflow-hidden shadow-md transition-all border-[1.5px] cursor-pointer flex items-center justify-center p-0 ${
+                          active 
+                            ? 'border-[#EE635E] bg-transparent scale-105' 
+                            : 'border-white bg-transparent'
                         }`}
                       >
                         <img 
                           src={imgUrl} 
                           alt="Thumbnail" 
-                          className="w-full h-full object-cover rounded-[6px]"
+                          className="w-full h-full object-cover"
                         />
                       </button>
                     );
