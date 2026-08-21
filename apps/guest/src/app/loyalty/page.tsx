@@ -1287,10 +1287,9 @@ export default function LoyaltyPage() {
     );
   }
 
-  // Registration complete profile layout
   if (needRegister) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-6 pb-12">
+      <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center px-6 pt-10 pb-32">
         <div className="w-full max-w-[400px] bg-white rounded-[32px] p-6 shadow-[0_15px_30px_rgba(0,0,0,0.06)] border border-gray-100 flex flex-col text-left">
           <div className="flex flex-col items-center text-center mb-6">
             <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-[#FDBD38] mb-3">
@@ -1365,7 +1364,7 @@ export default function LoyaltyPage() {
   const detectedCountry = getCountryFlagAndName(phone);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-6 py-12">
+    <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center px-6 pt-10 pb-32">
       <div className="w-full max-w-[400px] bg-white rounded-[24px] p-6 shadow-none border border-gray-100 flex flex-col text-left">
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-[#FDBD38] mb-3">
