@@ -349,6 +349,19 @@ export default function LoyaltyPage() {
     return `https://raw.githubusercontent.com/dvytvytskyi/cafe_pos/main/apps/guest/public${path}`;
   };
 
+  const getCountryFlagAndName = (phoneStr: string) => {
+    const clean = phoneStr.trim();
+    if (clean.startsWith('+34') || clean.startsWith('34')) return { flag: '🇪🇸', name: 'Spain' };
+    if (clean.startsWith('+380') || clean.startsWith('380') || clean.startsWith('+38')) return { flag: '🇺🇦', name: 'Ukraine' };
+    if (clean.startsWith('+1') || clean.startsWith('1')) return { flag: '🇺🇸', name: 'USA' };
+    if (clean.startsWith('+44') || clean.startsWith('44')) return { flag: '🇬🇧', name: 'UK' };
+    if (clean.startsWith('+49') || clean.startsWith('49')) return { flag: '🇩🇪', name: 'Germany' };
+    if (clean.startsWith('+33') || clean.startsWith('33')) return { flag: '🇫🇷', name: 'France' };
+    if (clean.startsWith('+39') || clean.startsWith('39')) return { flag: '🇮🇹', name: 'Italy' };
+    if (clean.startsWith('+48') || clean.startsWith('48')) return { flag: '🇵🇱', name: 'Poland' };
+    return null;
+  };
+
   // Helper to determine tier badge border / color
   const getTierGradient = (tier: string) => {
     const t = tier.toLowerCase();
@@ -1349,23 +1362,33 @@ export default function LoyaltyPage() {
   }
 
   // OTP Login view (Logged Out)
+  const detectedCountry = getCountryFlagAndName(phone);
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-6 pb-12">
-      <div className="w-full max-w-[400px] bg-white rounded-[32px] p-6 shadow-[0_15px_30px_rgba(0,0,0,0.06)] border border-gray-100 flex flex-col text-left">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-6 py-12">
+      <div className="w-full max-w-[400px] bg-white rounded-[24px] p-6 shadow-none border border-gray-100 flex flex-col text-left">
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-[#FDBD38] mb-3">
             <Gift className="w-6 h-6" />
           </div>
           <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Loyalty Program</h1>
           <p className="text-xs text-gray-400 mt-1 max-w-[280px]">
-            Sign up or log in using your phone number to collect points and claim free rewards.
+            Sign up or log in using your phone number to collect rewards and claim cashback.
           </p>
         </div>
 
         {!otpSent ? (
           <form onSubmit={handleRequestOtp} className="flex flex-col gap-4">
             <div>
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block mb-1">Phone Number</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block mb-1.5 flex items-center justify-between">
+                <span>Phone Number</span>
+                {detectedCountry && (
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                    <span>{detectedCountry.flag}</span>
+                    <span>{detectedCountry.name}</span>
+                  </span>
+                )}
+              </label>
               <div className="relative">
                 <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
                 <input
@@ -1374,7 +1397,7 @@ export default function LoyaltyPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+34600111222"
-                  className="w-full border border-gray-200 rounded-[14px] py-2.5 pl-10 pr-4 text-sm font-medium text-gray-800 focus:outline-none focus:border-[#FDBD38]"
+                  className="w-full border border-gray-200 rounded-[14px] py-2.5 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38]"
                 />
               </div>
             </div>
@@ -1406,7 +1429,7 @@ export default function LoyaltyPage() {
             )}
 
             <div>
-              <label className="text-[10px] font-bold text-gray-450 uppercase tracking-wide block mb-1">SMS Verification Code</label>
+              <label className="text-[10px] font-bold text-gray-455 uppercase tracking-wide block mb-1">SMS Verification Code</label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
                 <input
@@ -1415,7 +1438,7 @@ export default function LoyaltyPage() {
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
                   placeholder="123456"
-                  className="w-full border border-gray-200 rounded-[14px] py-2.5 pl-10 pr-4 text-sm font-medium text-gray-800 focus:outline-none focus:border-[#FDBD38]"
+                  className="w-full border border-gray-200 rounded-[14px] py-2.5 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38]"
                 />
               </div>
             </div>
@@ -1438,6 +1461,54 @@ export default function LoyaltyPage() {
             </button>
           </form>
         )}
+      </div>
+
+      {/* Loyalty Program Information Perks Section */}
+      <div className="w-full max-w-[400px] bg-white rounded-[24px] p-6 shadow-none border border-gray-100 mt-4 flex flex-col text-left">
+        <span className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-4 block">Loyalty Program Perks</span>
+        <div className="flex flex-col gap-4">
+          
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#c29124] flex-shrink-0 text-sm">
+              ☕️
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-gray-800">5% Welcome Cashback</span>
+              <span className="text-[10px] text-gray-400 mt-0.5">Get 5% cashback in Euros on your first purchase at Corgi Cafe.</span>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#c29124] flex-shrink-0 text-sm">
+              🥐
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-gray-800">Unlock Sticker Rewards</span>
+              <span className="text-[10px] text-gray-400 mt-0.5">Collect digital stickers for ordering croissants, smoothies and desserts. Share them to chats!</span>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#c29124] flex-shrink-0 text-sm">
+              📱
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-gray-800">Apple Wallet Integration</span>
+              <span className="text-[10px] text-gray-400 mt-0.5">Add your virtual loyalty card pass to your Apple Wallet for instant counter checks.</span>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#c29124] flex-shrink-0 text-sm">
+              🎖
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-gray-800">Progressive Cashback Tiers</span>
+              <span className="text-[10px] text-gray-400 mt-0.5">Level up from Bronze to Legend to increase your cashback percentage rate.</span>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
