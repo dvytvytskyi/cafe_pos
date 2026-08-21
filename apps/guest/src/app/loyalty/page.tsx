@@ -540,8 +540,8 @@ export default function LoyaltyPage() {
         <div className="w-full bg-[#FAF7F3] mt-8 py-8 px-6 border-t border-gray-100/50">
           <div className="max-w-[440px] mx-auto flex flex-col gap-8">
             
-            {/* Stepper Progress Timeline (6 stages) */}
-            <div className="flex flex-col text-left mb-2">
+            {/* Stepper Progress Timeline (6 stages) inside a flat white frame */}
+            <div className="bg-white rounded-[24px] border border-gray-100 p-5 shadow-none flex flex-col text-left mb-2">
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-sm font-bold text-gray-800">Tier Progress</span>
                 <span className="text-xs font-bold text-[#FDBD38]">
@@ -582,7 +582,7 @@ export default function LoyaltyPage() {
                         {/* Node Label Below */}
                         <div className="absolute top-5 flex flex-col items-center whitespace-nowrap select-none">
                           <span className={`text-[9px] font-bold tracking-tight uppercase ${
-                            isReached || isCurrent ? 'text-gray-805' : 'text-gray-400'
+                            isReached || isCurrent ? 'text-gray-855' : 'text-gray-400'
                           }`}>
                             {['Friend', 'Explorer', 'Member', 'Expert', 'VIP', 'Legend'][idx]}
                           </span>
