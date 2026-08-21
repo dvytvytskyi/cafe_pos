@@ -1366,19 +1366,19 @@ export default function LoyaltyPage() {
   return (
     <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center pb-32">
       {/* Brand Yellow Top Header with Organic Wave */}
-      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-950 pt-12 pb-14 px-6 relative overflow-hidden select-none">
+      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-14 pb-20 px-6 relative overflow-hidden select-none">
         {/* Organic SVG Wave bottom transition */}
         <svg 
-          className="absolute bottom-0 left-0 w-full h-[32px] text-gray-50 fill-current translate-y-[1px]" 
+          className="absolute bottom-0 left-0 w-full h-[36px] text-gray-50 fill-current translate-y-[1px]" 
           viewBox="0 0 1440 320" 
           preserveAspectRatio="none"
         >
           <path d="M0,96 C288,192 576,96 864,160 C1152,224 1344,160 1440,128 L1440,320 L0,320 Z" />
         </svg>
 
-        <div className="max-w-[400px] mx-auto flex flex-col items-center text-center relative z-10">
-          <h1 className="text-2xl font-extrabold text-gray-950 tracking-tight leading-none mb-2">Corgi Loyalty Program</h1>
-          <p className="text-xs font-bold text-gray-900/80 max-w-[300px] leading-relaxed">
+        <div className="max-w-[400px] mx-auto flex flex-col items-center text-center relative z-10 pb-4">
+          <h1 className="text-2xl font-extrabold text-white tracking-tight leading-none mb-2.5 drop-shadow-sm">Corgi Loyalty Program</h1>
+          <p className="text-xs font-semibold text-white/95 max-w-[300px] leading-relaxed">
             Earn cashback in Euros, unlock exclusive stickers, and add your pass to Apple Wallet.
           </p>
         </div>
