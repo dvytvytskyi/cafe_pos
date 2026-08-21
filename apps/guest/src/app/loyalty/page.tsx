@@ -861,6 +861,17 @@ export default function LoyaltyPage() {
                 </div>
               </div>
 
+              {/* Minimal Log Out Button at the bottom */}
+              <div className="flex justify-center mt-2 mb-8 select-none">
+                <button
+                  onClick={handleLogoutClick}
+                  className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-[#EE635E] active:scale-95 transition-all cursor-pointer py-2 px-4 rounded-full hover:bg-rose-50/50"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log Out</span>
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
@@ -1145,10 +1156,10 @@ export default function LoyaltyPage() {
                       link.click();
                       document.body.removeChild(link);
                     }}
-                    className="w-full bg-gray-100 hover:bg-gray-150 text-gray-800 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer border border-gray-200 shadow-sm"
+                    className="w-full bg-[#FDBD38]/10 hover:bg-[#FDBD38]/15 text-[#b08115] py-3 rounded-[16px] font-bold text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer border-none shadow-none"
                     title="Download Sticker Image File"
                   >
-                    <Download className="w-4 h-4 text-gray-600" />
+                    <Download className="w-4 h-4 text-[#b08115]" />
                     <span>Download Sticker File</span>
                   </button>
                 </div>
