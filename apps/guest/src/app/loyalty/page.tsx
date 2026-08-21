@@ -1385,7 +1385,7 @@ export default function LoyaltyPage() {
       </div>
 
       {/* Main Content Container (Frameless Form + Member Privileges) */}
-      <div className="w-full max-w-[400px] px-6 mt-6 flex flex-col gap-8 relative z-20">
+      <div className="w-full max-w-[400px] px-6 mt-4 flex flex-col gap-8 relative z-20">
         
         {/* Form Container (Clean & Frameless) */}
         {!otpSent ? (
