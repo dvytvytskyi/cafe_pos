@@ -1377,10 +1377,7 @@ export default function LoyaltyPage() {
         </svg>
 
         <div className="max-w-[400px] mx-auto flex flex-col items-center text-center relative z-10">
-          <div className="w-14 h-14 bg-white/30 backdrop-blur-md rounded-[22px] flex items-center justify-center text-gray-950 mb-3.5 shadow-sm border border-white/40">
-            <Gift className="w-7 h-7" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-gray-950 tracking-tight leading-none mb-2">Corgi Loyalty Club</h1>
+          <h1 className="text-2xl font-extrabold text-gray-950 tracking-tight leading-none mb-2">Corgi Loyalty Program</h1>
           <p className="text-xs font-bold text-gray-900/80 max-w-[290px] leading-relaxed">
             Earn cashback in Euros, unlock exclusive stickers, and add your pass to Apple Wallet.
           </p>
