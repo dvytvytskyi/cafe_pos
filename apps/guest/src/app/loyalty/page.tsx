@@ -438,7 +438,7 @@ export default function LoyaltyPage() {
             >
               {/* Front Side: Profile Info Card */}
               <div 
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[10px] shadow-sm border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 pt-[10px] shadow-none border border-gray-100 flex flex-col justify-between [backface-visibility:hidden] relative"
               >
                 {/* Left Status Info (Absolute positioned) */}
                 <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
@@ -504,7 +504,7 @@ export default function LoyaltyPage() {
               {/* Back Side: QR Code Card */}
               <div 
                 onClick={() => setIsCardFlipped(false)}
-                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex flex-col items-center justify-between [backface-visibility:hidden] [transform:rotateY(180deg)]"
+                className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-5 shadow-none border border-gray-100 flex flex-col items-center justify-between [backface-visibility:hidden] [transform:rotateY(180deg)]"
               >
                 <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Scannable Member Code</span>
                 
