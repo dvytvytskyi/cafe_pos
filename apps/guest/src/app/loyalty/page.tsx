@@ -1364,150 +1364,163 @@ export default function LoyaltyPage() {
   const detectedCountry = getCountryFlagAndName(phone);
 
   return (
-    <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center px-6 pt-16 pb-32">
-      <div className="w-full max-w-[400px] flex flex-col text-left">
-        
-        {/* Sleek Branding Header */}
-        <div className="flex flex-col text-left mb-8 select-none">
-          <div className="w-14 h-14 bg-[#FDBD38]/10 rounded-[20px] flex items-center justify-center text-[#b08115] mb-5 select-none animate-fadeIn">
+    <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center pb-32">
+      {/* Brand Yellow Top Header with Organic Wave */}
+      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-950 pt-10 pb-16 px-6 relative overflow-hidden select-none">
+        {/* Organic SVG Wave bottom transition */}
+        <svg 
+          className="absolute bottom-0 left-0 w-full h-[38px] text-gray-50 fill-current translate-y-[1px]" 
+          viewBox="0 0 1440 320" 
+          preserveAspectRatio="none"
+        >
+          <path d="M0,96 C288,192 576,96 864,160 C1152,224 1344,160 1440,128 L1440,320 L0,320 Z" />
+        </svg>
+
+        <div className="max-w-[400px] mx-auto flex flex-col items-center text-center relative z-10">
+          <div className="w-14 h-14 bg-white/30 backdrop-blur-md rounded-[22px] flex items-center justify-center text-gray-950 mb-3.5 shadow-sm border border-white/40">
             <Gift className="w-7 h-7" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-none mb-3">Corgi Club</h1>
-          <p className="text-sm font-semibold text-gray-500 leading-relaxed">
-            Sign up or log in using your phone number to collect rewards, claim cashback and unlock special stickers.
+          <h1 className="text-2xl font-extrabold text-gray-950 tracking-tight leading-none mb-2">Corgi Loyalty Club</h1>
+          <p className="text-xs font-bold text-gray-900/80 max-w-[290px] leading-relaxed">
+            Earn cashback in Euros, unlock exclusive stickers, and add your pass to Apple Wallet.
           </p>
         </div>
+      </div>
 
-        {/* Input Form Fields (Clean inputs directly on page background, no container card) */}
-        {!otpSent ? (
-          <form onSubmit={handleRequestOtp} className="flex flex-col gap-5 w-full">
-            <div>
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 flex items-center justify-between">
-                <span>Phone Number</span>
-                {detectedCountry && (
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <span>{detectedCountry.flag}</span>
-                    <span>{detectedCountry.name}</span>
-                  </span>
-                )}
-              </label>
-              <div className="relative">
-                <Phone className="w-4.5 h-4.5 text-gray-400 absolute left-4 top-3.5" />
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+34 600 111 222"
-                  className="w-full bg-white border border-gray-200 rounded-[18px] py-3.5 pl-12 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/5 transition-all shadow-none"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-955 py-3.5 rounded-[18px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-2"
-            >
-              <span>{loading ? 'Sending SMS...' : 'Send SMS OTP'}</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp} className="flex flex-col gap-5 w-full">
-            <div className="bg-emerald-50 text-emerald-700 p-3.5 rounded-[16px] text-xs font-semibold flex items-start gap-2.5 mb-2 leading-relaxed">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <span>We sent a verification code to {phone}</span>
-            </div>
-
-            {devCode && (
-              <div className="bg-amber-50 text-amber-850 p-3.5 rounded-[16px] text-xs font-semibold flex items-start gap-2.5 mb-2 border border-amber-100 leading-relaxed">
-                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <span className="block font-bold">Dev Sandbox Code (Auto-resolved):</span>
-                  <span className="block font-bold text-sm text-amber-950 mt-0.5 select-all">{devCode}</span>
+      {/* Main Content Container (Form + Vector Icon Benefits) */}
+      <div className="w-full max-w-[440px] px-6 -mt-4 flex flex-col gap-5 relative z-20">
+        
+        {/* Form Container Card */}
+        <div className="w-full bg-white rounded-[24px] p-6 border border-gray-100/90 shadow-sm flex flex-col text-left">
+          {!otpSent ? (
+            <form onSubmit={handleRequestOtp} className="flex flex-col gap-4 w-full">
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5 flex items-center justify-between">
+                  <span>Phone Number</span>
+                  {detectedCountry && (
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                      <span>{detectedCountry.flag}</span>
+                      <span>{detectedCountry.name}</span>
+                    </span>
+                  )}
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+34 600 111 222"
+                    className="w-full bg-white border border-gray-200 rounded-[14px] py-3 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/10 transition-all shadow-none"
+                  />
                 </div>
               </div>
-            )}
 
-            <div>
-              <label className="text-[10px] font-bold text-gray-455 uppercase tracking-widest block mb-2">SMS Verification Code</label>
-              <div className="relative">
-                <Lock className="w-4.5 h-4.5 text-gray-400 absolute left-4 top-3.5" />
-                <input
-                  type="text"
-                  required
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  placeholder="123456"
-                  className="w-full bg-white border border-gray-200 rounded-[18px] py-3.5 pl-12 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/5 transition-all shadow-none"
-                />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-950 py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
+              >
+                <span>{loading ? 'Sending SMS...' : 'Send SMS OTP'}</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4 w-full">
+              <div className="bg-emerald-50 text-emerald-700 p-3.5 rounded-[16px] text-xs font-semibold flex items-start gap-2.5 mb-2 leading-relaxed">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <span>We sent a verification code to {phone}</span>
+              </div>
+
+              {devCode && (
+                <div className="bg-amber-50 text-amber-850 p-3.5 rounded-[16px] text-xs font-semibold flex items-start gap-2.5 mb-2 border border-amber-100 leading-relaxed">
+                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="block font-bold">Dev Sandbox Code (Auto-resolved):</span>
+                    <span className="block font-bold text-sm text-amber-950 mt-0.5 select-all">{devCode}</span>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">SMS Verification Code</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    placeholder="123456"
+                    className="w-full bg-white border border-gray-200 rounded-[14px] py-3 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/10 transition-all shadow-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-950 py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
+              >
+                <span>{loading ? 'Verifying...' : 'Verify Code'}</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setOtpSent(false)}
+                className="w-full border border-gray-200 hover:bg-gray-50 text-gray-500 py-3 rounded-[16px] font-bold text-xs transition-all active:scale-[0.98] mt-1 cursor-pointer"
+              >
+                Back to phone entry
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* Vector Icon Benefits Card */}
+        <div className="w-full bg-white rounded-[24px] p-5 border border-gray-100/90 shadow-sm flex flex-col text-left">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">Member Privileges</span>
+          
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-9 h-9 rounded-full bg-amber-50/90 flex items-center justify-center text-[#b08115] flex-shrink-0">
+                <Coins className="w-4.5 h-4.5" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-gray-800">5% Welcome Cashback</span>
+                <span className="text-[10px] text-gray-400 font-semibold mt-0.5 leading-snug">Get 5% cashback in Euros on your first purchase at Corgi Cafe.</span>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-955 py-3.5 rounded-[18px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-2"
-            >
-              <span>{loading ? 'Verifying...' : 'Verify Code'}</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            <div className="flex items-start gap-3.5">
+              <div className="w-9 h-9 rounded-full bg-amber-50/90 flex items-center justify-center text-[#b08115] flex-shrink-0">
+                <Sparkles className="w-4.5 h-4.5" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-gray-800">Unlock Sticker Rewards</span>
+                <span className="text-[10px] text-gray-400 font-semibold mt-0.5 leading-snug">Collect digital stickers for croissants, coffee & treats. Share to Telegram!</span>
+              </div>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => setOtpSent(false)}
-              className="w-full border border-gray-200 hover:bg-gray-100 text-gray-500 py-3.5 rounded-[18px] font-bold text-xs transition-all active:scale-[0.98] mt-1 cursor-pointer"
-            >
-              Back to phone entry
-            </button>
-          </form>
-        )}
+            <div className="flex items-start gap-3.5">
+              <div className="w-9 h-9 rounded-full bg-amber-50/90 flex items-center justify-center text-[#b08115] flex-shrink-0">
+                <QrCode className="w-4.5 h-4.5" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-gray-800">Apple Wallet Pass</span>
+                <span className="text-[10px] text-gray-400 font-semibold mt-0.5 leading-snug">Add your virtual loyalty pass to Apple Wallet for quick counter scans.</span>
+              </div>
+            </div>
 
-        {/* Perks Section Divider */}
-        <div className="border-t border-gray-250/70 my-10 w-full" />
-
-        {/* Beautiful List of Benefits */}
-        <div className="w-full flex flex-col gap-6">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Club Benefits</span>
-          
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-[14px] bg-[#FDBD38]/10 flex items-center justify-center text-[#b08115] flex-shrink-0 text-lg select-none">
-              ☕️
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-sm font-bold text-gray-800">5% Welcome Cashback</span>
-              <span className="text-xs text-gray-500 font-semibold mt-0.5 leading-relaxed">Get 5% cashback in Euros on your first purchase at Corgi Cafe.</span>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-[14px] bg-[#FDBD38]/10 flex items-center justify-center text-[#b08115] flex-shrink-0 text-lg select-none">
-              🥐
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-sm font-bold text-gray-800">Unlock Sticker Rewards</span>
-              <span className="text-xs text-gray-500 font-semibold mt-0.5 leading-relaxed">Collect digital stickers for ordering croissants, smoothies and desserts. Share them to chats!</span>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-[14px] bg-[#FDBD38]/10 flex items-center justify-center text-[#b08115] flex-shrink-0 text-lg select-none">
-              📱
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-sm font-bold text-gray-800">Apple Wallet Integration</span>
-              <span className="text-xs text-gray-500 font-semibold mt-0.5 leading-relaxed">Add your virtual loyalty card pass to your Apple Wallet for instant counter checks.</span>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-[14px] bg-[#FDBD38]/10 flex items-center justify-center text-[#b08115] flex-shrink-0 text-lg select-none">
-              🎖
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-sm font-bold text-gray-800">Progressive Cashback Tiers</span>
-              <span className="text-xs text-gray-500 font-semibold mt-0.5 leading-relaxed">Level up from Bronze to Legend to increase your cashback percentage rate.</span>
+            <div className="flex items-start gap-3.5">
+              <div className="w-9 h-9 rounded-full bg-amber-50/90 flex items-center justify-center text-[#b08115] flex-shrink-0">
+                <Crown className="w-4.5 h-4.5" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-gray-800">Progressive Tiers</span>
+                <span className="text-[10px] text-gray-400 font-semibold mt-0.5 leading-snug">Level up from Bronze to Legend to boost your cashback percentage.</span>
+              </div>
             </div>
           </div>
         </div>
