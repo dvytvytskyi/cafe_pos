@@ -1366,10 +1366,10 @@ export default function LoyaltyPage() {
   return (
     <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center pb-32">
       {/* Brand Yellow Top Header with Organic Wave */}
-      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-950 pt-10 pb-16 px-6 relative overflow-hidden select-none">
+      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-950 pt-12 pb-14 px-6 relative overflow-hidden select-none">
         {/* Organic SVG Wave bottom transition */}
         <svg 
-          className="absolute bottom-0 left-0 w-full h-[38px] text-gray-50 fill-current translate-y-[1px]" 
+          className="absolute bottom-0 left-0 w-full h-[32px] text-gray-50 fill-current translate-y-[1px]" 
           viewBox="0 0 1440 320" 
           preserveAspectRatio="none"
         >
@@ -1378,110 +1378,108 @@ export default function LoyaltyPage() {
 
         <div className="max-w-[400px] mx-auto flex flex-col items-center text-center relative z-10">
           <h1 className="text-2xl font-extrabold text-gray-950 tracking-tight leading-none mb-2">Corgi Loyalty Program</h1>
-          <p className="text-xs font-bold text-gray-900/80 max-w-[290px] leading-relaxed">
+          <p className="text-xs font-bold text-gray-900/80 max-w-[300px] leading-relaxed">
             Earn cashback in Euros, unlock exclusive stickers, and add your pass to Apple Wallet.
           </p>
         </div>
       </div>
 
-      {/* Main Content Container (Form + Vector Icon Benefits) */}
-      <div className="w-full max-w-[440px] px-6 -mt-4 flex flex-col gap-5 relative z-20">
+      {/* Main Content Container (Frameless Form + Member Privileges) */}
+      <div className="w-full max-w-[400px] px-6 mt-6 flex flex-col gap-8 relative z-20">
         
-        {/* Form Container Card */}
-        <div className="w-full bg-white rounded-[24px] p-6 border border-gray-100/90 shadow-sm flex flex-col text-left">
-          {!otpSent ? (
-            <form onSubmit={handleRequestOtp} className="flex flex-col gap-4 w-full">
-              <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5 flex items-center justify-between">
-                  <span>Phone Number</span>
-                  {detectedCountry && (
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                      <span>{detectedCountry.flag}</span>
-                      <span>{detectedCountry.name}</span>
-                    </span>
-                  )}
-                </label>
-                <div className="relative">
-                  <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+34 600 111 222"
-                    className="w-full bg-white border border-gray-200 rounded-[14px] py-3 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/10 transition-all shadow-none"
-                  />
+        {/* Form Container (Clean & Frameless) */}
+        {!otpSent ? (
+          <form onSubmit={handleRequestOtp} className="flex flex-col gap-4 w-full">
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5 flex items-center justify-between">
+                <span>Phone Number</span>
+                {detectedCountry && (
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                    <span>{detectedCountry.flag}</span>
+                    <span>{detectedCountry.name}</span>
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+34 600 111 222"
+                  className="w-full bg-white border border-gray-200 rounded-[14px] py-3 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/10 transition-all shadow-none"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-950 py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
+            >
+              <span>{loading ? 'Sending SMS...' : 'Send SMS OTP'}</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4 w-full">
+            <div className="bg-emerald-50 text-emerald-700 p-3.5 rounded-[16px] text-xs font-semibold flex items-start gap-2.5 mb-2 leading-relaxed">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <span>We sent a verification code to {phone}</span>
+            </div>
+
+            {devCode && (
+              <div className="bg-amber-50 text-amber-850 p-3.5 rounded-[16px] text-xs font-semibold flex items-start gap-2.5 mb-2 border border-amber-100 leading-relaxed">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="block font-bold">Dev Sandbox Code (Auto-resolved):</span>
+                  <span className="block font-bold text-sm text-amber-950 mt-0.5 select-all">{devCode}</span>
                 </div>
               </div>
+            )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-950 py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
-              >
-                <span>{loading ? 'Sending SMS...' : 'Send SMS OTP'}</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4 w-full">
-              <div className="bg-emerald-50 text-emerald-700 p-3.5 rounded-[16px] text-xs font-semibold flex items-start gap-2.5 mb-2 leading-relaxed">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <span>We sent a verification code to {phone}</span>
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">SMS Verification Code</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+                <input
+                  type="text"
+                  required
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  placeholder="123456"
+                  className="w-full bg-white border border-gray-200 rounded-[14px] py-3 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/10 transition-all shadow-none"
+                />
               </div>
+            </div>
 
-              {devCode && (
-                <div className="bg-amber-50 text-amber-850 p-3.5 rounded-[16px] text-xs font-semibold flex items-start gap-2.5 mb-2 border border-amber-100 leading-relaxed">
-                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="block font-bold">Dev Sandbox Code (Auto-resolved):</span>
-                    <span className="block font-bold text-sm text-amber-950 mt-0.5 select-all">{devCode}</span>
-                  </div>
-                </div>
-              )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-950 py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
+            >
+              <span>{loading ? 'Verifying...' : 'Verify Code'}</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
 
-              <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">SMS Verification Code</label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    required
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    placeholder="123456"
-                    className="w-full bg-white border border-gray-200 rounded-[14px] py-3 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/10 transition-all shadow-none"
-                  />
-                </div>
-              </div>
+            <button
+              type="button"
+              onClick={() => setOtpSent(false)}
+              className="w-full border border-gray-200 hover:bg-gray-50 text-gray-500 py-3 rounded-[16px] font-bold text-xs transition-all active:scale-[0.98] mt-1 cursor-pointer"
+            >
+              Back to phone entry
+            </button>
+          </form>
+        )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-950 py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
-              >
-                <span>{loading ? 'Verifying...' : 'Verify Code'}</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setOtpSent(false)}
-                className="w-full border border-gray-200 hover:bg-gray-50 text-gray-500 py-3 rounded-[16px] font-bold text-xs transition-all active:scale-[0.98] mt-1 cursor-pointer"
-              >
-                Back to phone entry
-              </button>
-            </form>
-          )}
-        </div>
-
-        {/* Vector Icon Benefits Card */}
-        <div className="w-full bg-white rounded-[24px] p-5 border border-gray-100/90 shadow-sm flex flex-col text-left">
+        {/* Vector Icon Benefits (Clean & Frameless) */}
+        <div className="w-full flex flex-col text-left">
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">Member Privileges</span>
           
           <div className="flex flex-col gap-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-full bg-amber-50/90 flex items-center justify-center text-[#b08115] flex-shrink-0">
+              <div className="w-9 h-9 rounded-full bg-amber-100/60 flex items-center justify-center text-[#b08115] flex-shrink-0">
                 <Coins className="w-4.5 h-4.5" />
               </div>
               <div className="flex flex-col text-left">
@@ -1491,7 +1489,7 @@ export default function LoyaltyPage() {
             </div>
 
             <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-full bg-amber-50/90 flex items-center justify-center text-[#b08115] flex-shrink-0">
+              <div className="w-9 h-9 rounded-full bg-amber-100/60 flex items-center justify-center text-[#b08115] flex-shrink-0">
                 <Sparkles className="w-4.5 h-4.5" />
               </div>
               <div className="flex flex-col text-left">
@@ -1501,7 +1499,7 @@ export default function LoyaltyPage() {
             </div>
 
             <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-full bg-amber-50/90 flex items-center justify-center text-[#b08115] flex-shrink-0">
+              <div className="w-9 h-9 rounded-full bg-amber-100/60 flex items-center justify-center text-[#b08115] flex-shrink-0">
                 <QrCode className="w-4.5 h-4.5" />
               </div>
               <div className="flex flex-col text-left">
@@ -1511,7 +1509,7 @@ export default function LoyaltyPage() {
             </div>
 
             <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-full bg-amber-50/90 flex items-center justify-center text-[#b08115] flex-shrink-0">
+              <div className="w-9 h-9 rounded-full bg-amber-100/60 flex items-center justify-center text-[#b08115] flex-shrink-0">
                 <Crown className="w-4.5 h-4.5" />
               </div>
               <div className="flex flex-col text-left">
