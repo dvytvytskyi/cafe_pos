@@ -76,6 +76,10 @@ export default function LoyaltyPage() {
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoSuccess, setPromoSuccess] = useState<boolean>(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isAppleWalletOpen, setIsAppleWalletOpen] = useState(false);
+  const [isAddingToWallet, setIsAddingToWallet] = useState(false);
+  const [walletAdded, setWalletAdded] = useState(false);
+  const [calcSpend, setCalcSpend] = useState(15);
   const [selectedSticker, setSelectedSticker] = useState<{
     id: number;
     name: string;
@@ -83,6 +87,24 @@ export default function LoyaltyPage() {
     path: string;
     unlocked: boolean;
   } | null>(null);
+
+  const handleDownloadPass = () => {
+    setIsAddingToWallet(true);
+    setTimeout(() => {
+      setIsAddingToWallet(false);
+      setWalletAdded(true);
+      const dummyPassContent = "PKPASS DUMMY BINARY DATA FOR CORGI CAFE LOYALTY CARD";
+      const blob = new Blob([dummyPassContent], { type: 'application/vnd.apple.pkpass' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'corgi_loyalty_card.pkpass';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 1500);
+  };
 
   // Fetch loyalty status and transaction history
   const loadLoyaltyData = async () => {
@@ -525,15 +547,30 @@ export default function LoyaltyPage() {
                   </div>
                   <div className="flex flex-col text-right">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Balance</span>
-                    <span className="text-xl font-bold text-[#FDBD38] flex items-center gap-1 justify-end leading-none mt-0.5">
-                      <Coins className="w-4 h-4 text-[#FDBD38]" />
-                      {customer.points.toFixed(0)} <span className="text-[10px] font-bold text-gray-400">PTS</span>
+                    <span className="text-lg font-extrabold text-gray-800 flex items-center justify-end leading-none mt-1">
+                      {customer.points.toFixed(2)}€
                     </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Apple Wallet Action Button */}
+        <div className="max-w-[440px] mx-auto mt-4 px-6 select-none">
+          <button
+            onClick={() => {
+              setIsAppleWalletOpen(true);
+              setWalletAdded(false);
+            }}
+            className="w-full bg-black hover:bg-zinc-955 text-white rounded-[18px] py-3.5 px-4 flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] font-bold text-sm cursor-pointer border border-zinc-800 shadow-sm"
+          >
+            <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 512 512">
+              <path d="M433 162.24H79c-34.62 0-63 28.38-63 63v176.53c0 34.62 28.38 63 63 63h354c34.62 0 63-28.38 63-63V225.24c0-34.62-28.38-63-63-63zm-4.7 248.53H83.7a28.31 28.31 0 01-28.3-28.3V252.1a28.31 28.31 0 0128.3-28.3H428.3a28.31 28.31 0 0128.3 28.3v130.37a28.31 28.31 0 01-28.3 28.3zM418.57 60H93.43c-31 0-56.32 25.32-56.32 56.32v8.92c0 8.5 6.9 15.4 15.4 15.4h399c8.5 0 15.4-6.9 15.4-15.4v-8.92C474.89 85.32 449.57 60 418.57 60z"/>
+            </svg>
+            <span>Add to Apple Wallet</span>
+          </button>
         </div>
 
         {/* Dashboard Content Container */}
@@ -545,7 +582,7 @@ export default function LoyaltyPage() {
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-sm font-bold text-gray-800">Tier Progress</span>
                 <span className="text-xs font-bold text-[#FDBD38]">
-                  {tierRate}x Points Rate
+                  {(tierRate * 100).toFixed(0)}% Cashback Rate
                 </span>
               </div>
 
@@ -701,7 +738,7 @@ export default function LoyaltyPage() {
                   </span>
                 </div>
                 <h3 className="font-bold text-lg text-gray-800 uppercase tracking-tight">{profileName || customer.name}</h3>
-                <span className="text-[10px] font-bold text-gray-400 mt-0.5">{customer.points.toFixed(0)} Points Balance</span>
+                <span className="text-[10px] font-bold text-gray-400 mt-0.5">{customer.points.toFixed(2)}€ Balance</span>
               </div>
 
               {/* Editable Profile Information Form */}
@@ -795,23 +832,22 @@ export default function LoyaltyPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Points Calculator Helper */}
+              {/* Cashback Calculator Helper */}
               <div className="flex flex-col text-left mb-6">
-                <span className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-4 block">Points Calculator</span>
+                <span className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-4 block">Cashback Calculator</span>
                 <div className="bg-amber-50/50 p-5 rounded-[24px] border border-amber-100/50 text-xs leading-relaxed text-[#c29124]">
-                  <p className="font-semibold">Calculate how many points you will earn on your next purchase:</p>
+                  <p className="font-semibold">Calculate how much cashback you will earn in Euros on your next purchase:</p>
                   <div className="flex items-center gap-3 mt-3">
                     <span className="font-bold text-sm text-gray-800">Spent €</span>
                     <input 
                       type="number" 
-                      defaultValue={15} 
-                      className="w-16 bg-white border border-gray-250 rounded-lg py-1 px-2 text-center font-bold text-gray-800"
+                      value={calcSpend} 
+                      onChange={(e) => setCalcSpend(Number(e.target.value) || 0)}
+                      className="w-20 bg-white border border-gray-250 rounded-lg py-1 px-2 text-center font-bold text-gray-800 focus:outline-none focus:border-[#FDBD38]"
                     />
                     <span className="font-bold text-sm text-gray-800">➔</span>
-                    <span className="font-bold text-sm text-[#FDBD38] flex items-center gap-1">
-                      <Coins className="w-4 h-4" />
-                      {(15 * tierRate).toFixed(0)} PTS
+                    <span className="font-bold text-sm text-[#c29124] flex items-center gap-0.5">
+                      {(calcSpend * tierRate).toFixed(2)}€
                     </span>
                   </div>
                 </div>
@@ -851,20 +887,20 @@ export default function LoyaltyPage() {
 
               {/* Title Header */}
               <div className="text-center mt-2 mb-4 w-full">
-                <span className="text-base font-bold text-gray-800 uppercase tracking-wider block">Add Points</span>
+                <span className="text-base font-bold text-gray-800 uppercase tracking-wider block">Add Balance</span>
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 block">Enter Alphanumeric Code</span>
               </div>
 
               {/* Description */}
               <p className="text-[11px] text-gray-400 text-center font-bold mb-4 leading-relaxed px-1">
-                Enter your 8-character promo code (letters and digits) to instantly claim your points.
+                Enter your 8-character promo code (letters and digits) to instantly claim your reward.
               </p>
 
               {/* Success / Error Inline Messages */}
               {promoSuccess && (
                 <div className="w-full bg-emerald-50 text-emerald-600 rounded-[12px] p-3 text-[11px] font-bold mb-4 text-center border border-emerald-100 flex items-center justify-center gap-1.5 animate-fadeIn">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                  <span>Success! Points claimed successfully.</span>
+                  <span>Success! Balance claimed successfully.</span>
                 </div>
               )}
               {promoError && (
@@ -933,7 +969,7 @@ export default function LoyaltyPage() {
                 {isApplyingPromo ? (
                   <span>Claiming...</span>
                 ) : (
-                  <span>Claim Points</span>
+                  <span>Claim Balance</span>
                 )}
               </button>
             </div>
@@ -950,7 +986,7 @@ export default function LoyaltyPage() {
             {/* Drawer Header */}
             <div className="px-6 pt-8 pb-4 border-b border-gray-100 flex items-start justify-between flex-shrink-0 bg-white">
               <div className="flex flex-col text-left">
-                <span className="text-xl font-bold text-gray-900 uppercase tracking-tight">Points History</span>
+                <span className="text-xl font-bold text-gray-900 uppercase tracking-tight">Balance History</span>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Your transaction logs</span>
               </div>
               <button 
@@ -989,7 +1025,7 @@ export default function LoyaltyPage() {
                           </div>
                           <div className="flex flex-col text-left">
                             <span className="text-xs font-bold text-gray-800">
-                              {isEarn ? 'Points Earned' : 'Points Spent'}
+                              {isEarn ? 'Cashback Earned' : 'Balance Redeemed'}
                             </span>
                             <span className="text-[10px] text-gray-400 font-bold mt-0.5">{dateLabel}</span>
                           </div>
@@ -998,7 +1034,7 @@ export default function LoyaltyPage() {
                           <span className={`text-sm font-bold ${
                             isEarn ? 'text-[#c29124]' : 'text-gray-700'
                           }`}>
-                            {isEarn ? '+' : '-'}{tx.points.toFixed(0)} PTS
+                            {isEarn ? '+' : '-'}{tx.points.toFixed(2)}€
                           </span>
                           {tx.orderId && (
                             <span className="text-[9px] font-bold text-gray-455 uppercase mt-0.5">Order #{tx.orderId.slice(-6)}</span>
@@ -1103,6 +1139,91 @@ export default function LoyaltyPage() {
               >
                 Got it
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Apple Wallet Mockup Pass Modal */}
+        {isAppleWalletOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6 animate-fadeIn">
+            <div className="w-full max-w-[340px] bg-[#1c1c1e] rounded-[28px] p-6 border border-zinc-800 flex flex-col items-center relative animate-scaleUp text-white shadow-2xl">
+              
+              {/* Close Button */}
+              <button 
+                onClick={() => {
+                  setIsAppleWalletOpen(false);
+                  setWalletAdded(false);
+                }}
+                className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 absolute top-4 right-4 transition-all active:scale-90 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Pass Header */}
+              <div className="w-full flex items-center gap-2.5 mb-6 border-b border-zinc-800 pb-4 mt-2">
+                <div className="w-7 h-7 bg-[#FDBD38] rounded-full flex items-center justify-center text-gray-950 font-bold text-xs">
+                  C
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Corgi Cafe</span>
+                  <span className="text-xs font-bold text-white mt-0.5">Loyalty Card</span>
+                </div>
+              </div>
+
+              {/* Pass Body Fields */}
+              <div className="w-full grid grid-cols-2 gap-y-4 gap-x-2 text-left mb-6">
+                <div>
+                  <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider block">Member</span>
+                  <span className="text-sm font-bold text-white truncate block">{profileName || customer.name}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider block">Tier</span>
+                  <span className="text-sm font-bold text-[#FDBD38] uppercase block">{tierName}</span>
+                </div>
+                <div>
+                  <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider block">Balance</span>
+                  <span className="text-base font-extrabold text-white block">{customer.points.toFixed(2)}€</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider block">Loyalty ID</span>
+                  <span className="text-xs font-mono text-zinc-400 block">{customer.id.toUpperCase()}</span>
+                </div>
+              </div>
+
+              {/* Centered Pass QR Code */}
+              <div className="bg-white p-4 rounded-[20px] mb-6 shadow-inner flex flex-col items-center">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCode)}`}
+                  alt="Wallet Pass QR"
+                  className="w-[120px] h-[120px] object-contain rounded-lg"
+                />
+                <span className="text-[8px] font-bold text-zinc-400 mt-2 tracking-widest uppercase">Scan at counter</span>
+              </div>
+
+              {/* Download / Action Button */}
+              {walletAdded ? (
+                <div className="w-full bg-emerald-500 text-white py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 animate-fadeIn border border-emerald-400">
+                  <CheckCircle2 className="w-4.5 h-4.5 text-white" />
+                  <span>Added to Apple Wallet</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleDownloadPass}
+                  disabled={isAddingToWallet}
+                  className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-gray-950 disabled:bg-zinc-800 disabled:text-zinc-500 py-3.5 rounded-full font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isAddingToWallet ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-950 border-t-transparent rounded-full animate-spin" />
+                      <span>Adding to Wallet...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Download Wallet Pass</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         )}
