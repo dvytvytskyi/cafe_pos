@@ -617,8 +617,8 @@ export default function LoyaltyPage() {
               </div>
             </div>
 
-            {/* Social Media Stickers Grid */}
-            <div className="flex flex-col text-left mb-2">
+            {/* Social Media Stickers Grid inside a flat white frame */}
+            <div className="bg-white rounded-[24px] border border-gray-100 p-5 shadow-none flex flex-col text-left mb-2">
               <div className="flex flex-col gap-0.5 mb-4">
                 <span className="text-sm font-bold text-gray-800">Social Media Stickers</span>
                 <span className="text-[10px] text-gray-400 font-bold">Press on sticker to learn how to open</span>
