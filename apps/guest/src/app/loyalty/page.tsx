@@ -238,6 +238,26 @@ export default function LoyaltyPage() {
     }
   }, [isLoggedIn]);
 
+  const formatSpanishPhoneNumber = (val: string): string => {
+    const digits = val.replace(/\D/g, '');
+    let local = digits;
+    if (local.startsWith('34')) {
+      local = local.slice(2);
+    }
+    local = local.slice(0, 9);
+
+    if (local.length === 0) {
+      return '+34 ';
+    }
+    if (local.length <= 3) {
+      return `+34 ${local}`;
+    }
+    if (local.length <= 6) {
+      return `+34 ${local.slice(0, 3)} ${local.slice(3)}`;
+    }
+    return `+34 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`;
+  };
+
   const validateSpanishPhone = (phoneStr: string): { isValid: boolean; cleanNumber: string; message?: string } => {
     const clean = phoneStr.replace(/[\s\-\(\)]/g, '');
     if (clean.startsWith('+34') || clean.startsWith('34')) {
@@ -1426,11 +1446,10 @@ export default function LoyaltyPage() {
                 <Phone className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
                 <input
                   type="tel"
-                  required
                   value={phone}
                   onChange={(e) => {
                     setPhoneError(null);
-                    setPhone(e.target.value);
+                    setPhone(formatSpanishPhoneNumber(e.target.value));
                   }}
                   placeholder="+34 600 111 222"
                   className={`w-full bg-white border rounded-[14px] py-3.5 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none transition-all shadow-none ${
@@ -1450,10 +1469,10 @@ export default function LoyaltyPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-950 py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
+              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-white font-extrabold drop-shadow-sm py-3.5 rounded-[16px] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
             >
               <span>{loading ? 'Sending SMS...' : 'Send SMS OTP'}</span>
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 text-white" />
             </button>
           </form>
         ) : (
@@ -1491,10 +1510,10 @@ export default function LoyaltyPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-gray-950 py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
+              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-white font-extrabold drop-shadow-sm py-3.5 rounded-[16px] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
             >
               <span>{loading ? 'Verifying...' : 'Verify Code'}</span>
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 text-white" />
             </button>
 
             <button
