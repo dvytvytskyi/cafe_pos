@@ -1366,7 +1366,7 @@ export default function LoyaltyPage() {
   return (
     <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center pb-32">
       {/* Brand Yellow Top Header with Organic Wave */}
-      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-10 pb-22 px-6 relative overflow-hidden select-none">
+      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-10 pb-24 px-6 relative overflow-hidden select-none">
         {/* Organic SVG Wave bottom transition */}
         <svg 
           className="absolute bottom-0 left-0 w-full h-[32px] text-gray-50 fill-current translate-y-[1px]" 
