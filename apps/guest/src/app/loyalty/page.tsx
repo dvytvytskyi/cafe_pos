@@ -51,7 +51,8 @@ export default function LoyaltyPage() {
   const router = useRouter();
   const { isLoggedIn, profileName, refreshAuth } = useGuest();
 
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('+34 ');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [devCode, setDevCode] = useState('');
@@ -237,12 +238,33 @@ export default function LoyaltyPage() {
     }
   }, [isLoggedIn]);
 
+  const validateSpanishPhone = (phoneStr: string): { isValid: boolean; cleanNumber: string; message?: string } => {
+    const clean = phoneStr.replace(/[\s\-\(\)]/g, '');
+    if (clean.startsWith('+34') || clean.startsWith('34')) {
+      const numberPart = clean.startsWith('+34') ? clean.slice(3) : clean.slice(2);
+      if (/^[6789]\d{8}$/.test(numberPart)) {
+        return { isValid: true, cleanNumber: `+34${numberPart}` };
+      }
+      return { isValid: false, cleanNumber: clean, message: 'Spanish phone number must have 9 digits after +34 starting with 6, 7, 8 or 9 (e.g. +34 600 111 222)' };
+    }
+    if (clean.length >= 8 && /^\+?\d+$/.test(clean)) {
+      return { isValid: true, cleanNumber: clean.startsWith('+') ? clean : `+${clean}` };
+    }
+    return { isValid: false, cleanNumber: clean, message: 'Please enter a valid Spanish phone number (+34 6XX XXX XXX)' };
+  };
+
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone) return;
+    setPhoneError(null);
+    const validation = validateSpanishPhone(phone);
+    if (!validation.isValid) {
+      setPhoneError(validation.message || 'Invalid phone number format');
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await requestOtp(phone);
+      const res = await requestOtp(validation.cleanNumber);
       setOtpSent(true);
       if (res.devCode) {
         setDevCode(res.devCode);
@@ -1400,17 +1422,29 @@ export default function LoyaltyPage() {
                   </span>
                 )}
               </label>
-              <div className="relative">
-                <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+              <div className="relative flex items-center">
+                <Phone className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
                 <input
                   type="tel"
                   required
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    setPhoneError(null);
+                    setPhone(e.target.value);
+                  }}
                   placeholder="+34 600 111 222"
-                  className="w-full bg-white border border-gray-200 rounded-[14px] py-3 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/10 transition-all shadow-none"
+                  className={`w-full bg-white border rounded-[14px] py-3.5 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none transition-all shadow-none ${
+                    phoneError
+                      ? 'border-rose-400 focus:border-rose-500 ring-2 ring-rose-500/10'
+                      : 'border-gray-200 focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/10'
+                  }`}
                 />
               </div>
+              {phoneError && (
+                <span className="text-[11px] font-bold text-rose-500 mt-1.5 block leading-tight">
+                  {phoneError}
+                </span>
+              )}
             </div>
 
             <button
