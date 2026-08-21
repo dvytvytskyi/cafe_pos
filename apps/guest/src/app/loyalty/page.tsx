@@ -296,29 +296,43 @@ export default function LoyaltyPage() {
     return 'from-orange-200 via-amber-600 to-amber-700 text-orange-950 border-orange-300';
   };
 
-  // Helper to get tier rates
-  const getTierRate = (tier: string, config: any) => {
-    const t = tier.toLowerCase();
-    if (t === 'silver') return config.silverRate;
-    if (t === 'gold') return config.goldRate;
-    if (t === 'vip') return config.vipRate;
-    return config.bronzeRate;
+  // Helper to determine tier name based on LTV
+  const getTierName = (ltv: number) => {
+    if (ltv < 5) return 'Friend';
+    if (ltv < 10) return 'Explorer';
+    if (ltv < 20) return 'Member';
+    if (ltv < 50) return 'Expert';
+    if (ltv < 100) return 'VIP';
+    return 'Legend';
   };
 
-  // Helper to get tier threshold
-  const getTierThreshold = (tier: string, config: any) => {
-    const t = tier.toLowerCase();
-    if (t === 'silver') return config.goldThreshold;
-    if (t === 'vip') return Infinity;
-    // bronze -> silver, silver -> gold, gold -> vip
-    if (t === 'bronze') return config.silverThreshold;
-    return config.vipThreshold;
+  // Helper to get tier points multiplier rate based on LTV
+  const getTierRate = (ltv: number) => {
+    if (ltv < 5) return 0.05;
+    if (ltv < 10) return 0.07;
+    if (ltv < 20) return 0.08;
+    if (ltv < 50) return 0.10;
+    if (ltv < 100) return 0.12;
+    return 0.15; // Legend rate: 15%
+  };
+
+  // Helper to get segmented progress percentage for 6 stages
+  const getProgressPercent = (ltv: number) => {
+    const milestones = [0, 5, 10, 20, 50, 100, 200];
+    for (let i = 0; i < milestones.length - 1; i++) {
+      if (ltv >= milestones[i] && ltv <= milestones[i+1]) {
+        const segmentBase = i * (100 / 6);
+        const segmentProgress = ((ltv - milestones[i]) / (milestones[i+1] - milestones[i])) * (100 / 6);
+        return segmentBase + segmentProgress;
+      }
+    }
+    return 100;
   };
   if (isLoggedIn && loyalty) {
     const { customer, config, nextTier, pointsToNextTier, qrCode } = loyalty;
-    const tierRate = getTierRate(customer.tier, config);
-    const nextThreshold = getTierThreshold(customer.tier, config);
-    const progressPercent = nextThreshold === Infinity ? 100 : Math.min(100, (customer.ltv / nextThreshold) * 100);
+    const tierName = getTierName(customer.ltv);
+    const tierRate = getTierRate(customer.ltv);
+    const progressPercent = getProgressPercent(customer.ltv);
 
     const stickers = [
       { id: 1, name: 'Coffee Lover', desc: 'Order your first coffee to unlock this sticker!', path: '/stickers/corgi_coffee1.png', unlocked: true },
@@ -389,7 +403,7 @@ export default function LoyaltyPage() {
               >
                 {/* Left Status Info (Absolute positioned) */}
                 <div className="absolute top-7 left-5 text-left flex flex-col pointer-events-none">
-                  <span className="text-sm font-bold text-gray-800 tracking-tight uppercase leading-none">{customer.tier}</span>
+                  <span className="text-sm font-bold text-gray-800 tracking-tight uppercase leading-none">{tierName}</span>
                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-1">Profile</span>
                 </div>
 
@@ -468,7 +482,7 @@ export default function LoyaltyPage() {
                 <div className="w-full flex justify-between items-center border-t border-gray-100 pt-2.5">
                   <div className="flex flex-col text-left">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Member Tier</span>
-                    <span className="text-base font-bold text-gray-800 uppercase tracking-tight leading-none mt-1">{customer.tier}</span>
+                    <span className="text-base font-bold text-gray-800 uppercase tracking-tight leading-none mt-1">{tierName}</span>
                   </div>
                   <div className="flex flex-col text-right">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Balance</span>
@@ -487,28 +501,79 @@ export default function LoyaltyPage() {
         <div className="w-full bg-[#FAF7F3] mt-8 py-8 px-6 border-t border-gray-100/50">
           <div className="max-w-[440px] mx-auto flex flex-col gap-8">
             
-            {/* Tier Progression Progress Card (Frameless) */}
-            <div className="flex flex-col text-left">
-              <div className="flex justify-between items-center mb-3">
+            {/* Stepper Progress Timeline (6 stages) */}
+            <div className="flex flex-col text-left mb-2">
+              <div className="flex justify-between items-center mb-1.5">
                 <span className="text-sm font-bold text-gray-800">Tier Progress</span>
                 <span className="text-xs font-bold text-[#FDBD38]">
                   {tierRate}x Points Rate
                 </span>
               </div>
 
-              <div className="w-full bg-gray-200/70 h-3 rounded-full overflow-hidden relative mb-2">
+              {/* Progress Line and Nodes */}
+              <div className="relative w-full py-4 mt-1">
+                {/* Horizontal Background Line */}
+                <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200/80 -translate-y-1/2 rounded-full" />
+                
+                {/* Active Colored Progress Line */}
                 <div 
-                  className="bg-gradient-to-r from-[#FDBD38] to-[#EE635E] h-full rounded-full transition-all duration-700 ease-out" 
+                  className="absolute top-1/2 left-0 h-1 bg-gradient-to-r from-[#FDBD38] to-[#FDB01A] -translate-y-1/2 rounded-full transition-all duration-700 ease-out"
                   style={{ width: `${progressPercent}%` }}
                 />
+
+                {/* Stepper Nodes */}
+                <div className="absolute inset-0 flex justify-between items-center">
+                  {[5, 10, 20, 50, 100, 200].map((milestone, idx) => {
+                    const isReached = customer.ltv >= milestone;
+                    const isCurrent = customer.ltv < milestone && (idx === 0 || customer.ltv >= [5, 10, 20, 50, 100, 200][idx - 1]);
+                    
+                    return (
+                      <div key={milestone} className="relative flex flex-col items-center">
+                        {/* Node Circle */}
+                        <div 
+                          className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-500 z-10 flex items-center justify-center ${
+                            isReached 
+                              ? 'border-[#FDBD38] bg-[#FDBD38]' 
+                              : isCurrent 
+                                ? 'border-[#FDBD38] bg-white ring-4 ring-[#FDBD38]/20 scale-110' 
+                                : 'border-gray-200 bg-white'
+                          }`}
+                        />
+                        
+                        {/* Node Label Below */}
+                        <div className="absolute top-5 flex flex-col items-center whitespace-nowrap select-none">
+                          <span className={`text-[9px] font-bold tracking-tight uppercase ${
+                            isReached || isCurrent ? 'text-gray-805' : 'text-gray-400'
+                          }`}>
+                            {['Friend', 'Explorer', 'Member', 'Expert', 'VIP', 'Legend'][idx]}
+                          </span>
+                          <span className="text-[7.5px] font-bold text-gray-400/85 mt-0.5">
+                            {milestone}€
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 mt-1">
+              {/* Extra spacing for absolute elements */}
+              <div className="h-6" />
+
+              {/* Range Details Label */}
+              <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 mt-3 pt-1 border-t border-gray-100/50">
                 <span>Spent: {customer.ltv.toFixed(2)}€</span>
-                {nextTier ? (
-                  <span>{pointsToNextTier ? `${pointsToNextTier.toFixed(2)}€` : 'Next Level'} to {nextTier}</span>
+                {customer.ltv < 200 ? (
+                  <span>
+                    {(() => {
+                      const milestones = [5, 10, 20, 50, 100, 200];
+                      const nextM = milestones.find(m => m > customer.ltv) || 200;
+                      const nextLabel = ['Friend', 'Explorer', 'Member', 'Expert', 'VIP', 'Legend'][milestones.indexOf(nextM)];
+                      return `${(nextM - customer.ltv).toFixed(2)}€ to ${nextLabel}`;
+                    })()}
+                  </span>
                 ) : (
-                  <span>Maximum Tier Achieved!</span>
+                  <span>Max Level Reached!</span>
                 )}
               </div>
             </div>
@@ -593,7 +658,7 @@ export default function LoyaltyPage() {
                     />
                   </div>
                   <span className="absolute -bottom-1 -right-1 bg-[#FDBD38] text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border border-white shadow-sm">
-                    {customer.tier}
+                    {getTierName(customer.ltv)}
                   </span>
                 </div>
                 <h3 className="font-bold text-lg text-gray-800 uppercase tracking-tight">{profileName || customer.name}</h3>
