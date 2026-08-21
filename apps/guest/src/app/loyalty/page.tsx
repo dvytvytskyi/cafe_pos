@@ -1366,7 +1366,7 @@ export default function LoyaltyPage() {
   return (
     <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center pb-32">
       {/* Brand Yellow Top Header with Organic Wave */}
-      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-7 pb-16 px-6 relative overflow-hidden select-none">
+      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-10 pb-22 px-6 relative overflow-hidden select-none">
         {/* Organic SVG Wave bottom transition */}
         <svg 
           className="absolute bottom-0 left-0 w-full h-[32px] text-gray-50 fill-current translate-y-[1px]" 
@@ -1377,8 +1377,8 @@ export default function LoyaltyPage() {
         </svg>
 
         <div className="max-w-[400px] mx-auto flex flex-col items-center text-center relative z-10">
-          <h1 className="text-2xl font-extrabold text-white tracking-tight leading-none mb-2 drop-shadow-sm">Corgi Loyalty Program</h1>
-          <p className="text-xs font-semibold text-white/95 max-w-[300px] leading-relaxed">
+          <h1 className="text-2xl font-extrabold text-white tracking-tight leading-none mb-2.5 drop-shadow-sm">Corgi Loyalty Program</h1>
+          <p className="text-xs font-semibold text-white/95 max-w-[310px] leading-relaxed">
             Earn cashback in Euros, unlock exclusive stickers, and add your pass to Apple Wallet.
           </p>
         </div>
