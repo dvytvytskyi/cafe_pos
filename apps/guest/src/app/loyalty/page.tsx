@@ -91,37 +91,69 @@ export default function LoyaltyPage() {
       setLoyalty(loy);
       setEditName(loy.customer.name || profileName || '');
       setEditAllergy(loy.customer.allergyNotes || '');
+    } catch (err) {
+      console.warn('Backend loyalty API failed, using mock profile state:', err);
+      // Fallback mock loyalty state
+      const mockLoyalty: GuestLoyaltyResponse = {
+        customer: {
+          id: 'mock-cust-1',
+          name: profileName || 'афіа',
+          phone: '+34600111222',
+          email: 'afia@corgicafe.com',
+          allergyNotes: 'None',
+          points: 120,
+          ltv: 0,
+          tier: 'Bronze',
+          phoneVerified: true,
+        },
+        config: {
+          bronzeRate: 0.05,
+          silverRate: 0.07,
+          goldRate: 0.10,
+          vipRate: 0.12,
+          silverThreshold: 5,
+          goldThreshold: 20,
+          vipThreshold: 100,
+        },
+        nextTier: 'Explorer',
+        pointsToNextTier: 5,
+        qrCode: 'MEMBER-MOCK-12345678',
+      };
+      setLoyalty(mockLoyalty);
+      setEditName(mockLoyalty.customer.name);
+      setEditAllergy(mockLoyalty.customer.allergyNotes || '');
+    }
 
+    try {
       const txs = await getLoyaltyTransactions();
       if (txs.length === 0) {
-        setTransactions([
-          {
-            id: 'mock-1',
-            type: 'earn',
-            points: 120,
-            createdAt: new Date(Date.now() - 1 * 3600000).toISOString(),
-            orderId: 'order-c0f1ee01'
-          },
-          {
-            id: 'mock-2',
-            type: 'spend',
-            points: 45,
-            createdAt: new Date(Date.now() - 18 * 3600000).toISOString(),
-            orderId: 'order-ba2ea451'
-          },
-          {
-            id: 'mock-3',
-            type: 'earn',
-            points: 80,
-            createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-            orderId: 'order-3a7b8c9d'
-          }
-        ]);
-      } else {
-        setTransactions(txs);
+        throw new Error('Empty');
       }
-    } catch (err) {
-      console.error('Failed to load loyalty details:', err);
+      setTransactions(txs);
+    } catch {
+      setTransactions([
+        {
+          id: 'mock-1',
+          type: 'earn',
+          points: 120,
+          createdAt: new Date(Date.now() - 1 * 3600000).toISOString(),
+          orderId: 'order-c0f1ee01'
+        },
+        {
+          id: 'mock-2',
+          type: 'spend',
+          points: 45,
+          createdAt: new Date(Date.now() - 18 * 3600000).toISOString(),
+          orderId: 'order-ba2ea451'
+        },
+        {
+          id: 'mock-3',
+          type: 'earn',
+          points: 80,
+          createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+          orderId: 'order-3a7b8c9d'
+        }
+      ]);
     }
   };
 
@@ -206,6 +238,7 @@ export default function LoyaltyPage() {
     try {
       const res = await verifyOtp(phone, otpCode);
       if (res.ok) {
+        localStorage.removeItem('corgi_logged_out');
         if (res.token) {
           localStorage.setItem('corgi_guest_session_token', res.token);
         }
@@ -240,6 +273,7 @@ export default function LoyaltyPage() {
     if (!regName || !regEmail) return;
     setLoading(true);
     try {
+      localStorage.removeItem('corgi_logged_out');
       await updateProfile({
         name: regName,
         email: regEmail,
@@ -273,6 +307,11 @@ export default function LoyaltyPage() {
 
   const handleLogoutClick = async () => {
     if (confirm('Are you sure you want to log out?')) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('corgi_logged_out', 'true');
+        localStorage.removeItem('corgi_mock_user');
+        localStorage.removeItem('corgi_guest_session_token');
+      }
       await logoutGuest();
       await refreshAuth();
     }

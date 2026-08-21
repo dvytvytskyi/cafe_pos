@@ -80,7 +80,13 @@ export function GuestProvider({
   const refreshAuth = useCallback(async () => {
     try {
       if (typeof window !== 'undefined') {
-        const mockUser = localStorage.getItem('corgi_mock_user');
+        const loggedOut = localStorage.getItem('corgi_logged_out');
+        let mockUser = localStorage.getItem('corgi_mock_user');
+        if (!mockUser && !loggedOut) {
+          localStorage.setItem('corgi_mock_user', 'афіа');
+          localStorage.setItem('corgi_guest_session_token', 'mock-session-token');
+          mockUser = 'афіа';
+        }
         if (mockUser) {
           setIsLoggedIn(true);
           setProfileName(mockUser);
