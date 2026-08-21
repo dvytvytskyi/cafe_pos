@@ -615,10 +615,10 @@ export default function LoyaltyPage() {
                   <span>Max Level Reached!</span>
                 )}
               </div>
-            </div>
 
-            {/* Social Media Stickers Grid inside a flat white frame */}
-            <div className="bg-white rounded-[24px] border border-gray-100 p-5 shadow-none flex flex-col text-left mb-2">
+              {/* Divider between progress and stickers (matching container padding) */}
+              <div className="border-t border-gray-100 my-6" />
+
               <div className="flex flex-col gap-0.5 mb-4">
                 <span className="text-sm font-bold text-gray-800">Social Media Stickers</span>
                 <span className="text-[10px] text-gray-400 font-bold">Press on sticker to learn how to open</span>
