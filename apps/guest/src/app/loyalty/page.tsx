@@ -352,7 +352,7 @@ export default function LoyaltyPage() {
     return (
       <div className="h-screen overflow-y-auto bg-gray-50 pb-[90px] relative scroll-smooth">
         {/* Profile Header */}
-        <div className="bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 px-6 pt-6 pb-20 rounded-b-[24px] shadow-lg relative">
+        <div className="bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 px-6 pt-6 pb-20 rounded-b-[36px] shadow-lg relative">
           <div className="max-w-[440px] mx-auto flex items-center justify-between">
             {/* Back Button (matching other pages) */}
             <button 
