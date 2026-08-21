@@ -536,8 +536,8 @@ export default function LoyaltyPage() {
           </div>
         </div>
 
-        {/* Dashboard Content Container (Solid Full-Width #FAF7F3 Background) */}
-        <div className="w-full bg-[#FAF7F3] mt-8 py-8 px-6 border-t border-gray-100/50">
+        {/* Dashboard Content Container */}
+        <div className="w-full bg-transparent mt-4 py-4 px-6">
           <div className="max-w-[440px] mx-auto flex flex-col gap-8">
             
             {/* Stepper Progress Timeline (6 stages) inside a flat white frame */}
