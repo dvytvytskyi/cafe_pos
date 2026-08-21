@@ -698,6 +698,17 @@ export default function LoyaltyPage() {
               </div>
             </div>
 
+            {/* Minimal Log Out Button at the bottom of the main screen */}
+            <div className="flex justify-center mt-2 mb-4 select-none">
+              <button
+                onClick={handleLogoutClick}
+                className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-[#EE635E] active:scale-95 transition-all cursor-pointer py-2 px-4 rounded-full hover:bg-rose-50/50"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Log Out</span>
+              </button>
+            </div>
+
           </div>
         </div>
 
