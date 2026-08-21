@@ -1461,54 +1461,6 @@ export default function LoyaltyPage() {
           </form>
         )}
       </div>
-
-      {/* Loyalty Program Information Perks Section */}
-      <div className="w-full max-w-[400px] bg-white rounded-[24px] p-6 shadow-none border border-gray-100 mt-4 flex flex-col text-left">
-        <span className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-4 block">Loyalty Program Perks</span>
-        <div className="flex flex-col gap-4">
-          
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#c29124] flex-shrink-0 text-sm">
-              ☕️
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-gray-800">5% Welcome Cashback</span>
-              <span className="text-[10px] text-gray-400 mt-0.5">Get 5% cashback in Euros on your first purchase at Corgi Cafe.</span>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#c29124] flex-shrink-0 text-sm">
-              🥐
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-gray-800">Unlock Sticker Rewards</span>
-              <span className="text-[10px] text-gray-400 mt-0.5">Collect digital stickers for ordering croissants, smoothies and desserts. Share them to chats!</span>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#c29124] flex-shrink-0 text-sm">
-              📱
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-gray-800">Apple Wallet Integration</span>
-              <span className="text-[10px] text-gray-400 mt-0.5">Add your virtual loyalty card pass to your Apple Wallet for instant counter checks.</span>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-[#c29124] flex-shrink-0 text-sm">
-              🎖
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-gray-800">Progressive Cashback Tiers</span>
-              <span className="text-[10px] text-gray-400 mt-0.5">Level up from Bronze to Legend to increase your cashback percentage rate.</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
     </div>
   );
 }
