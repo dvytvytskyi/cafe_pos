@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useGuest } from '@/lib/guest-context';
 import { getOrders, getOrder } from '@/lib/api-client';
 import type { GuestOrderSummary } from '@corgi/contracts';
+import { useRouter } from 'next/navigation';
 import {
+  ArrowLeft,
   ShoppingBag,
   Coffee,
   Clock,
@@ -63,6 +65,7 @@ const SAMPLE_ORDERS: GuestOrderSummary[] = [
 ];
 
 export default function OrdersPage() {
+  const router = useRouter();
   const { isLoggedIn } = useGuest();
   const [orders, setOrders] = useState<GuestOrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -193,14 +196,33 @@ export default function OrdersPage() {
   if (!isLoggedIn) {
     return (
       <div className="h-screen w-full overflow-y-auto bg-white flex flex-col items-center pb-32 select-none">
-        {/* Crisp Brand Yellow Top Header (No wave) */}
-        <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-8 pb-6 px-6 rounded-b-[24px] shadow-sm select-none">
-          <div className="max-w-[400px] mx-auto flex flex-col items-center text-center">
-            <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1 drop-shadow-xs">My Orders</h1>
-            <p className="text-xs font-semibold text-white/95 max-w-[290px] leading-relaxed">
-              Track your coffee, food & merch orders in real-time.
-            </p>
+        {/* Crisp Brand Yellow Top Header Bar (Matching screenshot bar style) */}
+        <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex items-center justify-between w-full px-4 pt-3.5 pb-3.5 shadow-xs select-none">
+          <button
+            onClick={() => router.push('/')}
+            className="w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-sm shadow-black/5 transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
+          </button>
+          <div className="flex-1 flex justify-center mx-2 min-w-0">
+            <div className="bg-white/95 border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm shadow-black/5 min-w-0 max-w-full">
+              <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs text-gray-900 min-w-0">
+                <span className="font-bold tracking-tight truncate">My Orders</span>
+                <span className="text-gray-300 font-light flex-shrink-0">|</span>
+                <span className="font-semibold text-gray-500 flex items-center gap-1 min-w-0">
+                  <span className="flex-shrink-0">🛍️</span>
+                  <span className="truncate">Track</span>
+                </span>
+              </div>
+            </div>
           </div>
+          <Link
+            href="/shop"
+            className="w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-sm shadow-black/5 transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+          >
+            <ShoppingBag className="w-4.5 h-4.5 text-gray-900" strokeWidth={2.2} />
+          </Link>
         </div>
 
         {/* Logged Out Card */}
@@ -228,14 +250,33 @@ export default function OrdersPage() {
 
   return (
     <div className="h-screen w-full overflow-y-auto bg-white flex flex-col items-center pb-32">
-      {/* Crisp Brand Yellow Top Header (No wave) */}
-      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-8 pb-6 px-6 rounded-b-[24px] shadow-sm select-none">
-        <div className="max-w-[400px] mx-auto flex flex-col items-center text-center">
-          <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1 drop-shadow-xs">My Orders</h1>
-          <p className="text-xs font-semibold text-white/95 max-w-[310px] leading-relaxed">
-            Real-time status tracking for your cafe treats & merch orders.
-          </p>
+      {/* Crisp Brand Yellow Top Header Bar (Matching screenshot bar style) */}
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex items-center justify-between w-full px-4 pt-3.5 pb-3.5 shadow-xs select-none">
+        <button
+          onClick={() => router.push('/')}
+          className="w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-sm shadow-black/5 transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
+        </button>
+        <div className="flex-1 flex justify-center mx-2 min-w-0">
+          <div className="bg-white/95 border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm shadow-black/5 min-w-0 max-w-full">
+            <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
+            <div className="flex items-center gap-1.5 text-xs text-gray-900 min-w-0">
+              <span className="font-bold tracking-tight truncate">My Orders</span>
+              <span className="text-gray-300 font-light flex-shrink-0">|</span>
+              <span className="font-semibold text-gray-500 flex items-center gap-1 min-w-0">
+                <span className="flex-shrink-0">🛍️</span>
+                <span className="truncate">Live Status</span>
+              </span>
+            </div>
+          </div>
         </div>
+        <Link
+          href="/shop"
+          className="w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-sm shadow-black/5 transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+        >
+          <ShoppingBag className="w-4.5 h-4.5 text-gray-900" strokeWidth={2.2} />
+        </Link>
       </div>
 
       {/* Main Content Container */}
