@@ -561,30 +561,35 @@ export default function HomePage() {
 
           {/* Drawer Content */}
           <div className="flex-1 flex flex-col">
-            {/* Top Black Header Section (~15% height) */}
-            <div className="bg-[#FDBD38] text-black p-6 pt-12 pb-8 flex items-center gap-4">
+            {/* Top Yellow Header Section (~15% height) */}
+            <div className="bg-[#FDBD38] text-white p-6 pt-12 pb-8 flex items-center gap-4">
               {/* White circle avatar container with kiwi emoji inside */}
-              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl shadow-sm">
+              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
                 🥝
               </div>
-              <div>
-                <h4 className="font-bold text-base tracking-tight leading-tight uppercase">
-                  {isLoggedIn ? profileName : 'NOT LOGGED IN'}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-[18px] text-white tracking-tight leading-snug uppercase line-clamp-2 break-words">
+                  {isLoggedIn ? (profileName || 'АФІА СОФІЯ-ЕЛИЗАВЕТА') : 'WELCOME TO CORGI CAFE'}
                 </h4>
                 {isLoggedIn ? (
-                  <button 
-                    onClick={async () => {
-                      if (typeof window !== 'undefined') {
-                        localStorage.removeItem('corgi_mock_user');
-                      }
-                      await logoutGuest();
-                      await refreshAuth();
-                      setShowDrawer(false);
-                    }}
-                    className="text-xs text-black/60 hover:text-black font-medium block text-left"
-                  >
-                    Log out
-                  </button>
+                  <div className="flex flex-col gap-0.5 mt-1">
+                    <span className="text-xs text-white/95 font-medium leading-tight block">
+                      Welcome to Corgi Cafe!
+                    </span>
+                    <button 
+                      onClick={async () => {
+                        if (typeof window !== 'undefined') {
+                          localStorage.removeItem('corgi_mock_user');
+                        }
+                        await logoutGuest();
+                        await refreshAuth();
+                        setShowDrawer(false);
+                      }}
+                      className="text-[11px] text-white/75 hover:text-white font-medium block text-left underline underline-offset-2 mt-0.5 cursor-pointer"
+                    >
+                      Log out
+                    </button>
+                  </div>
                 ) : (
                   <button 
                     onClick={() => {
@@ -592,7 +597,7 @@ export default function HomePage() {
                       setAuthMode('login');
                       setShowLoginModal(true);
                     }}
-                    className="text-xs text-black/60 hover:text-black font-medium block text-left"
+                    className="text-xs text-white/90 hover:text-white font-semibold block text-left mt-1 underline underline-offset-2 cursor-pointer"
                   >
                     Log in
                   </button>
