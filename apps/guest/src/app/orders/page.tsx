@@ -192,11 +192,11 @@ export default function OrdersPage() {
 
   if (!isLoggedIn) {
     return (
-      <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center pb-32 select-none">
+      <div className="h-screen w-full overflow-y-auto bg-white flex flex-col items-center pb-32 select-none">
         {/* Top Header */}
         <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-10 pb-24 px-6 relative overflow-hidden">
           <svg
-            className="absolute bottom-0 left-0 w-full h-[48px] text-gray-50 fill-current translate-y-[1px]"
+            className="absolute bottom-0 left-0 w-full h-[48px] text-white fill-current translate-y-[1px]"
             viewBox="0 0 1440 320"
             preserveAspectRatio="none"
           >
@@ -234,11 +234,11 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="h-screen w-full overflow-y-auto bg-gray-50 flex flex-col items-center pb-32">
+    <div className="h-screen w-full overflow-y-auto bg-white flex flex-col items-center pb-32">
       {/* Brand Top Header */}
       <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-10 pb-24 px-6 relative overflow-hidden select-none">
         <svg
-          className="absolute bottom-0 left-0 w-full h-[48px] text-gray-50 fill-current translate-y-[1px]"
+          className="absolute bottom-0 left-0 w-full h-[48px] text-white fill-current translate-y-[1px]"
           viewBox="0 0 1440 320"
           preserveAspectRatio="none"
         >
