@@ -145,7 +145,7 @@ export default function OrdersPage() {
     switch (status?.toLowerCase()) {
       case 'ready':
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-[#FDBD38] text-white shadow-xs animate-pulse">
+          <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-bold bg-[#FDBD38] text-white shadow-xs">
             <CheckCircle2 className="w-3.5 h-3.5 text-white" />
             <span>Ready for Pickup</span>
           </span>
@@ -154,8 +154,8 @@ export default function OrdersPage() {
       case 'preparing':
       case 'in_progress':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#FDBD38]/80 text-gray-950">
-            <Clock className="w-3.5 h-3.5 text-gray-950 animate-spin" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDBD38] text-white shadow-xs">
+            <Clock className="w-3.5 h-3.5 text-white" />
             <span>Preparing</span>
           </span>
         );
@@ -179,15 +179,15 @@ export default function OrdersPage() {
   const getSourceBadge = (source: string) => {
     if (source === 'merch') {
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-gray-950 bg-[#FDBD38] px-2.5 py-0.5 rounded-full shadow-xs">
-          <ShoppingBag className="w-3 h-3 text-gray-950" />
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-[#FDBD38] px-2.5 py-0.5 rounded-full shadow-xs">
+          <ShoppingBag className="w-3 h-3 text-white" />
           <span>Merch Shop</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-gray-950 bg-[#FDBD38] px-2.5 py-0.5 rounded-full shadow-xs">
-        <Utensils className="w-3 h-3 text-gray-950" />
+      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-[#FDBD38] px-2.5 py-0.5 rounded-full shadow-xs">
+        <Utensils className="w-3 h-3 text-white" />
         <span>Cafe Order</span>
       </span>
     );
@@ -206,7 +206,7 @@ export default function OrdersPage() {
           </button>
           <div className="flex-1 flex justify-center mx-2 min-w-0">
             <div className="bg-white/95 border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm shadow-black/5 min-w-0 max-w-full">
-              <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-[#4ADE80] flex-shrink-0" />
               <div className="flex items-center gap-1.5 text-xs text-gray-900 min-w-0">
                 <span className="font-bold tracking-tight truncate">My Orders</span>
                 <span className="text-gray-300 font-light flex-shrink-0">|</span>
@@ -230,7 +230,7 @@ export default function OrdersPage() {
           <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 mb-4 shadow-sm border border-amber-200">
             <ShoppingBag className="w-8 h-8 text-[#b08115]" />
           </div>
-          <h2 className="text-lg font-extrabold text-gray-950 tracking-tight mb-2">
+          <h2 className="text-lg font-bold text-gray-950 tracking-tight mb-2">
             Sign in to view your orders
           </h2>
           <p className="text-xs text-gray-500 max-w-[280px] leading-relaxed mb-6">
@@ -238,7 +238,7 @@ export default function OrdersPage() {
           </p>
           <Link
             href="/loyalty"
-            className="w-full max-w-[280px] bg-[#FDBD38] hover:bg-[#e5a420] text-white font-extrabold py-3.5 px-6 rounded-[16px] text-sm transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full max-w-[280px] bg-[#FDBD38] hover:bg-[#e5a420] text-white font-bold py-3.5 px-6 rounded-[16px] text-sm transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>Go to Loyalty Sign In</span>
             <ChevronRight className="w-4 h-4 text-white" />
@@ -260,7 +260,7 @@ export default function OrdersPage() {
         </button>
         <div className="flex-1 flex justify-center mx-2 min-w-0">
           <div className="bg-white/95 border border-black/5 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm shadow-black/5 min-w-0 max-w-full">
-            <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-[#4ADE80] flex-shrink-0" />
             <div className="flex items-center gap-1.5 text-xs text-gray-900 min-w-0">
               <span className="font-bold tracking-tight truncate">My Orders</span>
               <span className="text-gray-300 font-light flex-shrink-0">|</span>
@@ -292,14 +292,14 @@ export default function OrdersPage() {
             <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 mb-3 border border-amber-100/60">
               <ShoppingBag className="w-7 h-7 text-[#b08115]" />
             </div>
-            <h3 className="text-base font-extrabold text-gray-950 mb-1">No orders yet</h3>
+            <h3 className="text-base font-bold text-gray-950 mb-1">No orders yet</h3>
             <p className="text-xs text-gray-400 max-w-[240px] mb-5 leading-relaxed">
               You haven’t placed any orders yet. Explore our menu or merch catalog!
             </p>
             <div className="flex gap-3">
               <Link
                 href="/menu"
-                className="bg-[#FDBD38] hover:bg-[#e5a420] text-white font-extrabold px-4 py-2.5 rounded-[12px] text-xs transition-all active:scale-[0.98]"
+                className="bg-[#FDBD38] hover:bg-[#e5a420] text-white font-bold px-4 py-2.5 rounded-[12px] text-xs transition-all active:scale-[0.98]"
               >
                 Browse Menu
               </Link>
@@ -313,19 +313,19 @@ export default function OrdersPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-4 w-full">
-            {orders.map((o) => {
+            {filteredOrders.map((o) => {
               const cashbackEarned = (o.total * 0.05).toFixed(2);
 
               return (
                 <div
                   key={o.id}
                   onClick={() => handleSelectOrder(o)}
-                  className="w-full bg-white rounded-[20px] p-4.5 border border-gray-100/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3 group active:scale-[0.99] select-none"
+                  className="w-full bg-white rounded-[20px] p-4.5 border border-gray-100/90 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3 group active:scale-[0.99] select-none"
                 >
                   {/* Card Top Row: Order # & Badges */}
                   <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-extrabold text-gray-950 tracking-tight whitespace-nowrap">
+                      <span className="text-sm font-bold text-gray-950 tracking-tight whitespace-nowrap">
                         Order #{o.orderNumber}
                       </span>
                       {getSourceBadge(o.source)}
@@ -360,8 +360,8 @@ export default function OrdersPage() {
                   <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400 font-medium">Total:</span>
-                      <span className="text-sm font-extrabold text-gray-950">€{o.total.toFixed(2)}</span>
-                      <span className="text-[11px] font-extrabold text-white bg-[#FDBD38] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                      <span className="text-sm font-bold text-gray-950">€{o.total.toFixed(2)}</span>
+                      <span className="text-[11px] font-bold text-white bg-[#FDBD38] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
                         <Coins className="w-3 h-3 text-white" />
                         +€{cashbackEarned}
                       </span>
@@ -378,7 +378,7 @@ export default function OrdersPage() {
                     <button
                       onClick={(e) => handleConfirmPickup(o.id, e)}
                       disabled={confirmingPickupId === o.id}
-                      className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white font-extrabold py-2.5 rounded-[14px] text-xs transition-all flex items-center justify-center gap-1.5 mt-1 cursor-pointer shadow-xs"
+                      className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white font-bold py-2.5 rounded-[14px] text-xs transition-all flex items-center justify-center gap-1.5 mt-1 cursor-pointer shadow-xs"
                     >
                       <CheckCircle2 className="w-4 h-4 text-white" />
                       <span>{confirmingPickupId === o.id ? 'Confirming...' : 'Confirm Counter Pickup'}</span>
@@ -399,7 +399,7 @@ export default function OrdersPage() {
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex flex-col">
                 <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Order Details</span>
-                <h3 className="text-lg font-extrabold text-gray-950">#{selectedOrder.orderNumber}</h3>
+                <h3 className="text-lg font-bold text-gray-950">#{selectedOrder.orderNumber}</h3>
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
@@ -409,88 +409,69 @@ export default function OrdersPage() {
               </button>
             </div>
 
-            {/* Status Timeline */}
-            <div className="bg-amber-50/70 border border-amber-100 p-4 rounded-[18px] flex flex-col gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-950">Status:</span>
+            {/* Modal Details Body */}
+            <div className="flex flex-col gap-3 text-xs">
+              <div className="flex justify-between items-center bg-amber-50 p-3 rounded-[12px] border border-amber-100">
+                <span className="font-bold text-amber-900">Status</span>
                 {getStatusBadge(selectedOrder.status)}
               </div>
-              <div className="w-full bg-amber-200/60 h-1.5 rounded-full overflow-hidden">
-                <div
-                  className={`h-full bg-[#FDBD38] transition-all duration-500 ${
-                    selectedOrder.status === 'ready'
-                      ? 'w-full bg-emerald-500'
-                      : selectedOrder.status === 'completed'
-                      ? 'w-full bg-gray-400'
-                      : 'w-2/3 animate-pulse'
-                  }`}
-                />
-              </div>
-            </div>
 
-            {/* Itemized Receipt */}
-            <div className="flex flex-col gap-3">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items Ordered</span>
-              <div className="flex flex-col gap-2 bg-gray-50 p-3.5 rounded-[16px] border border-gray-100">
-                {selectedOrder.items && selectedOrder.items.length > 0 ? (
-                  selectedOrder.items.map((item: any, idx: number) => (
-                    <div key={idx} className="flex flex-col pb-2 border-b border-gray-200/60 last:border-0 last:pb-0">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-gray-900">
+              <div className="flex flex-col gap-2 pt-2">
+                <span className="font-bold text-gray-800 text-xs uppercase tracking-wider">Order Items</span>
+                <div className="flex flex-col gap-2 bg-gray-50 p-3.5 rounded-[14px] border border-gray-100">
+                  {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                    selectedOrder.items.map((item: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center">
+                        <span className="font-semibold text-gray-800">
                           {item.quantity}x {item.name}
                         </span>
-                        <span className="font-bold text-gray-800">
+                        <span className="font-bold text-gray-950">
                           €{(item.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
-                      {item.comments && (
-                        <span className="text-[11px] text-gray-500 italic mt-0.5">
-                          Note: "{item.comments}"
-                        </span>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-xs text-gray-500">Standard item summary</span>
-                )}
+                    ))
+                  ) : (
+                    <span className="text-gray-400">No item breakdown available.</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5 pt-2 border-t border-gray-100">
+                <div className="flex justify-between text-gray-500">
+                  <span>Subtotal</span>
+                  <span className="font-semibold">€{selectedOrder.total.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-500">
+                  <span>Estimated Cashback (5%)</span>
+                  <span className="font-bold text-amber-800">+€{(selectedOrder.total * 0.05).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-bold text-gray-950 pt-2 border-t border-gray-100">
+                  <span>Total Paid</span>
+                  <span>€{selectedOrder.total.toFixed(2)}</span>
+                </div>
               </div>
             </div>
 
-            {/* Receipt Summary Totals */}
-            <div className="flex flex-col gap-2 text-xs border-t border-gray-100 pt-3">
-              <div className="flex justify-between text-gray-500">
-                <span>Payment Status</span>
-                <span className="font-bold text-emerald-600">✓ Paid</span>
-              </div>
-              <div className="flex justify-between text-gray-500">
-                <span>Cashback Earned (5%)</span>
-                <span className="font-bold text-[#b08115]">+€{(selectedOrder.total * 0.05).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm font-extrabold text-gray-950 pt-2 border-t border-gray-100">
-                <span>Total Amount</span>
-                <span>€{selectedOrder.total.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Confirm Pickup Action if Ready */}
-            {selectedOrder.status === 'ready' && selectedOrder.source === 'merch' && (
+            {/* Close / Action Button */}
+            {selectedOrder.status === 'ready' && selectedOrder.source === 'merch' ? (
               <button
-                onClick={() => handleConfirmPickup(selectedOrder.id)}
-                disabled={confirmingPickupId === selectedOrder.id}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold py-3.5 rounded-[16px] text-sm transition-all shadow-xs flex items-center justify-center gap-2 mt-2 cursor-pointer"
+                onClick={(e) => {
+                  handleConfirmPickup(selectedOrder.id, e);
+                  setSelectedOrder(null);
+                }}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-[16px] text-sm transition-all shadow-xs flex items-center justify-center gap-2 mt-2 cursor-pointer"
               >
-                <CheckCircle2 className="w-5 h-5 text-white" />
-                <span>{confirmingPickupId === selectedOrder.id ? 'Confirming...' : 'Confirm Counter Pickup'}</span>
+                <CheckCircle2 className="w-4 h-4 text-white" />
+                <span>Confirm Pickup</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-[16px] text-xs transition-all mt-2 cursor-pointer"
+              >
+                Close Receipt
               </button>
             )}
-
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedOrder(null)}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-[16px] text-xs transition-colors cursor-pointer mt-1"
-            >
-              Close
-            </button>
           </div>
         </div>
       )}

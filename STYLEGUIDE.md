@@ -31,6 +31,7 @@ This document serves as the single source of truth for the Corgi POS design syst
 - **Labels**: `text-[14px] font-bold text-gray-900`
 - **Hints/Subtitles**: `text-[11px] font-medium text-gray-400`
 - **Buttons**: `text-[13px] font-bold`
+- **STRICT RULE**: `font-extrabold` (font weight 800) is **STRICTLY BANNED** across the codebase. Maximum font weight permitted is `font-bold` (700) or `font-semibold` (600).
 
 ## 4. Interaction States
 

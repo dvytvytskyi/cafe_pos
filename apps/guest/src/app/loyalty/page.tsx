@@ -1446,7 +1446,7 @@ export default function LoyaltyPage() {
         </svg>
 
         <div className="max-w-[400px] mx-auto flex flex-col items-center text-center relative z-10">
-          <h1 className="text-2xl font-extrabold text-white tracking-tight leading-none mb-2.5 drop-shadow-sm">Corgi Loyalty Program</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight leading-none mb-2.5 drop-shadow-sm">Corgi Loyalty Program</h1>
           <p className="text-xs font-semibold text-white/95 max-w-[310px] leading-relaxed">
             Earn cashback in Euros, unlock exclusive stickers, and add your pass to Apple Wallet.
           </p>
@@ -1514,16 +1514,18 @@ export default function LoyaltyPage() {
             )}
 
             <div>
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">SMS Verification Code</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">
+                <span>Enter 6-digit SMS verification code</span>
+              </label>
+              <div className="relative flex items-center">
+                <Lock className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
                 <input
                   type="text"
-                  required
+                  maxLength={6}
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
                   placeholder="123456"
-                  className="w-full bg-white border border-gray-200 rounded-[14px] py-3 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none focus:border-[#FDBD38] focus:ring-4 focus:ring-[#FDBD38]/10 transition-all shadow-none"
+                  className="w-full bg-white border border-gray-200 focus:border-[#FDBD38] rounded-[14px] py-3.5 pl-10 pr-4 text-base font-semibold text-gray-800 focus:outline-none transition-all shadow-none focus:ring-4 focus:ring-[#FDBD38]/10"
                 />
               </div>
             </div>
@@ -1531,9 +1533,9 @@ export default function LoyaltyPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-white font-extrabold drop-shadow-sm py-3.5 rounded-[16px] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
+              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-white font-bold drop-shadow-sm py-3.5 rounded-[16px] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
             >
-              <span>{loading ? 'Verifying...' : 'Verify Code'}</span>
+              <span>{loading ? 'Verifying...' : 'Verify Code & Sign In'}</span>
               <ChevronRight className="w-4 h-4 text-white" />
             </button>
 
@@ -1597,13 +1599,13 @@ export default function LoyaltyPage() {
           {/* Pill Badge */}
           <div className="flex items-center gap-1.5 text-xs font-bold text-gray-600 mb-2.5">
             <span>Unlock with</span>
-            <span className="px-3.5 py-1 bg-[#FDBD38] text-white rounded-full text-[11px] font-extrabold shadow-sm tracking-wide drop-shadow-xs">
+            <span className="px-3.5 py-1 bg-[#FDBD38] text-white rounded-full text-[11px] font-bold shadow-sm tracking-wide drop-shadow-xs">
               Corgi Pass
             </span>
           </div>
 
           {/* Main Headline */}
-          <h2 className="text-xl font-extrabold text-[#FDBD38] tracking-tight leading-snug max-w-[310px]">
+          <h2 className="text-xl font-bold text-[#FDBD38] tracking-tight leading-snug max-w-[310px]">
             Share Cashback & Stickers with Friends and Family
           </h2>
 
