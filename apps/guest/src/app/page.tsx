@@ -211,7 +211,7 @@ export default function HomePage() {
   }, [activeLocationIndex]);
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-black select-none">
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-white select-none">
       
       {/* Main Page Content Wrapper (Pushed to the right when drawer is active) */}
       <div 
@@ -540,7 +540,7 @@ export default function HomePage() {
       </div>
              {/* Sidebar Drawer Sheet */}
       <div 
-        className={`fixed inset-0 bg-black/20 z-50 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/5 z-50 transition-opacity duration-300 ${
           showDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setShowDrawer(false)}
