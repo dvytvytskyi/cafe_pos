@@ -1544,17 +1544,17 @@ export default function MenuPage() {
           {/* Terms checkbox on register step 2 */}
           {authMode === 'register_step2' && (
             <div 
-              className="flex items-center gap-2.5 px-4 cursor-pointer select-none mt-1" 
+              className="flex items-center justify-center gap-2.5 px-4 mx-auto cursor-pointer select-none text-center mt-1" 
               onClick={() => setAgreedToTerms(!agreedToTerms)}
             >
               <input 
                 type="checkbox" 
                 checked={agreedToTerms}
                 onChange={() => {}} 
-                className="w-4.5 h-4.5 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer"
+                className="w-4.5 h-4.5 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer flex-shrink-0"
               />
               <span className="text-[12px] text-gray-500 font-medium leading-tight">
-                By registering I confirm <span className="underline">privacy policy</span> and <span className="underline">terms</span>
+                By registering I confirm <span className="underline cursor-pointer hover:text-black">privacy policy</span> and <span className="underline cursor-pointer hover:text-black">terms</span>
               </span>
             </div>
           )}

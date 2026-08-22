@@ -1008,14 +1008,14 @@ export default function HomePage() {
 
           {(authMode === 'register_step1' || authMode === 'register_step2') && (
             <div 
-              className="flex items-start gap-2.5 px-4 cursor-pointer select-none" 
+              className="flex items-center justify-center gap-2.5 px-4 mx-auto cursor-pointer select-none text-center" 
               onClick={() => setAgreedToTerms(!agreedToTerms)}
             >
               <input 
                 type="checkbox" 
                 checked={agreedToTerms}
                 onChange={() => {}} // handled by click on parent div
-                className="mt-0.5 w-4.5 h-4.5 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer"
+                className="w-4.5 h-4.5 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer flex-shrink-0"
               />
               <span className="text-[12px] text-gray-500 font-medium leading-tight">
                 By registering I confirm{' '}
