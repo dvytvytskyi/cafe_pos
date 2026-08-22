@@ -5,7 +5,7 @@ import { useGuest } from '@/lib/guest-context';
 import Link from 'next/link';
 import { logoutGuest } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, ChevronLeft, LogIn, UserPlus, ArrowRight, HelpCircle, Menu, X, MapPin, ClipboardList, Gift, Coffee, ShoppingBag, Navigation2, Zap, ArrowLeft, MoreHorizontal, Compass, Bike, Globe, FileText, Shirt, Package, MessageSquare, Megaphone, Radio, PawPrint } from 'lucide-react';
+import { ChevronRight, ChevronLeft, LogIn, UserPlus, ArrowRight, HelpCircle, Menu, X, MapPin, ClipboardList, Gift, Coffee, ShoppingBag, Navigation2, Zap, ArrowLeft, MoreHorizontal, Compass, Bike, Globe, FileText, Shirt, Package, MessageSquare, Megaphone, Radio, PawPrint, Share2, Copy, Check } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 
 export default function HomePage() {
@@ -22,6 +22,8 @@ export default function HomePage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showLocations, setShowLocations] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [showOrderModeSelector, setShowOrderModeSelector] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [showNewAddressModal, setShowNewAddressModal] = useState(false);
@@ -536,25 +538,17 @@ export default function HomePage() {
         </div>
       </div>
       </div>
-       {/* Drawer Overlay Menu */}
+             {/* Sidebar Drawer Sheet */}
       <div 
-        className={`fixed inset-0 bg-white/20 backdrop-blur-[5px] z-50 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/20 z-50 transition-opacity duration-300 ${
           showDrawer ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
-        style={{
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          transform: 'translate3d(0,0,0)',
-          WebkitTransform: 'translate3d(0,0,0)',
-          willChange: 'opacity, backdrop-filter, -webkit-backdrop-filter'
-        }}
         onClick={() => setShowDrawer(false)}
       >
         <div 
-          className={`w-[80%] max-w-[290px] h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between relative transform transition-transform duration-300 ease-out shadow-none ${
+          className={`w-[80%] max-w-[290px] h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between relative transform transition-transform duration-300 ease-out shadow-[10px_0_30px_rgba(0,0,0,0.06)] border-r border-gray-100/60 ${
             showDrawer ? 'translate-x-0' : '-translate-x-full'
           }`}
-          style={{ willChange: 'transform' }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Transparent close button - Moved outside to the right of the sidebar container */}
@@ -628,21 +622,23 @@ export default function HomePage() {
                 >
                   <div className="flex items-center gap-3">
                     <Gift className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
-                    <span className="text-[14px] font-medium text-[#000000]">Honest People</span>
+                    <span className="text-[14px] font-medium text-[#000000]">Loyalty Club</span>
                   </div>
                 </Link>
                 <div className="ml-6 mr-0 border-b border-gray-200" />
 
-                <Link 
-                  href="/invite" 
-                  onClick={() => setShowDrawer(false)} 
-                  className="flex items-center justify-between hover:bg-black/5 transition-colors pl-6 py-[22px] pr-6 w-full"
+                <button 
+                  onClick={() => {
+                    setShowDrawer(false);
+                    setShowInviteModal(true);
+                  }}
+                  className="flex items-center justify-between hover:bg-black/5 transition-colors pl-6 py-[22px] pr-6 w-full cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <Megaphone className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
                     <span className="text-[14px] font-medium text-[#000000]">Invite a friend</span>
                   </div>
-                </Link>
+                </button>
                 <div className="ml-6 mr-0 border-b border-gray-200" />
 
                 <Link 
@@ -1234,6 +1230,75 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      {/* Invite a Friend Modal */}
+      {showInviteModal && (
+        <div 
+          onClick={() => setShowInviteModal(false)}
+          className="fixed inset-0 z-50 backdrop-blur-md bg-white/20 animate-backdrop-blur flex items-center justify-center p-4 select-none cursor-pointer"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-[360px] bg-white rounded-[28px] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100/90 relative flex flex-col items-center text-center animate-scaleUp cursor-default"
+          >
+            <button 
+              onClick={() => setShowInviteModal(false)}
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 absolute top-4 right-4 transition-all active:scale-90 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-3 p-2">
+              <img src="/stickers/corgi_fiesta_1.png" alt="Fiesta Corgi" className="w-12 h-12 object-contain" />
+            </div>
+
+            <h3 className="text-xl font-bold text-gray-950 tracking-tight mb-1">
+              Invite a Friend
+            </h3>
+            <p className="text-xs text-gray-500 max-w-[270px] leading-relaxed mb-5">
+              Share your referral link with friends. They get 5€ bonus & you earn 5% cashback on their first order!
+            </p>
+
+            {/* Link Input Box */}
+            <div className="w-full bg-gray-50 border border-gray-200/80 rounded-[16px] p-1.5 flex items-center gap-2 mb-4">
+              <span className="text-xs font-semibold text-gray-700 pl-3 truncate flex-1 select-all">
+                corgi.cafe/invite?ref=CORGI2026
+              </span>
+              <button
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    navigator.clipboard.writeText('https://corgi.cafe/invite?ref=CORGI2026');
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2000);
+                  }
+                }}
+                className="bg-[#FDBD38] hover:bg-[#e5a420] text-white font-bold px-3.5 py-2 rounded-[12px] text-xs transition-all active:scale-[0.95] flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+              >
+                {copiedLink ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5 text-white" />}
+                <span>{copiedLink ? 'Copied!' : 'Copy'}</span>
+              </button>
+            </div>
+
+            {/* Share via Socials Button */}
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined' && navigator.share) {
+                  navigator.share({
+                    title: 'Corgi Cafe Invite',
+                    text: 'Get 5€ bonus cashback at Corgi Cafe!',
+                    url: 'https://corgi.cafe/invite?ref=CORGI2026',
+                  }).catch(() => {});
+                } else if (typeof window !== 'undefined') {
+                  window.open(`https://t.me/share/url?url=${encodeURIComponent('https://corgi.cafe/invite?ref=CORGI2026')}&text=${encodeURIComponent('Get 5€ bonus cashback at Corgi Cafe!')}`, '_blank');
+                }
+              }}
+              className="w-full bg-gray-950 hover:bg-gray-800 text-white font-bold py-3.5 rounded-[16px] text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+            >
+              <Share2 className="w-4 h-4 text-white" />
+              <span>Share with Friends</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
