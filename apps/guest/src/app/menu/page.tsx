@@ -1770,13 +1770,13 @@ export default function MenuPage() {
 
       {/* Bottom Sheet Order Mode Modal */}
       <div 
-        className={`fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center backdrop-blur-[3px] ${
+        className={`fixed inset-0 z-50 backdrop-blur-md bg-white/20 animate-backdrop-blur transition-all duration-300 flex items-end justify-center ${
           showOrderModeModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setShowOrderModeModal(false)}
       >
         <div 
-          className={`w-full max-w-[480px] bg-white rounded-t-[16px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-2xl relative ${
+          className={`w-full max-w-[480px] bg-white rounded-t-[28px] pt-8 px-6 pb-8 transition-transform duration-300 ease-out transform flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100/90 relative ${
             showOrderModeModal ? 'translate-y-0' : 'translate-y-full'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -1813,10 +1813,10 @@ export default function MenuPage() {
                   onClick={() => {
                     setOrderMode(opt.id as 'store' | 'pickup' | 'delivery');
                   }}
-                  className={`w-full p-4 rounded-2xl text-left border transition-all flex items-center justify-between ${
+                  className={`w-full p-4 rounded-[20px] text-left transition-all flex items-center justify-between shadow-[0_2px_12px_rgba(0,0,0,0.04)] ${
                     active 
-                      ? 'bg-[#FDBD38]/10 border-[#FDBD38] text-gray-900' 
-                      : 'bg-white border-gray-100 text-gray-800 hover:bg-gray-50/50'
+                      ? 'bg-amber-50/60 border-2 border-[#FDBD38] text-gray-900' 
+                      : 'bg-white border border-gray-100/90 text-gray-800 hover:bg-gray-50/50'
                   }`}
                 >
                   <div className="flex items-center gap-3.5">
