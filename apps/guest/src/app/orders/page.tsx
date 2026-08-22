@@ -280,57 +280,21 @@ export default function OrdersPage() {
       </div>
 
       {/* Main Content Container */}
-      <div className="w-full max-w-[420px] px-6 mt-6 flex flex-col gap-5">
-        {/* Filter Tabs */}
-        <div className="w-full bg-gray-200/60 p-1 rounded-[16px] flex items-center gap-1 select-none">
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`flex-1 py-2 text-xs font-bold rounded-[12px] transition-all cursor-pointer ${
-              activeTab === 'all'
-                ? 'bg-white text-gray-950 shadow-xs'
-                : 'text-gray-500 hover:text-gray-800'
-            }`}
-          >
-            All Orders ({orders.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('active')}
-            className={`flex-1 py-2 text-xs font-bold rounded-[12px] transition-all cursor-pointer ${
-              activeTab === 'active'
-                ? 'bg-white text-gray-950 shadow-xs'
-                : 'text-gray-500 hover:text-gray-800'
-            }`}
-          >
-            Active
-          </button>
-          <button
-            onClick={() => setActiveTab('completed')}
-            className={`flex-1 py-2 text-xs font-bold rounded-[12px] transition-all cursor-pointer ${
-              activeTab === 'completed'
-                ? 'bg-white text-gray-950 shadow-xs'
-                : 'text-gray-500 hover:text-gray-800'
-            }`}
-          >
-            Completed
-          </button>
-        </div>
-
+      <div className="w-full max-w-[420px] px-6 mt-4 flex flex-col gap-6">
         {/* Orders List */}
         {loading ? (
           <div className="w-full py-16 flex flex-col items-center justify-center gap-3 text-gray-400">
             <Clock className="w-7 h-7 animate-spin text-[#FDBD38]" />
             <span className="text-xs font-bold">Loading your orders...</span>
           </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="w-full bg-white rounded-[24px] p-8 border border-gray-100/90 shadow-sm flex flex-col items-center text-center mt-2">
-            <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 mb-3">
+        ) : orders.length === 0 ? (
+          <div className="w-full bg-white rounded-[24px] p-8 flex flex-col items-center text-center mt-2">
+            <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 mb-3 border border-amber-100/60">
               <ShoppingBag className="w-7 h-7 text-[#b08115]" />
             </div>
-            <h3 className="text-base font-extrabold text-gray-900 mb-1">No orders found</h3>
+            <h3 className="text-base font-extrabold text-gray-950 mb-1">No orders yet</h3>
             <p className="text-xs text-gray-400 max-w-[240px] mb-5 leading-relaxed">
-              {activeTab === 'all'
-                ? 'You haven’t placed any orders yet. Explore our menu or merch catalog!'
-                : `You don't have any ${activeTab} orders at the moment.`}
+              You haven’t placed any orders yet. Explore our menu or merch catalog!
             </p>
             <div className="flex gap-3">
               <Link
@@ -341,28 +305,27 @@ export default function OrdersPage() {
               </Link>
               <Link
                 href="/shop"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-2.5 rounded-[12px] text-xs transition-all active:scale-[0.98]"
+                className="bg-amber-50 hover:bg-amber-100 text-[#b08115] font-bold px-4 py-2.5 rounded-[12px] text-xs transition-all active:scale-[0.98]"
               >
                 Explore Merch
               </Link>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3.5 w-full">
-            {filteredOrders.map((o) => {
-              const itemCount = o.items ? o.items.reduce((acc: number, i: any) => acc + (i.quantity || 1), 0) : 1;
+          <div className="flex flex-col gap-5 w-full">
+            {orders.map((o) => {
               const cashbackEarned = (o.total * 0.05).toFixed(2);
 
               return (
                 <div
                   key={o.id}
                   onClick={() => handleSelectOrder(o)}
-                  className="w-full bg-white rounded-[20px] p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col gap-3 group active:scale-[0.99]"
+                  className="w-full bg-white rounded-[24px] p-4 flex flex-col gap-3.5 transition-all cursor-pointer group active:scale-[0.99] select-none"
                 >
-                  {/* Card Top Row */}
+                  {/* Card Top Row: Order # & Badges */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-extrabold text-gray-950 tracking-tight">
+                      <span className="text-base font-extrabold text-gray-950 tracking-tight">
                         Order #{o.orderNumber}
                       </span>
                       {getSourceBadge(o.source)}
@@ -370,15 +333,15 @@ export default function OrdersPage() {
                     {getStatusBadge(o.status)}
                   </div>
 
-                  {/* Items Preview */}
-                  <div className="flex flex-col gap-1 text-xs text-gray-600 bg-gray-50/80 p-3 rounded-[12px] border border-gray-100/60">
+                  {/* Items Preview Box (Frameless Warm Amber Tint) */}
+                  <div className="flex flex-col gap-1.5 text-xs text-gray-700 bg-amber-50/50 p-3.5 rounded-[16px] border border-amber-100/60">
                     {o.items && o.items.length > 0 ? (
                       o.items.slice(0, 2).map((item: any, idx: number) => (
                         <div key={idx} className="flex justify-between items-center">
-                          <span className="font-semibold text-gray-800 truncate max-w-[230px]">
+                          <span className="font-bold text-gray-900 truncate max-w-[220px]">
                             {item.quantity}x {item.name}
                           </span>
-                          <span className="font-medium text-gray-500">
+                          <span className="font-semibold text-gray-500">
                             €{(item.price * item.quantity).toFixed(2)}
                           </span>
                         </div>
@@ -387,26 +350,26 @@ export default function OrdersPage() {
                       <span className="font-medium text-gray-500">Items summary available in details</span>
                     )}
                     {o.items && o.items.length > 2 && (
-                      <span className="text-[10px] font-bold text-amber-800 mt-0.5">
+                      <span className="text-[11px] font-extrabold text-[#b08115] mt-0.5">
                         +{o.items.length - 2} more item{o.items.length - 2 > 1 ? 's' : ''}
                       </span>
                     )}
                   </div>
 
                   {/* Card Bottom Row: Total & Cashback */}
-                  <div className="flex items-center justify-between pt-1 border-t border-gray-100/80 mt-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-400 font-medium">Total:</span>
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 font-bold">Total:</span>
                       <span className="text-sm font-extrabold text-gray-950">€{o.total.toFixed(2)}</span>
-                      <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200/60">
+                      <span className="text-[11px] font-extrabold text-[#b08115] bg-[#FDBD38]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-[#FDBD38]/30">
                         <Coins className="w-3 h-3 text-[#b08115]" />
                         +€{cashbackEarned}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-xs font-bold text-gray-400 group-hover:text-gray-700 transition-colors">
+                    <div className="flex items-center gap-1 text-xs font-extrabold text-[#b08115] group-hover:text-[#e5a420] transition-colors">
                       <span>Details</span>
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4 text-[#b08115]" />
                     </div>
                   </div>
 
@@ -415,7 +378,7 @@ export default function OrdersPage() {
                     <button
                       onClick={(e) => handleConfirmPickup(o.id, e)}
                       disabled={confirmingPickupId === o.id}
-                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold py-2.5 rounded-[12px] text-xs transition-all shadow-xs flex items-center justify-center gap-1.5 mt-1 cursor-pointer"
+                      className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white font-extrabold py-3 rounded-[16px] text-xs transition-all flex items-center justify-center gap-1.5 mt-1 cursor-pointer"
                     >
                       <CheckCircle2 className="w-4 h-4 text-white" />
                       <span>{confirmingPickupId === o.id ? 'Confirming...' : 'Confirm Counter Pickup'}</span>
