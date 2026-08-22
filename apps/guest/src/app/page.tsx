@@ -546,7 +546,7 @@ export default function HomePage() {
         onClick={() => setShowDrawer(false)}
       >
         <div 
-          className={`w-[80%] max-w-[290px] h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between relative transform transition-transform duration-300 ease-out shadow-[10px_0_30px_rgba(0,0,0,0.06)] border-r border-gray-100/60 ${
+          className={`w-[80%] max-w-[290px] h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between relative transform transition-transform duration-300 ease-out shadow-[10px_0_30px_rgba(0,0,0,0.06)] border-none ${
             showDrawer ? 'translate-x-0' : '-translate-x-full'
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -629,7 +629,6 @@ export default function HomePage() {
 
                 <button 
                   onClick={() => {
-                    setShowDrawer(false);
                     setShowInviteModal(true);
                   }}
                   className="flex items-center justify-between hover:bg-black/5 transition-colors pl-6 py-[22px] pr-6 w-full cursor-pointer"
@@ -1234,7 +1233,7 @@ export default function HomePage() {
       {showInviteModal && (
         <div 
           onClick={() => setShowInviteModal(false)}
-          className="fixed inset-0 z-50 backdrop-blur-md bg-white/20 animate-backdrop-blur flex items-center justify-center p-4 select-none cursor-pointer"
+          className="fixed inset-0 z-[60] backdrop-blur-md bg-white/20 animate-backdrop-blur flex items-center justify-center p-4 select-none cursor-pointer"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
@@ -1247,15 +1246,17 @@ export default function HomePage() {
               <X className="w-4 h-4" />
             </button>
 
-            <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-3 p-2">
-              <img src="/stickers/corgi_fiesta_1.png" alt="Fiesta Corgi" className="w-12 h-12 object-contain" />
-            </div>
+            <img 
+              src="/stickers/corgi_fiesta_1.png" 
+              alt="Fiesta Corgi" 
+              className="w-24 h-24 object-contain mb-2.5 drop-shadow-sm" 
+            />
 
             <h3 className="text-xl font-bold text-gray-950 tracking-tight mb-1">
               Invite a Friend
             </h3>
             <p className="text-xs text-gray-500 max-w-[270px] leading-relaxed mb-5">
-              Share your referral link with friends. They get 5€ bonus & you earn 5% cashback on their first order!
+              Share your referral link with friends and invite them to join the Corgi Cafe club!
             </p>
 
             {/* Link Input Box */}
@@ -1284,11 +1285,11 @@ export default function HomePage() {
                 if (typeof window !== 'undefined' && navigator.share) {
                   navigator.share({
                     title: 'Corgi Cafe Invite',
-                    text: 'Get 5€ bonus cashback at Corgi Cafe!',
+                    text: 'Join me at Corgi Cafe!',
                     url: 'https://corgi.cafe/invite?ref=CORGI2026',
                   }).catch(() => {});
                 } else if (typeof window !== 'undefined') {
-                  window.open(`https://t.me/share/url?url=${encodeURIComponent('https://corgi.cafe/invite?ref=CORGI2026')}&text=${encodeURIComponent('Get 5€ bonus cashback at Corgi Cafe!')}`, '_blank');
+                  window.open(`https://t.me/share/url?url=${encodeURIComponent('https://corgi.cafe/invite?ref=CORGI2026')}&text=${encodeURIComponent('Join me at Corgi Cafe!')}`, '_blank');
                 }
               }}
               className="w-full bg-gray-950 hover:bg-gray-800 text-white font-bold py-3.5 rounded-[16px] text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-xs"
