@@ -9,7 +9,7 @@ import { ChevronRight, ChevronLeft, LogIn, UserPlus, ArrowRight, HelpCircle, Men
 import mapboxgl from 'mapbox-gl';
 
 export default function HomePage() {
-  const { bootstrap, orderMode, setOrderMode, isLoggedIn, profileName, refreshAuth } = useGuest();
+  const { bootstrap, orderMode, setOrderMode, isLoggedIn, profileName, refreshAuth, logout } = useGuest();
   const router = useRouter();
   const [showDrawer, setShowDrawer] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -563,9 +563,9 @@ export default function HomePage() {
           <div className="flex-1 flex flex-col">
             {/* Top Yellow Header Section (~15% height) */}
             <div className="bg-[#FDBD38] text-white p-6 pt-12 pb-8 flex items-center gap-4">
-              {/* White circle avatar container with kiwi emoji inside */}
-              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
-                🥝
+              {/* White circle avatar container with Corgi icon inside */}
+              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm flex-shrink-0 p-1 border border-amber-200 overflow-hidden">
+                <img src="/stickers/corgi_fiesta_1.png" alt="Corgi Avatar" className="w-full h-full object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-[18px] text-white tracking-tight leading-snug uppercase line-clamp-2 break-words">
@@ -577,15 +577,13 @@ export default function HomePage() {
                       Welcome to Corgi Cafe!
                     </span>
                     <button 
-                      onClick={async () => {
-                        if (typeof window !== 'undefined') {
-                          localStorage.removeItem('corgi_mock_user');
-                        }
-                        await logoutGuest();
-                        await refreshAuth();
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        await logout();
                         setShowDrawer(false);
                       }}
-                      className="text-[11px] text-white/75 hover:text-white font-medium block text-left underline underline-offset-2 mt-0.5 cursor-pointer"
+                      className="text-[11px] text-white/80 hover:text-white font-semibold block text-left underline underline-offset-2 mt-0.5 cursor-pointer"
                     >
                       Log out
                     </button>

@@ -12,6 +12,7 @@ interface GuestContextValue {
   isLoggedIn: boolean;
   profileName?: string;
   refreshAuth: () => Promise<void>;
+  logout: () => Promise<void>;
   foodCart: CartLine[];
   merchCart: CartLine[];
   addFoodToCart: (line: Omit<CartLine, 'key'>) => void;
@@ -77,16 +78,27 @@ export function GuestProvider({
     if (typeof window !== 'undefined') localStorage.setItem('corgi_guest_locale', l);
   }, []);
 
+  const logout = useCallback(async () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('corgi_logged_out', 'true');
+      localStorage.removeItem('corgi_mock_user');
+      localStorage.removeItem('corgi_guest_session_token');
+      localStorage.removeItem('guest_token');
+    }
+    setIsLoggedIn(false);
+    setProfileName(undefined);
+  }, []);
+
   const refreshAuth = useCallback(async () => {
     try {
       if (typeof window !== 'undefined') {
         const loggedOut = localStorage.getItem('corgi_logged_out');
-        let mockUser = localStorage.getItem('corgi_mock_user');
-        if (!mockUser && !loggedOut) {
-          localStorage.setItem('corgi_mock_user', 'афіа');
-          localStorage.setItem('corgi_guest_session_token', 'mock-session-token');
-          mockUser = 'афіа';
+        if (loggedOut === 'true') {
+          setIsLoggedIn(false);
+          setProfileName(undefined);
+          return;
         }
+        let mockUser = localStorage.getItem('corgi_mock_user');
         if (mockUser) {
           setIsLoggedIn(true);
           setProfileName(mockUser);
@@ -189,6 +201,7 @@ export function GuestProvider({
       isLoggedIn,
       profileName,
       refreshAuth,
+      logout,
       foodCart,
       merchCart,
       addFoodToCart,
@@ -217,6 +230,7 @@ export function GuestProvider({
       isLoggedIn,
       profileName,
       refreshAuth,
+      logout,
       foodCart,
       merchCart,
       addFoodToCart,
