@@ -145,8 +145,8 @@ export default function OrdersPage() {
     switch (status?.toLowerCase()) {
       case 'ready':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/70 animate-pulse">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#FDBD38]/20 text-[#b08115] border border-[#FDBD38]/40 animate-pulse">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#b08115]" />
             <span>Ready for Pickup</span>
           </span>
         );
@@ -154,15 +154,15 @@ export default function OrdersPage() {
       case 'preparing':
       case 'in_progress':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200/70">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200/60">
             <Clock className="w-3.5 h-3.5 text-amber-700 animate-spin" />
             <span>Preparing</span>
           </span>
         );
       case 'cancelled':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-200/70">
-            <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 text-gray-700 border border-gray-200/60">
+            <AlertCircle className="w-3.5 h-3.5 text-gray-500" />
             <span>Cancelled</span>
           </span>
         );
@@ -179,15 +179,15 @@ export default function OrdersPage() {
   const getSourceBadge = (source: string) => {
     if (source === 'merch') {
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-100">
-          <ShoppingBag className="w-3 h-3 text-purple-600" />
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60">
+          <ShoppingBag className="w-3 h-3 text-[#b08115]" />
           <span>Merch Shop</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-700 bg-gray-100/90 px-2.5 py-0.5 rounded-full border border-gray-200/60">
-        <Utensils className="w-3 h-3 text-gray-500" />
+      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60">
+        <Utensils className="w-3 h-3 text-[#b08115]" />
         <span>Cafe Order</span>
       </span>
     );
@@ -288,7 +288,7 @@ export default function OrdersPage() {
             <span className="text-xs font-bold">Loading your orders...</span>
           </div>
         ) : orders.length === 0 ? (
-          <div className="w-full bg-white rounded-[24px] p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center mt-2">
+          <div className="w-full bg-white rounded-[24px] p-8 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col items-center text-center mt-2">
             <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 mb-3 border border-amber-100/60">
               <ShoppingBag className="w-7 h-7 text-[#b08115]" />
             </div>
@@ -320,7 +320,7 @@ export default function OrdersPage() {
                 <div
                   key={o.id}
                   onClick={() => handleSelectOrder(o)}
-                  className="w-full bg-white rounded-[20px] p-4.5 border border-gray-100/90 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col gap-3 group active:scale-[0.99] select-none"
+                  className="w-full bg-white rounded-[20px] p-4.5 border border-gray-100/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3 group active:scale-[0.99] select-none"
                 >
                   {/* Card Top Row: Order # & Badges */}
                   <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
@@ -361,7 +361,7 @@ export default function OrdersPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400 font-medium">Total:</span>
                       <span className="text-sm font-extrabold text-gray-950">€{o.total.toFixed(2)}</span>
-                      <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200/50">
+                      <span className="text-[11px] font-extrabold text-amber-950 bg-[#FDBD38]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-[#FDBD38]/40 shadow-xs">
                         <Coins className="w-3 h-3 text-[#b08115]" />
                         +€{cashbackEarned}
                       </span>
