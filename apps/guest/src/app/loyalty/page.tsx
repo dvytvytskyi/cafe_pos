@@ -1461,7 +1461,7 @@ export default function LoyaltyPage() {
           <form onSubmit={handleRequestOtp} className="flex flex-col gap-4 w-full">
             <div>
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">
-                <span>Phone Number</span>
+                <span>Enter phone number to enter</span>
               </label>
               <div className="relative flex items-center">
                 <Phone className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
