@@ -817,7 +817,7 @@ export default function HomePage() {
           {/* Header Block */}
           <div className="flex justify-between items-start w-full">
             <div className="flex flex-col pl-[25px]">
-              <h2 className="text-[28px] font-bold tracking-tight leading-none text-black uppercase">
+              <h2 className="text-[28px] font-bold tracking-tight leading-none text-[#FDBD38] uppercase">
                 {authMode === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'}
               </h2>
               <span className="text-[12px] text-gray-500 font-bold uppercase tracking-wider mt-1.5">

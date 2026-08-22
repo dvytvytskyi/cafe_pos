@@ -1341,7 +1341,7 @@ export default function MenuPage() {
           {/* Header Block */}
           <div className="flex justify-between items-start w-full">
             <div className="flex flex-col">
-              <h2 className="text-[28px] font-bold tracking-tight leading-none text-black uppercase">
+              <h2 className="text-[28px] font-bold tracking-tight leading-none text-[#FDBD38] uppercase">
                 {authMode === 'login' ? 'WELCOME BACK!' : 'CREATE ACCOUNT'}
               </h2>
               
