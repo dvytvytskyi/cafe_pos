@@ -656,9 +656,7 @@ export default function LoyaltyPage() {
             }}
             className="w-full bg-black hover:bg-zinc-955 text-white rounded-[18px] py-3.5 px-4 flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] font-bold text-sm cursor-pointer border border-zinc-800 shadow-sm"
           >
-            <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 512 512">
-              <path d="M433 162.24H79c-34.62 0-63 28.38-63 63v176.53c0 34.62 28.38 63 63 63h354c34.62 0 63-28.38 63-63V225.24c0-34.62-28.38-63-63-63zm-4.7 248.53H83.7a28.31 28.31 0 01-28.3-28.3V252.1a28.31 28.31 0 0128.3-28.3H428.3a28.31 28.31 0 0128.3 28.3v130.37a28.31 28.31 0 01-28.3 28.3zM418.57 60H93.43c-31 0-56.32 25.32-56.32 56.32v8.92c0 8.5 6.9 15.4 15.4 15.4h399c8.5 0 15.4-6.9 15.4-15.4v-8.92C474.89 85.32 449.57 60 418.57 60z"/>
-            </svg>
+            <img src="/apple-wallet-icon.png" alt="Apple Wallet" className="w-5.5 h-5.5 object-contain" />
             <span>Add to Apple Wallet</span>
           </button>
         </div>
@@ -1344,6 +1342,7 @@ export default function LoyaltyPage() {
                     </>
                   ) : (
                     <>
+                      <img src="/apple-wallet-icon.png" alt="Apple Wallet" className="w-5 h-5 object-contain" />
                       <span>Download Wallet Pass</span>
                     </>
                   )}

@@ -393,8 +393,14 @@ export default function OrdersPage() {
 
       {/* Order Details Slide-Over Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full sm:max-w-[420px] bg-white rounded-t-[28px] sm:rounded-[28px] p-6 max-h-[85vh] overflow-y-auto flex flex-col gap-4 shadow-xl border border-gray-100 select-none">
+        <div 
+          onClick={() => setSelectedOrder(null)}
+          className="fixed inset-0 z-50 backdrop-blur-md bg-white/20 animate-backdrop-blur flex items-end sm:items-center justify-center p-0 sm:p-4 select-none cursor-pointer"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full sm:max-w-[420px] bg-white rounded-t-[28px] sm:rounded-[28px] p-6 max-h-[85vh] overflow-y-auto flex flex-col gap-4 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100/90 select-none animate-slide-up cursor-default"
+          >
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex flex-col">
