@@ -1603,7 +1603,7 @@ export default function LoyaltyPage() {
           {/* Pill Badge */}
           <div className="flex items-center gap-1.5 text-xs font-bold text-gray-600 mb-2.5">
             <span>Unlock with</span>
-            <span className="px-3.5 py-1 bg-[#EE635E] text-white rounded-full text-[11px] font-extrabold shadow-sm tracking-wide">
+            <span className="px-3.5 py-1 bg-[#FDBD38] text-gray-950 rounded-full text-[11px] font-extrabold shadow-sm tracking-wide">
               Corgi Pass
             </span>
           </div>
