@@ -281,6 +281,9 @@ export default function HomePage() {
                     <div className="flex items-center gap-3">
                       <UserPlus className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
                       <span className="font-medium text-[15px] text-black">Sign up</span>
+                      <span className="bg-[#FDBD38] text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
+                        +3€ bonus
+                      </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
                   </button>
