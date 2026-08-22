@@ -145,8 +145,8 @@ export default function OrdersPage() {
     switch (status?.toLowerCase()) {
       case 'ready':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#FDBD38]/20 text-[#b08115] border border-[#FDBD38]/40 animate-pulse">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#b08115]" />
+          <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-[#FDBD38] text-white shadow-xs animate-pulse">
+            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
             <span>Ready for Pickup</span>
           </span>
         );
@@ -154,8 +154,8 @@ export default function OrdersPage() {
       case 'preparing':
       case 'in_progress':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200/60">
-            <Clock className="w-3.5 h-3.5 text-amber-700 animate-spin" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#FDBD38]/80 text-gray-950">
+            <Clock className="w-3.5 h-3.5 text-gray-950 animate-spin" />
             <span>Preparing</span>
           </span>
         );
@@ -179,15 +179,15 @@ export default function OrdersPage() {
   const getSourceBadge = (source: string) => {
     if (source === 'merch') {
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60">
-          <ShoppingBag className="w-3 h-3 text-[#b08115]" />
+        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-gray-950 bg-[#FDBD38] px-2.5 py-0.5 rounded-full shadow-xs">
+          <ShoppingBag className="w-3 h-3 text-gray-950" />
           <span>Merch Shop</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60">
-        <Utensils className="w-3 h-3 text-[#b08115]" />
+      <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-gray-950 bg-[#FDBD38] px-2.5 py-0.5 rounded-full shadow-xs">
+        <Utensils className="w-3 h-3 text-gray-950" />
         <span>Cafe Order</span>
       </span>
     );
@@ -361,8 +361,8 @@ export default function OrdersPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400 font-medium">Total:</span>
                       <span className="text-sm font-extrabold text-gray-950">€{o.total.toFixed(2)}</span>
-                      <span className="text-[11px] font-extrabold text-amber-950 bg-[#FDBD38]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-[#FDBD38]/40 shadow-xs">
-                        <Coins className="w-3 h-3 text-[#b08115]" />
+                      <span className="text-[11px] font-extrabold text-white bg-[#FDBD38] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                        <Coins className="w-3 h-3 text-white" />
                         +€{cashbackEarned}
                       </span>
                     </div>
