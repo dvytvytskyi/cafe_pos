@@ -262,15 +262,15 @@ export default function LoyaltyPage() {
     const clean = phoneStr.replace(/[\s\-\(\)]/g, '');
     if (clean.startsWith('+34') || clean.startsWith('34')) {
       const numberPart = clean.startsWith('+34') ? clean.slice(3) : clean.slice(2);
-      if (/^[6789]\d{8}$/.test(numberPart)) {
+      if (numberPart.length === 9 && /^\d{9}$/.test(numberPart)) {
         return { isValid: true, cleanNumber: `+34${numberPart}` };
       }
-      return { isValid: false, cleanNumber: clean, message: 'Spanish phone number must have 9 digits after +34 starting with 6, 7, 8 or 9 (e.g. +34 600 111 222)' };
+      return { isValid: false, cleanNumber: clean, message: 'Phone number must contain 9 digits after +34 (e.g. +34 600 111 222)' };
     }
     if (clean.length >= 8 && /^\+?\d+$/.test(clean)) {
       return { isValid: true, cleanNumber: clean.startsWith('+') ? clean : `+${clean}` };
     }
-    return { isValid: false, cleanNumber: clean, message: 'Please enter a valid Spanish phone number (+34 6XX XXX XXX)' };
+    return { isValid: false, cleanNumber: clean, message: 'Please enter a valid 9-digit phone number (+34 XXX AAA BBB)' };
   };
 
   const handleRequestOtp = async (e: React.FormEvent) => {
