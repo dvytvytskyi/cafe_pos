@@ -193,17 +193,10 @@ export default function OrdersPage() {
   if (!isLoggedIn) {
     return (
       <div className="h-screen w-full overflow-y-auto bg-white flex flex-col items-center pb-32 select-none">
-        {/* Top Header */}
-        <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-10 pb-24 px-6 relative overflow-hidden">
-          <svg
-            className="absolute bottom-0 left-0 w-full h-[48px] text-white fill-current translate-y-[1px]"
-            viewBox="0 0 1440 320"
-            preserveAspectRatio="none"
-          >
-            <path d="M0,96 C288,192 576,96 864,160 C1152,224 1344,160 1440,128 L1440,320 L0,320 Z" />
-          </svg>
-          <div className="max-w-[400px] mx-auto flex flex-col items-center text-center relative z-10">
-            <h1 className="text-2xl font-extrabold text-white tracking-tight mb-2 drop-shadow-sm">My Orders</h1>
+        {/* Crisp Brand Yellow Top Header (No wave) */}
+        <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-8 pb-6 px-6 rounded-b-[24px] shadow-sm select-none">
+          <div className="max-w-[400px] mx-auto flex flex-col items-center text-center">
+            <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1 drop-shadow-xs">My Orders</h1>
             <p className="text-xs font-semibold text-white/95 max-w-[290px] leading-relaxed">
               Track your coffee, food & merch orders in real-time.
             </p>
@@ -235,18 +228,10 @@ export default function OrdersPage() {
 
   return (
     <div className="h-screen w-full overflow-y-auto bg-white flex flex-col items-center pb-32">
-      {/* Brand Top Header */}
-      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-10 pb-24 px-6 relative overflow-hidden select-none">
-        <svg
-          className="absolute bottom-0 left-0 w-full h-[48px] text-white fill-current translate-y-[1px]"
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-        >
-          <path d="M0,96 C288,192 576,96 864,160 C1152,224 1344,160 1440,128 L1440,320 L0,320 Z" />
-        </svg>
-
-        <div className="max-w-[400px] mx-auto flex flex-col items-center text-center relative z-10">
-          <h1 className="text-2xl font-extrabold text-white tracking-tight mb-2 drop-shadow-sm">My Orders</h1>
+      {/* Crisp Brand Yellow Top Header (No wave) */}
+      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-white pt-8 pb-6 px-6 rounded-b-[24px] shadow-sm select-none">
+        <div className="max-w-[400px] mx-auto flex flex-col items-center text-center">
+          <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1 drop-shadow-xs">My Orders</h1>
           <p className="text-xs font-semibold text-white/95 max-w-[310px] leading-relaxed">
             Real-time status tracking for your cafe treats & merch orders.
           </p>
@@ -254,7 +239,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Main Content Container */}
-      <div className="w-full max-w-[420px] px-6 mt-4 flex flex-col gap-5 relative z-20">
+      <div className="w-full max-w-[420px] px-6 mt-6 flex flex-col gap-5">
         {/* Filter Tabs */}
         <div className="w-full bg-gray-200/60 p-1 rounded-[16px] flex items-center gap-1 select-none">
           <button
