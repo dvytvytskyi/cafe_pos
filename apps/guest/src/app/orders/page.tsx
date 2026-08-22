@@ -145,7 +145,7 @@ export default function OrdersPage() {
     switch (status?.toLowerCase()) {
       case 'ready':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-xs animate-pulse">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/70 animate-pulse">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             <span>Ready for Pickup</span>
           </span>
@@ -154,21 +154,21 @@ export default function OrdersPage() {
       case 'preparing':
       case 'in_progress':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200/70">
             <Clock className="w-3.5 h-3.5 text-amber-700 animate-spin" />
-            <span>Preparing in Kitchen</span>
+            <span>Preparing</span>
           </span>
         );
       case 'cancelled':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-200/70">
             <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
             <span>Cancelled</span>
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 text-gray-600 border border-gray-200/60">
             <PackageCheck className="w-3.5 h-3.5 text-gray-500" />
             <span>Completed</span>
           </span>
@@ -179,15 +179,15 @@ export default function OrdersPage() {
   const getSourceBadge = (source: string) => {
     if (source === 'merch') {
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-md border border-purple-100">
-          <ShoppingBag className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-100">
+          <ShoppingBag className="w-3 h-3 text-purple-600" />
           <span>Merch Shop</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-100">
-        <Utensils className="w-3 h-3" />
+      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-700 bg-gray-100/90 px-2.5 py-0.5 rounded-full border border-gray-200/60">
+        <Utensils className="w-3 h-3 text-gray-500" />
         <span>Cafe Order</span>
       </span>
     );
@@ -196,7 +196,7 @@ export default function OrdersPage() {
   if (!isLoggedIn) {
     return (
       <div className="h-screen w-full overflow-y-auto bg-white flex flex-col items-center pb-32 select-none">
-        {/* Crisp Brand Yellow Top Header Bar (Matching screenshot bar style) */}
+        {/* Crisp Brand Yellow Top Header Bar */}
         <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex items-center justify-between w-full px-4 pt-3.5 pb-3.5 shadow-xs select-none">
           <button
             onClick={() => router.push('/')}
@@ -250,7 +250,7 @@ export default function OrdersPage() {
 
   return (
     <div className="h-screen w-full overflow-y-auto bg-white flex flex-col items-center pb-32">
-      {/* Crisp Brand Yellow Top Header Bar (Matching screenshot bar style) */}
+      {/* Crisp Brand Yellow Top Header Bar */}
       <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex items-center justify-between w-full px-4 pt-3.5 pb-3.5 shadow-xs select-none">
         <button
           onClick={() => router.push('/')}
@@ -280,7 +280,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Main Content Container */}
-      <div className="w-full max-w-[420px] px-6 mt-4 flex flex-col gap-6">
+      <div className="w-full max-w-[420px] px-5 mt-5 flex flex-col gap-4">
         {/* Orders List */}
         {loading ? (
           <div className="w-full py-16 flex flex-col items-center justify-center gap-3 text-gray-400">
@@ -288,7 +288,7 @@ export default function OrdersPage() {
             <span className="text-xs font-bold">Loading your orders...</span>
           </div>
         ) : orders.length === 0 ? (
-          <div className="w-full bg-white rounded-[24px] p-8 flex flex-col items-center text-center mt-2">
+          <div className="w-full bg-white rounded-[24px] p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center mt-2">
             <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 mb-3 border border-amber-100/60">
               <ShoppingBag className="w-7 h-7 text-[#b08115]" />
             </div>
@@ -312,7 +312,7 @@ export default function OrdersPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-5 w-full">
+          <div className="flex flex-col gap-4 w-full">
             {orders.map((o) => {
               const cashbackEarned = (o.total * 0.05).toFixed(2);
 
@@ -320,12 +320,12 @@ export default function OrdersPage() {
                 <div
                   key={o.id}
                   onClick={() => handleSelectOrder(o)}
-                  className="w-full bg-white rounded-[24px] p-4 flex flex-col gap-3.5 transition-all cursor-pointer group active:scale-[0.99] select-none"
+                  className="w-full bg-white rounded-[20px] p-4.5 border border-gray-100/90 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col gap-3 group active:scale-[0.99] select-none"
                 >
                   {/* Card Top Row: Order # & Badges */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-extrabold text-gray-950 tracking-tight">
+                  <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-extrabold text-gray-950 tracking-tight whitespace-nowrap">
                         Order #{o.orderNumber}
                       </span>
                       {getSourceBadge(o.source)}
@@ -333,15 +333,15 @@ export default function OrdersPage() {
                     {getStatusBadge(o.status)}
                   </div>
 
-                  {/* Items Preview Box (Frameless Warm Amber Tint) */}
-                  <div className="flex flex-col gap-1.5 text-xs text-gray-700 bg-amber-50/50 p-3.5 rounded-[16px] border border-amber-100/60">
+                  {/* Items Preview Box (Clean Neutral Background) */}
+                  <div className="flex flex-col gap-1.5 text-xs text-gray-700 bg-gray-50/80 p-3.5 rounded-[14px] border border-gray-100/60">
                     {o.items && o.items.length > 0 ? (
                       o.items.slice(0, 2).map((item: any, idx: number) => (
-                        <div key={idx} className="flex justify-between items-center">
-                          <span className="font-bold text-gray-900 truncate max-w-[220px]">
+                        <div key={idx} className="flex justify-between items-center gap-2">
+                          <span className="font-semibold text-gray-800 truncate max-w-[220px]">
                             {item.quantity}x {item.name}
                           </span>
-                          <span className="font-semibold text-gray-500">
+                          <span className="font-semibold text-gray-500 flex-shrink-0">
                             €{(item.price * item.quantity).toFixed(2)}
                           </span>
                         </div>
@@ -350,7 +350,7 @@ export default function OrdersPage() {
                       <span className="font-medium text-gray-500">Items summary available in details</span>
                     )}
                     {o.items && o.items.length > 2 && (
-                      <span className="text-[11px] font-extrabold text-[#b08115] mt-0.5">
+                      <span className="text-[11px] font-bold text-gray-400 mt-0.5">
                         +{o.items.length - 2} more item{o.items.length - 2 > 1 ? 's' : ''}
                       </span>
                     )}
@@ -359,17 +359,17 @@ export default function OrdersPage() {
                   {/* Card Bottom Row: Total & Cashback */}
                   <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 font-bold">Total:</span>
+                      <span className="text-xs text-gray-400 font-medium">Total:</span>
                       <span className="text-sm font-extrabold text-gray-950">€{o.total.toFixed(2)}</span>
-                      <span className="text-[11px] font-extrabold text-[#b08115] bg-[#FDBD38]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-[#FDBD38]/30">
+                      <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200/50">
                         <Coins className="w-3 h-3 text-[#b08115]" />
                         +€{cashbackEarned}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-xs font-extrabold text-[#b08115] group-hover:text-[#e5a420] transition-colors">
+                    <div className="flex items-center gap-0.5 text-xs font-bold text-gray-400 group-hover:text-gray-700 transition-colors">
                       <span>Details</span>
-                      <ChevronRight className="w-4 h-4 text-[#b08115]" />
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
                     </div>
                   </div>
 
@@ -378,7 +378,7 @@ export default function OrdersPage() {
                     <button
                       onClick={(e) => handleConfirmPickup(o.id, e)}
                       disabled={confirmingPickupId === o.id}
-                      className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white font-extrabold py-3 rounded-[16px] text-xs transition-all flex items-center justify-center gap-1.5 mt-1 cursor-pointer"
+                      className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white font-extrabold py-2.5 rounded-[14px] text-xs transition-all flex items-center justify-center gap-1.5 mt-1 cursor-pointer shadow-xs"
                     >
                       <CheckCircle2 className="w-4 h-4 text-white" />
                       <span>{confirmingPickupId === o.id ? 'Confirming...' : 'Confirm Counter Pickup'}</span>
