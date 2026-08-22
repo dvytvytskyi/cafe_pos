@@ -1553,51 +1553,71 @@ export default function LoyaltyPage() {
           </form>
         )}
 
-        {/* Vector Icon Benefits (Clean & Frameless) */}
-        <div className="w-full flex flex-col text-left">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">Member Privileges</span>
+        {/* Hero Feature Highlight (Styled like Screenshot 2 in Corgi Light Theme) */}
+        <div className="w-full flex flex-col items-center text-center mt-2 mb-4 px-2 select-none">
           
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-full bg-amber-100/60 flex items-center justify-center text-[#b08115] flex-shrink-0">
-                <Coins className="w-4.5 h-4.5" />
+          {/* Overlapping Avatar Stack with Micro-Badges */}
+          <div className="relative flex items-center justify-center mb-5 pt-3">
+            
+            {/* Left Micro-Badge */}
+            <div className="absolute -top-1 left-1.5 z-30 flex flex-col items-center">
+              <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-md flex items-center justify-center text-[11px]">
+                🏠
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-bold text-gray-800">5% Welcome Cashback</span>
-                <span className="text-[10px] text-gray-400 font-semibold mt-0.5 leading-snug">Get 5% cashback in Euros on your first purchase at Corgi Cafe.</span>
-              </div>
+              <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-white -mt-[1px]" />
             </div>
 
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-full bg-amber-100/60 flex items-center justify-center text-[#b08115] flex-shrink-0">
-                <Sparkles className="w-4.5 h-4.5" />
+            {/* Center Micro-Badge */}
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
+              <div className="w-6.5 h-6.5 rounded-full bg-rose-500 text-white shadow-md flex items-center justify-center text-[11px] font-bold">
+                ❤️
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-bold text-gray-800">Unlock Sticker Rewards</span>
-                <span className="text-[10px] text-gray-400 font-semibold mt-0.5 leading-snug">Collect digital stickers for croissants, coffee & treats. Share to Telegram!</span>
-              </div>
+              <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-rose-500 -mt-[1px]" />
             </div>
 
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-full bg-amber-100/60 flex items-center justify-center text-[#b08115] flex-shrink-0">
-                <QrCode className="w-4.5 h-4.5" />
+            {/* Right Micro-Badge */}
+            <div className="absolute -top-1 right-1.5 z-30 flex flex-col items-center">
+              <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-md flex items-center justify-center text-[11px]">
+                👍
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-bold text-gray-800">Apple Wallet Pass</span>
-                <span className="text-[10px] text-gray-400 font-semibold mt-0.5 leading-snug">Add your virtual loyalty pass to Apple Wallet for quick counter scans.</span>
-              </div>
+              <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-white -mt-[1px]" />
             </div>
 
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-full bg-amber-100/60 flex items-center justify-center text-[#b08115] flex-shrink-0">
-                <Crown className="w-4.5 h-4.5" />
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-bold text-gray-800">Progressive Tiers</span>
-                <span className="text-[10px] text-gray-400 font-semibold mt-0.5 leading-snug">Level up from Bronze to Legend to boost your cashback percentage.</span>
-              </div>
+            {/* Avatar Circles */}
+            <div className="w-13 h-13 rounded-full bg-amber-100 border-2 border-white shadow-md flex items-center justify-center text-xl -mr-3 relative z-10">
+              ☕
             </div>
+
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FDBD38] to-[#FDB01A] border-2 border-white shadow-lg flex items-center justify-center text-2xl relative z-20">
+              🐶
+            </div>
+
+            <div className="w-13 h-13 rounded-full bg-amber-100 border-2 border-white shadow-md flex items-center justify-center text-xl -ml-3 relative z-10">
+              🥐
+            </div>
+
+            {/* Base Shadow Glow */}
+            <div className="absolute -bottom-2 w-24 h-2 bg-amber-900/10 rounded-full blur-sm -z-0" />
           </div>
+
+          {/* Pill Badge */}
+          <div className="flex items-center gap-1.5 text-xs font-bold text-gray-600 mb-2.5">
+            <span>Unlock with</span>
+            <span className="px-3 py-1 bg-gray-950 text-white rounded-full text-[11px] font-extrabold shadow-sm tracking-wide">
+              Corgi Pass
+            </span>
+          </div>
+
+          {/* Main Headline */}
+          <h2 className="text-xl font-extrabold text-gray-950 tracking-tight leading-snug max-w-[310px]">
+            Share Cashback & Stickers with Friends and Family
+          </h2>
+
+          {/* Subtitle */}
+          <p className="text-xs font-medium text-gray-500 max-w-[285px] leading-relaxed mt-2">
+            Get 5% cashback in Euros on every purchase, collect digital stickers, and add your pass to Apple Wallet.
+          </p>
+
         </div>
 
       </div>
