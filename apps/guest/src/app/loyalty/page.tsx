@@ -1603,7 +1603,7 @@ export default function LoyaltyPage() {
           </div>
 
           {/* Main Headline */}
-          <h2 className="text-xl font-extrabold text-gray-950 tracking-tight leading-snug max-w-[310px]">
+          <h2 className="text-xl font-extrabold text-[#FDBD38] tracking-tight leading-snug max-w-[310px]">
             Share Cashback & Stickers with Friends and Family
           </h2>
 
