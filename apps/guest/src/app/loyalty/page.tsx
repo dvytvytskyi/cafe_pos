@@ -1460,14 +1460,8 @@ export default function LoyaltyPage() {
         {!otpSent ? (
           <form onSubmit={handleRequestOtp} className="flex flex-col gap-4 w-full">
             <div>
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5 flex items-center justify-between">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">
                 <span>Phone Number</span>
-                {detectedCountry && (
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <span>{detectedCountry.flag}</span>
-                    <span>{detectedCountry.name}</span>
-                  </span>
-                )}
               </label>
               <div className="relative flex items-center">
                 <Phone className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
@@ -1583,17 +1577,17 @@ export default function LoyaltyPage() {
               <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-white -mt-[1px]" />
             </div>
 
-            {/* Avatar Circles */}
-            <div className="w-13 h-13 rounded-full bg-amber-100 border-2 border-white shadow-md flex items-center justify-center text-xl -mr-3 relative z-10">
-              ☕
+            {/* Avatar Circles with Real Corgi Stickers */}
+            <div className="w-13 h-13 rounded-full bg-amber-50 border-2 border-white shadow-md flex items-center justify-center -mr-3 relative z-10 overflow-hidden p-1">
+              <img src="/stickers/corgi_coffee1.png" alt="Coffee Corgi" className="w-full h-full object-contain" />
             </div>
 
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FDBD38] to-[#FDB01A] border-2 border-white shadow-lg flex items-center justify-center text-2xl relative z-20">
-              🐶
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FDBD38] to-[#FDB01A] border-2 border-white shadow-lg flex items-center justify-center relative z-20 overflow-hidden p-1.5">
+              <img src="/stickers/corgi_fiesta_1.png" alt="Fiesta Corgi" className="w-full h-full object-contain drop-shadow-xs" />
             </div>
 
-            <div className="w-13 h-13 rounded-full bg-amber-100 border-2 border-white shadow-md flex items-center justify-center text-xl -ml-3 relative z-10">
-              🥐
+            <div className="w-13 h-13 rounded-full bg-amber-50 border-2 border-white shadow-md flex items-center justify-center -ml-3 relative z-10 overflow-hidden p-1">
+              <img src="/stickers/corgi_croissant_1.png" alt="Croissant Corgi" className="w-full h-full object-contain" />
             </div>
 
             {/* Base Shadow Glow */}
