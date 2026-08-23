@@ -1071,6 +1071,8 @@ export default function HomePage() {
               onClick={() => {
                 if (typeof window !== 'undefined') {
                   localStorage.setItem('corgi_mock_user', authFullName.toUpperCase());
+                  localStorage.removeItem('corgi_logged_out');
+                  sessionStorage.setItem('corgi_just_registered', 'true');
                 }
                 refreshAuth();
                 setShowLoginModal(false);
@@ -1079,6 +1081,7 @@ export default function HomePage() {
                 setAuthConfirmPassword("");
                 setAuthFullName("");
                 setAgreedToTerms(false);
+                router.push('/menu');
               }}
               className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
                 (authFullName && authPassword && authConfirmPassword && authPassword === authConfirmPassword && agreedToTerms)

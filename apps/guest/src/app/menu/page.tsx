@@ -14,6 +14,7 @@ import {
   Sliders, 
   X, 
   Sparkle, 
+  Sparkles,
   ShoppingBag, 
   ArrowRight,
   Plus,
@@ -432,6 +433,7 @@ export default function MenuPage() {
   
   // Login modal triggers
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register_step1' | 'register_step2'>('login');
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -440,6 +442,15 @@ export default function MenuPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (sessionStorage.getItem('corgi_just_registered') === 'true') {
+        setShowWelcomeModal(true);
+        sessionStorage.removeItem('corgi_just_registered');
+      }
+    }
+  }, []);
 
   const categoriesRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -1595,13 +1606,17 @@ export default function MenuPage() {
             <button 
               disabled={!authFullName || !authPassword || !authConfirmPassword || authPassword !== authConfirmPassword || !agreedToTerms}
               onClick={() => {
-                if (typeof window !== 'undefined') localStorage.setItem('corgi_mock_user', authFullName.toUpperCase());
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('corgi_mock_user', authFullName.toUpperCase());
+                  localStorage.removeItem('corgi_logged_out');
+                }
                 refreshAuth();
                 setShowLoginModal(false);
+                setShowWelcomeModal(true);
               }}
               className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
                 (authFullName && authPassword && authConfirmPassword && authPassword === authConfirmPassword && agreedToTerms)
-                  ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99]'
+                  ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
                   : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
               }`}
             >
@@ -2158,6 +2173,66 @@ export default function MenuPage() {
           </button>
         </div>
       </div>
+
+      {/* Welcome Post-Registration Modal */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-[2px] transition-all animate-in fade-in duration-200">
+          <div 
+            className="bg-white rounded-[28px] p-6 sm:p-8 max-w-[380px] w-full shadow-2xl relative text-center flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowWelcomeModal(false)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Top Corgi Sticker */}
+            <div className="w-24 h-24 relative mt-1 mb-1 flex items-center justify-center">
+              <img 
+                src="/stickers/corgi_fiesta_1.png" 
+                alt="Welcome Corgi" 
+                className="w-full h-full object-contain drop-shadow-md"
+              />
+            </div>
+
+            {/* Title */}
+            <div className="flex flex-col items-center gap-1">
+              <h3 className="text-[22px] font-extrabold text-gray-900 leading-tight">
+                Nice to see you, <span className="text-[#FDBD38]">{profileName || 'Friend'}</span>! 🐾
+              </h3>
+            </div>
+
+            {/* Description */}
+            <p className="text-[13px] text-gray-600 leading-relaxed font-normal px-2">
+              We're excited to have you at Corgi Cafe! Discover our delicious <strong className="text-black font-semibold">Menu</strong>, exclusive <strong className="text-black font-semibold">Merch</strong>, and join our <strong className="text-black font-semibold">Loyalty Program</strong> to unlock rewards.
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-2.5 w-full mt-2">
+              <button
+                onClick={() => {
+                  setShowWelcomeModal(false);
+                  router.push('/loyalty');
+                }}
+                className="w-full bg-[#FDBD38] hover:bg-[#f5b328] text-white py-3.5 px-5 rounded-full font-bold text-[14px] flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <span>Join Loyalty & Get 3€ Bonus</span>
+                <Sparkles className="w-4.5 h-4.5 text-white fill-white" />
+              </button>
+
+              <button
+                onClick={() => setShowWelcomeModal(false)}
+                className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] text-gray-800 py-3.5 px-5 rounded-full font-bold text-[14px] transition-all active:scale-[0.98] cursor-pointer"
+              >
+                Go to Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
