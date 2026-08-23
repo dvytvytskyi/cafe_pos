@@ -1274,8 +1274,8 @@ export default function MenuPage() {
 
       {/* Cart Summary Bottom Sheet Overlay */}
       <div 
-        className={`fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center backdrop-blur-[3px] ${
-          showCartOverlay ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        className={`fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center ${
+          showCartOverlay ? 'opacity-100 pointer-events-auto backdrop-blur-[3px]' : 'opacity-0 pointer-events-none backdrop-blur-none'
         }`}
         onClick={() => setShowCartOverlay(false)}
       >
@@ -1654,10 +1654,12 @@ export default function MenuPage() {
         </div>
       </div>
 
+
+
       {/* Bottom Sheet Filters Modal */}
       <div 
-        className={`fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center backdrop-blur-[3px] ${
-          showFiltersModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        className={`fixed inset-0 bg-transparent z-50 transition-all duration-300 flex items-end justify-center ${
+          showFiltersModal ? 'opacity-100 pointer-events-auto backdrop-blur-[3px]' : 'opacity-0 pointer-events-none backdrop-blur-none'
         }`}
         onClick={() => setShowFiltersModal(false)}
       >
@@ -1807,10 +1809,10 @@ export default function MenuPage() {
         </div>
       </div>
 
-      {/* Bottom Sheet Order Mode Modal */}
+      {/* Store & Order Mode Location Selector Bottom Sheet Overlay */}
       <div 
-        className={`fixed inset-0 z-50 backdrop-blur-md bg-white/20 animate-backdrop-blur transition-all duration-300 flex items-end justify-center ${
-          showOrderModeModal ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        className={`fixed inset-0 z-50 transition-all duration-300 flex items-end justify-center ${
+          showOrderModeModal ? 'opacity-100 pointer-events-auto backdrop-blur-md bg-white/20' : 'opacity-0 pointer-events-none backdrop-blur-none bg-transparent'
         }`}
         onClick={() => setShowOrderModeModal(false)}
       >

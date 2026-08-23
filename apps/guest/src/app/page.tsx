@@ -257,7 +257,7 @@ export default function HomePage() {
             <Menu className="w-6 h-6 text-white" strokeWidth={1.5} />
           </button>
           <button onClick={() => router.push('/faq')} className="p-1 hover:bg-white/10 rounded-full transition-colors" title="FAQ & Support">
-            <MessageCircle className="w-6 h-6 text-white" strokeWidth={1.5} />
+            <HelpCircle className="w-6 h-6 text-white" strokeWidth={1.5} />
           </button>
         </div>
 
