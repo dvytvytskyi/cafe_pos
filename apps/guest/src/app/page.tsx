@@ -1099,35 +1099,6 @@ export default function HomePage() {
               Enter
             </button>
           )}
-
-
-          {authMode === 'register_step2' && (
-            <button 
-              disabled={!authFullName || !authPassword || !authConfirmPassword || authPassword !== authConfirmPassword || !agreedToTerms}
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('corgi_mock_user', authFullName.toUpperCase());
-                  localStorage.removeItem('corgi_logged_out');
-                  sessionStorage.setItem('corgi_just_registered', 'true');
-                }
-                refreshAuth();
-                setShowLoginModal(false);
-                setAuthEmail("");
-                setAuthPassword("");
-                setAuthConfirmPassword("");
-                setAuthFullName("");
-                setAgreedToTerms(false);
-                router.push('/menu');
-              }}
-              className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
-                (authFullName && authPassword && authConfirmPassword && authPassword === authConfirmPassword && agreedToTerms)
-                  ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
-                  : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
-              }`}
-            >
-              Enter
-            </button>
-          )}
         </div>
       </div>
       {/* Bottom Sheet New Address Modal */}
