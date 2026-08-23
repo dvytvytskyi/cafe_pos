@@ -139,26 +139,26 @@ export default function TeamPage() {
 
   return (
     <div className="h-screen overflow-y-auto bg-gray-50 pb-[120px] relative scroll-smooth">
-      {/* Compact Top Header (matching /menu style) */}
-      <div className="bg-white px-6 py-4 border-b border-gray-100 sticky top-0 z-30 flex items-center justify-between shadow-xs">
+      {/* Compact Yellow Top Header */}
+      <div className="bg-[#FDBD38] px-6 py-3.5 sticky top-0 z-30 flex items-center justify-between shadow-xs select-none">
         <button 
           onClick={() => router.push('/')}
-          className="w-10 h-10 bg-gray-100/80 hover:bg-gray-200/80 rounded-full flex items-center justify-center transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+          className="w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-xs transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
           title="Back to Home"
         >
           <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
         </button>
 
-        <div className="flex flex-col text-center">
-          <h1 className="text-base font-extrabold text-gray-900 tracking-tight leading-none">
+        <div className="flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white/80 leading-none">Careers at Corgi</span>
+          <h1 className="text-base font-extrabold text-white tracking-tight leading-tight mt-0.5">
             Join Our Team
           </h1>
-          <span className="text-[10px] font-semibold text-gray-400 mt-0.5">Careers &amp; Vacancies 🐾</span>
         </div>
 
         <button
           onClick={() => alert("Careers Support: jobs@corgicafe.com")}
-          className="w-10 h-10 bg-gray-100/80 hover:bg-gray-200/80 rounded-full flex items-center justify-center transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+          className="w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-xs transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
           title="Help"
         >
           <AlertCircle className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
@@ -311,7 +311,7 @@ export default function TeamPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <h4 className="text-xl font-extrabold text-gray-900">Application Received! 🎉</h4>
+                  <h4 className="text-xl font-extrabold text-gray-900">Application Received!</h4>
                   <p className="text-xs text-gray-500 max-w-[280px] leading-relaxed">
                     Thank you for applying to join Corgi Cafe! Our HR team will review your application and reach out within 48 hours.
                   </p>
