@@ -64,8 +64,24 @@ export function GuestProvider({
   const [bootstrap, setBootstrap] = useState<GuestBootstrapResponse | null>(null);
   const [locale, setLocaleState] = useState<GuestLocale>('en');
   const [loading, setLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [profileName, setProfileName] = useState<string>();
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const loggedOut = localStorage.getItem('corgi_logged_out');
+      const mockUser = localStorage.getItem('corgi_mock_user');
+      const token = localStorage.getItem('corgi_guest_session_token') || localStorage.getItem('guest_token');
+      if (loggedOut === 'true') return false;
+      if (mockUser || token) return true;
+    }
+    return false;
+  });
+
+  const [profileName, setProfileName] = useState<string | undefined>(() => {
+    if (typeof window !== 'undefined') {
+      const mockUser = localStorage.getItem('corgi_mock_user');
+      if (mockUser) return mockUser;
+    }
+    return undefined;
+  });
   const [foodCart, setFoodCart] = useState<CartLine[]>([]);
   const [merchCart, setMerchCart] = useState<CartLine[]>([]);
   const [showWelcome, setShowWelcome] = useState(false);

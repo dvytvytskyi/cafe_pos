@@ -479,6 +479,33 @@ export default function LoyaltyPage() {
     }
     return 100;
   };
+
+  if (isLoggedIn && !loyalty) {
+    return (
+      <div className="h-screen overflow-y-auto bg-white pb-[90px] relative animate-in fade-in duration-150">
+        <div className="bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 px-6 pt-6 pb-20 rounded-b-[36px] relative">
+          <div className="max-w-[440px] mx-auto flex items-center justify-between">
+            <div className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5" />
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Loyalty Club</span>
+              <h1 className="text-xl font-bold text-white mt-0.5 tracking-tight leading-none">
+                Hello, {profileName || 'Friend'}!
+              </h1>
+            </div>
+            <div className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5" />
+          </div>
+        </div>
+
+        <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
+          <div className="w-full h-[240px] bg-white rounded-[24px] p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3">
+            <div className="w-8 h-8 border-3 border-[#FDBD38] border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-semibold text-gray-400">Loading Loyalty Card...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoggedIn && loyalty) {
     const { customer, config, nextTier, pointsToNextTier, qrCode } = loyalty;
     const tierName = getTierName(customer.ltv);
