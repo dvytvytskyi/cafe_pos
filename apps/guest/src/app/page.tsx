@@ -7,6 +7,7 @@ import { logoutGuest, requestOtp, verifyOtp } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronLeft, LogIn, UserPlus, ArrowRight, HelpCircle, MessageCircle, Menu, X, MapPin, ClipboardList, Gift, Coffee, ShoppingBag, Navigation2, Zap, ArrowLeft, MoreHorizontal, Compass, Bike, Globe, FileText, Shirt, Package, MessageSquare, Megaphone, Radio, PawPrint, Share2, Copy, Check, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
+import SupportIcon from '@/components/SupportIcon';
 
 export default function HomePage() {
   const { bootstrap, orderMode, setOrderMode, isLoggedIn, profileName, refreshAuth, logout } = useGuest();
@@ -257,7 +258,7 @@ export default function HomePage() {
             <Menu className="w-6 h-6 text-white" strokeWidth={1.5} />
           </button>
           <button onClick={() => router.push('/faq')} className="p-1 hover:bg-white/10 rounded-full transition-colors" title="FAQ & Support">
-            <HelpCircle className="w-6 h-6 text-white" strokeWidth={1.5} />
+            <SupportIcon className="w-6 h-6 text-white" />
           </button>
         </div>
 
