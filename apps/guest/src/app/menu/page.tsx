@@ -1124,7 +1124,7 @@ export default function MenuPage() {
                                   </div>
                                   {/* Top-right Checkmark Circle Badge */}
                                   {isSelected && (
-                                    <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#EE635E] text-white flex items-center justify-center shadow-md z-10">
+                                    <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#FDBD38] text-white flex items-center justify-center shadow-md z-10">
                                       <Check className="w-3.5 h-3.5" strokeWidth={3.5} />
                                     </span>
                                   )}
@@ -1135,7 +1135,7 @@ export default function MenuPage() {
                                   <span className="text-[12px] font-bold text-gray-900 leading-tight max-w-[95px]">
                                     {option.name}
                                   </span>
-                                  <span className="text-[11px] font-bold text-[#EE635E] mt-0.5">
+                                  <span className="text-[11px] font-bold text-[#FDBD38] mt-0.5">
                                     + {(option.price * modQty).toFixed(2)}€
                                   </span>
                                 </div>
