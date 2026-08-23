@@ -823,11 +823,42 @@ export default function HomePage() {
               <span className="text-[12px] text-gray-500 font-semibold uppercase tracking-wider mt-1.5">
                 {authMode === 'login' ? 'To place an order' : 'Join our club'}
               </span>
+
+              {authMode === 'login' && (
+                <button 
+                  onClick={() => {
+                    setAuthMode('register_step1');
+                    setAuthPassword("");
+                    setAuthConfirmPassword("");
+                    setAuthFullName("");
+                  }}
+                  className="flex items-center gap-1 text-[13px] font-medium text-gray-500 hover:text-black transition-colors mt-2 text-left cursor-pointer"
+                >
+                  <span>Don't have an account?</span>
+                  <span className="font-bold text-black flex items-center gap-1 underline underline-offset-2">
+                    Sign up (+3€ bonus)
+                    <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+                  </span>
+                </button>
+              )}
+
+              {(authMode === 'register_step1' || authMode === 'register_step2') && (
+                <button 
+                  onClick={() => setAuthMode('login')}
+                  className="flex items-center gap-1 text-[13px] font-medium text-gray-500 hover:text-black transition-colors mt-2 text-left cursor-pointer"
+                >
+                  <span>Already registered?</span>
+                  <span className="font-bold text-black flex items-center gap-1 underline underline-offset-2">
+                    Log in
+                    <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+                  </span>
+                </button>
+              )}
             </div>
             
             <button 
               onClick={() => setShowLoginModal(false)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-black"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-black cursor-pointer"
             >
               <X className="w-6 h-6" strokeWidth={1.8} />
             </button>
