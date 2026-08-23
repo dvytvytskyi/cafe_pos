@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
   AlertCircle, 
-  Briefcase, 
   Clock, 
   MapPin, 
   Sparkles, 
@@ -14,7 +13,7 @@ import {
   User, 
   Mail, 
   Phone, 
-  FileText, 
+  Upload, 
   Send 
 } from 'lucide-react';
 
@@ -103,10 +102,9 @@ export default function TeamPage() {
 
   // Form states
   const [applicantName, setApplicantName] = useState('');
-  const [applicantEmail, setApplicantEmail] = useState('');
   const [applicantPhone, setApplicantPhone] = useState('');
-  const [applicantBio, setApplicantBio] = useState('');
-  const [applicantCvUrl, setApplicantCvUrl] = useState('');
+  const [applicantEmail, setApplicantEmail] = useState('');
+  const [cvFileName, setCvFileName] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -123,17 +121,16 @@ export default function TeamPage() {
 
   const handleSubmitApplication = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!applicantName || !applicantEmail || !applicantPhone || !applicantBio) return;
+    if (!applicantName || !applicantPhone || !applicantEmail) return;
 
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSubmitted(true);
       setApplicantName('');
-      setApplicantEmail('');
       setApplicantPhone('');
-      setApplicantBio('');
-      setApplicantCvUrl('');
+      setApplicantEmail('');
+      setCvFileName(null);
     }, 1200);
   };
 
@@ -178,25 +175,26 @@ export default function TeamPage() {
           {OPEN_POSITIONS.map((job) => (
             <div 
               key={job.id} 
-              className="bg-white rounded-[24px] p-5 shadow-xs border border-gray-200/60 hover:shadow-md transition-all flex flex-col gap-4 relative overflow-hidden"
+              onClick={() => handleOpenApply(job)}
+              className="bg-white rounded-[24px] p-5 shadow-xs border border-gray-200/60 hover:shadow-md hover:border-gray-300 transition-all flex flex-col gap-4 relative overflow-hidden cursor-pointer"
             >
-              {/* Job Title & Salary Pill */}
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-base font-extrabold text-gray-900 leading-tight">
+              {/* Job Title & Yellow Salary Badge */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-base font-extrabold text-gray-900 leading-tight flex-1">
                     {job.title}
                   </h3>
-                  <span className="text-[11px] font-bold text-gray-900 bg-gray-100 border border-gray-200/60 px-3 py-1 rounded-full whitespace-nowrap">
+                  <span className="text-[12px] font-bold text-white bg-[#FDBD38] px-3.5 py-1.5 rounded-full whitespace-nowrap shadow-xs flex-shrink-0">
                     {job.salary}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-xs font-semibold text-gray-400">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-gray-400">
                   <div className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                    <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                     <span>{job.location}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-gray-400" />
+                    <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                     <span>{job.type}</span>
                   </div>
                 </div>
@@ -220,8 +218,8 @@ export default function TeamPage() {
                 </ul>
               </div>
 
-              {/* Tags & Action Button */}
-              <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+              {/* Bottom Row: Tags & Clean Apply Button (No Icon) */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 border-t border-gray-100 gap-3">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {job.tags.map((tag, tIdx) => (
                     <span 
@@ -234,11 +232,13 @@ export default function TeamPage() {
                 </div>
 
                 <button
-                  onClick={() => handleOpenApply(job)}
-                  className="bg-black hover:bg-gray-800 text-white font-extrabold text-xs px-4 py-2.5 rounded-full transition-all active:scale-[0.96] cursor-pointer whitespace-nowrap flex items-center gap-1.5 shadow-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenApply(job);
+                  }}
+                  className="bg-black hover:bg-gray-800 text-white font-extrabold text-xs px-5 py-2.5 rounded-full transition-all active:scale-[0.96] cursor-pointer whitespace-nowrap text-center shadow-xs self-end sm:self-auto"
                 >
-                  <span>Apply Now</span>
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
+                  Apply Now
                 </button>
               </div>
             </div>
@@ -318,7 +318,7 @@ export default function TeamPage() {
                 </button>
               </div>
             ) : (
-              /* Application Form */
+              /* Application Form: Name, Phone, Email, Upload CV */
               <form onSubmit={handleSubmitApplication} className="flex flex-col gap-4">
                 {/* Full Name */}
                 <div>
@@ -338,25 +338,7 @@ export default function TeamPage() {
                   </div>
                 </div>
 
-                {/* Email */}
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
-                    Email Address *
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
-                    <input 
-                      type="email" 
-                      required
-                      value={applicantEmail}
-                      onChange={(e) => setApplicantEmail(e.target.value)}
-                      placeholder="alex@example.com"
-                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Phone */}
+                {/* Phone Number */}
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
                     Phone Number *
@@ -374,42 +356,58 @@ export default function TeamPage() {
                   </div>
                 </div>
 
-                {/* Experience / Short Bio */}
+                {/* Email Address */}
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
-                    Short Bio &amp; Experience *
+                    Email Address *
                   </label>
                   <div className="relative">
-                    <FileText className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
-                    <textarea 
+                    <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+                    <input 
+                      type="email" 
                       required
-                      rows={3}
-                      value={applicantBio}
-                      onChange={(e) => setApplicantBio(e.target.value)}
-                      placeholder="Tell us briefly about your hospitality background..."
-                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-xs font-medium text-gray-900 transition-all outline-none resize-none"
+                      value={applicantEmail}
+                      onChange={(e) => setApplicantEmail(e.target.value)}
+                      placeholder="alex@example.com"
+                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
                     />
                   </div>
                 </div>
 
-                {/* CV Link (Optional) */}
+                {/* Upload CV */}
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
-                    Link to CV / LinkedIn (Optional)
+                    Upload CV (Resume) *
                   </label>
                   <input 
-                    type="url" 
-                    value={applicantCvUrl}
-                    onChange={(e) => setApplicantCvUrl(e.target.value)}
-                    placeholder="https://linkedin.com/in/alexmorgan"
-                    className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 px-4 text-xs font-medium text-gray-900 transition-all outline-none"
+                    type="file" 
+                    id="cv-file-input"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setCvFileName(e.target.files[0].name);
+                      }
+                    }}
+                    className="hidden"
                   />
+                  <label 
+                    htmlFor="cv-file-input"
+                    className="w-full bg-[#F4F4F5] hover:bg-gray-200/70 border-2 border-dashed border-gray-300 hover:border-black rounded-[16px] p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all text-center"
+                  >
+                    <Upload className="w-5 h-5 text-gray-700" />
+                    <span className="text-xs font-bold text-gray-800">
+                      {cvFileName ? cvFileName : 'Click to Upload CV (PDF, DOCX)'}
+                    </span>
+                    <span className="text-[10px] font-medium text-gray-400">
+                      {cvFileName ? 'Click to replace file' : 'Maximum file size: 10MB'}
+                    </span>
+                  </label>
                 </div>
 
                 {/* Submit Action */}
                 <button
                   type="submit"
-                  disabled={isSubmitting || !applicantName || !applicantEmail || !applicantPhone || !applicantBio}
+                  disabled={isSubmitting || !applicantName || !applicantPhone || !applicantEmail}
                   className="w-full bg-black hover:bg-gray-800 disabled:opacity-60 text-white py-3.5 rounded-full font-extrabold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-xs"
                 >
                   {isSubmitting ? (
