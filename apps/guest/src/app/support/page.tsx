@@ -1,3 +1,5 @@
-import FaqPage from '../faq/page';
+import { redirect } from 'next/navigation';
 
-export default FaqPage;
+export default function SupportPage() {
+  redirect('/faq');
+}
