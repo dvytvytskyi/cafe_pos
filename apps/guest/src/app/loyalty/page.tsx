@@ -485,23 +485,67 @@ export default function LoyaltyPage() {
   if (isLoggedIn && !loyalty) {
     return (
       <div className="h-screen overflow-y-auto bg-white pb-[90px] relative animate-in fade-in duration-150">
+        {/* Profile Header Skeleton */}
         <div className="bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 px-6 pt-6 pb-20 rounded-b-[36px] relative">
           <div className="max-w-[440px] mx-auto flex items-center justify-between">
-            <div className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5" />
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Loyalty Club</span>
-              <h1 className="text-xl font-bold text-white mt-0.5 tracking-tight leading-none">
-                Hello, {profileName || 'Friend'}!
-              </h1>
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full animate-pulse" />
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="w-20 h-3 bg-white/30 rounded-full animate-pulse" />
+              <div className="w-32 h-5 bg-white/40 rounded-full animate-pulse" />
             </div>
-            <div className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5" />
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full animate-pulse" />
           </div>
         </div>
 
+        {/* Flipping 3D QR Card Skeleton */}
         <div className="px-6 -mt-10 relative z-10 max-w-[440px] mx-auto">
-          <div className="w-full h-[240px] bg-white rounded-[24px] p-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3">
-            <div className="w-8 h-8 border-3 border-[#FDBD38] border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-semibold text-gray-400">Loading Loyalty Card...</span>
+          <div className="w-full h-[240px] bg-white rounded-[24px] p-5 border border-gray-100/80 flex flex-col justify-between relative shadow-sm animate-pulse">
+            {/* Top row status */}
+            <div className="flex justify-between items-center w-full">
+              <div className="w-20 h-4 bg-gray-200 rounded-full" />
+              <div className="w-16 h-4 bg-amber-100 rounded-full" />
+            </div>
+
+            {/* Center Avatar & Lines */}
+            <div className="flex flex-col items-center justify-center my-auto gap-2">
+              <div className="w-20 h-20 rounded-full bg-gray-200" />
+              <div className="w-36 h-4 bg-gray-200 rounded-full" />
+              <div className="w-24 h-3 bg-gray-150 rounded-full" />
+            </div>
+
+            {/* Bottom Action Buttons */}
+            <div className="flex gap-2 w-full items-center">
+              <div className="flex-1 h-9 bg-amber-200/50 rounded-[12px]" />
+              <div className="flex-1 h-9 bg-gray-150 rounded-[12px]" />
+              <div className="w-9 h-9 bg-amber-200/50 rounded-[12px]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Lower Page Content Skeleton */}
+        <div className="max-w-[440px] mx-auto px-6 pt-6 flex flex-col gap-5 animate-pulse">
+          {/* Progress Card Skeleton */}
+          <div className="w-full h-[84px] bg-gray-50 border border-gray-100 rounded-[20px] p-4 flex flex-col justify-between">
+            <div className="flex justify-between items-center">
+              <div className="w-28 h-3.5 bg-gray-200 rounded-full" />
+              <div className="w-16 h-3.5 bg-gray-200 rounded-full" />
+            </div>
+            <div className="w-full h-2.5 bg-gray-200 rounded-full" />
+          </div>
+
+          {/* Stickers Section Header Skeleton */}
+          <div className="flex justify-between items-center pt-2">
+            <div className="w-32 h-4 bg-gray-200 rounded-full" />
+            <div className="w-20 h-3 bg-gray-150 rounded-full" />
+          </div>
+
+          {/* Stickers Grid Skeleton */}
+          <div className="grid grid-cols-4 gap-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="aspect-square rounded-[18px] bg-gray-100 border border-gray-100 flex items-center justify-center p-3">
+                <div className="w-10 h-10 rounded-full bg-gray-200" />
+              </div>
+            ))}
           </div>
         </div>
       </div>
