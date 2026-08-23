@@ -232,10 +232,10 @@ export default function FaqPage() {
               </a>
             </div>
 
-            {/* Email Contact Button (Yellow Background, White Text, 50px Height, Gmail Icon) */}
+            {/* Email Contact Button (Yellow Background, White Text, 50px Height, Light Rounding) */}
             <a
               href="mailto:support@corgicafe.com"
-              className="w-full bg-[#FDBD38] hover:bg-[#f5b32a] text-white font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 shadow-xs cursor-pointer"
+              className="w-full bg-[#FDBD38] hover:bg-[#f5b32a] text-white font-semibold text-sm h-[50px] px-4 rounded-[16px] transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 shadow-xs cursor-pointer"
             >
               <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0 p-1 shadow-2xs">
                 <img 
