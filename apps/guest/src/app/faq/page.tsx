@@ -150,7 +150,7 @@ export default function FaqPage() {
             className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
             title="Live Chat Support"
           >
-            <SupportIcon className="w-5 h-5 text-gray-900" />
+            <SupportIcon className="w-[23px] h-[23px] text-gray-900" />
           </button>
         </div>
       </div>

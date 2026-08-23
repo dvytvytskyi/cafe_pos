@@ -5,7 +5,7 @@ interface SupportIconProps {
   style?: 'question-circle' | 'message-question' | 'headphone';
 }
 
-export default function SupportIcon({ className = "w-5 h-5 text-gray-900", style = 'question-circle' }: SupportIconProps) {
+export default function SupportIcon({ className = "w-6 h-6 text-gray-900", style = 'question-circle' }: SupportIconProps) {
   if (style === 'message-question') {
     return (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
