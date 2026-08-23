@@ -26,6 +26,7 @@ export default function HomePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const formatSpanishPhoneNumber = (val: string): string => {
     const digits = val.replace(/\D/g, '');
@@ -691,16 +692,18 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <Link 
-                  href="/privacy" 
-                  onClick={() => setShowDrawer(false)} 
-                  className="flex items-center justify-between hover:bg-black/5 transition-colors pl-6 py-[11px] pr-6 w-full"
+                <button 
+                  onClick={() => {
+                    setShowDrawer(false);
+                    setShowPrivacyModal(true);
+                  }} 
+                  className="flex items-center justify-between hover:bg-black/5 transition-colors pl-6 py-[11px] pr-6 w-full text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <FileText className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
                     <span className="text-[12px] font-medium text-[#000000]">Privacy policy</span>
                   </div>
-                </Link>
+                </button>
 
                 <Link 
                   href="/team" 
@@ -1029,7 +1032,15 @@ export default function HomePage() {
               />
               <span className="text-[12px] text-gray-500 font-medium leading-tight">
                 By registering I confirm{' '}
-                <span className="underline cursor-pointer hover:text-black">privacy policy</span> and{' '}
+                <span 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPrivacyModal(true);
+                  }}
+                  className="underline cursor-pointer hover:text-black"
+                >
+                  privacy policy
+                </span> and{' '}
                 <span className="underline cursor-pointer hover:text-black">terms</span>
               </span>
             </div>
@@ -1315,6 +1326,106 @@ export default function HomePage() {
               <Share2 className="w-4 h-4 text-white" />
               <span>Share with Friends</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy Policy Modal */}
+      {showPrivacyModal && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-[2px] transition-all animate-in fade-in duration-200"
+          onClick={() => setShowPrivacyModal(false)}
+        >
+          <div 
+            className="bg-white rounded-[28px] p-6 sm:p-8 max-w-[460px] w-full shadow-2xl relative flex flex-col gap-5 max-h-[85vh] animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-[#FFF8E7] flex items-center justify-center text-[#FDBD38]">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight">Privacy Policy</h3>
+                  <span className="text-[11px] text-gray-400 font-medium">Last updated: August 2026</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowPrivacyModal(false)}
+                className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Content Body */}
+            <div className="overflow-y-auto pr-2 flex flex-col gap-4 text-xs text-gray-600 leading-relaxed max-h-[55vh]">
+              <section className="flex flex-col gap-1">
+                <h4 className="font-bold text-gray-900 text-sm">1. Introduction</h4>
+                <p>
+                  At Corgi Cafe, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Guest Web Application, join our Loyalty Program, or place an order.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1">
+                <h4 className="font-bold text-gray-900 text-sm">2. Information We Collect</h4>
+                <p>
+                  We may collect personal information that you voluntarily provide to us when registering, placing an order, or contacting us. This includes:
+                </p>
+                <ul className="list-disc pl-4 space-y-1 mt-1 text-gray-500">
+                  <li>Full name, email address, and contact phone number.</li>
+                  <li>Order details, purchase history, and allergen preferences.</li>
+                  <li>Loyalty points, cashback balance, and rewards activity.</li>
+                  <li>Technical device data (browser type, IP address, location permissions).</li>
+                </ul>
+              </section>
+
+              <section className="flex flex-col gap-1">
+                <h4 className="font-bold text-gray-900 text-sm">3. How We Use Your Information</h4>
+                <p>
+                  We process your information to fulfill your orders, manage your loyalty account, process payments, improve our services, and communicate order updates or promotional rewards.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1">
+                <h4 className="font-bold text-gray-900 text-sm">4. Data Security & Protection</h4>
+                <p>
+                  We implement robust technical and organizational security measures designed to protect your personal data against unauthorized access, loss, or alteration in full compliance with EU GDPR requirements.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1">
+                <h4 className="font-bold text-gray-900 text-sm">5. Third-Party Services</h4>
+                <p>
+                  We do not sell your personal data. We only share necessary information with trusted third-party providers (such as secure payment processors and delivery mapping tools) strictly to operate our services.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1">
+                <h4 className="font-bold text-gray-900 text-sm">6. Your Data Rights</h4>
+                <p>
+                  Under European privacy laws, you have the right to access, rectify, request erasure, or export your personal information at any time by contacting support.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1 border-t border-gray-100 pt-3">
+                <h4 className="font-bold text-gray-900 text-sm">7. Contact Us</h4>
+                <p>
+                  If you have any questions or requests regarding this policy, please reach out to our privacy team at <a href="mailto:privacy@corgicafe.com" className="text-[#FDBD38] font-semibold underline">privacy@corgicafe.com</a>.
+                </p>
+              </section>
+            </div>
+
+            {/* Footer Close Button */}
+            <div className="pt-2 border-t border-gray-100 w-full">
+              <button
+                onClick={() => setShowPrivacyModal(false)}
+                className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3.5 rounded-full font-bold text-sm shadow-md transition-all active:scale-[0.98] cursor-pointer"
+              >
+                Got it
+              </button>
+            </div>
           </div>
         </div>
       )}
