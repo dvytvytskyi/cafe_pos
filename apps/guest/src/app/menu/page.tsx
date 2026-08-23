@@ -572,52 +572,78 @@ export default function MenuPage() {
     return foodImages[0]; // default fallback
   };
 
+  const incrementModifierQty = (group: any, option: any) => {
+    setSelectedModifiers((prev) => {
+      const existingIndex = prev.findIndex((m) => m.optionId === option.id);
+      if (existingIndex > -1) {
+        const updated = [...prev];
+        const currentQty = updated[existingIndex].quantity || 1;
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: currentQty + 1,
+        };
+        return updated;
+      } else {
+        return [
+          ...prev,
+          {
+            groupId: group.id,
+            groupName: group.name,
+            optionId: option.id,
+            optionName: option.name,
+            price: option.price,
+            quantity: 1,
+          },
+        ];
+      }
+    });
+  };
+
+  const decrementModifierQty = (groupId: string, optionId: string) => {
+    setSelectedModifiers((prev) => {
+      const existingIndex = prev.findIndex((m) => m.optionId === optionId);
+      if (existingIndex === -1) return prev;
+      const currentQty = prev[existingIndex].quantity || 1;
+      if (currentQty <= 1) {
+        return prev.filter((m) => m.optionId !== optionId);
+      } else {
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: currentQty - 1,
+        };
+        return updated;
+      }
+    });
+  };
+
   const toggleModifier = (group: any, option: any) => {
     setSelectedModifiers((prev) => {
-      const isSelected = prev.some((m) => m.optionId === option.id);
-      if (group.maxQty === 1) {
-        if (isSelected) {
-          if (group.minQty === 0) {
-            return prev.filter((m) => m.groupId !== group.id);
-          }
-          return prev;
-        } else {
-          const filtered = prev.filter((m) => m.groupId !== group.id);
-          return [
-            ...filtered,
-            {
-              groupId: group.id,
-              groupName: group.name,
-              optionId: option.id,
-              optionName: option.name,
-              price: option.price,
-            },
-          ];
-        }
+      const existing = prev.find((m) => m.optionId === option.id);
+      if (existing) {
+        return prev.filter((m) => m.optionId !== option.id);
       } else {
-        if (isSelected) {
-          return prev.filter((m) => m.optionId !== option.id);
-        } else {
-          const groupCount = prev.filter((m) => m.groupId === group.id).length;
-          if (groupCount >= group.maxQty) return prev;
-          return [
-            ...prev,
-            {
-              groupId: group.id,
-              groupName: group.name,
-              optionId: option.id,
-              optionName: option.name,
-              price: option.price,
-            },
-          ];
-        }
+        return [
+          ...prev,
+          {
+            groupId: group.id,
+            groupName: group.name,
+            optionId: option.id,
+            optionName: option.name,
+            price: option.price,
+            quantity: 1,
+          },
+        ];
       }
     });
   };
 
   const handleAddToCart = () => {
     if (!selectedItem) return;
-    const addedPrice = selectedModifiers.reduce((acc, m) => acc + m.price, 0);
+    const addedPrice = selectedModifiers.reduce(
+      (acc, m) => acc + m.price * (m.quantity || 1),
+      0
+    );
     addFoodToCart({
       menuItemId: selectedItem.id,
       itemType: 'food',
@@ -700,7 +726,7 @@ export default function MenuPage() {
   };
   const tipAmount = getTipAmount();
 
-  const totalPrice = selectedItem ? (selectedItem.basePrice + selectedModifiers.reduce((acc: any, m: any) => acc + m.price, 0)) * quantity : 0;
+  const totalPrice = selectedItem ? (selectedItem.basePrice + selectedModifiers.reduce((acc: any, m: any) => acc + (m.price * (m.quantity || 1)), 0)) * quantity : 0;
 
   if (loadingMenu) {
     return (
@@ -1074,85 +1100,119 @@ export default function MenuPage() {
                          {group.name}
                        </h3>
                        <div className="flex flex-wrap gap-5">
-                         {group.options.map((option) => {
-                           const isSelected = selectedModifiers.some((m) => m.optionId === option.id);
-                           return (
-                             <button
-                               key={option.id}
-                               type="button"
-                               onClick={() => toggleModifier(group, option)}
-                               className="flex flex-col items-center bg-white cursor-pointer group"
-                             >
-                               <div className="relative">
-                                 <img
-                                   src={getModifierImage(option.name)}
-                                   alt={option.name}
-                                   className={`w-[84px] h-[84px] rounded-full object-cover transition-all duration-200 border-2 ${
-                                     isSelected 
-                                       ? 'border-[#FDBD38] ring-2 ring-[#FDBD38] ring-offset-2 scale-[1.03] shadow-md' 
-                                       : 'border-transparent shadow-sm group-hover:scale-[1.02] group-hover:shadow-md'
-                                   }`}
-                                 />
-                                 {isSelected && (
-                                   <div className="absolute -top-1 -right-1 bg-[#FDBD38] text-black w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm border border-white">
-                                     ✓
-                                   </div>
-                                 )}
-                               </div>
-                               <span className="text-[12px] font-bold text-gray-900 mt-2 text-center max-w-[90px] leading-tight">
-                                 {option.name}
-                               </span>
-                               <span className="w-4 border-t border-gray-250 my-1 group-hover:border-gray-400 transition-colors"></span>
-                               <span className="text-[11px] font-bold text-gray-900 opacity-80">
-                                 +{option.price.toFixed(2)}€
-                               </span>
-                             </button>
-                           );
-                         })}
-                       </div>
-                     </div>
-                   ))}
+                          {group.options.map((option) => {
+                            const selectedMod = selectedModifiers.find((m) => m.optionId === option.id);
+                            const isSelected = !!selectedMod;
+                            const modQty = selectedMod?.quantity || 1;
+
+                            return (
+                              <div
+                                key={option.id}
+                                className="flex flex-col items-center bg-white cursor-pointer group select-none"
+                              >
+                                <div 
+                                  onClick={() => toggleModifier(group, option)}
+                                  className="relative cursor-pointer group"
+                                >
+                                  <img
+                                    src={getModifierImage(option.name)}
+                                    alt={option.name}
+                                    className={`w-[84px] h-[84px] rounded-full object-cover transition-all duration-200 border-2 ${
+                                      isSelected 
+                                        ? 'border-[#EE635E] ring-2 ring-[#EE635E]/30 ring-offset-2 scale-[1.03] shadow-md' 
+                                        : 'border-transparent shadow-sm group-hover:scale-[1.02] group-hover:shadow-md'
+                                    }`}
+                                  />
+                                  {isSelected && (
+                                    <div className="absolute -top-1 -right-1 bg-[#EE635E] text-white w-5.5 h-5.5 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm border-2 border-white">
+                                      ✓
+                                    </div>
+                                  )}
+                                </div>
+
+                                <span className="text-[12px] font-bold text-gray-900 mt-2 text-center max-w-[90px] leading-tight">
+                                  {option.name}
+                                </span>
+                                
+                                <span className="text-[11px] font-bold text-[#EE635E] mt-0.5">
+                                  +{(option.price * modQty).toFixed(2)}€
+                                </span>
+
+                                {/* Modifier Quantity Stepper (- 1 +) matching Shop Drawer */}
+                                {isSelected && (
+                                  <div className="flex items-center gap-2 mt-2 bg-gray-100/90 rounded-full px-2 py-1 shadow-2xs">
+                                    <button 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        decrementModifierQty(group.id, option.id);
+                                      }}
+                                      className="w-5 h-5 rounded-full bg-white hover:bg-gray-200 active:scale-90 flex items-center justify-center text-gray-700 shadow-2xs transition-colors cursor-pointer"
+                                    >
+                                      <Minus className="w-3 h-3" strokeWidth={2.5} />
+                                    </button>
+                                    <span className="text-[12px] font-bold text-gray-900 w-3 text-center">
+                                      {modQty}
+                                    </span>
+                                    <button 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        incrementModifierQty(group, option);
+                                      }}
+                                      className="w-5 h-5 rounded-full bg-white hover:bg-gray-200 active:scale-90 flex items-center justify-center text-gray-700 shadow-2xs transition-colors cursor-pointer"
+                                    >
+                                      <Plus className="w-3 h-3" strokeWidth={2.5} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
 
           {/* Fixed Bottom Footer */}
           <div className="px-6 pb-4 pt-2 flex-shrink-0 bg-transparent">
-            {/* Unified Quantity Selector & Add to Bag CTA Button */}
-            <div className="w-full bg-[#FDBD38] text-white p-2 rounded-full flex items-center shadow-none mt-2 transition-all hover:opacity-[0.98]">
-              {/* Standalone Quantity selectors */}
-              <div className="flex items-center gap-2">
+            {/* Combined Pill Button matching Shop Page */}
+            <div className="w-full bg-[#FDBD38] hover:bg-[#f5b32a] text-white h-[54px] rounded-full flex items-center justify-between px-5 font-bold shadow-xs active:scale-[0.99] transition-all">
+              {/* Left Side: Quantity Stepper */}
+              <div className="flex items-center gap-3">
                 <button 
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="w-10 h-10 hover:bg-white/10 active:scale-95 rounded-full flex items-center justify-center text-white cursor-pointer transition-colors"
+                  className="w-8 h-8 hover:bg-white/20 active:scale-90 rounded-full flex items-center justify-center text-white cursor-pointer transition-colors"
                 >
-                  <Minus className="w-4 h-4" strokeWidth={3.2} />
+                  <Minus className="w-4 h-4" strokeWidth={3} />
                 </button>
-                <span className="text-[16px] font-bold text-white w-5 text-center select-none">
+                <span className="text-[16px] font-bold text-white w-4 text-center select-none">
                   {quantity}
                 </span>
                 <button 
                   type="button"
                   onClick={() => setQuantity((q) => q + 1)}
-                  className="w-10 h-10 hover:bg-white/10 active:scale-95 rounded-full flex items-center justify-center text-white cursor-pointer transition-colors"
+                  className="w-8 h-8 hover:bg-white/20 active:scale-90 rounded-full flex items-center justify-center text-white cursor-pointer transition-colors"
                 >
-                  <Plus className="w-4 h-4" strokeWidth={3.2} />
+                  <Plus className="w-4 h-4" strokeWidth={3} />
                 </button>
               </div>
 
               {/* Vertical Divider */}
-              <div className="w-[1px] h-8 bg-white/20 mx-2" />
+              <div className="w-[1px] h-6 bg-white/30 mx-2" />
 
-              {/* Primary Add to bag trigger */}
+              {/* Right Side: Add to Order Action */}
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="flex-1 flex justify-between items-center pl-3 pr-4 py-2 text-white font-semibold text-[15px] cursor-pointer active:scale-[0.99] transition-all"
+                className="flex-1 flex justify-between items-center pl-2 font-bold text-base cursor-pointer"
               >
-                 <span>Add to bag</span>
-                 <span className="font-bold text-[16px]">{totalPrice.toFixed(2)}€</span>
-               </button>
+                <span>Add to order</span>
+                <span>{totalPrice.toFixed(2)}€</span>
+              </button>
             </div>
           </div>
         </div>
