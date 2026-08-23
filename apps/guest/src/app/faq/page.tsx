@@ -171,7 +171,7 @@ export default function FaqPage() {
                   onClick={() => toggleFaq(faq.id)}
                   className="w-full flex items-start justify-between gap-3 text-left cursor-pointer py-1 group"
                 >
-                  <h3 className="text-sm font-semibold text-gray-900 leading-snug group-hover:text-black transition-colors flex-1">
+                  <h3 className="text-[15px] font-semibold text-gray-900 leading-snug group-hover:text-black transition-colors flex-1">
                     {faq.question}
                   </h3>
                   <div className={`w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-gray-200' : ''}`}>
@@ -208,7 +208,7 @@ export default function FaqPage() {
                 href="https://wa.me/34600111222?text=Hello%20Corgi%20Cafe%20Support!"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/80 cursor-pointer shadow-xs"
+                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/80 cursor-pointer"
               >
                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="9.5" fill="#ffffff" />
@@ -222,7 +222,7 @@ export default function FaqPage() {
                 href="https://t.me/corgicafe_support"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/80 cursor-pointer shadow-xs"
+                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/80 cursor-pointer"
               >
                 <img 
                   src="/telegram-icon.png" 
@@ -236,7 +236,7 @@ export default function FaqPage() {
             {/* Email Contact Button (Yellow Background, White Text, 50px Height) */}
             <a
               href="mailto:support@corgicafe.com"
-              className="w-full bg-[#FDBD38] hover:bg-[#f5b32a] text-white font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 shadow-xs cursor-pointer"
+              className="w-full bg-[#FDBD38] hover:bg-[#f5b32a] text-white font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer"
             >
               <div className="w-6.5 h-6.5 rounded-[7px] bg-white flex items-center justify-center flex-shrink-0 p-1 shadow-2xs">
                 <img 
