@@ -387,7 +387,7 @@ export default function TeamPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !applicantName || !applicantPhone || !applicantEmail}
-                  className="w-full bg-black hover:bg-gray-800 disabled:opacity-60 text-white py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-xs"
+                  className="w-full bg-[#FDBD38] hover:bg-[#f5b32a] disabled:opacity-50 text-white py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-xs"
                 >
                   {isSubmitting ? (
                     <span>Submitting Application...</span>
