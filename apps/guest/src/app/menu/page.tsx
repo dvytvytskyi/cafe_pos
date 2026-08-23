@@ -1398,100 +1398,121 @@ export default function MenuPage() {
           </div>
 
           {/* Form Fields */}
-          <div className="flex flex-col gap-3.5 w-full">
+          <div className="flex flex-col gap-4 w-full">
             {authMode === 'login' && (
               <>
-                <div className="relative flex items-center">
-                  <Mail className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
+                <div className="relative">
                   <input 
                     type="email" 
-                    placeholder="Email Address"
+                    placeholder="Email"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full bg-white border border-gray-200 focus:border-[#FDBD38] rounded-[14px] py-3.5 pl-10 pr-4 text-sm font-semibold text-gray-800 focus:outline-none transition-all shadow-none focus:ring-4 focus:ring-[#FDBD38]/10 placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
                   />
                 </div>
-                <div className="relative flex items-center">
-                  <Lock className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
+                <div className="relative">
                   <input 
                     type={showPassword ? "text" : "password"} 
                     placeholder="Password"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full bg-white border border-gray-200 focus:border-[#FDBD38] rounded-[14px] py-3.5 pl-10 pr-12 text-sm font-semibold text-gray-800 focus:outline-none transition-all shadow-none focus:ring-4 focus:ring-[#FDBD38]/10 placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                    {showPassword ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
                   </button>
                 </div>
               </>
             )}
 
             {authMode === 'register_step1' && (
-              <div className="relative flex items-center">
-                <Mail className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
+              <div className="relative">
                 <input 
                   type="email" 
-                  placeholder="Email Address"
+                  placeholder="Email"
                   value={authEmail}
                   onChange={(e) => setAuthEmail(e.target.value)}
-                  className="w-full bg-white border border-gray-200 focus:border-[#FDBD38] rounded-[14px] py-3.5 pl-10 pr-4 text-sm font-semibold text-gray-800 focus:outline-none transition-all shadow-none focus:ring-4 focus:ring-[#FDBD38]/10 placeholder-gray-400"
+                  className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
                 />
               </div>
             )}
 
             {authMode === 'register_step2' && (
               <>
-                <div className="relative flex items-center">
-                  <User className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
+                <div className="relative">
                   <input 
                     type="text" 
                     placeholder="Full name"
                     value={authFullName}
                     onChange={(e) => setAuthFullName(e.target.value)}
-                    className="w-full bg-white border border-gray-200 focus:border-[#FDBD38] rounded-[14px] py-3.5 pl-10 pr-4 text-sm font-semibold text-gray-800 focus:outline-none transition-all shadow-none focus:ring-4 focus:ring-[#FDBD38]/10 placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
                   />
                 </div>
-                <div className="relative flex items-center">
-                  <Lock className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
+                <div className="relative">
                   <input 
                     type={showPassword ? "text" : "password"} 
                     placeholder="Password"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full bg-white border border-gray-200 focus:border-[#FDBD38] rounded-[14px] py-3.5 pl-10 pr-12 text-sm font-semibold text-gray-800 focus:outline-none transition-all shadow-none focus:ring-4 focus:ring-[#FDBD38]/10 placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                    {showPassword ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
                   </button>
                 </div>
-                <div className="relative flex items-center">
-                  <Lock className="w-4.5 h-4.5 text-gray-400 absolute left-3.5 pointer-events-none" />
+                <div className="relative">
                   <input 
                     type={showConfirmPassword ? "text" : "password"} 
                     placeholder="Confirm password"
                     value={authConfirmPassword}
                     onChange={(e) => setAuthConfirmPassword(e.target.value)}
-                    className="w-full bg-white border border-gray-200 focus:border-[#FDBD38] rounded-[14px] py-3.5 pl-10 pr-12 text-sm font-semibold text-gray-800 focus:outline-none transition-all shadow-none focus:ring-4 focus:ring-[#FDBD38]/10 placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3.5 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
                   >
-                    {showConfirmPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                    {showConfirmPassword ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
                   </button>
                 </div>
                 {authPassword && authConfirmPassword && authPassword !== authConfirmPassword && (
-                  <span className="text-[12px] text-rose-500 font-semibold px-2 mt-[-4px]">
+                  <span className="text-[12px] text-rose-500 font-semibold px-5 mt-[-4px]">
                     Passwords do not match
                   </span>
                 )}
@@ -1508,7 +1529,7 @@ export default function MenuPage() {
                   refreshAuth();
                   setShowLoginModal(false);
                 }}
-                className="w-full bg-white border border-gray-200 hover:border-gray-300 rounded-[16px] py-3.5 px-6 font-bold text-gray-800 flex items-center justify-center gap-2.5 transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] rounded-full py-3.5 px-6 font-bold text-gray-900 flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer"
               >
                 <svg className="w-5 h-5 fill-current text-gray-900" viewBox="0 0 24 24">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.69-1.12 1.83-.98 2.94.1.08.2.12.31.12.87 0 1.94-.56 2.5-1.45z" />
@@ -1521,7 +1542,7 @@ export default function MenuPage() {
                   refreshAuth();
                   setShowLoginModal(false);
                 }}
-                className="w-full bg-white border border-gray-200 hover:border-gray-300 rounded-[16px] py-3.5 px-6 font-bold text-gray-800 flex items-center justify-center gap-2.5 transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] rounded-full py-3.5 px-6 font-bold text-gray-900 flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
