@@ -218,8 +218,8 @@ export default function TeamPage() {
                 </ul>
               </div>
 
-              {/* Bottom Row: Tags & Clean Apply Button (No Icon) */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 border-t border-gray-100 gap-3">
+              {/* Bottom Row: Tags & Full-Width Apply Button */}
+              <div className="flex flex-col pt-2 border-t border-gray-100 gap-3">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {job.tags.map((tag, tIdx) => (
                     <span 
@@ -236,7 +236,7 @@ export default function TeamPage() {
                     e.stopPropagation();
                     handleOpenApply(job);
                   }}
-                  className="bg-black hover:bg-gray-800 text-white font-extrabold text-xs px-5 py-2.5 rounded-full transition-all active:scale-[0.96] cursor-pointer whitespace-nowrap text-center shadow-xs self-end sm:self-auto"
+                  className="w-full bg-black hover:bg-gray-800 text-white font-extrabold text-sm py-3 rounded-full transition-all active:scale-[0.98] cursor-pointer text-center shadow-xs mt-0.5"
                 >
                   Apply Now
                 </button>
