@@ -210,7 +210,7 @@ export default function FaqPage() {
                 className="bg-[#F4F4F5] hover:bg-gray-200 text-gray-900 font-semibold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/60 cursor-pointer"
               >
                 <img 
-                  src="https://static.vecteezy.com/system/resources/previews/018/930/464/non_2x/whatsapp-logo-whatsapp-icon-whatsapp-transparent-free-png.png" 
+                  src="/whatsapp-icon.png" 
                   alt="WhatsApp" 
                   className="w-5 h-5 object-contain flex-shrink-0" 
                 />
@@ -225,7 +225,7 @@ export default function FaqPage() {
                 className="bg-[#F4F4F5] hover:bg-gray-200 text-gray-900 font-semibold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/60 cursor-pointer"
               >
                 <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Telegram_Messenger.png" 
+                  src="/telegram-icon.png" 
                   alt="Telegram" 
                   className="w-5 h-5 object-contain flex-shrink-0" 
                 />
