@@ -822,8 +822,8 @@ export default function LoyaltyPage() {
         </div>
 
         {/* Profile Drawer Sheet (100vh slide-up from bottom) */}
-        <div className={`fixed inset-0 z-50 flex justify-center items-end backdrop-blur-md bg-white/20 animate-backdrop-blur transition-opacity duration-300 ${
-          isProfileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        <div className={`fixed inset-0 z-50 flex justify-center items-end transition-all duration-300 ${
+          isProfileOpen ? 'opacity-100 pointer-events-auto backdrop-blur-md bg-white/20' : 'opacity-0 pointer-events-none backdrop-blur-none bg-transparent'
         }`}>
           <div className={`w-full max-w-[480px] h-[100dvh] bg-white rounded-t-[32px] overflow-hidden flex flex-col shadow-2xl relative transition-transform duration-300 ease-out transform ${
             isProfileOpen ? 'translate-y-0' : 'translate-y-full'
@@ -999,7 +999,7 @@ export default function LoyaltyPage() {
         {/* Beautiful Add Points Promo Code Modal */}
         {isAddPointsOpen && (
           <div 
-            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-white/20 animate-backdrop-blur p-4 select-none cursor-pointer"
+            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-white/20 p-4 select-none cursor-pointer"
             onClick={() => {
               setIsAddPointsOpen(false);
               setPromoError(null);
@@ -1116,8 +1116,8 @@ export default function LoyaltyPage() {
         )}
 
         {/* Points History Drawer Sheet (80dvh slide-up from bottom) */}
-        <div className={`fixed inset-0 z-50 flex justify-center items-end backdrop-blur-md bg-white/20 animate-backdrop-blur transition-opacity duration-300 ${
-          isHistoryOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        <div className={`fixed inset-0 z-50 flex justify-center items-end transition-all duration-300 ${
+          isHistoryOpen ? 'opacity-100 pointer-events-auto backdrop-blur-md bg-white/20' : 'opacity-0 pointer-events-none backdrop-blur-none bg-transparent'
         }`}>
           <div className={`w-full max-w-[480px] h-[80dvh] bg-white rounded-t-[32px] overflow-hidden flex flex-col shadow-2xl relative transition-transform duration-300 ease-out transform ${
             isHistoryOpen ? 'translate-y-0' : 'translate-y-full'
@@ -1297,7 +1297,7 @@ export default function LoyaltyPage() {
 
         {/* Apple Wallet Mockup Pass Modal */}
         {isAppleWalletOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-white/20 animate-backdrop-blur p-6 select-none">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-white/20 p-6 select-none">
             <div className="w-full max-w-[340px] bg-[#1c1c1e] rounded-[28px] p-6 border border-zinc-800 flex flex-col items-center relative animate-scaleUp text-white shadow-2xl">
               
               {/* Close Button */}

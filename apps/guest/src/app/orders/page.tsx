@@ -395,7 +395,7 @@ export default function OrdersPage() {
       {selectedOrder && (
         <div 
           onClick={() => setSelectedOrder(null)}
-          className="fixed inset-0 z-50 backdrop-blur-md bg-white/20 animate-backdrop-blur flex items-end sm:items-center justify-center p-0 sm:p-4 select-none cursor-pointer"
+          className="fixed inset-0 z-50 backdrop-blur-md bg-white/20 flex items-end sm:items-center justify-center p-0 sm:p-4 select-none cursor-pointer"
         >
           <div 
             onClick={(e) => e.stopPropagation()}

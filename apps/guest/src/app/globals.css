@@ -79,22 +79,7 @@ body.item-detail-open nav {
   }
 }
 
-@keyframes backdropFade {
-  0% {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-  100% {
-    opacity: 1;
-    backdrop-filter: blur(12px);
-  }
-}
-
 .animate-slide-up {
   animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-backdrop-blur {
-  animation: backdropFade 0.2s ease-out forwards;
 }
 

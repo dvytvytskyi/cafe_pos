@@ -64,8 +64,8 @@ export function BottomNav() {
 
   return (
     <nav 
-      className={`fixed bottom-[14px] left-6 right-6 z-40 max-w-[400px] mx-auto bg-white/95 backdrop-blur-md border border-gray-100/80 rounded-[22px] shadow-[0_8px_30px_-8px_rgba(0,0,0,0.12)] transition-all duration-500 ease-in-out transform ${
-        isNavVisible ? 'translate-y-0 opacity-100 pointer-events-auto' : 'translate-y-16 opacity-0 pointer-events-none'
+      className={`fixed bottom-[14px] left-6 right-6 z-40 max-w-[400px] mx-auto bg-white/95 border border-gray-100/80 rounded-[22px] shadow-[0_8px_30px_-8px_rgba(0,0,0,0.12)] transition-all duration-500 ease-in-out transform ${
+        isNavVisible ? 'translate-y-0 opacity-100 pointer-events-auto backdrop-blur-md' : 'translate-y-16 opacity-0 pointer-events-none backdrop-blur-none'
       }`}
     >
       <div className="mx-auto flex items-stretch justify-around px-2 py-[10px]">

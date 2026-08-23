@@ -1263,7 +1263,7 @@ export default function HomePage() {
       {showInviteModal && (
         <div 
           onClick={() => setShowInviteModal(false)}
-          className="fixed inset-0 z-[60] backdrop-blur-md bg-white/20 animate-backdrop-blur flex items-center justify-center p-4 select-none cursor-pointer"
+          className="fixed inset-0 z-[60] backdrop-blur-md bg-white/20 flex items-center justify-center p-4 select-none cursor-pointer"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
