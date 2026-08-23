@@ -207,7 +207,7 @@ export default function FaqPage() {
                 href="https://wa.me/34600111222?text=Hello%20Corgi%20Cafe%20Support!"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/80 cursor-pointer shadow-xs"
+                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/80 cursor-pointer shadow-xs"
               >
                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="9.5" fill="#ffffff" />
@@ -221,7 +221,7 @@ export default function FaqPage() {
                 href="https://t.me/corgicafe_support"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/80 cursor-pointer shadow-xs"
+                className="bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/80 cursor-pointer shadow-xs"
               >
                 <img 
                   src="/telegram-icon.png" 
@@ -232,17 +232,19 @@ export default function FaqPage() {
               </a>
             </div>
 
-            {/* Email Contact Button (Gmail PNG icon + border style) */}
+            {/* Email Contact Button (Yellow Background, White Text, 50px Height, Gmail Icon) */}
             <a
               href="mailto:support@corgicafe.com"
-              className="w-full bg-white hover:bg-gray-50 text-gray-900 font-semibold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/80 cursor-pointer shadow-xs"
+              className="w-full bg-[#FDBD38] hover:bg-[#f5b32a] text-white font-semibold text-sm h-[50px] px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 shadow-xs cursor-pointer"
             >
-              <img 
-                src="/email-icon.png" 
-                alt="Gmail" 
-                className="w-5 h-5 object-contain flex-shrink-0" 
-              />
-              <span className="font-semibold text-gray-900">Email Support (support@corgicafe.com)</span>
+              <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0 p-1 shadow-2xs">
+                <img 
+                  src="/email-icon.svg" 
+                  alt="Gmail" 
+                  className="w-4 h-4 object-contain flex-shrink-0" 
+                />
+              </div>
+              <span className="font-semibold text-white">Email Support (support@corgicafe.com)</span>
             </a>
           </div>
         </div>
