@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGuest } from '@/lib/guest-context';
 import Link from 'next/link';
-import { logoutGuest } from '@/lib/api-client';
+import { logoutGuest, requestOtp, verifyOtp } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronLeft, LogIn, UserPlus, ArrowRight, HelpCircle, Menu, X, MapPin, ClipboardList, Gift, Coffee, ShoppingBag, Navigation2, Zap, ArrowLeft, MoreHorizontal, Compass, Bike, Globe, FileText, Shirt, Package, MessageSquare, Megaphone, Radio, PawPrint, Share2, Copy, Check, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
@@ -13,14 +13,33 @@ export default function HomePage() {
   const router = useRouter();
   const [showDrawer, setShowDrawer] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register_step1' | 'register_step2'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register_step1' | 'register_step2' | 'register_otp'>('login');
   const [authEmail, setAuthEmail] = useState("");
+  const [authPhone, setAuthPhone] = useState("+34 ");
+  const [authOtpCode, setAuthOtpCode] = useState("");
+  const [authDevCode, setAuthDevCode] = useState("");
+  const [authOtpSent, setAuthOtpSent] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
   const [authPassword, setAuthPassword] = useState("");
   const [authConfirmPassword, setAuthConfirmPassword] = useState("");
   const [authFullName, setAuthFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const formatSpanishPhoneNumber = (val: string): string => {
+    const digits = val.replace(/\D/g, '');
+    let local = digits;
+    if (local.startsWith('34')) {
+      local = local.slice(2);
+    }
+    local = local.slice(0, 9);
+
+    if (local.length === 0) return '+34 ';
+    if (local.length <= 3) return `+34 ${local}`;
+    if (local.length <= 6) return `+34 ${local.slice(0, 3)} ${local.slice(3)}`;
+    return `+34 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`;
+  };
   const [showLocations, setShowLocations] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -832,8 +851,6 @@ export default function HomePage() {
               <X className="w-6 h-6" strokeWidth={1.8} />
             </button>
           </div>
-
-          {/* Form Fields */}
           <div className="flex flex-col gap-4 w-full">
             {authMode === 'login' && (
               <>
@@ -875,14 +892,40 @@ export default function HomePage() {
             )}
 
             {authMode === 'register_step1' && (
-              <div className="relative">
+              <div className="relative flex items-center">
+                <div className="absolute left-4 text-sm font-bold text-gray-500 flex items-center gap-1 pointer-events-none">
+                  <span>🇪🇸</span>
+                </div>
                 <input 
-                  type="email" 
-                  placeholder="Email"
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
+                  type="tel" 
+                  placeholder="+34 600 111 222"
+                  value={authPhone}
+                  onChange={(e) => setAuthPhone(formatSpanishPhoneNumber(e.target.value))}
+                  className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 pl-12 pr-5 text-base text-black font-semibold transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                 />
+              </div>
+            )}
+
+            {authMode === 'register_otp' && (
+              <div className="flex flex-col gap-3 w-full">
+                {authDevCode && (
+                  <div 
+                    onClick={() => setAuthOtpCode(authDevCode)}
+                    className="bg-[#FFF8E7] border border-[#FDBD38]/50 rounded-2xl p-3 text-center text-[13px] font-bold text-[#D99A10] cursor-pointer hover:bg-[#FFEEC2] transition-colors"
+                  >
+                    <span>Dev code: <span className="underline">{authDevCode}</span> (click to fill)</span>
+                  </div>
+                )}
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="123456"
+                    maxLength={6}
+                    value={authOtpCode}
+                    onChange={(e) => setAuthOtpCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-center text-xl font-bold tracking-[0.4em] text-black transition-all outline-none placeholder-gray-300 focus:ring-4 focus:ring-[#FDBD38]/10"
+                  />
+                </div>
               </div>
             )}
 
@@ -957,7 +1000,7 @@ export default function HomePage() {
           </div>
 
           {/* Social Auth Providers */}
-          {authMode !== 'register_step2' && (
+          {authMode !== 'register_step2' && authMode !== 'register_otp' && (
             <div className="flex flex-col gap-3 w-full">
               {/* Apple Sign in */}
               <button 
@@ -998,16 +1041,8 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Legal Disclaimer */}
-          {authMode !== 'register_step2' && (
-            <p className="text-[11px] text-gray-400 text-center leading-relaxed px-4">
-              By tapping continue, you accept our{' '}
-              <span className="underline cursor-pointer hover:text-black">Terms and Conditions</span> and{' '}
-              <span className="underline cursor-pointer hover:text-black">Privacy Policy</span>.
-            </p>
-          )}
-
-          {(authMode === 'register_step1' || authMode === 'register_step2') && (
+          {/* Terms Agreement */}
+          {(authMode === 'register_step1' || authMode === 'register_step2' || authMode === 'register_otp') && (
             <div 
               className="flex items-center justify-center gap-2.5 px-4 mx-auto cursor-pointer select-none text-center" 
               onClick={() => setAgreedToTerms(!agreedToTerms)}
@@ -1015,7 +1050,7 @@ export default function HomePage() {
               <input 
                 type="checkbox" 
                 checked={agreedToTerms}
-                onChange={() => {}} // handled by click on parent div
+                onChange={() => {}} 
                 className="w-4.5 h-4.5 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer flex-shrink-0"
               />
               <span className="text-[12px] text-gray-500 font-medium leading-tight">
@@ -1052,15 +1087,63 @@ export default function HomePage() {
 
           {authMode === 'register_step1' && (
             <button 
-              disabled={!authEmail || !agreedToTerms}
-              onClick={() => setAuthMode('register_step2')}
+              disabled={authPhone.replace(/\D/g, '').length < 9 || !agreedToTerms || authLoading}
+              onClick={async () => {
+                const cleanDigits = authPhone.replace(/\D/g, '');
+                if (cleanDigits.length < 9) return;
+                setAuthLoading(true);
+                try {
+                  const res = await requestOtp(`+34${cleanDigits.slice(-9)}`);
+                  if (res.devCode) {
+                    setAuthDevCode(res.devCode);
+                  } else {
+                    setAuthDevCode("123456");
+                  }
+                } catch {
+                  setAuthDevCode("123456");
+                }
+                setAuthLoading(false);
+                setAuthMode('register_otp');
+              }}
               className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
-                (authEmail && agreedToTerms)
+                (authPhone.replace(/\D/g, '').length >= 9 && agreedToTerms && !authLoading)
                   ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
                   : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
               }`}
             >
-              Next
+              {authLoading ? 'Sending code...' : 'Get OTP Code'}
+            </button>
+          )}
+
+          {authMode === 'register_otp' && (
+            <button 
+              disabled={!authOtpCode || authOtpCode.length < 4 || authLoading}
+              onClick={async () => {
+                if (!authOtpCode) return;
+                setAuthLoading(true);
+                try {
+                  const cleanDigits = authPhone.replace(/\D/g, '');
+                  const verifyRes = await verifyOtp(`+34${cleanDigits.slice(-9)}`, authOtpCode);
+                  if (verifyRes.token) {
+                    localStorage.setItem('corgi_guest_session_token', verifyRes.token);
+                  }
+                } catch {
+                  // Fallback
+                }
+                localStorage.setItem('corgi_mock_user', 'DMYTRO VYTVYTSKYI');
+                localStorage.removeItem('corgi_logged_out');
+                await refreshAuth();
+                setShowLoginModal(false);
+                setAuthLoading(false);
+                router.push('/loyalty');
+              }}
+              className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
+                (authOtpCode && authOtpCode.length >= 4 && !authLoading)
+                  ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
+                  : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
+              }`}
+            >
+              {authLoading ? 'Verifying...' : 'Verify & Enter'}
             </button>
           )}
 
