@@ -2228,7 +2228,7 @@ export default function MenuPage() {
 
             {/* Title */}
             <div className="flex flex-col items-center gap-1">
-              <h3 className="text-[22px] font-extrabold text-gray-900 leading-tight">
+              <h3 className="text-[22px] font-bold text-gray-900 leading-tight">
                 Nice to see you, <span className="text-[#FDBD38]">{profileName || 'Friend'}</span>! 🐾
               </h3>
             </div>

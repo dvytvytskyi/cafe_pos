@@ -664,7 +664,7 @@ export default function LoyaltyPage() {
                   </div>
                   <div className="flex flex-col text-right">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Balance</span>
-                    <span className="text-lg font-extrabold text-gray-800 flex items-center justify-end leading-none mt-1">
+                    <span className="text-lg font-bold text-gray-800 flex items-center justify-end leading-none mt-1">
                       {customer.points.toFixed(2)}€
                     </span>
                   </div>
@@ -1332,7 +1332,7 @@ export default function LoyaltyPage() {
                 </div>
                 <div>
                   <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider block">Balance</span>
-                  <span className="text-base font-extrabold text-white block">{customer.points.toFixed(2)}€</span>
+                  <span className="text-base font-bold text-white block">{customer.points.toFixed(2)}€</span>
                 </div>
                 <div className="text-right">
                   <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider block">Loyalty ID</span>
@@ -1516,7 +1516,7 @@ export default function LoyaltyPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-white font-extrabold drop-shadow-sm py-3.5 rounded-[16px] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
+              className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-white font-bold drop-shadow-sm py-3.5 rounded-[16px] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-none border-none mt-1"
             >
               <span>{loading ? 'Sending SMS...' : 'Send SMS OTP'}</span>
               <ChevronRight className="w-4 h-4 text-white" />

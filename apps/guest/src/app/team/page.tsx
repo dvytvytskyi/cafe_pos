@@ -181,7 +181,7 @@ export default function TeamPage() {
               {/* Job Title & Yellow Salary Badge */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-base font-extrabold text-gray-900 leading-tight flex-1">
+                  <h3 className="text-base font-bold text-gray-900 leading-tight flex-1">
                     {job.title}
                   </h3>
                   <span className="text-[12px] font-bold text-white bg-[#FDBD38] px-3.5 py-1.5 rounded-full whitespace-nowrap shadow-xs flex-shrink-0">
@@ -236,7 +236,7 @@ export default function TeamPage() {
                     e.stopPropagation();
                     handleOpenApply(job);
                   }}
-                  className="w-full bg-black hover:bg-gray-800 text-white font-extrabold text-sm py-3 rounded-full transition-all active:scale-[0.98] cursor-pointer text-center shadow-xs mt-0.5"
+                  className="w-full bg-black hover:bg-gray-800 text-white font-bold text-sm py-3 rounded-full transition-all active:scale-[0.98] cursor-pointer text-center shadow-xs mt-0.5"
                 >
                   Apply Now
                 </button>
@@ -260,7 +260,7 @@ export default function TeamPage() {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3.5">
               <div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Application</span>
-                <h3 className="text-lg font-extrabold text-gray-900 leading-tight">
+                <h3 className="text-lg font-bold text-gray-900 leading-tight">
                   Apply for {selectedJob.title}
                 </h3>
               </div>
@@ -283,7 +283,7 @@ export default function TeamPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <h4 className="text-xl font-extrabold text-gray-900">Application Received!</h4>
+                  <h4 className="text-xl font-bold text-gray-900">Application Received!</h4>
                   <p className="text-xs text-gray-500 max-w-[280px] leading-relaxed">
                     Thank you for applying to join Corgi Cafe! Our HR team will review your application and reach out within 48 hours.
                   </p>
@@ -386,7 +386,7 @@ export default function TeamPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !applicantName || !applicantPhone || !applicantEmail}
-                  className="w-full bg-black hover:bg-gray-800 disabled:opacity-60 text-white py-3.5 rounded-full font-extrabold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-xs"
+                  className="w-full bg-black hover:bg-gray-800 disabled:opacity-60 text-white py-3.5 rounded-full font-bold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-xs"
                 >
                   {isSubmitting ? (
                     <span>Submitting Application...</span>
