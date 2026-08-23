@@ -8,7 +8,6 @@ import {
   Briefcase, 
   Clock, 
   MapPin, 
-  Euro, 
   Sparkles, 
   CheckCircle2, 
   X, 
@@ -139,74 +138,43 @@ export default function TeamPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-28 relative">
-      {/* Brand Yellow Top Header with Organic Wave */}
-      <div className="w-full bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 pt-6 pb-24 px-6 relative overflow-hidden select-none">
-        {/* Organic SVG Wave bottom transition */}
-        <svg 
-          className="absolute bottom-0 left-0 w-full h-[44px] text-gray-50 fill-current translate-y-[1px]" 
-          viewBox="0 0 1440 320" 
-          preserveAspectRatio="none"
+    <div className="h-screen overflow-y-auto bg-gray-50 pb-[120px] relative scroll-smooth">
+      {/* Compact Top Header (matching /menu style) */}
+      <div className="bg-white px-6 py-4 border-b border-gray-100 sticky top-0 z-30 flex items-center justify-between shadow-xs">
+        <button 
+          onClick={() => router.push('/')}
+          className="w-10 h-10 bg-gray-100/80 hover:bg-gray-200/80 rounded-full flex items-center justify-center transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+          title="Back to Home"
         >
-          <path d="M0,96 C288,192 576,96 864,160 C1152,224 1344,160 1440,128 L1440,320 L0,320 Z" />
-        </svg>
+          <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
+        </button>
 
-        <div className="max-w-[480px] mx-auto flex flex-col gap-5 relative z-10">
-          {/* Top Bar: Back & Help */}
-          <div className="flex items-center justify-between w-full">
-            <button 
-              onClick={() => router.push('/')}
-              className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0"
-              title="Back to Home"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
-            </button>
-
-            <div className="flex flex-col text-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Careers at Corgi</span>
-              <h1 className="text-xl font-extrabold text-white mt-0.5 tracking-tight leading-none">
-                Join Our Team
-              </h1>
-            </div>
-
-            <button
-              onClick={() => alert("Careers Support: jobs@corgicafe.com")}
-              className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0"
-              title="Help"
-            >
-              <AlertCircle className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
-            </button>
-          </div>
-
-          {/* Hero Corgi Sticker & Heading */}
-          <div className="flex flex-col items-center text-center mt-2 px-2">
-            <div className="w-20 h-20 relative mb-3 drop-shadow-md">
-              <img 
-                src="/stickers/corgi_laptop1.png" 
-                alt="Corgi Work Sticker" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <h2 className="text-2xl font-extrabold text-white tracking-tight leading-tight">
-              Build the Future of Specialty Coffee With Us! 🐾
-            </h2>
-            <p className="text-xs font-semibold text-white/95 mt-2 max-w-[320px] leading-relaxed">
-              We are a passionate team of baristas, bakers, and creators crafting memorable everyday experiences in Barcelona.
-            </p>
-          </div>
+        <div className="flex flex-col text-center">
+          <h1 className="text-base font-extrabold text-gray-900 tracking-tight leading-none">
+            Join Our Team
+          </h1>
+          <span className="text-[10px] font-semibold text-gray-400 mt-0.5">Careers &amp; Vacancies 🐾</span>
         </div>
+
+        <button
+          onClick={() => alert("Careers Support: jobs@corgicafe.com")}
+          className="w-10 h-10 bg-gray-100/80 hover:bg-gray-200/80 rounded-full flex items-center justify-center transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+          title="Help"
+        >
+          <AlertCircle className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
+        </button>
       </div>
 
-      {/* Vacancies Section */}
-      <div className="max-w-[480px] mx-auto px-6 -mt-6 relative z-20 flex flex-col gap-6">
+      {/* Main Container */}
+      <div className="max-w-[480px] mx-auto px-6 pt-6 flex flex-col gap-6">
         
-        {/* Section Header badge */}
+        {/* Vacancies Section Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Briefcase className="w-4.5 h-4.5 text-[#FDBD38]" />
-            <h3 className="text-base font-bold text-gray-900 tracking-tight">Open Vacancies</h3>
+            <Briefcase className="w-4.5 h-4.5 text-gray-900" />
+            <h2 className="text-base font-extrabold text-gray-900 tracking-tight">Open Vacancies</h2>
           </div>
-          <span className="bg-[#FFF8E7] text-[#D99A10] border border-[#FDBD38]/40 px-3 py-1 rounded-full text-xs font-bold">
+          <span className="bg-gray-900 text-white px-3 py-1 rounded-full text-xs font-bold">
             {OPEN_POSITIONS.length} positions
           </span>
         </div>
@@ -216,19 +184,19 @@ export default function TeamPage() {
           {OPEN_POSITIONS.map((job) => (
             <div 
               key={job.id} 
-              className="bg-white rounded-[24px] p-5 shadow-xs border border-gray-100/80 hover:shadow-md transition-all flex flex-col gap-4 relative overflow-hidden"
+              className="bg-white rounded-[24px] p-5 shadow-xs border border-gray-200/60 hover:shadow-md transition-all flex flex-col gap-4 relative overflow-hidden"
             >
-              {/* Job Header */}
-              <div className="flex flex-col gap-1">
+              {/* Job Title & Salary Pill */}
+              <div className="flex flex-col gap-1.5">
                 <div className="flex items-start justify-between gap-2">
-                  <h4 className="text-base font-extrabold text-gray-900 leading-tight">
+                  <h3 className="text-base font-extrabold text-gray-900 leading-tight">
                     {job.title}
-                  </h4>
-                  <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                  </h3>
+                  <span className="text-[11px] font-bold text-gray-900 bg-gray-100 border border-gray-200/60 px-3 py-1 rounded-full whitespace-nowrap">
                     {job.salary}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-xs font-semibold text-gray-400 mt-0.5">
+                <div className="flex items-center gap-3 text-xs font-semibold text-gray-400">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-gray-400" />
                     <span>{job.location}</span>
@@ -240,13 +208,13 @@ export default function TeamPage() {
                 </div>
               </div>
 
-              {/* Job Description */}
+              {/* Description */}
               <p className="text-xs text-gray-600 leading-relaxed">
                 {job.description}
               </p>
 
-              {/* Requirements snippet */}
-              <div className="bg-gray-50 rounded-[16px] p-3.5 flex flex-col gap-1.5 border border-gray-100">
+              {/* Key Requirements */}
+              <div className="bg-gray-50/80 rounded-[18px] p-3.5 flex flex-col gap-1.5 border border-gray-100">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Key Requirements</span>
                 <ul className="space-y-1">
                   {job.requirements.map((req, idx) => (
@@ -259,12 +227,12 @@ export default function TeamPage() {
               </div>
 
               {/* Tags & Action Button */}
-              <div className="flex items-center justify-between pt-1 border-t border-gray-100 gap-2">
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {job.tags.map((tag, tIdx) => (
                     <span 
                       key={tIdx} 
-                      className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2.5 py-1 rounded-full"
+                      className="bg-gray-100 text-gray-600 text-[10px] font-semibold px-2.5 py-1 rounded-full"
                     >
                       {tag}
                     </span>
@@ -273,7 +241,7 @@ export default function TeamPage() {
 
                 <button
                   onClick={() => handleOpenApply(job)}
-                  className="bg-[#FDBD38] hover:bg-[#e5a420] text-white font-extrabold text-xs px-4 py-2.5 rounded-full shadow-xs transition-all active:scale-[0.96] cursor-pointer whitespace-nowrap flex items-center gap-1"
+                  className="bg-black hover:bg-gray-800 text-white font-extrabold text-xs px-4 py-2.5 rounded-full transition-all active:scale-[0.96] cursor-pointer whitespace-nowrap flex items-center gap-1.5 shadow-xs"
                 >
                   <span>Apply Now</span>
                   <Sparkles className="w-3.5 h-3.5 text-white" />
@@ -284,23 +252,23 @@ export default function TeamPage() {
         </div>
 
         {/* Culture & Perks Banner */}
-        <div className="bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-[28px] p-6 shadow-md flex flex-col gap-3 relative overflow-hidden mt-2">
+        <div className="bg-black text-white rounded-[24px] p-6 shadow-sm flex flex-col gap-3 relative overflow-hidden mt-2">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-200" />
+            <Sparkles className="w-5 h-5 text-[#FDBD38]" />
             <h4 className="text-base font-extrabold text-white">Why Join Corgi Cafe?</h4>
           </div>
-          <ul className="text-xs font-semibold text-white/95 space-y-2">
-            <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-amber-200 flex-shrink-0" />
-              <span>Unlimited specialty coffee & free team meals on shift</span>
+          <ul className="text-xs font-semibold text-gray-300 space-y-2">
+            <li className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-[#FDBD38] flex-shrink-0" />
+              <span>Unlimited specialty coffee &amp; free team meals on shift</span>
             </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-amber-200 flex-shrink-0" />
-              <span>Professional barista certifications & coffee roasting workshops</span>
+            <li className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-[#FDBD38] flex-shrink-0" />
+              <span>Professional barista certifications &amp; coffee roasting workshops</span>
             </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-amber-200 flex-shrink-0" />
-              <span>Competitive salaries, tip share & clear career growth</span>
+            <li className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-[#FDBD38] flex-shrink-0" />
+              <span>Competitive salaries, tip share &amp; clear career growth</span>
             </li>
           </ul>
         </div>
@@ -319,8 +287,8 @@ export default function TeamPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-3.5">
               <div>
-                <span className="text-[10px] font-bold text-[#D99A10] uppercase tracking-widest">Application</span>
-                <h3 className="text-lg font-bold text-gray-900 leading-tight">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Application</span>
+                <h3 className="text-lg font-extrabold text-gray-900 leading-tight">
                   Apply for {selectedJob.title}
                 </h3>
               </div>
@@ -350,7 +318,7 @@ export default function TeamPage() {
                 </div>
                 <button
                   onClick={handleCloseModal}
-                  className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white py-3.5 rounded-full font-bold text-sm shadow-sm transition-all active:scale-[0.98] cursor-pointer mt-2"
+                  className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-full font-bold text-sm shadow-xs transition-all active:scale-[0.98] cursor-pointer mt-2"
                 >
                   Awesome, Close
                 </button>
@@ -371,7 +339,7 @@ export default function TeamPage() {
                       value={applicantName}
                       onChange={(e) => setApplicantName(e.target.value)}
                       placeholder="e.g. Alex Morgan"
-                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-[#FDBD38] focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
+                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
                     />
                   </div>
                 </div>
@@ -389,7 +357,7 @@ export default function TeamPage() {
                       value={applicantEmail}
                       onChange={(e) => setApplicantEmail(e.target.value)}
                       placeholder="alex@example.com"
-                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-[#FDBD38] focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
+                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
                     />
                   </div>
                 </div>
@@ -407,7 +375,7 @@ export default function TeamPage() {
                       value={applicantPhone}
                       onChange={(e) => setApplicantPhone(e.target.value)}
                       placeholder="+34 600 111 222"
-                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-[#FDBD38] focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
+                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
                     />
                   </div>
                 </div>
@@ -415,7 +383,7 @@ export default function TeamPage() {
                 {/* Experience / Short Bio */}
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
-                    Short Bio & Experience *
+                    Short Bio &amp; Experience *
                   </label>
                   <div className="relative">
                     <FileText className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
@@ -425,7 +393,7 @@ export default function TeamPage() {
                       value={applicantBio}
                       onChange={(e) => setApplicantBio(e.target.value)}
                       placeholder="Tell us briefly about your hospitality background..."
-                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-[#FDBD38] focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-xs font-medium text-gray-900 transition-all outline-none resize-none"
+                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-xs font-medium text-gray-900 transition-all outline-none resize-none"
                     />
                   </div>
                 </div>
@@ -440,7 +408,7 @@ export default function TeamPage() {
                     value={applicantCvUrl}
                     onChange={(e) => setApplicantCvUrl(e.target.value)}
                     placeholder="https://linkedin.com/in/alexmorgan"
-                    className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-[#FDBD38] focus:bg-white rounded-[14px] py-3 px-4 text-xs font-medium text-gray-900 transition-all outline-none"
+                    className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 px-4 text-xs font-medium text-gray-900 transition-all outline-none"
                   />
                 </div>
 
@@ -448,7 +416,7 @@ export default function TeamPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !applicantName || !applicantEmail || !applicantPhone || !applicantBio}
-                  className="w-full bg-[#FDBD38] hover:bg-[#e5a420] disabled:opacity-60 text-white py-3.5 rounded-full font-extrabold text-sm shadow-md transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2"
+                  className="w-full bg-black hover:bg-gray-800 disabled:opacity-60 text-white py-3.5 rounded-full font-extrabold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-xs"
                 >
                   {isSubmitting ? (
                     <span>Submitting Application...</span>
