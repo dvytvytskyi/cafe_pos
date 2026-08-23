@@ -1342,14 +1342,9 @@ export default function HomePage() {
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-[#FFF8E7] flex items-center justify-center text-[#FDBD38]">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 leading-tight">Privacy Policy</h3>
-                  <span className="text-[11px] text-gray-400 font-medium">Last updated: August 2026</span>
-                </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 leading-tight">Privacy Policy</h3>
+                <span className="text-[11px] text-gray-400 font-medium">Last updated: August 2026</span>
               </div>
               <button 
                 onClick={() => setShowPrivacyModal(false)}
@@ -1360,59 +1355,90 @@ export default function HomePage() {
             </div>
 
             {/* Scrollable Content Body */}
-            <div className="overflow-y-auto pr-2 flex flex-col gap-4 text-xs text-gray-600 leading-relaxed max-h-[55vh]">
+            <div className="overflow-y-auto pr-2 flex flex-col gap-4 text-xs text-gray-600 leading-relaxed max-h-[60vh]">
               <section className="flex flex-col gap-1">
-                <h4 className="font-bold text-gray-900 text-sm">1. Introduction</h4>
+                <h4 className="font-bold text-gray-900 text-sm">1. Introduction & Scope</h4>
                 <p>
-                  At Corgi Cafe, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Guest Web Application, join our Loyalty Program, or place an order.
+                  At Corgi Cafe (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;), we are dedicated to protecting the privacy and security of your personal data. This Privacy Policy governs your use of our Guest Web Application, online ordering services, loyalty program, merch store, and physical cafe integrations. By accessing or using our services, you agree to the collection and use of information in accordance with this policy.
                 </p>
               </section>
 
               <section className="flex flex-col gap-1">
                 <h4 className="font-bold text-gray-900 text-sm">2. Information We Collect</h4>
                 <p>
-                  We may collect personal information that you voluntarily provide to us when registering, placing an order, or contacting us. This includes:
+                  We collect several types of information to provide and improve our services to you:
                 </p>
                 <ul className="list-disc pl-4 space-y-1 mt-1 text-gray-500">
-                  <li>Full name, email address, and contact phone number.</li>
-                  <li>Order details, purchase history, and allergen preferences.</li>
-                  <li>Loyalty points, cashback balance, and rewards activity.</li>
-                  <li>Technical device data (browser type, IP address, location permissions).</li>
+                  <li><strong className="text-gray-700">Account Details:</strong> Full name, email address, contact phone number, encrypted password hash, and loyalty preferences.</li>
+                  <li><strong className="text-gray-700">Order & Transaction History:</strong> Purchase items, customization notes, dietary/allergen alerts, timestamp of visits, payment receipts, and delivery instructions.</li>
+                  <li><strong className="text-gray-700">Loyalty & Cashback Records:</strong> Earned points balance, tier level progress (Friend, Explorer, Member, Expert, VIP, Legend), unlocked sticker achievements, and redeemed vouchers.</li>
+                  <li><strong className="text-gray-700">Technical Device Data:</strong> IP address, browser type and version, operating system, network status, session tokens, and cookie consent preferences.</li>
+                  <li><strong className="text-gray-700">Geolocation Data:</strong> Approximate GPS or IP-based location used strictly to route orders to the nearest Corgi Cafe store when enabled.</li>
                 </ul>
               </section>
 
               <section className="flex flex-col gap-1">
-                <h4 className="font-bold text-gray-900 text-sm">3. How We Use Your Information</h4>
+                <h4 className="font-bold text-gray-900 text-sm">3. How We Use Your Data</h4>
                 <p>
-                  We process your information to fulfill your orders, manage your loyalty account, process payments, improve our services, and communicate order updates or promotional rewards.
+                  We process your information strictly for legitimate business purposes under European law:
+                </p>
+                <ul className="list-disc pl-4 space-y-1 mt-1 text-gray-500">
+                  <li>To prepare, fulfill, and deliver your food, beverage, and merchandise orders.</li>
+                  <li>To calculate and issue your cashback rewards, manage point balances, and generate Apple Wallet passes.</li>
+                  <li>To personalize your guest experience (e.g., storing allergen warnings and preferred pickup locations).</li>
+                  <li>To send transactional order updates, digital receipts, and security notifications.</li>
+                  <li>To prevent fraudulent transactions, ensure network security, and comply with tax and legal requirements.</li>
+                </ul>
+              </section>
+
+              <section className="flex flex-col gap-1">
+                <h4 className="font-bold text-gray-900 text-sm">4. Data Sharing & Third Parties</h4>
+                <p>
+                  We value your trust and do NOT sell, rent, or trade your personal data to third-party advertisers. We only share necessary information with verified third-party partners required to operate our service:
+                </p>
+                <ul className="list-disc pl-4 space-y-1 mt-1 text-gray-500">
+                  <li><strong className="text-gray-700">Payment Processors:</strong> Encrypted credit/debit card and digital wallet transactions (Stripe, Apple Pay, Google Pay).</li>
+                  <li><strong className="text-gray-700">Delivery Partners:</strong> Order details and delivery address shared with courier dispatch systems (Glovo, UberEats) when placing delivery orders.</li>
+                  <li><strong className="text-gray-700">Cloud Infrastructure:</strong> High-security EU-hosted database servers and diagnostic services.</li>
+                </ul>
+              </section>
+
+              <section className="flex flex-col gap-1">
+                <h4 className="font-bold text-gray-900 text-sm">5. Data Security & GDPR Compliance</h4>
+                <p>
+                  We implement robust technical and organizational security measures, including end-to-end SSL/TLS encryption for data in transit, strict access controls, and database encryption at rest. In compliance with the EU General Data Protection Regulation (GDPR) (EU 2016/679), all data storage and processing are hosted within the European Economic Area (EEA).
                 </p>
               </section>
 
               <section className="flex flex-col gap-1">
-                <h4 className="font-bold text-gray-900 text-sm">4. Data Security & Protection</h4>
+                <h4 className="font-bold text-gray-900 text-sm">6. Cookies & Local Storage</h4>
                 <p>
-                  We implement robust technical and organizational security measures designed to protect your personal data against unauthorized access, loss, or alteration in full compliance with EU GDPR requirements.
+                  Our application uses essential cookies and browser storage tokens (<code className="text-[11px] bg-gray-100 px-1 py-0.5 rounded text-gray-700">localStorage</code> and <code className="text-[11px] bg-gray-100 px-1 py-0.5 rounded text-gray-700">sessionStorage</code>) to maintain active user sessions, retain shopping cart items, and save UI preferences. You can clear or disable storage via your browser settings at any time.
                 </p>
               </section>
 
               <section className="flex flex-col gap-1">
-                <h4 className="font-bold text-gray-900 text-sm">5. Third-Party Services</h4>
+                <h4 className="font-bold text-gray-900 text-sm">7. Data Retention & Your Rights</h4>
                 <p>
-                  We do not sell your personal data. We only share necessary information with trusted third-party providers (such as secure payment processors and delivery mapping tools) strictly to operate our services.
+                  We retain personal data for as long as your account remains active or as needed to meet legal obligations. Under GDPR and European data protection laws, you possess the following rights:
                 </p>
-              </section>
-
-              <section className="flex flex-col gap-1">
-                <h4 className="font-bold text-gray-900 text-sm">6. Your Data Rights</h4>
-                <p>
-                  Under European privacy laws, you have the right to access, rectify, request erasure, or export your personal information at any time by contacting support.
-                </p>
+                <ul className="list-disc pl-4 space-y-1 mt-1 text-gray-500">
+                  <li>Right to access, inspect, or request a copy of your stored personal data.</li>
+                  <li>Right to request correction or updating of incomplete or inaccurate data.</li>
+                  <li>Right to request complete account deletion (&quot;Right to be Forgotten&quot;).</li>
+                  <li>Right to object to or restrict specific data processing activities.</li>
+                </ul>
               </section>
 
               <section className="flex flex-col gap-1 border-t border-gray-100 pt-3">
-                <h4 className="font-bold text-gray-900 text-sm">7. Contact Us</h4>
+                <h4 className="font-bold text-gray-900 text-sm">8. Contact Us</h4>
                 <p>
-                  If you have any questions or requests regarding this policy, please reach out to our privacy team at <a href="mailto:privacy@corgicafe.com" className="text-[#FDBD38] font-semibold underline">privacy@corgicafe.com</a>.
+                  If you have questions, concerns, or data requests regarding this Privacy Policy, please reach out to our Data Protection Officer at:
+                </p>
+                <p className="mt-1 font-medium text-gray-800">
+                  Email: <a href="mailto:privacy@corgicafe.com" className="text-[#FDBD38] font-bold underline">privacy@corgicafe.com</a>
+                  <br />
+                  Address: Corgi Cafe Legal &amp; Privacy Team, Barcelona, Spain
                 </p>
               </section>
             </div>
