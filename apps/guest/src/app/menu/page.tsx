@@ -1108,62 +1108,69 @@ export default function MenuPage() {
                             return (
                               <div
                                 key={option.id}
-                                className="flex flex-col items-center bg-white cursor-pointer group select-none"
+                                className="relative flex flex-col items-center gap-2.5 transition-all text-center select-none cursor-pointer"
                               >
+                                {/* Round Image at Top with Checkmark Badge */}
                                 <div 
                                   onClick={() => toggleModifier(group, option)}
                                   className="relative cursor-pointer group"
                                 >
-                                  <img
-                                    src={getModifierImage(option.name)}
-                                    alt={option.name}
-                                    className={`w-[84px] h-[84px] rounded-full object-cover transition-all duration-200 border-2 ${
-                                      isSelected 
-                                        ? 'border-[#EE635E] ring-2 ring-[#EE635E]/30 ring-offset-2 scale-[1.03] shadow-md' 
-                                        : 'border-transparent shadow-sm group-hover:scale-[1.02] group-hover:shadow-md'
-                                    }`}
-                                  />
+                                  <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white shadow-sm border border-gray-100 flex-shrink-0 flex items-center justify-center">
+                                    <img
+                                      src={getModifierImage(option.name)}
+                                      alt={option.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  {/* Top-right Checkmark Circle Badge */}
                                   {isSelected && (
-                                    <div className="absolute -top-1 -right-1 bg-[#EE635E] text-white w-5.5 h-5.5 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm border-2 border-white">
-                                      ✓
-                                    </div>
+                                    <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#EE635E] text-white flex items-center justify-center shadow-md z-10">
+                                      <Check className="w-3.5 h-3.5" strokeWidth={3.5} />
+                                    </span>
                                   )}
                                 </div>
 
-                                <span className="text-[12px] font-bold text-gray-900 mt-2 text-center max-w-[90px] leading-tight">
-                                  {option.name}
-                                </span>
-                                
-                                <span className="text-[11px] font-bold text-[#EE635E] mt-0.5">
-                                  +{(option.price * modQty).toFixed(2)}€
-                                </span>
+                                {/* Title and Price */}
+                                <div className="flex flex-col gap-0.5 justify-center">
+                                  <span className="text-[12px] font-bold text-gray-900 leading-tight max-w-[95px]">
+                                    {option.name}
+                                  </span>
+                                  <span className="text-[11px] font-bold text-[#EE635E] mt-0.5">
+                                    + {(option.price * modQty).toFixed(2)}€
+                                  </span>
+                                </div>
 
-                                {/* Modifier Quantity Stepper (- 1 +) matching Shop Drawer */}
+                                {/* Bottom Quantity Stepper (only if selected) - Standalone circular buttons matching Shop */}
                                 {isSelected && (
-                                  <div className="flex items-center gap-2 mt-2 bg-gray-100/90 rounded-full px-2 py-1 shadow-2xs">
-                                    <button 
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        decrementModifierQty(group.id, option.id);
-                                      }}
-                                      className="w-5 h-5 rounded-full bg-white hover:bg-gray-200 active:scale-90 flex items-center justify-center text-gray-700 shadow-2xs transition-colors cursor-pointer"
-                                    >
-                                      <Minus className="w-3 h-3" strokeWidth={2.5} />
-                                    </button>
-                                    <span className="text-[12px] font-bold text-gray-900 w-3 text-center">
-                                      {modQty}
-                                    </span>
-                                    <button 
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        incrementModifierQty(group, option);
-                                      }}
-                                      className="w-5 h-5 rounded-full bg-white hover:bg-gray-200 active:scale-90 flex items-center justify-center text-gray-700 shadow-2xs transition-colors cursor-pointer"
-                                    >
-                                      <Plus className="w-3 h-3" strokeWidth={2.5} />
-                                    </button>
+                                  <div 
+                                    className="w-full mt-1.5 z-20 flex justify-center"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="flex items-center justify-center gap-3">
+                                      <button 
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          decrementModifierQty(group.id, option.id);
+                                        }}
+                                        className="w-8 h-8 rounded-full bg-white border border-gray-100/80 shadow-md flex items-center justify-center text-gray-700 active:scale-95 transition-transform cursor-pointer"
+                                      >
+                                        <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                      </button>
+                                      <span className="text-[13px] font-bold text-gray-900 min-w-[12px] text-center">
+                                        {modQty}
+                                      </span>
+                                      <button 
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          incrementModifierQty(group, option);
+                                        }}
+                                        className="w-8 h-8 rounded-full bg-white border border-gray-100/80 shadow-md flex items-center justify-center text-gray-700 active:scale-95 transition-transform cursor-pointer"
+                                      >
+                                        <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                      </button>
+                                    </div>
                                   </div>
                                 )}
                               </div>
