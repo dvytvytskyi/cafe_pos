@@ -312,7 +312,7 @@ export default function TeamPage() {
                       value={applicantName}
                       onChange={(e) => setApplicantName(e.target.value)}
                       placeholder="e.g. Alex Morgan"
-                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
+                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[16px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
                     />
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export default function TeamPage() {
                       value={applicantPhone}
                       onChange={(e) => setApplicantPhone(e.target.value)}
                       placeholder="+34 600 111 222"
-                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
+                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[16px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
                     />
                   </div>
                 </div>
@@ -348,15 +348,15 @@ export default function TeamPage() {
                       value={applicantEmail}
                       onChange={(e) => setApplicantEmail(e.target.value)}
                       placeholder="alex@example.com"
-                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[14px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
+                      className="w-full bg-[#F4F4F5] border border-gray-200/60 focus:border-black focus:bg-white rounded-[16px] py-3 pl-10 pr-4 text-sm font-semibold text-gray-900 transition-all outline-none"
                     />
                   </div>
                 </div>
 
-                {/* Upload CV */}
+                {/* Upload CV (Optional) */}
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
-                    Upload CV (Resume) *
+                    Upload CV (Resume)
                   </label>
                   <input 
                     type="file" 
@@ -387,7 +387,7 @@ export default function TeamPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !applicantName || !applicantPhone || !applicantEmail}
-                  className="w-full bg-black hover:bg-gray-800 disabled:opacity-60 text-white py-3.5 rounded-full font-bold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-xs"
+                  className="w-full bg-black hover:bg-gray-800 disabled:opacity-60 text-white py-3.5 rounded-[16px] font-bold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-xs"
                 >
                   {isSubmitting ? (
                     <span>Submitting Application...</span>
