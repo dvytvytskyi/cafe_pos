@@ -263,7 +263,7 @@ export default function HomePage() {
                 <>
                   <button 
                     onClick={() => setShowLoginModal(true)}
-                    className="flex justify-between items-center bg-white py-[26px] px-6 border-b border-gray-200 transition-colors w-full text-left"
+                    className="flex justify-between items-center bg-white py-[26px] px-[15px] border-b border-gray-200 transition-colors w-full text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <LogIn className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
@@ -276,7 +276,7 @@ export default function HomePage() {
                       setAuthMode('register_step1');
                       setShowLoginModal(true);
                     }}
-                    className="flex justify-between items-center bg-white py-[26px] px-6 border-b border-gray-200 transition-colors w-full text-left"
+                    className="flex justify-between items-center bg-white py-[26px] px-[15px] border-b border-gray-200 transition-colors w-full text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <UserPlus className="w-4 h-4 text-gray-800" strokeWidth={1.5} />
@@ -816,7 +816,7 @@ export default function HomePage() {
         >
           {/* Header Block */}
           <div className="flex justify-between items-start w-full">
-            <div className="flex flex-col pl-[25px]">
+            <div className="flex flex-col pl-[15px]">
               <h2 className="text-[28px] font-bold tracking-tight leading-none text-[#FDBD38] uppercase">
                 {authMode === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'}
               </h2>
