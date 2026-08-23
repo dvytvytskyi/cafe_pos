@@ -1349,24 +1349,6 @@ export default function MenuPage() {
               <h2 className="text-[28px] font-bold tracking-tight leading-none text-[#FDBD38] uppercase">
                 {authMode === 'login' ? 'WELCOME BACK!' : 'CREATE ACCOUNT'}
               </h2>
-              
-              {authMode === 'login' && (
-                <button 
-                  onClick={() => {
-                    setAuthMode('register_step1');
-                    setAuthPassword("");
-                    setAuthConfirmPassword("");
-                    setAuthFullName("");
-                  }}
-                  className="flex items-center gap-1 text-[14px] font-medium text-gray-500 hover:text-black transition-colors mt-2 text-left"
-                >
-                  <span>New user?</span>
-                  <span className="font-bold text-black flex items-center gap-1">
-                    Sign up
-                    <ArrowRight className="w-4 h-4" strokeWidth={2} />
-                  </span>
-                </button>
-              )}
 
               {authMode === 'register_step1' && (
                 <button 
