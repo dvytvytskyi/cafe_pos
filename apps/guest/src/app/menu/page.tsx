@@ -2265,7 +2265,7 @@ export default function MenuPage() {
       {/* Privacy Policy Modal */}
       {showPrivacyModal && (
         <div 
-          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-[2px] transition-all animate-in fade-in duration-200"
+          className="fixed inset-0 bg-transparent z-50 flex items-center justify-center p-4 backdrop-blur-md transition-all animate-in fade-in duration-200"
           onClick={() => setShowPrivacyModal(false)}
         >
           <div 
