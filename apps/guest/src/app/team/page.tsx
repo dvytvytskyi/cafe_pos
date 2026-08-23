@@ -257,25 +257,27 @@ export default function TeamPage() {
             className="bg-white rounded-[28px] p-6 sm:p-7 max-w-[440px] w-full shadow-2xl relative flex flex-col gap-5 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3.5">
-              <div>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Application</span>
-                <h3 className="text-lg font-bold text-gray-900 leading-tight">
-                  Apply for {selectedJob.title}
-                </h3>
+            {/* Modal Header (Only shown when not submitted) */}
+            {!isSubmitted && (
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3.5">
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Application</span>
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight">
+                    Apply for {selectedJob.title}
+                  </h3>
+                </div>
+                <button 
+                  onClick={handleCloseModal}
+                  className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button 
-                onClick={handleCloseModal}
-                className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            )}
 
             {/* Application Success State */}
             {isSubmitted ? (
-              <div className="flex flex-col items-center text-center py-6 gap-4">
+              <div className="flex flex-col items-center text-center py-4 sm:py-6 gap-4">
                 <div className="w-24 h-24 relative">
                   <img 
                     src="/stickers/corgi_fiesta_1.png" 
@@ -283,17 +285,17 @@ export default function TeamPage() {
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5">
                   <h4 className="text-xl font-bold text-gray-900">Application Received!</h4>
-                  <p className="text-xs text-gray-500 max-w-[280px] leading-relaxed">
+                  <p className="text-xs font-medium text-gray-500 max-w-[280px] leading-relaxed">
                     Thank you for applying to join Corgi Cafe! Our HR team will review your application and reach out within 48 hours.
                   </p>
                 </div>
                 <button
                   onClick={handleCloseModal}
-                  className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-full font-bold text-sm shadow-xs transition-all active:scale-[0.98] cursor-pointer mt-2"
+                  className="w-full bg-[#FDBD38] hover:bg-[#f5b32a] text-white py-3.5 rounded-[16px] font-bold text-sm shadow-xs transition-all active:scale-[0.98] cursor-pointer mt-2"
                 >
-                  Awesome, Close
+                  Awesome
                 </button>
               </div>
             ) : (
