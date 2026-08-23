@@ -244,28 +244,6 @@ export default function TeamPage() {
             </div>
           ))}
         </div>
-
-        {/* Culture & Perks Banner */}
-        <div className="bg-black text-white rounded-[24px] p-6 shadow-sm flex flex-col gap-3 relative overflow-hidden mt-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#FDBD38]" />
-            <h4 className="text-base font-extrabold text-white">Why Join Corgi Cafe?</h4>
-          </div>
-          <ul className="text-xs font-semibold text-gray-300 space-y-2">
-            <li className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-[#FDBD38] flex-shrink-0" />
-              <span>Unlimited specialty coffee &amp; free team meals on shift</span>
-            </li>
-            <li className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-[#FDBD38] flex-shrink-0" />
-              <span>Professional barista certifications &amp; coffee roasting workshops</span>
-            </li>
-            <li className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-[#FDBD38] flex-shrink-0" />
-              <span>Competitive salaries, tip share &amp; clear career growth</span>
-            </li>
-          </ul>
-        </div>
       </div>
 
       {/* Application Form Modal */}
