@@ -1450,40 +1450,14 @@ export default function MenuPage() {
             )}
 
             {authMode === 'register_step1' && (
-              <div className="relative flex items-center">
-                <div className="absolute left-4 text-sm font-bold text-gray-500 flex items-center gap-1 pointer-events-none">
-                  <span>🇪🇸</span>
-                </div>
+              <div className="relative">
                 <input 
-                  type="tel" 
-                  placeholder="+34 600 111 222"
-                  value={authPhone}
-                  onChange={(e) => setAuthPhone(formatSpanishPhoneNumber(e.target.value))}
-                  className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 pl-12 pr-5 text-base text-black font-semibold transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
+                  type="email" 
+                  placeholder="Email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                 />
-              </div>
-            )}
-
-            {authMode === 'register_otp' && (
-              <div className="flex flex-col gap-3 w-full">
-                {authDevCode && (
-                  <div 
-                    onClick={() => setAuthOtpCode(authDevCode)}
-                    className="bg-[#FFF8E7] border border-[#FDBD38]/50 rounded-2xl p-3 text-center text-[13px] font-bold text-[#D99A10] cursor-pointer hover:bg-[#FFEEC2] transition-colors"
-                  >
-                    <span>Dev code: <span className="underline">{authDevCode}</span> (click to fill)</span>
-                  </div>
-                )}
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="123456"
-                    maxLength={6}
-                    value={authOtpCode}
-                    onChange={(e) => setAuthOtpCode(e.target.value.replace(/\D/g, ''))}
-                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-center text-xl font-bold tracking-[0.4em] text-black transition-all outline-none placeholder-gray-300 focus:ring-4 focus:ring-[#FDBD38]/10"
-                  />
-                </div>
               </div>
             )}
 
@@ -1558,7 +1532,7 @@ export default function MenuPage() {
           </div>
 
           {/* Social buttons */}
-          {authMode !== 'register_step2' && authMode !== 'register_otp' && (
+          {authMode !== 'register_step2' && (
             <div className="flex flex-col gap-3 w-full">
               <button 
                 onClick={() => {
@@ -1593,7 +1567,7 @@ export default function MenuPage() {
           )}
 
           {/* Terms checkbox */}
-          {(authMode === 'register_step1' || authMode === 'register_step2' || authMode === 'register_otp') && (
+          {(authMode === 'register_step1' || authMode === 'register_step2') && (
             <div 
               className="flex items-center justify-center gap-2.5 px-4 mx-auto cursor-pointer select-none text-center mt-1" 
               onClick={() => setAgreedToTerms(!agreedToTerms)}
@@ -1634,63 +1608,37 @@ export default function MenuPage() {
 
           {authMode === 'register_step1' && (
             <button 
-              disabled={authPhone.replace(/\D/g, '').length < 9 || !agreedToTerms || authLoading}
-              onClick={async () => {
-                const cleanDigits = authPhone.replace(/\D/g, '');
-                if (cleanDigits.length < 9) return;
-                setAuthLoading(true);
-                try {
-                  const res = await requestOtp(`+34${cleanDigits.slice(-9)}`);
-                  if (res.devCode) {
-                    setAuthDevCode(res.devCode);
-                  } else {
-                    setAuthDevCode("123456");
-                  }
-                } catch {
-                  setAuthDevCode("123456");
-                }
-                setAuthLoading(false);
-                setAuthMode('register_otp');
-              }}
+              disabled={!authEmail || !agreedToTerms}
+              onClick={() => setAuthMode('register_step2')}
               className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
-                (authPhone.replace(/\D/g, '').length >= 9 && agreedToTerms && !authLoading)
+                (authEmail && agreedToTerms)
                   ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
                   : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
               }`}
             >
-              {authLoading ? 'Sending code...' : 'Get OTP Code'}
+              Next
             </button>
           )}
 
-          {authMode === 'register_otp' && (
+          {authMode === 'register_step2' && (
             <button 
-              disabled={!authOtpCode || authOtpCode.length < 4 || authLoading}
-              onClick={async () => {
-                if (!authOtpCode) return;
-                setAuthLoading(true);
-                try {
-                  const cleanDigits = authPhone.replace(/\D/g, '');
-                  const verifyRes = await verifyOtp(`+34${cleanDigits.slice(-9)}`, authOtpCode);
-                  if (verifyRes.token) {
-                    localStorage.setItem('corgi_guest_session_token', verifyRes.token);
-                  }
-                } catch {
-                  // Fallback
+              disabled={!authFullName || !authPassword || !authConfirmPassword || authPassword !== authConfirmPassword || !agreedToTerms}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('corgi_mock_user', authFullName.toUpperCase());
+                  localStorage.removeItem('corgi_logged_out');
                 }
-                localStorage.setItem('corgi_mock_user', 'DMYTRO VYTVYTSKYI');
-                localStorage.removeItem('corgi_logged_out');
-                await refreshAuth();
+                refreshAuth();
                 setShowLoginModal(false);
-                setAuthLoading(false);
-                router.push('/loyalty');
+                setShowWelcomeModal(true);
               }}
               className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
-                (authOtpCode && authOtpCode.length >= 4 && !authLoading)
+                (authFullName && authPassword && authConfirmPassword && authPassword === authConfirmPassword && agreedToTerms)
                   ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
                   : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
               }`}
             >
-              {authLoading ? 'Verifying...' : 'Verify & Enter'}
+              Enter
             </button>
           )}
 
