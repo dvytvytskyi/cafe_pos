@@ -820,7 +820,7 @@ export default function HomePage() {
               <h2 className="text-[28px] font-bold tracking-tight leading-none text-[#FDBD38] uppercase">
                 {authMode === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'}
               </h2>
-              <span className="text-[12px] text-gray-500 font-bold uppercase tracking-wider mt-1.5">
+              <span className="text-[12px] text-gray-500 font-semibold uppercase tracking-wider mt-1.5">
                 {authMode === 'login' ? 'To place an order' : 'Join our club'}
               </span>
             </div>
@@ -842,7 +842,7 @@ export default function HomePage() {
                     placeholder="Email"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                 </div>
                 <div className="relative">
@@ -851,7 +851,7 @@ export default function HomePage() {
                     placeholder="Password"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                   <button 
                     type="button"
@@ -880,7 +880,7 @@ export default function HomePage() {
                   placeholder="Email"
                   value={authEmail}
                   onChange={(e) => setAuthEmail(e.target.value)}
-                  className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
+                  className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                 />
               </div>
             )}
@@ -893,7 +893,7 @@ export default function HomePage() {
                     placeholder="Full name"
                     value={authFullName}
                     onChange={(e) => setAuthFullName(e.target.value)}
-                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                 </div>
                 <div className="relative">
@@ -902,7 +902,7 @@ export default function HomePage() {
                     placeholder="Password"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                   <button 
                     type="button"
@@ -927,7 +927,7 @@ export default function HomePage() {
                     placeholder="Confirm password"
                     value={authConfirmPassword}
                     onChange={(e) => setAuthConfirmPassword(e.target.value)}
-                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border-2 border-transparent focus:border-black rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400"
+                    className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                   <button 
                     type="button"
