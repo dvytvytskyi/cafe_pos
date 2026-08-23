@@ -139,30 +139,35 @@ export default function TeamPage() {
 
   return (
     <div className="h-screen overflow-y-auto bg-gray-50 pb-[120px] relative scroll-smooth">
-      {/* Compact Yellow Top Header */}
-      <div className="bg-[#FDBD38] px-6 py-3.5 sticky top-0 z-30 flex items-center justify-between shadow-xs select-none">
-        <button 
-          onClick={() => router.push('/')}
-          className="w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-xs transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
-          title="Back to Home"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
-        </button>
+      {/* Compact Yellow Top Header (matching /menu & /loyalty header styling) */}
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex flex-col w-full shadow-xs select-none">
+        <div className="max-w-[440px] mx-auto w-full flex items-center justify-between px-4 pt-4 pb-3 gap-3">
+          {/* Back button */}
+          <button 
+            onClick={() => router.push('/')}
+            className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+            title="Back to Home"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
+          </button>
 
-        <div className="flex flex-col items-center justify-center text-center">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white/80 leading-none">Careers at Corgi</span>
-          <h1 className="text-base font-extrabold text-white tracking-tight leading-tight mt-0.5">
-            Join Our Team
-          </h1>
+          {/* Central Title Block */}
+          <div className="flex-1 flex flex-col text-center items-center justify-center min-w-0 mx-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/80 leading-none">Careers at Corgi</span>
+            <h1 className="text-xl font-bold tracking-tight leading-none text-white mt-1 truncate">
+              Join Our Team
+            </h1>
+          </div>
+
+          {/* Support / Help Icon */}
+          <button
+            onClick={() => alert("Careers Support: jobs@corgicafe.com")}
+            className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
+            title="Support"
+          >
+            <AlertCircle className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
+          </button>
         </div>
-
-        <button
-          onClick={() => alert("Careers Support: jobs@corgicafe.com")}
-          className="w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-xs transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
-          title="Help"
-        >
-          <AlertCircle className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
-        </button>
       </div>
 
       {/* Main Container */}
