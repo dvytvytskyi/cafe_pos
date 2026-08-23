@@ -171,18 +171,7 @@ export default function TeamPage() {
       </div>
 
       {/* Main Container */}
-      <div className="max-w-[480px] mx-auto px-6 pt-6 flex flex-col gap-6">
-        
-        {/* Vacancies Section Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Briefcase className="w-4.5 h-4.5 text-gray-900" />
-            <h2 className="text-base font-extrabold text-gray-900 tracking-tight">Open Vacancies</h2>
-          </div>
-          <span className="bg-gray-900 text-white px-3 py-1 rounded-full text-xs font-bold">
-            {OPEN_POSITIONS.length} positions
-          </span>
-        </div>
+      <div className="max-w-[480px] mx-auto px-6 pt-5 flex flex-col gap-5">
 
         {/* Vacancies List */}
         <div className="flex flex-col gap-4">
