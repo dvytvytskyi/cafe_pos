@@ -170,7 +170,7 @@ export default function FaqPage() {
                   onClick={() => toggleFaq(faq.id)}
                   className="w-full flex items-start justify-between gap-3 text-left cursor-pointer py-1 group"
                 >
-                  <h3 className="text-sm font-bold text-gray-900 leading-snug group-hover:text-black transition-colors flex-1">
+                  <h3 className="text-sm font-semibold text-gray-900 leading-snug group-hover:text-black transition-colors flex-1">
                     {faq.question}
                   </h3>
                   <div className={`w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-gray-200' : ''}`}>
@@ -191,7 +191,7 @@ export default function FaqPage() {
         {/* Contact Support Options */}
         <div className="flex flex-col gap-4 pt-4 border-t border-gray-200/80 mt-1">
           <div className="flex flex-col gap-1">
-            <h3 className="text-base font-bold text-gray-900 leading-tight">
+            <h3 className="text-base font-semibold text-gray-900 leading-tight">
               Still have questions?
             </h3>
             <p className="text-xs text-gray-500">
@@ -200,19 +200,19 @@ export default function FaqPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            {/* WhatsApp and Telegram in 1 Row */}
+            {/* WhatsApp and Telegram in 1 Row with Neutral Background & Colored Brand Icons */}
             <div className="grid grid-cols-2 gap-3 w-full">
               {/* WhatsApp Contact Button */}
               <a
                 href="https://wa.me/34600111222?text=Hello%20Corgi%20Cafe%20Support!"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                className="bg-[#F4F4F5] hover:bg-gray-200 text-gray-900 font-semibold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/60 cursor-pointer"
               >
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 fill-[#25D366] flex-shrink-0" viewBox="0 0 24 24">
                   <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.299.434 2.503 1.185 3.463l-.776 2.836 2.905-.762c.928.618 2.038.974 3.23.974 3.181 0 5.767-2.586 5.767-5.766.001-3.18-2.585-5.766-5.543-5.766zm3.376 8.163c-.144.405-.837.774-1.17.825-.333.05-.758.077-2.227-.527-1.745-.717-2.846-2.512-2.934-2.628-.088-.117-.706-.94-.706-1.792 0-.852.441-1.272.598-1.447.157-.175.342-.219.456-.219.114 0 .228.001.327.006.104.005.244-.04.381.289.144.347.492 1.2.535 1.288.043.088.072.19.014.307-.058.117-.087.19-.175.292-.088.102-.185.228-.264.307-.088.088-.18.184-.077.36.103.176.458.756.984 1.225.677.603 1.248.79 1.424.878.176.088.278.073.38-.044.103-.117.439-.512.556-.688.117-.175.234-.146.395-.088.161.058 1.024.483 1.2.57.176.088.293.132.336.205.043.073.043.424-.101.829zM12 2C6.477 2 2 6.477 2 12c0 1.891.524 3.662 1.435 5.176L2 22l4.956-1.301A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
                 </svg>
-                <span>WhatsApp</span>
+                <span className="font-semibold text-gray-900">WhatsApp</span>
               </a>
 
               {/* Telegram Contact Button */}
@@ -220,22 +220,22 @@ export default function FaqPage() {
                 href="https://t.me/corgicafe_support"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#229ED9] hover:bg-[#1d8ec4] text-white font-bold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                className="bg-[#F4F4F5] hover:bg-gray-200 text-gray-900 font-semibold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/60 cursor-pointer"
               >
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 fill-[#229ED9] flex-shrink-0" viewBox="0 0 24 24">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .54-1.42.53-.47-.01-1.37-.26-2.05-.48-.83-.27-1.49-.42-1.43-.88.03-.24.37-.49 1.02-.74 3.99-1.74 6.66-2.89 8.01-3.45 3.81-1.59 4.6-1.87 5.12-1.88.11 0 .37.03.54.17.14.12.18.28.2.4.02.09.03.27.01.43z"/>
                 </svg>
-                <span>Telegram</span>
+                <span className="font-semibold text-gray-900">Telegram</span>
               </a>
             </div>
 
             {/* Email Contact Button */}
             <a
               href="mailto:support@corgicafe.com"
-              className="w-full bg-[#F4F4F5] hover:bg-gray-200 text-gray-900 font-bold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/60 cursor-pointer"
+              className="w-full bg-[#F4F4F5] hover:bg-gray-200 text-gray-900 font-semibold text-sm py-3.5 px-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-200/60 cursor-pointer"
             >
-              <Mail className="w-4.5 h-4.5 text-gray-700" />
-              <span>Email Support (support@corgicafe.com)</span>
+              <Mail className="w-4.5 h-4.5 text-gray-700 flex-shrink-0" />
+              <span className="font-semibold text-gray-900">Email Support (support@corgicafe.com)</span>
             </a>
           </div>
         </div>
