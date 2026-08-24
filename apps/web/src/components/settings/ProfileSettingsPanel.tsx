@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { User, Check, ChevronDown } from 'lucide-react';
+import { User, Check, ChevronDown, X, Eye, EyeOff } from 'lucide-react';
 import {
   getProfileAsync,
   updateProfileAsync,
@@ -29,9 +29,14 @@ export default function ProfileSettingsPanel() {
   const [removeAvatar, setRemoveAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Password reset modal state
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSaved, setPasswordSaved] = useState(false);
 
@@ -148,7 +153,10 @@ export default function ProfileSettingsPanel() {
       setNewPassword('');
       setConfirmPassword('');
       setPasswordSaved(true);
-      setTimeout(() => setPasswordSaved(false), 1500);
+      setTimeout(() => {
+        setPasswordSaved(false);
+        setIsResetModalOpen(false);
+      }, 1200);
     } catch (err) {
       if (err instanceof ProfileApiError && err.code === 'INVALID_CURRENT_PASSWORD') {
         setPasswordError('Incorrect current password.');
@@ -197,11 +205,24 @@ export default function ProfileSettingsPanel() {
             <h3 className="text-lg font-bold text-gray-800" data-testid="profile-display-name">
               {profile?.name ?? 'User'}
             </h3>
-            <p className="text-[13px] font-medium text-gray-500">
-              {roleLabel} • {locationLabel}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-[13px] font-medium text-gray-500">
+                {roleLabel} • {locationLabel}
+              </p>
+              <span className="text-gray-300">•</span>
+              <button 
+                type="button"
+                onClick={() => {
+                  setPasswordError(null);
+                  setIsResetModalOpen(true);
+                }}
+                className="text-[13px] font-semibold text-gray-700 hover:text-black hover:underline cursor-pointer"
+              >
+                Reset password
+              </button>
+            </div>
             {(avatarUrl || profile?.avatarUrl) && (
-              <button type="button" onClick={handleRemoveAvatar} className="text-[12px] font-bold text-red-500 self-start hover:underline">
+              <button type="button" onClick={handleRemoveAvatar} className="text-[12px] font-bold text-red-500 self-start hover:underline mt-0.5">
                 Remove photo
               </button>
             )}
@@ -332,50 +353,132 @@ export default function ProfileSettingsPanel() {
         </div>
       </div>
 
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100">Change Password</h2>
-        <div className="grid grid-cols-1 gap-4 max-w-md">
-          <input
-            type="password"
-            data-testid="profile-old-password"
-            placeholder="Current password"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-            className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-[14px] outline-none focus:ring-4 focus:ring-corgi/10 focus:border-corgi"
-          />
-          <input
-            type="password"
-            data-testid="profile-new-password"
-            placeholder="New password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-[14px] outline-none focus:ring-4 focus:ring-corgi/10 focus:border-corgi"
-          />
-          <input
-            type="password"
-            data-testid="profile-confirm-password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-[14px] outline-none focus:ring-4 focus:ring-corgi/10 focus:border-corgi"
-          />
-          {passwordError && (
-            <p className="text-sm text-red-500" role="alert" data-testid="profile-password-error">
-              {passwordError}
-            </p>
-          )}
-          <button
-            type="button"
-            data-testid="profile-password-save-btn"
-            onClick={handlePasswordSave}
-            className={`self-start px-6 py-3 text-white text-[14px] font-bold rounded-full ${
-              passwordSaved ? 'bg-green-500' : 'bg-black hover:bg-gray-800'
-            }`}
+      {/* Styled Reset Password Modal */}
+      {isResetModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setIsResetModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl flex flex-col gap-6 relative animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
           >
-            {passwordSaved ? 'Password updated!' : 'Update Password'}
-          </button>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <h3 className="text-lg font-bold text-gray-900">Reset Password</h3>
+              <button 
+                type="button"
+                onClick={() => setIsResetModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Password Inputs */}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-semibold text-gray-700">Current Password</label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showOld ? "text" : "password"}
+                    data-testid="profile-old-password"
+                    placeholder="Enter current password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-[14px] font-medium text-gray-800 outline-none focus:ring-4 focus:ring-corgi/10 focus:border-corgi pr-10 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOld(!showOld)}
+                    className="absolute right-3 text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    {showOld ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-semibold text-gray-700">New Password</label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showNew ? "text" : "password"}
+                    data-testid="profile-new-password"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-[14px] font-medium text-gray-800 outline-none focus:ring-4 focus:ring-corgi/10 focus:border-corgi pr-10 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNew(!showNew)}
+                    className="absolute right-3 text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-semibold text-gray-700">Confirm New Password</label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    data-testid="profile-confirm-password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-[14px] font-medium text-gray-800 outline-none focus:ring-4 focus:ring-corgi/10 focus:border-corgi pr-10 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-3 text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {passwordError && (
+                <p className="text-xs font-semibold text-red-500 mt-1" role="alert" data-testid="profile-password-error">
+                  {passwordError}
+                </p>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsResetModalOpen(false);
+                  setPasswordError(null);
+                }}
+                className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 text-[13px] font-bold rounded-full hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                data-testid="profile-password-save-btn"
+                onClick={handlePasswordSave}
+                className={`px-6 py-2.5 text-white text-[13px] font-bold rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  passwordSaved ? 'bg-green-500' : 'bg-black hover:bg-gray-800'
+                }`}
+              >
+                {passwordSaved ? (
+                  <>
+                    <Check size={16} strokeWidth={3} /> Updated!
+                  </>
+                ) : (
+                  'Reset Password'
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
