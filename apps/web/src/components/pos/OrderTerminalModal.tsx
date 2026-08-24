@@ -464,7 +464,7 @@ export default function OrderTerminalModal({
             onClick={() => setActiveCategory(cat.id)}
             className={`py-2 px-1 rounded-xl font-bold text-xs text-center transition-colors cursor-pointer truncate ${
               activeCategory === cat.id
-                ? 'bg-corgi text-white'
+                ? 'bg-[#EE635E] text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200/60'
             }`}
             title={cat.name}

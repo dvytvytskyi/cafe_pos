@@ -506,7 +506,7 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
 
             <button 
               onClick={() => setIsCreateOrderOpen(true)}
-              className="flex shrink-0 items-center justify-center gap-2 px-4 h-[38px] bg-corgi hover:brightness-110 text-white rounded-[10px] font-bold transition-all text-[13px] shadow-sm cursor-pointer active:scale-95"
+              className="flex shrink-0 items-center justify-center gap-2 px-4 h-[38px] bg-[#EE635E] hover:bg-[#d94f4a] text-white rounded-[10px] font-bold transition-all text-[13px] shadow-sm cursor-pointer active:scale-95"
             >
               <Plus size={16} /> <span className="whitespace-nowrap">Create Order</span>
             </button>

@@ -465,7 +465,7 @@ function CrmPageContent() {
                   type="button"
                   data-testid="crm-add-guest-btn"
                   onClick={() => { resetForm(); setIsAddOpen(true); }}
-                  className="bg-corgi hover:bg-corgi/90 text-white rounded-xl px-4 py-2.5 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer shrink-0"
+                  className="bg-[#EE635E] hover:bg-[#d94f4a] text-white rounded-xl px-4 py-2.5 text-xs font-bold flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer shrink-0"
                 >
                   <UserPlus size={14} className="stroke-[2.5px]" />
                   <span>Add</span>
