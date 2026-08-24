@@ -194,7 +194,7 @@ export default function OrdersPage() {
             />
           </div>
 
-          <h2 className="text-[24px] font-extrabold text-[#FDBD38] tracking-tight leading-tight mb-2 flex items-center justify-center gap-2">
+          <h2 className="text-[24px] font-bold text-[#FDBD38] tracking-tight leading-tight mb-2 flex items-center justify-center gap-2">
             <span>Sign in to view orders</span>
             <PawPrint className="w-5.5 h-5.5 text-[#FDBD38] fill-[#FDBD38]" />
           </h2>
@@ -265,7 +265,7 @@ export default function OrdersPage() {
             </div>
 
             {/* Title & Paws in Brand Yellow */}
-            <h3 className="text-[24px] font-extrabold text-[#FDBD38] tracking-tight leading-tight flex items-center justify-center gap-2">
+            <h3 className="text-[24px] font-bold text-[#FDBD38] tracking-tight leading-tight flex items-center justify-center gap-2">
               <span>No orders yet</span>
               <div className="flex items-center gap-1 text-[#FDBD38]">
                 <PawPrint className="w-5.5 h-5.5 text-[#FDBD38] fill-[#FDBD38]" />

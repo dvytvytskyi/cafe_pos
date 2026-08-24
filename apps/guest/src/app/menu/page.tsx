@@ -841,7 +841,7 @@ export default function MenuPage() {
                             />
                             {/* Featured / Recommended tag */}
                             {isFeaturedMenuItem(item) && (
-                              <div className="absolute top-3 left-3 bg-[#FDBD38] text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
+                              <div className="absolute top-3 left-3 bg-[#FDBD38] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
                                 <PawPrint className="w-3 h-3 text-white fill-white" />
                                 <span>{getFeaturedBadgeLabel(item) ?? 'Recommended'}</span>
                               </div>
@@ -885,7 +885,7 @@ export default function MenuPage() {
                               />
                               {/* Featured / Recommended tag */}
                               {isFeaturedMenuItem(item) && (
-                                <div className="absolute top-4 left-4 bg-[#FDBD38] text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
+                                <div className="absolute top-4 left-4 bg-[#FDBD38] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
                                   <PawPrint className="w-3 h-3 text-white fill-white" />
                                   <span>{getFeaturedBadgeLabel(item) ?? 'Recommended'}</span>
                                 </div>
