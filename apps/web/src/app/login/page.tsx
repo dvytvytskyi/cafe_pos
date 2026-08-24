@@ -2,8 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Delete, LogIn, CheckCircle2, User, Search, ArrowLeft, RefreshCw, Shield } from 'lucide-react';
+import {
+  Delete,
+  LogIn,
+  CheckCircle2,
+  MapPin,
+  Castle,
+  Church,
+  Building2,
+  Coffee,
+  Landmark,
+  ArrowLeft,
+  UserCheck,
+  Store,
+} from 'lucide-react';
 import { loginWithPinAsync, getEmployeesAsync, type Employee } from '@/lib/staff';
+import { getLocationsCachedAsync, type LocationSummary } from '@/lib/locations';
+
+const DEFAULT_LOCATIONS: Array<LocationSummary & { icon: React.ElementType }> = [
+  { id: 'gotico', name: 'Gótico', address: 'Carrer de Ferran, 12', icon: Castle },
+  { id: 'sagrada', name: 'Sagrada', address: 'Carrer de Mallorca, 401', icon: Church },
+  { id: 'muntaner', name: 'Muntaner', address: 'Carrer de Muntaner, 180', icon: Building2 },
+  { id: 'gracia', name: 'Gràcia', address: 'Carrer de Verdi, 22', icon: Coffee },
+  { id: 'arc', name: 'ARC', address: 'Passeig de Lluís Companys, 5', icon: Landmark },
+];
 
 const DEMO_STAFF: Employee[] = [
   {
@@ -21,6 +43,7 @@ const DEMO_STAFF: Employee[] = [
     avatarInitials: 'AM',
     status: 'active',
     roleName: 'Manager',
+    locationNames: ['Gótico', 'Sagrada', 'Muntaner', 'Gràcia', 'ARC'],
   },
   {
     id: 'usr_felix',
@@ -37,6 +60,7 @@ const DEMO_STAFF: Employee[] = [
     avatarInitials: 'FG',
     status: 'active',
     roleName: 'Super Admin',
+    locationNames: ['Gótico', 'Sagrada', 'Muntaner', 'Gràcia', 'ARC'],
   },
   {
     id: 'usr_alex',
@@ -53,6 +77,7 @@ const DEMO_STAFF: Employee[] = [
     avatarInitials: 'AK',
     status: 'active',
     roleName: 'Barista',
+    locationNames: ['Gótico', 'Gràcia'],
   },
   {
     id: 'usr_elena',
@@ -69,6 +94,7 @@ const DEMO_STAFF: Employee[] = [
     avatarInitials: 'ER',
     status: 'active',
     roleName: 'Chef',
+    locationNames: ['Sagrada', 'Muntaner'],
   },
   {
     id: 'usr_mark',
@@ -85,41 +111,63 @@ const DEMO_STAFF: Employee[] = [
     avatarInitials: 'MT',
     status: 'active',
     roleName: 'Waiter',
+    locationNames: ['ARC', 'Gótico'],
   },
 ];
 
 export default function LoginPage() {
+  const [locations, setLocations] = useState(DEFAULT_LOCATIONS);
   const [staffList, setStaffList] = useState<Employee[]>(DEMO_STAFF);
-  const [loadingStaff, setLoadingStaff] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Selection Flow States
+  const [selectedLocation, setSelectedLocation] = useState<LocationSummary | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<Employee | null>(null);
 
+  // PIN Login States
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    async function loadStaff() {
+    async function loadData() {
       try {
-        const data = await getEmployeesAsync();
-        if (data && data.length > 0) {
-          setStaffList(data);
+        const locs = await getLocationsCachedAsync();
+        if (locs && locs.length > 0) {
+          const merged = locs.map((l) => {
+            const match = DEFAULT_LOCATIONS.find((dl) => dl.name.toLowerCase() === l.name.toLowerCase() || dl.id === l.id);
+            return {
+              ...l,
+              icon: match?.icon || Store,
+            };
+          });
+          setLocations(merged);
         }
       } catch (err) {
-        console.warn('Could not fetch staff from API, fallback to demo list:', err);
-      } finally {
-        setLoadingStaff(false);
+        console.warn('Using default locations list:', err);
+      }
+
+      try {
+        const staff = await getEmployeesAsync();
+        if (staff && staff.length > 0) {
+          setStaffList(staff);
+        }
+      } catch (err) {
+        console.warn('Using default staff list:', err);
       }
     }
-    void loadStaff();
+    void loadData();
   }, []);
 
-  const filteredStaff = staffList.filter((s) => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return true;
-    return s.name.toLowerCase().includes(q) || (s.position || '').toLowerCase().includes(q);
-  });
+  // Filter staff by selected location
+  const availableStaff = selectedLocation
+    ? staffList.filter((s) => {
+        if (!s.locationNames || s.locationNames.length === 0) return true;
+        return s.locationNames.some(
+          (locName) => locName.toLowerCase() === selectedLocation.name.toLowerCase()
+        );
+      })
+    : staffList;
 
   const appendDigit = (digit: string) => {
     if (pin.length >= 4 || loadingLogin || success) return;
@@ -136,7 +184,7 @@ export default function LoginPage() {
   const handleSubmit = async (value = pin) => {
     const digits = value.replace(/\D/g, '');
     if (digits.length !== 4) {
-      setError('Please enter 4 digits');
+      setError('Enter 4 digits');
       return;
     }
     setLoadingLogin(true);
@@ -173,52 +221,97 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-100/80 w-full max-w-md flex flex-col items-center relative overflow-hidden"
+        className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-100/80 w-full max-w-lg flex flex-col items-center relative overflow-hidden"
       >
-        {/* Top Gradient Stripe */}
+        {/* Header Color Stripe */}
         <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#EE635E] via-[#FC8C86] to-[#EE635E]" />
 
-        {/* Header Logo */}
+        {/* Brand Logo & Title Header */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-14 h-14 rounded-2xl bg-[#EE635E]/10 p-2 flex items-center justify-center mb-3 border border-[#EE635E]/20 shadow-sm">
             <img src="/media/image.png" alt="Corgi POS Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Corgi POS</h1>
           <p className="text-xs font-semibold text-gray-500 mt-0.5">
-            {selectedStaff ? `Terminal Login for ${selectedStaff.name}` : 'Select your user profile to sign in'}
+            {!selectedLocation
+              ? 'Step 1: Select store location'
+              : !selectedStaff
+              ? `Step 2: Select user in ${selectedLocation.name}`
+              : `Step 3: Enter PIN for ${selectedStaff.name}`}
           </p>
         </div>
 
         <AnimatePresence mode="wait">
-          {!selectedStaff ? (
-            /* STEP 1: SELECT USER */
+          {/* STEP 1: SELECT LOCATION */}
+          {!selectedLocation ? (
             <motion.div
-              key="user-select-step"
+              key="step-1-location"
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -16 }}
               className="w-full flex flex-col items-center"
             >
-              {/* Search Bar */}
-              <div className="relative w-full mb-4">
-                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search staff user..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-semibold text-gray-800 outline-none focus:border-[#EE635E] focus:ring-4 focus:ring-[#EE635E]/10 transition-all placeholder:text-gray-400"
-                />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
+                {locations.map((loc) => {
+                  const IconComp = (loc as unknown as { icon?: React.ElementType }).icon || MapPin;
+                  return (
+                    <button
+                      key={loc.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedLocation(loc);
+                        setError(null);
+                      }}
+                      className="p-4 bg-gray-50 hover:bg-[#EE635E]/10 border border-gray-100 hover:border-[#EE635E]/40 rounded-2xl transition-all duration-200 cursor-pointer flex flex-col items-center text-center group active:scale-95 shadow-2xs hover:shadow-sm"
+                    >
+                      <div className="w-11 h-11 rounded-2xl bg-white text-gray-700 group-hover:bg-[#EE635E] group-hover:text-white flex items-center justify-center mb-2.5 transition-all shadow-xs group-hover:scale-110">
+                        <IconComp size={20} />
+                      </div>
+                      <span className="text-sm font-bold text-gray-900 group-hover:text-[#EE635E] transition-colors leading-tight">
+                        {loc.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          ) : !selectedStaff ? (
+            /* STEP 2: SELECT USER IN SELECTED LOCATION */
+            <motion.div
+              key="step-2-user"
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              className="w-full flex flex-col items-center"
+            >
+              {/* Location Breadcrumb Bar */}
+              <div className="w-full p-3 bg-[#EE635E]/10 border border-[#EE635E]/20 rounded-2xl flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#EE635E]">
+                  <MapPin size={14} />
+                  <span>{selectedLocation.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedLocation(null);
+                    setSelectedStaff(null);
+                    setError(null);
+                  }}
+                  className="px-3 py-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-600 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs"
+                >
+                  <ArrowLeft size={12} />
+                  <span>Change Location</span>
+                </button>
               </div>
 
               {/* Staff Grid */}
-              <div className="w-full max-h-[280px] overflow-y-auto flex flex-col gap-2 pr-1 custom-scrollbar">
-                {filteredStaff.length === 0 ? (
-                  <div className="py-8 text-center text-xs font-medium text-gray-400">
-                    No staff members found
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                {availableStaff.length === 0 ? (
+                  <div className="col-span-2 py-8 text-center text-xs font-medium text-gray-400">
+                    No staff members assigned to {selectedLocation.name}
                   </div>
                 ) : (
-                  filteredStaff.map((staff) => (
+                  availableStaff.map((staff) => (
                     <button
                       key={staff.id}
                       type="button"
@@ -227,23 +320,18 @@ export default function LoginPage() {
                         setPin('');
                         setError(null);
                       }}
-                      className="w-full p-3 bg-gray-50 hover:bg-[#EE635E]/10 border border-gray-100 hover:border-[#EE635E]/30 rounded-2xl transition-all duration-200 cursor-pointer flex items-center justify-between group text-left active:scale-[0.99]"
+                      className="p-3.5 bg-gray-50 hover:bg-[#EE635E]/10 border border-gray-100 hover:border-[#EE635E]/30 rounded-2xl transition-all duration-200 cursor-pointer flex items-center gap-3 text-left group active:scale-95 shadow-2xs hover:shadow-sm"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#EE635E]/10 text-[#EE635E] flex items-center justify-center font-bold text-sm shrink-0 border border-[#EE635E]/20 group-hover:scale-105 transition-transform">
-                          {staff.avatarInitials || staff.name.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-gray-900 group-hover:text-[#EE635E] transition-colors leading-tight">
-                            {staff.name}
-                          </span>
-                          <span className="text-xs text-gray-500 font-medium leading-tight mt-0.5">
-                            {staff.position || staff.roleName || 'Staff Member'}
-                          </span>
-                        </div>
+                      <div className="w-10 h-10 rounded-full bg-[#EE635E]/10 text-[#EE635E] group-hover:bg-[#EE635E] group-hover:text-white flex items-center justify-center font-bold text-sm shrink-0 border border-[#EE635E]/20 transition-all">
+                        {staff.avatarInitials || staff.name.slice(0, 2).toUpperCase()}
                       </div>
-                      <div className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-400 group-hover:text-[#EE635E] group-hover:border-[#EE635E] flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shrink-0">
-                        <LogIn size={14} />
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-xs font-bold text-gray-900 group-hover:text-[#EE635E] transition-colors truncate leading-tight">
+                          {staff.name}
+                        </span>
+                        <span className="text-[10px] text-gray-500 font-semibold leading-tight mt-0.5 truncate">
+                          {staff.position || staff.roleName || 'Staff'}
+                        </span>
                       </div>
                     </button>
                   ))
@@ -251,16 +339,16 @@ export default function LoginPage() {
               </div>
             </motion.div>
           ) : (
-            /* STEP 2: ENTER PIN FOR SELECTED USER */
+            /* STEP 3: ENTER PIN FOR SELECTED USER */
             <motion.div
-              key="pin-entry-step"
+              key="step-3-pin"
               initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }}
-              className="w-full flex flex-col items-center"
+              className="w-full flex flex-col items-center max-w-sm mx-auto"
             >
-              {/* Selected User Banner */}
-              <div className="w-full p-3.5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between mb-5">
+              {/* Selected User Header */}
+              <div className="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#EE635E] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
                     {selectedStaff.avatarInitials || selectedStaff.name.slice(0, 2).toUpperCase()}
@@ -270,7 +358,7 @@ export default function LoginPage() {
                       {selectedStaff.name}
                     </span>
                     <span className="text-xs text-gray-500 font-medium leading-tight mt-0.5">
-                      {selectedStaff.position || selectedStaff.roleName || 'Staff Member'}
+                      {selectedLocation.name} • {selectedStaff.position || selectedStaff.roleName || 'Staff'}
                     </span>
                   </div>
                 </div>
@@ -281,14 +369,14 @@ export default function LoginPage() {
                     setPin('');
                     setError(null);
                   }}
-                  className="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+                  className="px-2.5 py-1.5 bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs"
                 >
-                  <ArrowLeft size={13} />
+                  <ArrowLeft size={12} />
                   <span>Switch</span>
                 </button>
               </div>
 
-              {/* PIN Indicators */}
+              {/* PIN Dots */}
               <div className="flex justify-center gap-3.5 mb-5" data-testid="pin-dots">
                 {[0, 1, 2, 3].map((i) => {
                   const isFilled = pin.length > i;
@@ -307,7 +395,7 @@ export default function LoginPage() {
                 })}
               </div>
 
-              {/* Error / Success Alerts */}
+              {/* Error / Success Banner */}
               <div className="h-6 mb-3 flex items-center justify-center w-full">
                 <AnimatePresence mode="wait">
                   {error && (
@@ -376,7 +464,7 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Demo PIN Chips */}
+              {/* Quick Demo PIN Chips */}
               <div className="w-full pt-3.5 border-t border-gray-100 flex flex-col items-center gap-2">
                 <span className="text-[11px] font-semibold text-gray-400">Quick Demo PINs:</span>
                 <div className="flex gap-2">
