@@ -453,75 +453,13 @@ export default function TaskManager({
           </div>
 
           <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="ml-auto flex items-center gap-2 px-4 py-1.5 bg-[#EE635E] text-white rounded-xl hover:bg-[#d94f4a] transition-colors cursor-pointer shrink-0 text-xs font-bold"
+            onClick={() => openNewTaskModal('todo')}
+            className="ml-auto flex items-center gap-2 px-4 py-1.5 bg-[#EE635E] hover:bg-[#d94f4a] text-white rounded-xl transition-colors cursor-pointer shrink-0"
           >
             <Plus size={16} />
-            Add Task
-          </button>    <AnimatePresence>
-              {isTagFilterOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setIsTagFilterOpen(false)} />
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 w-[240px] py-1"
-                  >
-                    <button 
-                      onClick={() => { setTagFilter('All'); setIsTagFilterOpen(false); }}
-                      className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between cursor-pointer"
-                    >
-                      All Tags
-                      {tagFilter === 'All' && <CheckSquare size={14} className="text-corgi" />}
-                    </button>
-                    {tagCounts.map(tag => (
-                      <button 
-                        key={tag.label}
-                        onClick={() => { setTagFilter(tag.label); setIsTagFilterOpen(false); }}
-                        className="w-full text-left px-4 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between group cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          {tag.label}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400 text-[11px] group-hover:text-gray-600 transition-colors">{tag.count}</span>
-                          {tagFilter === tag.label && <CheckSquare size={14} className="text-corgi" />}
-                        </div>
-                      </button>
-                    ))}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div className="hidden lg:block w-px h-6 bg-gray-200 mx-1" />
-
-          {/* Settings Button */}
-          <button 
-             data-testid="task-board-settings-btn"
-             onClick={() => {
-               setIsAssigneeFilterOpen(false);
-               setIsLocationFilterOpen(false);
-               setIsTagFilterOpen(false);
-               setIsSettingsModalOpen(true);
-             }}
-             className="w-[32px] h-[32px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-900 rounded-xl border border-gray-200 transition-colors cursor-pointer"
-          >
-             <Settings size={16} />
+            <span className="text-[13px] font-bold">New Task</span>
           </button>
-
-        {/* Create New */}
-        <button 
-          onClick={() => openNewTaskModal('todo')}
-          className="ml-auto flex items-center gap-2 px-4 py-1.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors cursor-pointer shrink-0"
-        >
-          <Plus size={16} />
-          <span className="text-[13px] font-bold">New Task</span>
-        </button>
-      </div>
+        </div>
 
       {actionError && (
         <div role="alert" className="mx-4 mt-3 bg-red-50 border border-red-100 text-red-700 text-[13px] font-medium rounded-xl px-3 py-2 shrink-0">
