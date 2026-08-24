@@ -26,8 +26,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-corgi: #FDBD38;
-  --color-corgi-hover: #e5a420;
+  --color-corgi: #EE635E;
+  --color-corgi-hover: #d94f4a;
   --color-beige: #FFF2E2;
   --color-darker-beige: #FFEBD2;
   --color-ui-beige: #FAF7F3;
