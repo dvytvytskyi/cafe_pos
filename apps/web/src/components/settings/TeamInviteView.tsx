@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowLeft, ChevronDown, Mail, Settings } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Mail, MapPin, Settings } from 'lucide-react';
 import TeamPermissionsMatrix, { type TeamRole } from './TeamPermissionsMatrix';
 import type { LocationSummary } from '@/lib/locations';
 
@@ -152,20 +152,33 @@ export default function TeamInviteView({
             {teamType === 'location' && (
               <div className="flex flex-col gap-2 max-w-4xl">
                 <label className="text-[13px] font-bold text-gray-700">Locations</label>
-                <select
-                  multiple
-                  value={inviteLocationIds}
-                  onChange={(e) =>
-                    onLocationIdsChange(Array.from(e.target.selectedOptions, (o) => o.value))
-                  }
-                  className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm min-h-[88px]"
-                >
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-wrap gap-2 p-3 bg-gray-50/80 border border-gray-200 rounded-2xl">
+                  {locations.map((loc) => {
+                    const isSelected = inviteLocationIds.includes(loc.id);
+                    return (
+                      <button
+                        key={loc.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            onLocationIdsChange(inviteLocationIds.filter((id) => id !== loc.id));
+                          } else {
+                            onLocationIdsChange([...inviteLocationIds, loc.id]);
+                          }
+                        }}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                          isSelected
+                            ? 'bg-[#EE635E] text-white border-[#EE635E] shadow-sm'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        <MapPin size={13} className={isSelected ? 'text-white' : 'text-gray-400'} />
+                        <span>{loc.name}</span>
+                        {isSelected && <Check size={12} strokeWidth={3} />}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
