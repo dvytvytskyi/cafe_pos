@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { calculateReceiptTaxes, taxRatesToMap as calcMapFromRows } from '@/lib/tax-calc';
 import { taxRepository } from '@/repositories/tax.repository';
 import { TaxValidationError } from '@/lib/tax-validation';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const locationId = typeof body.locationId === 'string' ? body.locationId : 'default';
+    const locationId = typeof body.locationId === 'string' ? body.locationId : DEFAULT_LOCATION_ID;
     const items = Array.isArray(body.items) ? body.items : [];
     if (items.length === 0) {
       return NextResponse.json({ error: 'items array is required' }, { status: 400 });

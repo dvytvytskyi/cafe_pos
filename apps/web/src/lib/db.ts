@@ -29,8 +29,24 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.pgPool = pool;
 }
 
-/** Close Prisma + pg pool so Node test scripts can exit (adapter keeps pool open after $disconnect). */
+/** Close Prisma + pg pool so Node scripts can exit (adapter keeps pool open after $disconnect). */
 export async function disconnectDb(): Promise<void> {
   await prisma.$disconnect().catch(() => {});
-  await pool.end().catch(() => {});
+  if (!pool.ended) {
+    await pool.end().catch(() => {});
+  }
+}
+
+/** Run a one-shot import/script and exit cleanly (avoids hang after pool disconnect). */
+export async function runScriptAndExit(fn: () => Promise<void>): Promise<void> {
+  let exitCode = 0;
+  try {
+    await fn();
+  } catch (e) {
+    console.error(e);
+    exitCode = 1;
+  } finally {
+    await disconnectDb();
+    process.exit(exitCode);
+  }
 }

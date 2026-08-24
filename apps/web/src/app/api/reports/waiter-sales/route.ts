@@ -2,14 +2,15 @@ import { NextResponse } from 'next/server';
 import { waiterSalesService } from '@/services/waiter-sales.service';
 import { getSessionFromRequest } from '@/lib/auth';
 import { resolveScopedLocationId } from '@/lib/location-scope';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const session = getSessionFromRequest(req);
     const locationId = session
-      ? resolveScopedLocationId(session, searchParams.get('locationId') || 'default', 'default')
-      : searchParams.get('locationId') || 'default';
+      ? resolveScopedLocationId(session, searchParams.get('locationId') || DEFAULT_LOCATION_ID, DEFAULT_LOCATION_ID)
+      : searchParams.get('locationId') || DEFAULT_LOCATION_ID;
 
     const start = searchParams.get('startDate');
     const end = searchParams.get('endDate');

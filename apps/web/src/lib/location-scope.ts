@@ -1,4 +1,5 @@
 import type { RolePermissions, SessionPayload } from './auth-constants';
+import { DEFAULT_LOCATION_ID } from './constants.ts';
 
 export type LocationAccess = string[] | 'all';
 
@@ -40,7 +41,7 @@ export function assertLocationAccess(session: SessionPayload, locationId: string
 export function resolveScopedLocationId(
   session: SessionPayload | null,
   requestedLocationId: string | null | undefined,
-  fallback = 'default'
+  fallback = DEFAULT_LOCATION_ID
 ): string {
   if (!session) return requestedLocationId || fallback;
   const access = getAccessibleLocationIds(session);
@@ -60,7 +61,7 @@ export function resolveScopedLocationId(
 /** Location ids to query when client requests `all` (orders, etc.). */
 export function resolveLocationIdsForAllQuery(
   session: SessionPayload | null,
-  fallback = 'default'
+  fallback = DEFAULT_LOCATION_ID
 ): string[] | 'all' {
   if (!session) return 'all';
   const access = getAccessibleLocationIds(session);
@@ -93,11 +94,11 @@ export function isGeneralTeamMember(locationIds: string[] | undefined): boolean 
 
 export function filterStaffByTeamTab<T extends { locationIds?: string[] }>(
   employees: T[],
-  tab: 'general' | string,
-  access: LocationAccess
+  tab: 'general' | string
 ): T[] {
+  // "General (All locations)" tab — show entire team, not only HQ/unassigned staff.
   if (tab === 'general') {
-    return employees.filter((e) => isGeneralTeamMember(e.locationIds));
+    return employees;
   }
   return employees.filter(
     (e) => !isGeneralTeamMember(e.locationIds) && e.locationIds?.includes(tab)

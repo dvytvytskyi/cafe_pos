@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Calendar, Filter, Eye, AlertCircle, ShoppingBag, Bike, Store, Tablet, ChevronDown, X, BarChart3, TrendingUp, Coins, DollarSign, Percent, ReceiptText, CheckCircle2, Split, Printer } from 'lucide-react';
+import { Search, Calendar, Filter, Eye, AlertCircle, ShoppingBag, Bike, Store, Tablet, ChevronDown, X, BarChart3, TrendingUp, Coins, DollarSign, Percent, ReceiptText, CheckCircle2, Split, Printer, Archive } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ClientDateTime from '@/components/ui/ClientDateTime';
 import { Order, getOrderHistoryAsync, updateOrderAsync } from '@/lib/orders';
@@ -22,6 +22,7 @@ function HistoryPageContent() {
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(true);
+  const [guavaArchiveCount, setGuavaArchiveCount] = useState(0);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ function HistoryPageContent() {
         limit: 100,
       });
       setOrders(data.orders);
+      setGuavaArchiveCount(data.guavaArchiveCount ?? 0);
     } catch (e) {
       console.error('Failed to load order history:', e);
       if (!options?.silent) {
@@ -221,6 +223,15 @@ function HistoryPageContent() {
           <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-medium flex items-center gap-2">
             <AlertCircle size={16} />
             {loadError}
+          </div>
+        )}
+
+        {isClient && showAnalytics && guavaArchiveCount > 0 && (
+          <div className="mb-4 px-4 py-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-900 text-sm font-medium flex items-center gap-2">
+            <Archive size={16} className="shrink-0" />
+            <span>
+              Imported fiscal (Guava): <strong>{guavaArchiveCount}</strong> archived receipt{guavaArchiveCount === 1 ? '' : 's'} in database — open an order to view details.
+            </span>
           </div>
         )}
 

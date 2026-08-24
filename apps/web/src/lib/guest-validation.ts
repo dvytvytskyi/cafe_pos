@@ -4,6 +4,7 @@ import {
   type GuestLocale,
   DEFAULT_GUEST_LOCALE,
 } from './guest-constants';
+import { DEFAULT_CORGI_LOCATION_ID, isKnownGuestLocationId } from '@corgi/contracts';
 
 export class GuestValidationError extends Error {
   constructor(message: string) {
@@ -23,8 +24,9 @@ export function parseGuestLocale(value: unknown): GuestLocale {
 
 export function validateLocationId(value: unknown): string {
   const raw = typeof value === 'string' ? value.trim() : '';
-  if (!raw || raw === 'default') return 'loc-gotico';
-  return raw;
+  if (!raw || raw === 'default') return DEFAULT_CORGI_LOCATION_ID;
+  if (isKnownGuestLocationId(raw)) return raw;
+  return DEFAULT_CORGI_LOCATION_ID;
 }
 
 export function validateTableParam(value: unknown): string | undefined {

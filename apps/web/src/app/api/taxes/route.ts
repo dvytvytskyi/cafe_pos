@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { taxRepository } from '@/repositories/tax.repository';
 import { TaxValidationError } from '@/lib/tax-validation';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const locationId = searchParams.get('locationId') ?? 'default';
+    const locationId = searchParams.get('locationId') ?? DEFAULT_LOCATION_ID;
     const rates = await taxRepository.getCached(locationId);
     return NextResponse.json(rates, { status: 200 });
   } catch (error: unknown) {
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const locationId = typeof body.locationId === 'string' ? body.locationId : 'default';
+    const locationId = typeof body.locationId === 'string' ? body.locationId : DEFAULT_LOCATION_ID;
     const rates = Array.isArray(body.rates) ? body.rates : [];
     if (rates.length === 0) {
       return NextResponse.json({ error: 'rates array is required' }, { status: 400 });

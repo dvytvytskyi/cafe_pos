@@ -1,4 +1,4 @@
-export const DEFAULT_LOCATION_ID = 'default';
+import { DEFAULT_LOCATION_ID } from './constants';
 
 export interface EMenuDish {
   id: string;

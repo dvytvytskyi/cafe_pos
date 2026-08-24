@@ -23,7 +23,8 @@ import {
   type Employee,
   StaffApiError,
 } from '@/lib/staff';
-import { getLocationsAsync, type LocationSummary } from '@/lib/locations';
+import type { LocationSummary } from '@/lib/locations';
+import { CORGI_STORE_LOCATIONS } from '@/lib/corgi-locations';
 import { filterStaffByTeamTab, isGeneralTeamMember } from '@/lib/location-scope';
 import type { RolePermissions } from '@/lib/auth-constants';
 import TeamInviteView, { type TeamType } from './TeamInviteView';
@@ -75,7 +76,15 @@ function togglePermInRole(
 export default function TeamSettingsPanel() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [roles, setRoles] = useState<TeamRole[]>([]);
-  const [locations, setLocations] = useState<LocationSummary[]>([]);
+  const storeLocations = useMemo<LocationSummary[]>(
+    () =>
+      CORGI_STORE_LOCATIONS.map((loc) => ({
+        id: loc.id,
+        name: loc.shortName,
+        address: loc.address,
+      })),
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -120,11 +129,7 @@ export default function TeamSettingsPanel() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [staff, roleList, locs] = await Promise.all([
-        getEmployeesAsync(),
-        getRolesAsync(),
-        getLocationsAsync(),
-      ]);
+      const [staff, roleList] = await Promise.all([getEmployeesAsync(), getRolesAsync()]);
       setEmployees(staff);
       setRoles(
         roleList.map((r) => ({
@@ -133,7 +138,6 @@ export default function TeamSettingsPanel() {
           permissions: (r.permissions as RolePermissions) ?? {},
         }))
       );
-      setLocations(locs);
       if (!inviteRoleId && roleList[0]) setInviteRoleId(roleList[0].id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load team');
@@ -143,7 +147,8 @@ export default function TeamSettingsPanel() {
   }, [inviteRoleId]);
 
   useEffect(() => {
-    load().catch(console.error);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount refresh via shared load()
+    void load();
   }, [load]);
 
   useEffect(() => {
@@ -154,14 +159,14 @@ export default function TeamSettingsPanel() {
 
   const localeTabs = useMemo(() => {
     const tabs: { id: string; label: string }[] = [{ id: 'general', label: 'General' }];
-    for (const loc of locations) {
+    for (const loc of storeLocations) {
       tabs.push({ id: loc.id, label: loc.name });
     }
     return tabs;
-  }, [locations]);
+  }, [storeLocations]);
 
   const tabEmployees = useMemo(() => {
-    return filterStaffByTeamTab(employees, teamTab, 'all');
+    return filterStaffByTeamTab(employees, teamTab);
   }, [employees, teamTab]);
 
   const filtered = useMemo(() => {
@@ -354,7 +359,7 @@ export default function TeamSettingsPanel() {
     return (
       <TeamInviteView
         roles={roles}
-        locations={locations}
+        locations={storeLocations}
         inviteEmail={inviteEmail}
         inviteEmailError={inviteEmailError}
         inviteRoleId={inviteRoleId}
@@ -392,7 +397,7 @@ export default function TeamSettingsPanel() {
       <TeamMemberEditView
         member={member}
         roles={roles}
-        locations={locations}
+        locations={storeLocations}
         memberViewTab={memberViewTab}
         editForm={editForm}
         userPermissions={userPermissions}

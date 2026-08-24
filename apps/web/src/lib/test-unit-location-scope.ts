@@ -62,10 +62,22 @@ export async function run() {
     { id: '2', locationIds: ['eixample'] },
     { id: '3', locationIds: ['gothic'] },
   ];
-  assert.strictEqual(filterStaffByTeamTab(staff, 'general', 'all').length, 1);
-  assert.strictEqual(filterStaffByTeamTab(staff, 'eixample', 'all').length, 1);
+  assert.strictEqual(filterStaffByTeamTab(staff, 'general').length, 3);
+  assert.strictEqual(filterStaffByTeamTab(staff, 'eixample').length, 1);
+  assert.strictEqual(filterStaffByTeamTab(staff, 'gothic').length, 1);
   assert.strictEqual(isGeneralTeamMember([]), true);
   assert.strictEqual(isGeneralTeamMember(['eixample']), false);
+
+  const seededTeam = [
+    { id: 'anna', locationIds: ['loc-gotico', 'loc-sagrada'] },
+    { id: 'denis', locationIds: ['loc-gotico'] },
+    { id: 'marta', locationIds: ['loc-muntaner', 'loc-gracia'] },
+    { id: 'pau', locationIds: ['loc-arc'] },
+    { id: 'carla', locationIds: ['loc-gotico'] },
+    { id: 'albert', locationIds: ['loc-gotico', 'loc-sagrada', 'loc-muntaner', 'loc-gracia', 'loc-arc'] },
+  ];
+  assert.strictEqual(filterStaffByTeamTab(seededTeam, 'general').length, seededTeam.length);
+  assert.strictEqual(filterStaffByTeamTab(seededTeam, 'loc-gotico').length, 4);
 
   console.log('✅ test-unit-location-scope passed.');
 }

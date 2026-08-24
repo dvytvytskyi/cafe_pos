@@ -9,7 +9,6 @@ import OrderDetailsModal from '@/components/operations/OrderDetailsModal';
 import { getOrdersAsync, createOrderAsync, updateOrderAsync, updateOrderStatusAsync, completePaymentAsync, printOrderAsync, addOrderItemsAsync, Order } from '@/lib/orders';
 import { getGuestsAsync, Guest } from '@/lib/crm';
 import {
-  DEFAULT_ROOMS,
   Room,
   Table,
   Zone,
@@ -17,7 +16,6 @@ import {
   Point,
   getRoomsAsync,
   saveRoomsAsync,
-  seedDefaultLayoutAsync,
   updateTableStatusAsync,
   updateTablePatchAsync,
 } from '@/lib/tables';
@@ -94,11 +92,14 @@ export default function TablesView({
         setStaffLocationId(locationId);
         let dbRooms = await getRoomsAsync(locationId);
         if (!dbRooms || dbRooms.length === 0) {
-          dbRooms = await seedDefaultLayoutAsync(locationId);
+          setRooms([]);
+          setInitialRooms([]);
+          setActiveRoomId('');
+        } else {
+          setRooms(dbRooms);
+          setInitialRooms(dbRooms);
+          setActiveRoomId((prev) => (dbRooms.some((r) => r.id === prev) ? prev : dbRooms[0]!.id));
         }
-        setRooms(dbRooms);
-        setInitialRooms(dbRooms);
-        setActiveRoomId((prev) => (dbRooms.some((r) => r.id === prev) ? prev : dbRooms[0]!.id));
         await fetchActiveOrders(locationId);
       } catch (error) {
         console.error('Failed to load layout from DB:', error);
@@ -572,6 +573,16 @@ export default function TablesView({
           >
             ×
           </button>
+        </div>
+      )}
+      {!isLoadingLayout && rooms.length === 0 && !layoutError && (
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-gray-50 p-8 text-center gap-3">
+          <Map size={40} className="text-gray-300" />
+          <p className="text-sm font-bold text-gray-700">No floor plan for this location</p>
+          <p className="text-xs text-gray-500 font-medium max-w-sm">
+            Import tables from Guava: <span className="font-mono">npm run guava:import-all -- --seed</span>
+            or <span className="font-mono">npm run floor:import-guava -- --seed</span>
+          </p>
         </div>
       )}
       {/* Save Banner */}

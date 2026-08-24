@@ -1,4 +1,5 @@
 import { prisma } from '../lib/db.ts';
+import { DEFAULT_LOCATION_ID } from '../lib/constants.ts';
 import {
   ReputationValidationError,
   sanitizeReplyText,
@@ -28,56 +29,6 @@ export type ReviewSummary = {
   averageRating: number;
   totalReviews: number;
 };
-
-const SEED_REVIEWS: Array<{
-  source: ReviewSource;
-  rating: number;
-  authorName: string;
-  comment: string;
-  locationId: string;
-  reviewDate: Date;
-}> = [
-  {
-    source: 'GOOGLE',
-    rating: 5,
-    authorName: 'Elena Rodriguez',
-    comment: 'Absolutely love the new Corgi Cafe! The avocado toast is to die for.',
-    locationId: 'default',
-    reviewDate: new Date(Date.now() - 2 * 86400000),
-  },
-  {
-    source: 'GOOGLE',
-    rating: 4,
-    authorName: 'Mark T.',
-    comment: 'Great atmosphere and good coffee. Prices are a bit high, but quality justifies it.',
-    locationId: 'default',
-    reviewDate: new Date(Date.now() - 7 * 86400000),
-  },
-  {
-    source: 'TRIPADVISOR',
-    rating: 5,
-    authorName: 'Sophie L.',
-    comment: 'Best matcha latte in the city! The corgi mascot is adorable.',
-    locationId: 'default',
-    reviewDate: new Date(Date.now() - 3 * 86400000),
-  },
-  {
-    source: 'TRIPADVISOR',
-    rating: 3,
-    authorName: 'David Chen',
-    comment: 'Coffee was good but we had to wait 20 minutes for a table on Sunday.',
-    locationId: 'default',
-    reviewDate: new Date(Date.now() - 14 * 86400000),
-  },
-  {
-    source: 'GOOGLE',
-    rating: 1,
-    authorName: 'Browser Test Guest',
-    comment: 'Disappointed with the wait time during rush hour.',
-    locationId: 'default',
-    reviewDate: new Date(Date.now() - 1 * 86400000),
-  },
-];
 
 function mapRow(row: {
   id: string;
@@ -110,21 +61,8 @@ function mapRow(row: {
 }
 
 export class ReputationRepository {
-  async ensureSeedData(locationId = 'default'): Promise<void> {
-    const count = await prisma.customerReview.count({ where: { locationId } });
-    if (count > 0) return;
-
-    await prisma.customerReview.createMany({
-      data: SEED_REVIEWS.map((r) => ({
-        ...r,
-        externalId: `mock-${r.source.toLowerCase()}-${r.authorName.replace(/\s+/g, '-').toLowerCase()}`,
-      })),
-    });
-  }
-
   async findReviews(filters: ReviewListFilters): Promise<{ items: CustomerReviewRecord[]; total: number }> {
-    const locationId = filters.locationId ?? 'default';
-    await this.ensureSeedData(locationId);
+    const locationId = filters.locationId ?? DEFAULT_LOCATION_ID;
 
     const where: { source?: string; locationId?: string } = { locationId };
     if (filters.source) where.source = filters.source;
@@ -142,9 +80,7 @@ export class ReputationRepository {
     return { items: rows.map(mapRow), total };
   }
 
-  async getSummaries(locationId = 'default'): Promise<ReviewSummary[]> {
-    await this.ensureSeedData(locationId);
-
+  async getSummaries(locationId = DEFAULT_LOCATION_ID): Promise<ReviewSummary[]> {
     const grouped = await prisma.customerReview.groupBy({
       by: ['source'],
       where: { locationId },
@@ -215,7 +151,7 @@ export class ReputationRepository {
         rating,
         authorName,
         comment: input.comment?.trim() || null,
-        locationId: input.locationId ?? 'default',
+        locationId: input.locationId ?? DEFAULT_LOCATION_ID,
         externalId: input.externalId ?? null,
         reviewDate: input.reviewDate ?? new Date(),
       },

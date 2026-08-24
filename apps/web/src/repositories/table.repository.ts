@@ -43,6 +43,7 @@ export class TableRepository {
     seats: number | null;
     status: string;
     assignedStaffId?: string | null;
+    qrCodeUrl?: string | null;
   }): Table {
     return {
       id: dbTable.id,
@@ -55,6 +56,7 @@ export class TableRepository {
       seats: dbTable.seats || 4,
       status: dbTable.status as Table['status'],
       assignedStaffId: dbTable.assignedStaffId ?? null,
+      qrCode: dbTable.qrCodeUrl ?? undefined,
     };
   }
 
@@ -152,6 +154,10 @@ export class TableRepository {
             roomId: room.id,
             roomName: room.name,
             seats: table.seats || 4,
+            ...(table.qrCode !== undefined ? { qrCodeUrl: table.qrCode || null } : {}),
+            ...(table.assignedStaffId !== undefined
+              ? { assignedStaffId: table.assignedStaffId }
+              : {}),
           };
 
           if (existingTableIds.has(table.id)) {
@@ -236,6 +242,7 @@ export class TableRepository {
         seats: dbT.seats || 4,
         status: dbT.status as 'available' | 'occupied' | 'billed' | 'dirty',
         assignedStaffId: dbT.assignedStaffId ?? null,
+        qrCode: dbT.qrCodeUrl ?? undefined,
       });
     }
 

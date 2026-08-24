@@ -247,7 +247,7 @@ export default function GlobalFilters({
         : 'Select Date Range';
 
   return (
-    <div className={variant === 'reports' ? "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-3 z-20 relative flex-1 min-w-0 max-w-full w-full" : "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-4 z-20 relative w-full min-w-0 max-w-full"}>
+    <div className={variant === 'reports' ? "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-4 z-20 relative flex-1 min-w-0 max-w-full w-full" : "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-4 z-20 relative w-full min-w-0 max-w-full"}>
       
       {/* Presets Segmented Control (Row 1 on tablet) */}
       <div className="flex items-center gap-0.5 h-[40px] bg-gray-50/80 p-1 rounded-[12px] border border-gray-200/60 w-full xl:w-auto overflow-x-auto custom-scrollbar shrink-0">
@@ -268,7 +268,7 @@ export default function GlobalFilters({
         </div>
 
       {/* Secondary Filters (Row 2 on tablet) */}
-      <div className="flex flex-wrap items-center gap-3 w-full min-w-0 max-w-full xl:w-auto pb-1 sm:pb-0">
+      <div className="flex flex-wrap items-center gap-4 w-full min-w-0 max-w-full xl:w-auto pb-1 sm:pb-0">
         
         {/* Month Picker Button & Modal */}
         <div className="relative w-full sm:w-auto sm:min-w-[140px] sm:max-w-[180px]" ref={monthRef}>

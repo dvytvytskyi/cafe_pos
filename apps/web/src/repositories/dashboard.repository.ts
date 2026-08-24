@@ -1,4 +1,5 @@
 import { prisma } from '../lib/db.ts';
+import { DEFAULT_LOCATION_ID } from '../lib/constants.ts';
 import {
   calcGrowthPercent,
   HOURLY_SLOTS,
@@ -161,12 +162,40 @@ export class DashboardRepository {
     });
   }
 
-  private async ensureDefaultLocation() {
-    await prisma.location.upsert({
-      where: { id: 'default' },
-      update: {},
-      create: { id: 'default', name: 'Corgi Cafe' },
+  private async buildSignupByLocation(
+    locations: Array<{ id: string; name: string }>,
+    startDate: Date,
+    endDate: Date
+  ): Promise<Array<{ locationId: string; name: string; count: number }>> {
+    const newCustomers = await prisma.customer.findMany({
+      where: { createdAt: { gte: startDate, lte: endDate } },
+      select: { id: true },
     });
+    const newIds = newCustomers.map((c) => c.id);
+    const countByLocation = new Map<string, number>();
+
+    if (newIds.length > 0) {
+      const orders = await prisma.order.findMany({
+        where: { customerId: { in: newIds } },
+        orderBy: { createdAt: 'asc' },
+        select: { customerId: true, locationId: true },
+      });
+      const firstLocByCustomer = new Map<string, string>();
+      for (const order of orders) {
+        if (order.customerId && !firstLocByCustomer.has(order.customerId)) {
+          firstLocByCustomer.set(order.customerId, order.locationId);
+        }
+      }
+      for (const locId of firstLocByCustomer.values()) {
+        countByLocation.set(locId, (countByLocation.get(locId) ?? 0) + 1);
+      }
+    }
+
+    return locations.map((loc) => ({
+      locationId: loc.id,
+      name: loc.name,
+      count: countByLocation.get(loc.id) ?? 0,
+    }));
   }
 
   async getDashboard(
@@ -175,9 +204,6 @@ export class DashboardRepository {
     compare = false,
     paymentFilter: DashboardPaymentFilter = 'all'
   ): Promise<DashboardReport> {
-    await this.ensureDefaultLocation();
-    await reputationRepository.ensureSeedData('default');
-
     const [locations, orders, tables, customersInPeriod, reviewsInPeriod, openTimeCards, scheduleShifts] =
       await Promise.all([
         prisma.location.findMany({ orderBy: { name: 'asc' } }),
@@ -286,6 +312,7 @@ export class DashboardRepository {
 
     const shiftRoster = this.buildShiftRoster(scheduleShifts, clockedInIds);
     const signupGrowth = compare ? calcGrowthPercent(customersInPeriod, previousCustomers) : null;
+    const signupsByLocation = await this.buildSignupByLocation(locations, startDate, endDate);
 
     const activeTablesTotal = tableStats.reduce(
       (acc, t) => ({ active: acc.active + t.active, total: acc.total + t.total }),
@@ -313,11 +340,7 @@ export class DashboardRepository {
       signups: {
         total: customersInPeriod,
         growth: signupGrowth,
-        byLocation: locations.map((loc) => ({
-          locationId: loc.id,
-          name: loc.name,
-          count: loc.id === 'default' ? customersInPeriod : 0,
-        })),
+        byLocation: signupsByLocation,
       },
       periodLabel: { start: periodStart, end: periodEnd },
     };

@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Star, CheckCircle2, MapPin, ChevronDown, CheckSquare, MessageSquare, Loader2 } from 'lucide-react';
+import { Star, CheckCircle2, MapPin, ChevronDown, CheckSquare, MessageSquare, Loader2, RefreshCw } from 'lucide-react';
 import {
   getReviewsAsync,
   replyToReviewAsync,
   formatReviewDate,
   sourceLabel,
+  getReputationSyncStatusAsync,
+  syncReputationReviewsAsync,
+  formatSyncTimestamp,
   type CustomerReview,
   type ReviewSummary,
   ReputationApiError,
@@ -86,6 +89,11 @@ export default function ReputationView() {
   const [replyText, setReplyText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [replyError, setReplyError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const [googleMode, setGoogleMode] = useState<'live' | 'mock' | 'disabled'>('disabled');
 
   const sourceFilter: ReviewSource | undefined =
     activeTab === 'google' ? 'GOOGLE' : activeTab === 'tripadvisor' ? 'TRIPADVISOR' : undefined;
@@ -98,6 +106,15 @@ export default function ReputationView() {
   useEffect(() => {
     getLocationsCachedAsync()
       .then(setLocations)
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    getReputationSyncStatusAsync()
+      .then((status) => {
+        setLastSyncedAt(status.lastSyncedAt);
+        setGoogleMode(status.googleMode);
+      })
       .catch(console.error);
   }, []);
 
@@ -135,6 +152,28 @@ export default function ReputationView() {
 
   const visible = filtered.slice(0, visibleCount);
 
+  async function handleSync() {
+    setSyncError(null);
+    setSyncMessage(null);
+    setSyncing(true);
+    try {
+      const result = await syncReputationReviewsAsync(
+        activeLocationId === 'all' ? undefined : activeLocationId
+      );
+      setLastSyncedAt(result.syncedAt);
+      setGoogleMode(result.mode);
+      setSyncMessage(
+        result.message ??
+          `Synced ${result.fetched} Google review(s): ${result.created} new, ${result.updated} updated.`
+      );
+      await load();
+    } catch (e) {
+      setSyncError(e instanceof ReputationApiError ? e.message : 'Sync failed');
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   async function handleReply(reviewId: string) {
     setReplyError(null);
     setSubmitting(true);
@@ -162,7 +201,18 @@ export default function ReputationView() {
           <p className="text-sm text-gray-500 font-medium mt-1">Manage customer feedback across all platforms.</p>
         </div>
 
-        <div className="relative z-10">
+        <div className="relative z-10 flex items-center gap-2">
+          <button
+            data-testid="reputation-sync-btn"
+            onClick={() => void handleSync()}
+            disabled={syncing}
+            className="flex items-center gap-1.5 px-3 h-[38px] rounded-xl border text-[13px] font-bold transition-colors cursor-pointer bg-corgi text-white border-corgi hover:bg-corgi/90 disabled:opacity-60"
+          >
+            {syncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+            Sync now
+          </button>
+
+          <div className="relative">
           <button
             onClick={() => setIsLocationOpen(!isLocationOpen)}
             className="flex items-center gap-1.5 px-3 h-[38px] rounded-xl border text-[13px] font-bold transition-colors cursor-pointer bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -204,8 +254,28 @@ export default function ReputationView() {
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-[12px] text-gray-500 font-medium">
+        <span data-testid="reputation-last-sync">
+          Last synced: {formatSyncTimestamp(lastSyncedAt)}
+          {googleMode === 'mock' && ' · demo/mock mode'}
+          {googleMode === 'disabled' && ' · Google sync not configured'}
+        </span>
+        <span>TripAdvisor: not available (Google only)</span>
+      </div>
+
+      {syncError && (
+        <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700 font-medium">{syncError}</div>
+      )}
+
+      {syncMessage && !syncError && (
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800 font-medium">
+          {syncMessage}
+        </div>
+      )}
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700 font-medium">{error}</div>

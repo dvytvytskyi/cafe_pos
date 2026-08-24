@@ -2,6 +2,10 @@
  * Module 4 — Fiscal integration (T4.3–T4.7)
  */
 import { prisma, disconnectDb } from './db.ts';
+import {
+  disableFiscalImmutabilityTrigger,
+  enableFiscalImmutabilityTrigger,
+} from './cleanup-test-data.ts';
 import { Queue } from 'bullmq';
 import Redis from 'ioredis';
 import { randomUUID } from 'crypto';
@@ -27,9 +31,31 @@ async function ensureFiscalImmutabilityTrigger() {
 }
 
 async function cleanup() {
-  await prisma.orderItem.deleteMany({ where: { orderId } }).catch(() => {});
-  await prisma.order.delete({ where: { id: orderId } }).catch(() => {});
-  await prisma.location.delete({ where: { id: locationId } }).catch(() => {});
+  await disableFiscalImmutabilityTrigger(prisma);
+  try {
+    await prisma.fiscalRecord.deleteMany({ where: { orderId } }).catch(() => {});
+    await prisma.orderItem.deleteMany({ where: { orderId } }).catch(() => {});
+    await prisma.order.delete({ where: { id: orderId } }).catch(() => {});
+    await prisma.location.delete({ where: { id: locationId } }).catch(() => {});
+    const fiscalTestLocs = await prisma.location.findMany({
+      where: { name: 'Fiscal Test' },
+      select: { id: true },
+    });
+    for (const loc of fiscalTestLocs) {
+      const orderIds = (
+        await prisma.order.findMany({ where: { locationId: loc.id }, select: { id: true } })
+      ).map((o) => o.id);
+      if (orderIds.length) {
+        await prisma.fiscalRecord.deleteMany({ where: { orderId: { in: orderIds } } }).catch(() => {});
+        await prisma.orderItem.deleteMany({ where: { orderId: { in: orderIds } } }).catch(() => {});
+        await prisma.order.deleteMany({ where: { id: { in: orderIds } } }).catch(() => {});
+      }
+      await prisma.table.deleteMany({ where: { locationId: loc.id } }).catch(() => {});
+      await prisma.location.delete({ where: { id: loc.id } }).catch(() => {});
+    }
+  } finally {
+    await enableFiscalImmutabilityTrigger(prisma);
+  }
 }
 
 async function main() {

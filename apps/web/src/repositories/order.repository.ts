@@ -163,9 +163,18 @@ export type OrderHistoryRecord = Order & {
 };
 
 function resolveWaiterName(
+  order: {
+    takenByStaff?: { name: string } | null;
+    assignedStaff?: { name: string } | null;
+    closedByStaff?: { name: string } | null;
+  },
   orderCreatedAt: Date,
   shifts: Array<{ openedAt: Date; closedAt: Date | null; user: { name: string } }>
 ): string | null {
+  if (order.takenByStaff?.name) return order.takenByStaff.name;
+  if (order.assignedStaff?.name) return order.assignedStaff.name;
+  if (order.closedByStaff?.name) return order.closedByStaff.name;
+
   const shift = shifts.find(
     (s) =>
       s.openedAt.getTime() <= orderCreatedAt.getTime() &&
@@ -266,6 +275,9 @@ export class OrderRepository {
           items: true,
           transactions: true,
           table: { select: { number: true } },
+          takenByStaff: { select: { name: true } },
+          assignedStaff: { select: { name: true } },
+          closedByStaff: { select: { name: true } },
         },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         skip,
@@ -306,7 +318,7 @@ export class OrderRepository {
         ...domain,
         orderNumber: row.orderNumber,
         tableNumber: row.table?.number ?? null,
-        waiterName: resolveWaiterName(row.createdAt, shifts),
+        waiterName: resolveWaiterName(row, row.createdAt, shifts),
         customerPointsEarned,
       };
     });

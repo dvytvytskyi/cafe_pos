@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, MapPin, ShoppingBag, Bike, Store, Printer, CreditCard, Trash2, SplitSquareHorizontal, Banknote, CheckCircle2, ChevronLeft, Tag, Percent, Coins, Heart, Mail, Send, Download, AlertCircle, Users, Sparkles, Gift, UserPlus, MessageSquare, Receipt, ChefHat, AlertTriangle, Search, Minus, Plus, Check, RotateCcw } from 'lucide-react';
+import { X, Clock, MapPin, ShoppingBag, Bike, Store, Printer, CreditCard, Trash2, SplitSquareHorizontal, Banknote, CheckCircle2, ChevronLeft, Tag, Percent, Coins, Heart, Mail, Send, Download, AlertCircle, Users, Sparkles, Gift, UserPlus, MessageSquare, Receipt, ChefHat, AlertTriangle, Search, Minus, Plus, Check, RotateCcw, Archive } from 'lucide-react';
 import { Order, OrderSource, OrderItem, completePaymentAsync, PayPayload, getOrderLoyaltyGuestIds, withAddedLoyaltyGuest, withRemovedLoyaltyGuest, detachOrderFromTableAsync, updateOrderItemAsync, updateOrderAsync } from '@/lib/orders';
 import { getEmployeesAsync, type Employee } from '@/lib/staff';
 import PosPaymentStaffSheet from '@/components/pos/PosPaymentStaffSheet';
@@ -12,7 +12,7 @@ import { logAuditEventAsync } from '@/lib/audit';
 import { getCurrentShiftAsync } from '@/lib/shifts';
 import { findCardByCodeAsync } from '@/lib/giftcards';
 import { DEFAULT_LOCATION_ID } from '@/lib/constants';
-import { refundOrderAsync, generateFiscalAsync, printOrderReceiptAsync } from '@/lib/fiscal';
+import { refundOrderAsync, generateFiscalAsync, printOrderReceiptAsync, getOrderFiscalRecordsAsync, type FiscalRecordSummary } from '@/lib/fiscal';
 import { getDefaultReceiptPrinterIpAsync } from '@/lib/printers';
 import { mapApiOrderToUi } from '@/lib/mappers/order.mapper';
 import { calculateReceiptTaxes } from '@/lib/tax-calc';
@@ -97,6 +97,8 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
   const [refundProcessing, setRefundProcessing] = useState(false);
   const [refundError, setRefundError] = useState<string | null>(null);
   const [fiscalInvoiceNumber, setFiscalInvoiceNumber] = useState('');
+  const [fiscalRecords, setFiscalRecords] = useState<FiscalRecordSummary[]>([]);
+  const [fiscalRecordsLoading, setFiscalRecordsLoading] = useState(false);
   const [freeTableProcessing, setFreeTableProcessing] = useState(false);
   
   // Factura Corporate Details
@@ -131,6 +133,29 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       window.removeEventListener(TAX_RATES_UPDATED_EVENT, onRatesUpdated);
     };
   }, [order?.locationId]);
+
+  useEffect(() => {
+    if (!order?.id || !isOpen) {
+      setFiscalRecords([]);
+      return;
+    }
+    let cancelled = false;
+    setFiscalRecordsLoading(true);
+    getOrderFiscalRecordsAsync(order.id)
+      .then((data) => {
+        if (!cancelled) setFiscalRecords(data.records);
+      })
+      .catch((e) => console.warn('Could not load fiscal records:', e))
+      .finally(() => {
+        if (!cancelled) setFiscalRecordsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [order?.id, isOpen]);
+
+  const liveFiscalRecords = fiscalRecords.filter((r) => !r.isGuavaArchive);
+  const guavaArchiveRecords = fiscalRecords.filter((r) => r.isGuavaArchive);
 
   const handleKitchenPrint = async () => {
     if (!order) return;
@@ -198,10 +223,20 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     const lines: string[] = [];
     if (order.paid) {
       try {
-        const result = await generateFiscalAsync(order.id, {});
-        lines.push(`Invoice: ${result.record.invoiceNumber}`);
-        lines.push(`Hash: ${result.record.hash?.slice(0, 16) || 'N/A'}...`);
-        lines.push('');
+        const archiveInvoice = guavaArchiveRecords[0]?.invoiceNumber;
+        const liveInvoice = liveFiscalRecords[0]?.invoiceNumber;
+        if (liveInvoice || archiveInvoice) {
+          const result = liveInvoice
+            ? await generateFiscalAsync(order.id, {})
+            : null;
+          lines.push(`Invoice: ${result?.record.invoiceNumber ?? liveInvoice ?? archiveInvoice}`);
+          if (result?.record.hash) {
+            lines.push(`Hash: ${result.record.hash.slice(0, 16)}...`);
+          } else if (guavaArchiveRecords[0]) {
+            lines.push('Source: Guava archive (read-only)');
+          }
+          lines.push('');
+        }
       } catch (e) {
         console.warn('Could not attach fiscal data to export:', e);
       }
@@ -310,6 +345,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       setRefundReason('');
       setRefundError(null);
       setFiscalInvoiceNumber('');
+      setFiscalRecords([]);
 
       // Auto-apply Happy Hour discount on open if eligible
       if (order && !order.paid && !order.discount) {
@@ -676,6 +712,61 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
           {order.guestCount ? (
             <div className="flex justify-between"><span className="text-gray-500">Guests</span><span className="font-semibold text-gray-900">{order.guestCount}</span></div>
           ) : null}
+        </div>
+      )}
+
+      {/* Fiscal records (live + Guava archive) */}
+      {(fiscalRecordsLoading || fiscalRecords.length > 0) && (
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-gray-900 font-bold text-sm">Fiscal / Receipt</h3>
+            {guavaArchiveRecords.length > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200">
+                <Archive size={11} />
+                Guava archive
+              </span>
+            )}
+          </div>
+
+          {fiscalRecordsLoading ? (
+            <p className="text-xs text-gray-400 font-medium">Loading fiscal records…</p>
+          ) : (
+            <div className="space-y-2">
+              {liveFiscalRecords.map((record) => (
+                <div key={record.id} className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 text-xs">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-bold text-gray-900">{record.invoiceNumber}</span>
+                    <span className="text-[10px] font-bold uppercase text-emerald-700">Live VERI*FACTU</span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-1 text-gray-600 font-medium">
+                    <span>Total</span><span className="text-right font-bold text-gray-900">€{record.total.toFixed(2)}</span>
+                    <span>Tax</span><span className="text-right">€{record.taxAmount.toFixed(2)}</span>
+                    <span>Date</span><span className="text-right">{new Date(record.createdAt).toLocaleString()}</span>
+                  </div>
+                </div>
+              ))}
+
+              {guavaArchiveRecords.map((record) => (
+                <div key={record.id} className="rounded-xl border border-amber-100 bg-amber-50/50 p-3 text-xs">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-bold text-gray-900">{record.invoiceNumber}</span>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-amber-800">
+                      <Archive size={11} />
+                      Guava archive
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-amber-700/80 font-medium mt-1">
+                    Imported historical receipt — read-only, not in live fiscal chain.
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-1 text-gray-600 font-medium">
+                    <span>Total</span><span className="text-right font-bold text-gray-900">€{record.total.toFixed(2)}</span>
+                    <span>Tax</span><span className="text-right">€{record.taxAmount.toFixed(2)}</span>
+                    <span>Date</span><span className="text-right">{new Date(record.createdAt).toLocaleString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

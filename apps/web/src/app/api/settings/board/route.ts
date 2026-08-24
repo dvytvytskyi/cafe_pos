@@ -4,6 +4,7 @@ import {
   BoardValidationError,
 } from '@/repositories/board-settings.repository';
 import type { BoardType } from '@/lib/board-settings';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 
 const VALID_TYPES: BoardType[] = ['orders', 'tasks'];
 
@@ -16,7 +17,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const type = parseType(searchParams.get('type'));
-    const locationId = searchParams.get('locationId') ?? 'default';
+    const locationId = searchParams.get('locationId') ?? DEFAULT_LOCATION_ID;
 
     if (!type) {
       return NextResponse.json(
@@ -38,7 +39,7 @@ export async function PUT(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const type = parseType(searchParams.get('type'));
-    const locationId = searchParams.get('locationId') ?? 'default';
+    const locationId = searchParams.get('locationId') ?? DEFAULT_LOCATION_ID;
 
     if (!type) {
       return NextResponse.json(

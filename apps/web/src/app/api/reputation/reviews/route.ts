@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { reputationRepository } from '@/repositories/reputation.repository';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 import { ReputationValidationError, parseReviewFilters } from '@/lib/reputation-validation';
 
 function formatReview(review: {
@@ -31,7 +32,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const filters = parseReviewFilters(searchParams);
-    const locationId = filters.locationId ?? 'default';
+    const locationId = filters.locationId ?? DEFAULT_LOCATION_ID;
     const [{ items, total }, summaries] = await Promise.all([
       reputationRepository.findReviews(filters),
       reputationRepository.getSummaries(locationId),

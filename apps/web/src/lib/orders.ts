@@ -137,6 +137,7 @@ export type OrderHistoryPage = {
   page: number;
   limit: number;
   totalPages: number;
+  guavaArchiveCount?: number;
 };
 
 export class OrderHistoryApiError extends Error {

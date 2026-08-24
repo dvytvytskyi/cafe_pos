@@ -6,20 +6,21 @@ import {
   resolveScopedLocationId,
   resolveLocationIdsForAllQuery,
 } from '@/lib/location-scope';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 import { apiErrorResponse } from '@/lib/api-route-errors';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const session = getSessionFromRequest(req);
-    const rawLocationId = searchParams.get('locationId') || 'default';
+    const rawLocationId = searchParams.get('locationId') || DEFAULT_LOCATION_ID;
     const status = searchParams.get('status') || 'active';
 
     if (status === 'active') {
       const fresh = searchParams.get('fresh') === '1';
 
       if (session && rawLocationId === 'all') {
-        const scopedIds = resolveLocationIdsForAllQuery(session, 'default');
+        const scopedIds = resolveLocationIdsForAllQuery(session, DEFAULT_LOCATION_ID);
         if (scopedIds !== 'all') {
           const batches = await Promise.all(
             scopedIds.map((id) => orderService.getActiveOrders(id, { bypassCache: fresh }))
@@ -33,7 +34,7 @@ export async function GET(req: Request) {
       }
 
       const locationId = session
-        ? resolveScopedLocationId(session, rawLocationId, 'default')
+        ? resolveScopedLocationId(session, rawLocationId, DEFAULT_LOCATION_ID)
         : rawLocationId;
       const orders = await orderService.getActiveOrders(
         locationId === 'all' ? 'all' : locationId,
@@ -44,7 +45,7 @@ export async function GET(req: Request) {
 
     const filters = parseOrderHistoryFilters(searchParams);
     if (session) {
-      filters.locationId = resolveScopedLocationId(session, filters.locationId, 'default');
+      filters.locationId = resolveScopedLocationId(session, filters.locationId, DEFAULT_LOCATION_ID);
     }
     const result = await orderService.getOrderHistory(filters);
     return NextResponse.json(result.orders, { status: 200 });
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
 
     const created = await orderService.createOrder({
       id: body.id || `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-      locationId: body.locationId || 'default',
+      locationId: body.locationId || DEFAULT_LOCATION_ID,
       source: body.source || 'dine_in',
       status: body.status || 'preparing',
       paymentStatus: body.paymentStatus || (body.paid ? 'paid' : 'unpaid'),

@@ -1,3 +1,5 @@
+import { DEFAULT_LOCATION_ID } from './constants.ts';
+
 export const ORDER_HISTORY_SOURCES = ['dine_in', 'takeaway', 'glovo', 'ubereats'] as const;
 export type OrderHistorySource = (typeof ORDER_HISTORY_SOURCES)[number];
 
@@ -67,7 +69,7 @@ export function resolveDefaultDateRange(startRaw?: string | null, endRaw?: strin
 }
 
 export function parseOrderHistoryFilters(searchParams: URLSearchParams): OrderHistoryFilters {
-  const locationId = searchParams.get('locationId')?.trim() || 'default';
+  const locationId = searchParams.get('locationId')?.trim() || DEFAULT_LOCATION_ID;
 
   const pageRaw = searchParams.get('page');
   const page = pageRaw ? Number.parseInt(pageRaw, 10) : 1;

@@ -146,6 +146,11 @@ export type DashboardReport = FinancialReport & {
 export const HOURLY_SLOTS = Array.from({ length: 15 }, (_, i) => i + 8);
 
 export const LOCATION_COORDS: Record<string, { lat: number; lng: number }> = {
+  'loc-gotico': { lat: 41.384142, lng: 2.172637 },
+  'loc-sagrada': { lat: 41.40579, lng: 2.169558 },
+  'loc-muntaner': { lat: 41.38763, lng: 2.157706 },
+  'loc-gracia': { lat: 41.403345, lng: 2.150875 },
+  'loc-arc': { lat: 41.388592, lng: 2.181591 },
   eixample: { lat: 41.38763, lng: 2.157706 },
   gotico: { lat: 41.384142, lng: 2.172637 },
   gótico: { lat: 41.384142, lng: 2.172637 },
@@ -155,7 +160,8 @@ export const LOCATION_COORDS: Record<string, { lat: number; lng: number }> = {
   'sagrada família': { lat: 41.40579, lng: 2.169558 },
   gracia: { lat: 41.403345, lng: 2.150875 },
   gràcia: { lat: 41.403345, lng: 2.150875 },
-  default: { lat: 41.3874, lng: 2.1686 },
+  muntaner: { lat: 41.38763, lng: 2.157706 },
+  default: { lat: 41.384142, lng: 2.172637 },
 };
 
 export function resolveLocationCoords(name: string, id: string): { lat: number; lng: number } {
@@ -167,7 +173,7 @@ export function resolveLocationCoords(name: string, id: string): { lat: number; 
     const nk = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (normalized.includes(nk) || id === key) return coords;
   }
-  return LOCATION_COORDS.default;
+  return LOCATION_COORDS['loc-gotico'];
 }
 
 export function formatTimeAgo(date: Date, now = new Date()): string {

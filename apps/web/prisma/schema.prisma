@@ -48,6 +48,7 @@ model User {
   avatarInitials String?
   avatarUrl      String?
   status         String?     @default("active") // "active" | "inactive"
+  guavaStaffId   String?     @unique // Guava employee UUID for import mapping
 
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -212,6 +213,7 @@ model Order {
   items         OrderItem[]
   transactions  Transaction[]
   fiscalRecords FiscalRecord[]
+  guavaOrderId  String?        @unique // Guava order UUID for idempotent historical import
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -285,6 +287,8 @@ model FiscalRecord {
   qrCodeUrl     String?  // URL для перевірки чека на сайті AEAT
   isSyncAEAT    Boolean  @default(false)
   syncError     String?  // Помилка синхронізації якщо була
+  guavaFiscalId String?  @unique // Guava receipt UUID for idempotent historical import
+  isGuavaArchive Boolean @default(false) // Historical Guava receipt — excluded from VERI*FACTU chain
   createdAt     DateTime @default(now())
 }
 
@@ -307,6 +311,7 @@ model CashShift {
   status      String    // "open" | "closed"
   openedAt    DateTime  @default(now())
   closedAt    DateTime?
+  guavaShiftId String?  @unique // Guava shift UUID for idempotent historical import
 }
 
 model AuditLog {
@@ -325,6 +330,7 @@ model AuditLog {
 
 model MerchInventory {
   id             String                   @id @default(uuid())
+  guavaMerchId   String?                  @unique // Guava menu/inventory item UUID for idempotent import
   sku            String                   @unique
   name           String
   price          Float
@@ -384,6 +390,7 @@ model InventoryTransfer {
 
 model Customer {
   id                String               @id @default(uuid())
+  guavaCustomerId   String?              @unique // Guava CRM customer UUID for idempotent import
   name              String
   phone             String               @unique
   email             String
@@ -444,47 +451,51 @@ model LoyaltyConfig {
 }
 
 model LoyaltyTransaction {
-  id         String   @id @default(uuid())
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
-  type       String   // "earn" | "spend"
-  points     Float
-  orderId    String?
-  createdAt  DateTime @default(now())
+  id               String   @id @default(uuid())
+  customerId       String
+  customer         Customer @relation(fields: [customerId], references: [id])
+  type             String   // "earn" | "spend"
+  points           Float
+  orderId          String?
+  guavaLoyaltyTxId String?  @unique // Guava loyalty tx UUID for idempotent import
+  createdAt        DateTime @default(now())
 }
 
 model DiscountPreset {
-  id        String   @id @default(uuid())
-  name      String
-  value     Float    // percentage (e.g., 50 for Staff Meal)
-  colorTag  String?  @default("bg-gray-100 text-gray-700")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  name          String
+  value         Float    // percentage (e.g., 50 for Staff Meal)
+  colorTag      String?  @default("bg-gray-100 text-gray-700")
+  guavaPresetId String?  @unique // Guava preset UUID for idempotent import
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Promotion {
-  id              String   @id @default(uuid())
-  name            String
-  discountPercent Float
-  activeDays      Int[]    // e.g. [5] for Friday, [0] for Sunday
-  startHour       Int      // 24h format
-  endHour         Int      // 24h format
-  targetItems     String[] // Array of item names affected
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               String   @id @default(uuid())
+  name             String
+  discountPercent  Float
+  activeDays       Int[]    // e.g. [5] for Friday, [0] for Sunday
+  startHour        Int      // 24h format
+  endHour          Int      // 24h format
+  targetItems      String[] // Array of item names affected
+  guavaPromotionId String?  @unique // Guava promotion UUID for idempotent import
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model GiftCard {
-  id             String    @id @default(uuid())
-  code           String    @unique
-  initialBalance Float
-  balance        Float
-  customerId     String?
-  customer       Customer? @relation(fields: [customerId], references: [id])
-  status         String    @default("active") // "active" | "redeemed" | "expired" | "disabled"
-  expiryDate     DateTime
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  code            String    @unique
+  initialBalance  Float
+  balance         Float
+  customerId      String?
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  status          String    @default("active") // "active" | "redeemed" | "expired" | "disabled"
+  expiryDate      DateTime
+  guavaGiftCardId String?   @unique // Guava gift card UUID for idempotent import
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Task {
@@ -554,15 +565,16 @@ model DailyChecklist {
 }
 
 model TimeCard {
-  id           String    @id @default(uuid())
-  userId       String
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workDate     DateTime  @db.Date
-  clockIn      DateTime
-  clockOut     DateTime?
-  totalMinutes Int       @default(0)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  guavaTimeCardId String?   @unique // Guava HR timecard UUID for idempotent import
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workDate        DateTime  @db.Date
+  clockIn         DateTime
+  clockOut        DateTime?
+  totalMinutes    Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([userId, workDate])
   @@index([workDate])
@@ -570,15 +582,16 @@ model TimeCard {
 }
 
 model ShiftSchedule {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  weekStart DateTime @db.Date
-  dayOfWeek Int      // 0=Mon … 6=Sun
-  startTime String   // HH:mm
-  endTime   String   // HH:mm
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  guavaScheduleId String?  @unique // Guava HR schedule UUID for idempotent import
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart       DateTime @db.Date
+  dayOfWeek       Int      // 0=Mon … 6=Sun
+  startTime       String   // HH:mm
+  endTime         String   // HH:mm
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@unique([userId, weekStart, dayOfWeek])
   @@index([weekStart])
@@ -592,14 +605,15 @@ model SystemSetting {
 }
 
 model Printer {
-  id         String   @id @default(cuid())
-  name       String
-  ipAddress  String
-  port       Int      @default(9100)
-  type       String
-  locationId String   @default("default")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String   @id @default(cuid())
+  guavaPrinterId String?  @unique // Guava printer UUID for idempotent import
+  name           String
+  ipAddress      String
+  port           Int      @default(9100)
+  type           String
+  locationId     String   @default("default")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([locationId])
 }
@@ -618,7 +632,8 @@ model TaxRate {
 }
 
 model CustomerReview {
-  id         String    @id @default(uuid())
+  id            String    @id @default(uuid())
+  guavaReviewId String?   @unique // Guava reputation review UUID for idempotent import
   source     String    // GOOGLE | TRIPADVISOR | YELP
   rating     Int
   authorName String

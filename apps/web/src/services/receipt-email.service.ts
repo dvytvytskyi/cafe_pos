@@ -13,7 +13,14 @@ export class ReceiptEmailService {
 
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: true, fiscalRecords: { orderBy: { createdAt: 'desc' }, take: 1 } },
+      include: {
+        items: true,
+        fiscalRecords: {
+          where: { isGuavaArchive: false },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
     });
     if (!order) throw new Error('Order not found');
 

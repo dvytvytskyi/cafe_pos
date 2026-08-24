@@ -12,6 +12,7 @@ import {
   PrinterApiError,
 } from '@/lib/printers';
 import { PRINTER_TYPES, type PrinterType } from '@/lib/printer-validation';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 
 const TYPE_STYLES: Record<PrinterType, string> = {
   kitchen: 'bg-orange-50 text-orange-700',
@@ -77,7 +78,7 @@ export default function PrintersPanel() {
         ipAddress: form.ipAddress,
         port,
         type: form.type,
-        locationId: 'default',
+        locationId: DEFAULT_LOCATION_ID,
       });
       setPrinters((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
       setFormOpen(false);

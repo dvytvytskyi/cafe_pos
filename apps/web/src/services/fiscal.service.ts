@@ -80,6 +80,7 @@ export class FiscalService {
       FROM "FiscalRecord" fr
       INNER JOIN "Order" o ON fr."orderId" = o.id
       WHERE o."locationId" = ${locationId}
+        AND fr."isGuavaArchive" = false
         AND fr."invoiceNumber" LIKE ${pattern}
       ORDER BY fr."invoiceNumber" DESC
       LIMIT 1;
@@ -101,6 +102,7 @@ export class FiscalService {
       FROM "FiscalRecord" fr
       INNER JOIN "Order" o ON fr."orderId" = o.id
       WHERE o."locationId" = ${locationId}
+        AND fr."isGuavaArchive" = false
       ORDER BY fr."invoiceNumber" DESC
       LIMIT 1;
     `;
@@ -158,7 +160,7 @@ export class FiscalService {
       if (!order.paid) throw new Error(`Cannot generate fiscal record for unpaid order ${orderId}.`);
 
       const existing = await tx.fiscalRecord.findFirst({
-        where: { orderId, recordType: 'invoice' },
+        where: { orderId, recordType: 'invoice', isGuavaArchive: false },
       });
       if (existing) return existing;
 
@@ -222,7 +224,7 @@ export class FiscalService {
       }
 
       let original = await tx.fiscalRecord.findFirst({
-        where: { orderId, recordType: 'invoice' },
+        where: { orderId, recordType: 'invoice', isGuavaArchive: false },
       });
       if (!original) {
         await tx.$queryRaw`SELECT "id" FROM "Location" WHERE "id" = ${order.locationId} FOR UPDATE;`;

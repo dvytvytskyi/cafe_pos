@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { printerRepository } from '@/repositories/printer.repository';
 import { PrinterValidationError } from '@/lib/printer-validation';
+import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const locationId = searchParams.get('locationId') ?? 'default';
+    const locationId = searchParams.get('locationId') ?? DEFAULT_LOCATION_ID;
     const printers = await printerRepository.findAll(locationId);
     return NextResponse.json(printers, { status: 200 });
   } catch (error: unknown) {

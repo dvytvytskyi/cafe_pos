@@ -15,6 +15,30 @@ export interface FiscalClientPayload {
   clientAddress?: string;
 }
 
+export interface FiscalRecordSummary {
+  id: string;
+  orderId: string;
+  recordType: string;
+  invoiceNumber: string;
+  invoiceType: string;
+  taxBase: number;
+  taxRate: number;
+  taxAmount: number;
+  total: number;
+  isGuavaArchive: boolean;
+  guavaFiscalId: string | null;
+  qrCodeUrl: string | null;
+  createdAt: string;
+}
+
+export interface OrderFiscalArchiveResponse {
+  orderId: string;
+  records: FiscalRecordSummary[];
+  live: FiscalRecordSummary[];
+  archives: FiscalRecordSummary[];
+  hasGuavaArchive: boolean;
+}
+
 export async function refundOrderAsync(orderId: string, payload: RefundPayload) {
   const res = await fetch(`/api/orders/${orderId}/refund`, {
     method: 'POST',
@@ -24,6 +48,15 @@ export async function refundOrderAsync(orderId: string, payload: RefundPayload) 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || 'Refund failed');
+  }
+  return res.json();
+}
+
+export async function getOrderFiscalRecordsAsync(orderId: string): Promise<OrderFiscalArchiveResponse> {
+  const res = await fetch(`/api/orders/${orderId}/fiscal-archive`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || 'Failed to load fiscal records');
   }
   return res.json();
 }

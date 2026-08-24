@@ -14,6 +14,7 @@ import {
   publishGoogleReviewReply,
   getLastGooglePublishCall,
   resetGooglePublishCall,
+  getGoogleReviewsSyncConfig,
 } from './reputation-google-client.ts';
 
 async function main() {
@@ -62,6 +63,14 @@ async function main() {
   assert.ok(call);
   assert.strictEqual(call!.reviewId, 'review-uuid');
   assert.strictEqual(call!.replyText, 'Thank you!');
+
+  console.log('✅ Google sync config mock mode');
+  const prevMode = process.env.GOOGLE_REVIEWS_SYNC_MODE;
+  process.env.GOOGLE_REVIEWS_SYNC_MODE = 'mock';
+  const cfg = getGoogleReviewsSyncConfig();
+  assert.strictEqual(cfg.mode, 'mock');
+  if (prevMode === undefined) delete process.env.GOOGLE_REVIEWS_SYNC_MODE;
+  else process.env.GOOGLE_REVIEWS_SYNC_MODE = prevMode;
 
   console.log('--- Module 31 Unit Tests Passed ---');
 }

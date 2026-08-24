@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import { pickPrimaryLocationId } from './staff-location.ts';
 
 function testPickPrimary() {
-  assert.equal(pickPrimaryLocationId([]), 'default');
+  assert.equal(pickPrimaryLocationId([]), 'loc-gotico');
   assert.equal(
     pickPrimaryLocationId([
       { id: 'loc-gotico', name: 'Gótico', address: null },
-      { id: 'default', name: 'Eixample', address: null },
+      { id: 'default', name: 'Legacy', address: null },
     ]),
-    'default'
+    'loc-gotico'
   );
   assert.equal(
     pickPrimaryLocationId([{ id: 'loc-gotico', name: 'Gótico', address: null }]),

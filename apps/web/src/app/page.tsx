@@ -73,7 +73,7 @@ export default function Home() {
         data-testid="home-page"
         className="bg-white rounded-3xl p-5 md:p-8 shadow-sm flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden"
       >
-        <div className="flex-shrink-0 min-w-0">
+        <div className="flex-shrink-0 min-w-0 mb-6">
           <GlobalFilters
             compare={compare}
             onCompareChange={setCompare}

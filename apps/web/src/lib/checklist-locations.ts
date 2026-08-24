@@ -1,3 +1,5 @@
+import { DEFAULT_CORGI_LOCATION_ID } from './corgi-locations.ts';
+
 export type ChecklistShiftType = 'opening' | 'closing';
 
 export type LocationKey = 'gotico' | 'sagrada' | 'eixample' | 'gracia' | 'arc' | 'main';
@@ -20,9 +22,17 @@ export const CHECKLIST_LOCATION_NAMES: Record<LocationKey, string> = {
   main: 'Main WH',
 };
 
-/** Cash-shift lookup uses default location for all checklist locales (phase 1). */
-export function locationKeyToLocationId(_key: LocationKey): string {
-  return 'default';
+const LOCATION_KEY_TO_ID: Record<LocationKey, string> = {
+  gotico: 'loc-gotico',
+  sagrada: 'loc-sagrada',
+  eixample: 'loc-muntaner',
+  gracia: 'loc-gracia',
+  arc: 'loc-arc',
+  main: DEFAULT_CORGI_LOCATION_ID,
+};
+
+export function locationKeyToLocationId(key: LocationKey): string {
+  return LOCATION_KEY_TO_ID[key];
 }
 
 export function isValidShiftType(value: string): value is ChecklistShiftType {

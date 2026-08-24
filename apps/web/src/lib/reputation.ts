@@ -27,6 +27,26 @@ export type ReviewsPage = {
   summaries: ReviewSummary[];
 };
 
+export type ReputationSyncStatus = {
+  lastSyncedAt: string | null;
+  googleConfigured: boolean;
+  googleMode: 'live' | 'mock' | 'disabled';
+  tripAdvisorAvailable: false;
+  tripAdvisorNote: string;
+};
+
+export type ReputationSyncResult = {
+  provider: 'google';
+  mode: 'live' | 'mock';
+  created: number;
+  updated: number;
+  skipped: number;
+  fetched: number;
+  syncedAt: string;
+  message?: string;
+  tripAdvisorNote: string;
+};
+
 export const REPUTATION_UPDATED_EVENT = 'corgi-reputation-updated';
 
 export class ReputationApiError extends Error {
@@ -107,6 +127,34 @@ export async function replyToReviewAsync(reviewId: string, replyText: string): P
   }
   notifyReputationUpdated();
   return mapReview(body);
+}
+
+export async function getReputationSyncStatusAsync(): Promise<ReputationSyncStatus> {
+  const res = await fetch('/api/reputation/sync');
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ReputationApiError(body.error ?? 'Failed to load sync status', res.status);
+  }
+  return body;
+}
+
+export async function syncReputationReviewsAsync(locationId?: string): Promise<ReputationSyncResult> {
+  const res = await fetch('/api/reputation/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(locationId && locationId !== 'all' ? { locationId } : {}),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ReputationApiError(body.error ?? 'Failed to sync reviews', res.status);
+  }
+  notifyReputationUpdated();
+  return body;
+}
+
+export function formatSyncTimestamp(iso: string | null): string {
+  if (!iso) return 'Never';
+  return new Date(iso).toLocaleString();
 }
 
 export function formatReviewDate(iso: string): string {

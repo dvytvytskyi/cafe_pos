@@ -171,6 +171,7 @@ export const updateTableStatus = (tableId: string, newStatus: Table['status']) =
 
 // --- Database Connected Async Operations ---
 
+/** Seeds demo layout for scripts only — not used by POS UI (import Guava floor plan instead). */
 export async function seedDefaultLayoutAsync(locationId: string): Promise<Room[]> {
   await saveRoomsAsync(locationId, DEFAULT_ROOMS);
   return DEFAULT_ROOMS;

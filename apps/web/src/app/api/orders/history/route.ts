@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { orderService } from '@/services/order.service';
+import { fiscalRepository } from '@/repositories/fiscal.repository';
 import {
   OrderHistoryValidationError,
   parseOrderHistoryFilters,
@@ -56,6 +57,13 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const filters = parseOrderHistoryFilters(searchParams);
     const result = await orderService.getOrderHistory(filters);
+    let guavaArchiveCount = 0;
+    try {
+      guavaArchiveCount = await fiscalRepository.countGuavaArchives(filters.locationId);
+    } catch (archiveError) {
+      // Stale Prisma client (missing isGuavaArchive) must not block order history.
+      console.warn('GET /api/orders/history: guava archive count skipped:', archiveError);
+    }
     return NextResponse.json(
       {
         orders: result.orders.map(formatHistoryOrder),
@@ -63,6 +71,7 @@ export async function GET(req: Request) {
         page: result.page,
         limit: result.limit,
         totalPages: result.totalPages,
+        guavaArchiveCount,
       },
       { status: 200 }
     );
