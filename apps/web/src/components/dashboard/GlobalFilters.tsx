@@ -247,7 +247,7 @@ export default function GlobalFilters({
         : 'Select Date Range';
 
   return (
-    <div className={variant === 'reports' ? "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-4 z-20 relative flex-1 min-w-0 max-w-full w-full" : "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-between gap-y-4 gap-x-4 z-20 relative w-full min-w-0 max-w-full"}>
+    <div className={variant === 'reports' ? "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-start gap-y-4 gap-x-4 z-20 relative flex-1 min-w-0 max-w-full w-full" : "flex flex-wrap xl:flex-nowrap items-start xl:items-center justify-start gap-y-4 gap-x-4 z-20 relative w-full min-w-0 max-w-full"}>
       
       {/* Presets Segmented Control (Row 1 on tablet) */}
       <div className="flex items-center gap-0.5 h-[40px] bg-gray-50/80 p-1 rounded-[12px] border border-gray-200/60 w-full xl:w-auto overflow-x-auto custom-scrollbar shrink-0">
@@ -267,8 +267,8 @@ export default function GlobalFilters({
           ))}
         </div>
 
-      {/* Secondary Filters (Row 2 on tablet) */}
-      <div className="flex flex-wrap items-center gap-4 w-full min-w-0 max-w-full xl:w-auto pb-1 sm:pb-0">
+      {/* Secondary Filters (Left aligned right next to Presets) */}
+      <div className="flex flex-wrap items-center gap-4 w-full min-w-0 max-w-full xl:w-auto pb-1 sm:pb-0 justify-start">
         
         {/* Month Picker Button & Modal */}
         <div className="relative w-full sm:w-auto sm:min-w-[140px] sm:max-w-[180px]" ref={monthRef}>
@@ -302,6 +302,7 @@ export default function GlobalFilters({
             open={monthOpen}
             onClose={() => setMonthOpen(false)}
             anchorRef={monthRef}
+            align="left"
             width={280}
             className="bg-white border border-gray-200 rounded-xl shadow-2xl p-4"
           >
@@ -361,60 +362,63 @@ export default function GlobalFilters({
           </AnchoredDropdown>
         </div>
 
-        {/* Custom Date Range Button & Modal */}
-        <div className="relative flex-shrink-0" ref={dateRef}>
-          <button 
-            onClick={() => { setDateOpen(!dateOpen); setMonthOpen(false); setPaymentOpen(false); setActivePreset('Custom'); }}
-            className={`cursor-pointer flex items-center justify-center h-[40px] w-[40px] px-0 lg:w-auto lg:px-4 lg:gap-2.5 rounded-[10px] border transition-colors shrink-0 ${
-              variant === 'reports' 
-                ? (activePreset === 'Custom' || dateOpen 
-                  ? 'bg-gray-50 border-gray-100 text-gray-900' 
-                  : 'bg-white border-gray-100 hover:border-gray-200 text-gray-700 hover:bg-gray-50')
-                : (activePreset === 'Custom' || dateOpen 
-                  ? 'bg-white border-gray-900 text-gray-900 shadow-sm' 
-                  : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50')
-            }`}
-          >
-            <Calendar className={`w-3.5 h-3.5 shrink-0 ${activePreset === 'Custom' || dateOpen ? 'text-gray-900' : 'text-gray-500'}`} />
-            <span className="hidden lg:inline text-[13px] font-semibold tracking-tight whitespace-nowrap">{buttonLabel}</span>
-          </button>
+        {/* Custom Date Range Button & Modal - ONLY APPEARS WHEN Custom PRESET IS ACTIVE */}
+        {activePreset === 'Custom' && (
+          <div className="relative flex-shrink-0 animate-fadeIn" ref={dateRef}>
+            <button 
+              onClick={() => { setDateOpen(!dateOpen); setMonthOpen(false); setPaymentOpen(false); }}
+              className={`cursor-pointer flex items-center justify-center h-[40px] px-4 gap-2.5 rounded-[10px] border transition-colors shrink-0 ${
+                variant === 'reports' 
+                  ? (dateOpen 
+                    ? 'bg-gray-50 border-gray-100 text-gray-900' 
+                    : 'bg-white border-gray-100 hover:border-gray-200 text-gray-700 hover:bg-gray-50')
+                  : (dateOpen 
+                    ? 'bg-white border-gray-900 text-gray-900 shadow-sm' 
+                    : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50')
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5 shrink-0 text-gray-900" />
+              <span className="text-[13px] font-semibold tracking-tight whitespace-nowrap">{buttonLabel}</span>
+            </button>
 
-          <AnchoredDropdown
-            open={dateOpen}
-            onClose={() => setDateOpen(false)}
-            anchorRef={dateRef}
-            width={540}
-            className="bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden max-w-[calc(100vw-16px)]"
-          >
-            <div className="flex px-5 pt-5 pb-2 gap-6 overflow-x-auto" onMouseLeave={() => setHoverDate(null)}>
-              {renderMonth(0)}
-              {renderMonth(1)}
-            </div>
-            <div className="border-t border-gray-100 p-3 px-5 flex items-center justify-between bg-gray-50/50">
-              <div className="text-[11px] font-medium text-gray-400">Select start and end date</div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRangeStart(null);
-                    setRangeEnd(null);
-                  }}
-                  className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Clear
-                </button>
-                <button
-                  type="button"
-                  onClick={applyCustomRange}
-                  disabled={!rangeStart || !rangeEnd}
-                  className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-white bg-[#1a2333] hover:bg-gray-800 rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Apply
-                </button>
+            <AnchoredDropdown
+              open={dateOpen}
+              onClose={() => setDateOpen(false)}
+              anchorRef={dateRef}
+              align="left"
+              width={540}
+              className="bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden max-w-[calc(100vw-16px)]"
+            >
+              <div className="flex px-5 pt-5 pb-2 gap-6 overflow-x-auto" onMouseLeave={() => setHoverDate(null)}>
+                {renderMonth(0)}
+                {renderMonth(1)}
               </div>
-            </div>
-          </AnchoredDropdown>
-        </div>
+              <div className="border-t border-gray-100 p-3 px-5 flex items-center justify-between bg-gray-50/50">
+                <div className="text-[11px] font-medium text-gray-400">Select start and end date</div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRangeStart(null);
+                      setRangeEnd(null);
+                    }}
+                    className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={applyCustomRange}
+                    disabled={!rangeStart || !rangeEnd}
+                    className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-white bg-[#1a2333] hover:bg-gray-800 rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </AnchoredDropdown>
+          </div>
+        )}
         
         {/* Compare Toggle */}
         {variant === 'reports' ? (
@@ -464,7 +468,7 @@ export default function GlobalFilters({
             open={paymentOpen}
             onClose={() => setPaymentOpen(false)}
             anchorRef={paymentRef}
-            align="right"
+            align="left"
             className="bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden p-1.5"
           >
             <div className="flex flex-col gap-0.5">
@@ -492,7 +496,7 @@ export default function GlobalFilters({
         </div>
         
         {children && (
-          <div className={variant === 'reports' ? "flex items-center gap-3 ml-auto" : "flex items-center gap-3"}>
+          <div className="flex items-center gap-3">
             {children}
           </div>
         )}
