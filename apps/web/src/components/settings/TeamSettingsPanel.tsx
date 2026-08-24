@@ -45,15 +45,8 @@ function initials(name: string): string {
     .join('');
 }
 
-function avatarColor(name: string): string {
-  const palette = [
-    'bg-orange-100 text-orange-700',
-    'bg-blue-100 text-blue-700',
-    'bg-purple-100 text-purple-700',
-    'bg-green-100 text-green-700',
-  ];
-  const idx = name.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % palette.length;
-  return palette[idx]!;
+function avatarColor(_name: string): string {
+  return 'bg-[#EE635E]/10 text-[#EE635E] border border-[#EE635E]/20';
 }
 
 function togglePermInRole(

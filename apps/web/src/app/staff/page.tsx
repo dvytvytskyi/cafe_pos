@@ -311,7 +311,7 @@ export default function StaffAdminPage() {
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-sm shrink-0 border border-gray-200">
+                              <div className="w-10 h-10 rounded-full bg-[#EE635E]/10 text-[#EE635E] flex items-center justify-center font-bold text-sm shrink-0 border border-[#EE635E]/20">
                                 {emp.avatarInitials}
                               </div>
                               <div>
