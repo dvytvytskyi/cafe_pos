@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { User, Check, ChevronDown, X, Eye, EyeOff, LogOut } from 'lucide-react';
+import { User, Check, ChevronDown, X, Eye, EyeOff, LogOut, Camera } from 'lucide-react';
 import {
   getProfileAsync,
   updateProfileAsync,
@@ -28,6 +28,9 @@ export default function ProfileSettingsPanel() {
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Logout modal state
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Password reset modal state
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -188,16 +191,18 @@ export default function ProfileSettingsPanel() {
         <h2 className="text-xl font-bold text-gray-900 mb-8 pb-4 border-b border-gray-100">My Profile</h2>
 
         <div className="flex items-center gap-6 mb-10 pb-8 border-b border-gray-100">
-          <div className="relative group cursor-pointer" onClick={handleUploadClick}>
-            <div className="w-20 h-20 rounded-full bg-gray-100 border-4 border-white shadow-sm flex items-center justify-center overflow-hidden">
-              <img 
-                src={avatarUrl ?? profile?.avatarUrl ?? "https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=EE635E"} 
-                alt="User Avatar" 
-                className="w-full h-full object-cover group-hover:opacity-30 transition-opacity" 
-              />
-            </div>
-            <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <span className="text-white text-[11px] font-bold tracking-wider">CHANGE</span>
+          <div 
+            className="w-20 h-20 rounded-full border-4 border-white shadow-md relative overflow-hidden group cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-[#EE635E]/30 shrink-0" 
+            onClick={handleUploadClick}
+          >
+            <img 
+              src={avatarUrl ?? profile?.avatarUrl ?? "https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=EE635E"} 
+              alt="User Avatar" 
+              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" 
+            />
+            <div className="absolute inset-0 bg-[#EE635E]/85 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out flex flex-col items-center justify-center text-white gap-0.5">
+              <Camera size={18} className="translate-y-1 group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <span className="text-[10px] font-bold tracking-wider uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">Edit</span>
             </div>
             <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
           </div>
@@ -361,14 +366,7 @@ export default function ProfileSettingsPanel() {
           <button
             type="button"
             data-testid="profile-logout-btn"
-            onClick={async () => {
-              try {
-                await fetch('/api/auth/logout', { method: 'POST' });
-              } catch (e) {
-                console.error(e);
-              }
-              window.location.href = '/login';
-            }}
+            onClick={() => setIsLogoutModalOpen(true)}
             className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 active:scale-95"
           >
             <LogOut size={16} />
@@ -376,6 +374,59 @@ export default function ProfileSettingsPanel() {
           </button>
         </div>
       </div>
+
+      {/* Log Out Confirmation Modal */}
+      {isLogoutModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setIsLogoutModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center shrink-0 border border-red-100">
+                <LogOut size={22} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Sign Out</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Are you sure you want to log out?</p>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-gray-600 mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100 leading-relaxed font-medium">
+              You will be signed out of your current session on this device and returned to the login screen.
+            </p>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsLogoutModalOpen(false)}
+                className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                data-testid="confirm-logout-btn"
+                onClick={async () => {
+                  try {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                  } catch (e) {
+                    console.error(e);
+                  }
+                  window.location.href = '/login';
+                }}
+                className="px-5 py-2.5 bg-[#EE635E] hover:bg-[#d94f4a] text-white text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer active:scale-95 flex items-center gap-1.5"
+              >
+                <LogOut size={14} />
+                <span>Yes, Log Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Styled Reset Password Modal */}
       {isResetModalOpen && (
