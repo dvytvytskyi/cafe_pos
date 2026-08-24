@@ -2,6 +2,9 @@ export * from './menu-pricing';
 
 export type GuestLocale = 'en' | 'es' | 'ca' | 'uk';
 
+/** Virtual Guest PWA category for featured / recommended dishes */
+export const GUEST_RECOMMENDED_CATEGORY_ID = '__recommended__';
+
 export interface GuestModifierOption {
   id: string;
   name: string;
@@ -21,6 +24,13 @@ export interface GuestMenuCategory {
   name: string;
 }
 
+export interface GuestMenuUpsellItem {
+  id: string;
+  name: string;
+  basePrice: number;
+  image: string;
+}
+
 export interface GuestMenuItem {
   id: string;
   categoryId: string;
@@ -32,12 +42,14 @@ export interface GuestMenuItem {
   allergens: string[];
   tags: string[];
   modifierGroups: GuestModifierGroup[];
+  recommendedItems?: GuestMenuUpsellItem[];
 }
 
 export interface GuestMenuResponse {
   categories: GuestMenuCategory[];
   items: GuestMenuItem[];
   locale: string;
+  suggestedItems?: GuestMenuUpsellItem[];
 }
 
 export interface GuestBootstrapResponse {

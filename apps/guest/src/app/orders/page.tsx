@@ -182,23 +182,23 @@ export default function OrdersPage() {
           </Link>
         </div>
 
-        {/* Logged Out Card */}
-        <div className="w-full max-w-[400px] px-6 mt-4 flex flex-col items-center text-center relative z-20">
-          <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 mb-4 shadow-sm border border-amber-200">
-            <ShoppingBag className="w-8 h-8 text-[#b08115]" />
+        {/* Logged Out Screen without frame */}
+        <div className="w-full max-w-[400px] px-6 py-14 flex flex-col items-center text-center relative z-20 animate-fadeIn">
+          <div className="w-20 h-20 rounded-full bg-[#FFFBEB] flex items-center justify-center text-[#FDBD38] mb-5 shadow-sm border border-[#FDBD38]/20">
+            <ShoppingBag className="w-10 h-10 text-[#FDBD38]" strokeWidth={1.8} />
           </div>
-          <h2 className="text-lg font-bold text-gray-950 tracking-tight mb-2">
-            Sign in to view your orders
+          <h2 className="text-[22px] font-extrabold text-gray-900 tracking-tight leading-tight mb-2">
+            Sign in to view orders 🐾
           </h2>
-          <p className="text-xs text-gray-500 max-w-[280px] leading-relaxed mb-6">
-            Enter your phone number in the Loyalty tab to track live orders and earn 5% cashback.
+          <p className="text-[14px] text-gray-500 max-w-[300px] leading-relaxed mb-8 font-normal">
+            Sign in to track your live food orders, view purchase history, and earn cashback rewards.
           </p>
           <Link
             href="/loyalty"
-            className="w-full max-w-[280px] bg-[#FDBD38] hover:bg-[#e5a420] text-white font-bold py-3.5 px-6 rounded-[16px] text-sm transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full max-w-[320px] bg-[#FDBD38] hover:bg-[#e5a420] text-white font-bold py-4 px-6 rounded-full text-[15px] transition-all active:scale-[0.98] shadow-none flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>Go to Loyalty Sign In</span>
-            <ChevronRight className="w-4 h-4 text-white" />
+            <span>Go to Sign In</span>
+            <ChevronRight className="w-5 h-5 text-white" />
           </Link>
         </div>
       </div>
@@ -245,26 +245,36 @@ export default function OrdersPage() {
             <span className="text-xs font-bold">Loading your orders...</span>
           </div>
         ) : orders.length === 0 ? (
-          <div className="w-full bg-white rounded-[24px] p-8 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col items-center text-center mt-2">
-            <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 mb-3 border border-amber-100/60">
-              <ShoppingBag className="w-7 h-7 text-[#b08115]" />
+          /* Frameless Clean Empty State with Large Buttons */
+          <div className="w-full flex flex-col items-center text-center py-12 px-2 animate-fadeIn">
+            {/* Soft Icon Badge */}
+            <div className="w-20 h-20 rounded-full bg-[#FFFBEB] flex items-center justify-center text-[#FDBD38] mb-5 shadow-sm border border-[#FDBD38]/20">
+              <ShoppingBag className="w-10 h-10 text-[#FDBD38]" strokeWidth={1.8} />
             </div>
-            <h3 className="text-base font-bold text-gray-950 mb-1">No orders yet</h3>
-            <p className="text-xs text-gray-400 max-w-[240px] mb-5 leading-relaxed">
+
+            {/* Title & Description */}
+            <h3 className="text-[22px] font-extrabold text-gray-900 tracking-tight leading-tight">
+              No orders yet 🐾
+            </h3>
+            <p className="text-[14px] text-gray-500 max-w-[300px] mt-2 mb-8 leading-relaxed font-normal">
               You haven’t placed any orders yet. Explore our menu or merch catalog!
             </p>
-            <div className="flex gap-3">
+
+            {/* Large Beautiful Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-[340px]">
               <Link
                 href="/menu"
-                className="bg-[#FDBD38] hover:bg-[#e5a420] text-white font-bold px-4 py-2.5 rounded-[12px] text-xs transition-all active:scale-[0.98]"
+                className="w-full bg-[#FDBD38] hover:bg-[#e5a420] text-white font-bold py-4 px-6 rounded-full text-[15px] transition-all active:scale-[0.98] shadow-none flex items-center justify-center gap-2 cursor-pointer"
               >
-                Browse Menu
+                <Coffee className="w-5 h-5 text-white" />
+                <span>Browse Menu</span>
               </Link>
               <Link
                 href="/shop"
-                className="bg-amber-50 hover:bg-amber-100 text-[#b08115] font-bold px-4 py-2.5 rounded-[12px] text-xs transition-all active:scale-[0.98]"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-4 px-6 rounded-full text-[15px] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
               >
-                Explore Merch
+                <ShoppingBag className="w-5 h-5 text-gray-700" />
+                <span>Explore Merch</span>
               </Link>
             </div>
           </div>

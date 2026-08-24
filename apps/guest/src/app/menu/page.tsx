@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useGuest } from '@/lib/guest-context';
 import { getMenu, createOrder, requestOtp, verifyOtp } from '@/lib/api-client';
 import type { GuestMenuResponse, GuestMenuItem } from '@corgi/contracts';
-import { calculateMenuUnitPrice, getMenuListingPriceRange, isVariantPricingGroup } from '@corgi/contracts';
-import { menuItemImage, isFeaturedMenuItem } from '@/lib/menu-image';
+import { calculateMenuUnitPrice, getMenuListingPriceRange, isVariantPricingGroup, GUEST_RECOMMENDED_CATEGORY_ID } from '@corgi/contracts';
+import { menuItemImage, isFeaturedMenuItem, getFeaturedBadgeLabel } from '@/lib/menu-image';
 import { GUEST_STORE_LOCATIONS, getGuestStoreLocation } from '@/lib/locations';
 import Link from 'next/link';
 import AllergenBadge, { AllergenSvg, ALLERGEN_CATALOG } from '@/components/AllergenIcon';
@@ -210,6 +210,18 @@ export default function MenuPage() {
       items.sort((a, b) => a.basePrice - b.basePrice);
     } else if (sortBy === 'price-desc') {
       items.sort((a, b) => b.basePrice - a.basePrice);
+    } else {
+      items.sort((a, b) => {
+        const score = (item: GuestMenuItem) => {
+          const tags = item.tags ?? [];
+          if (tags.includes('recommended')) return 0;
+          if (tags.includes('new')) return 1;
+          return 2;
+        };
+        const diff = score(a) - score(b);
+        if (diff !== 0) return diff;
+        return a.name.localeCompare(b.name);
+      });
     }
     
     return items;
@@ -287,7 +299,7 @@ export default function MenuPage() {
     if (!menu?.items?.length) return [];
     const sweetCategoryIds = new Set(
       menu.categories
-        .filter((c) => /dessert|pastry|sweet|desert/i.test(c.name))
+        .filter((c) => c.id !== GUEST_RECOMMENDED_CATEGORY_ID && /dessert|pastry|sweet|desert/i.test(c.name))
         .map((c) => c.id)
     );
     return menu.items
@@ -305,7 +317,7 @@ export default function MenuPage() {
     if (!menu?.items?.length) return [];
     const drinkCategoryIds = new Set(
       menu.categories
-        .filter((c) => /drink|coffee|tea|latte|beverage|cocktail|alcohol|smoothie/i.test(c.name))
+        .filter((c) => c.id !== GUEST_RECOMMENDED_CATEGORY_ID && /drink|coffee|tea|latte|beverage|cocktail|alcohol|smoothie/i.test(c.name))
         .map((c) => c.id)
     );
     return menu.items
@@ -318,6 +330,33 @@ export default function MenuPage() {
         image: menuItemImage(item),
       }));
   }, [menu]);
+
+  const upsellForSelectedItem = useMemo(() => {
+    if (!selectedItem) return [];
+    if (selectedItem.recommendedItems?.length) {
+      return selectedItem.recommendedItems.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.basePrice,
+        image: item.image,
+      }));
+    }
+    const cat = selectedItem.categoryName.toLowerCase();
+    const isSweet = /dessert|pastry|sweet|desert/i.test(cat);
+    const isDrink = /drink|coffee|tea|latte|beverage|cocktail|alcohol|smoothie/i.test(cat);
+    if (isSweet) return upsellDrinks.slice(0, 4);
+    if (isDrink) return upsellSweets.slice(0, 4);
+    return [...upsellDrinks.slice(0, 3), ...upsellSweets.slice(0, 3)];
+  }, [selectedItem, upsellDrinks, upsellSweets]);
+
+  const upsellModalTitle = useMemo(() => {
+    if (!selectedItem) return 'Add something extra?';
+    if (selectedItem.recommendedItems?.length) return 'Pairs well with';
+    const cat = selectedItem.categoryName.toLowerCase();
+    if (/dessert|pastry|sweet|desert/i.test(cat)) return 'Thirsty?';
+    if (/drink|coffee|tea|latte|beverage/i.test(cat)) return 'Fancy a sweet ending?';
+    return 'Fancy a sweet ending?';
+  }, [selectedItem]);
 
   useEffect(() => {
     const parent = pageContainerRef.current;
@@ -709,7 +748,10 @@ export default function MenuPage() {
             </div>
           ) : (
             menu?.categories.map((category, catIdx) => {
-              const categoryItems = filteredItems.filter(i => i.categoryId === category.id);
+              const categoryItems =
+                category.id === GUEST_RECOMMENDED_CATEGORY_ID
+                  ? filteredItems.filter((i) => (i.tags ?? []).some((t) => t === 'recommended' || t === 'new'))
+                  : filteredItems.filter((i) => i.categoryId === category.id);
               if (categoryItems.length === 0) return null;
 
               const isFirstCategory = catIdx === 0;
@@ -750,7 +792,7 @@ export default function MenuPage() {
                             {isFeaturedMenuItem(item) && (
                               <div className="absolute top-3 left-3 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm z-10">
                                 <Sparkle className="w-3 h-3 fill-current" />
-                                <span>New recipe</span>
+                                <span>{getFeaturedBadgeLabel(item) ?? 'Featured'}</span>
                               </div>
                             )}
                           </div>
