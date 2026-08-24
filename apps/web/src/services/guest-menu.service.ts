@@ -7,10 +7,11 @@ import {
   getMenuListingPrice,
   resolveVariantOptionPrice,
   resolveVariantPricingGroup,
+  GUEST_RECOMMENDED_CATEGORY_ID,
   type GuestMenuUpsellItem,
 } from '@corgi/contracts';
 
-export const GUEST_RECOMMENDED_CATEGORY_ID = '__recommended__';
+export { GUEST_RECOMMENDED_CATEGORY_ID };
 
 type DbCategory = Awaited<ReturnType<typeof menuRepository.getCategories>>[number];
 type DbItem = NonNullable<DbCategory['items']>[number];

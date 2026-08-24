@@ -22,6 +22,7 @@ import {
   Utensils,
   Store,
   PackageCheck,
+  PawPrint,
 } from 'lucide-react';
 
 // Fallback sample orders removed — show only real API data.
@@ -182,13 +183,20 @@ export default function OrdersPage() {
           </Link>
         </div>
 
-        {/* Logged Out Screen without frame */}
+        {/* Logged Out Screen with Corgi Sticker */}
         <div className="w-full max-w-[400px] px-6 py-14 flex flex-col items-center text-center relative z-20 animate-fadeIn">
-          <div className="w-20 h-20 rounded-full bg-[#FFFBEB] flex items-center justify-center text-[#FDBD38] mb-5 shadow-sm border border-[#FDBD38]/20">
-            <ShoppingBag className="w-10 h-10 text-[#FDBD38]" strokeWidth={1.8} />
+          {/* Corgi Sticker */}
+          <div className="w-28 h-28 relative mb-4 flex items-center justify-center">
+            <img 
+              src="/stickers/corgi_fiesta_1.png" 
+              alt="Corgi Fiesta Sticker" 
+              className="w-full h-full object-contain drop-shadow-md"
+            />
           </div>
-          <h2 className="text-[22px] font-extrabold text-gray-900 tracking-tight leading-tight mb-2">
-            Sign in to view orders 🐾
+
+          <h2 className="text-[24px] font-extrabold text-[#FDBD38] tracking-tight leading-tight mb-2 flex items-center justify-center gap-2">
+            <span>Sign in to view orders</span>
+            <PawPrint className="w-5.5 h-5.5 text-[#FDBD38] fill-[#FDBD38]" />
           </h2>
           <p className="text-[14px] text-gray-500 max-w-[300px] leading-relaxed mb-8 font-normal">
             Sign in to track your live food orders, view purchase history, and earn cashback rewards.
@@ -245,17 +253,26 @@ export default function OrdersPage() {
             <span className="text-xs font-bold">Loading your orders...</span>
           </div>
         ) : orders.length === 0 ? (
-          /* Frameless Clean Empty State with Large Buttons */
+          /* Frameless Clean Empty State with Corgi Sticker & Yellow Paw Title */
           <div className="w-full flex flex-col items-center text-center py-12 px-2 animate-fadeIn">
-            {/* Soft Icon Badge */}
-            <div className="w-20 h-20 rounded-full bg-[#FFFBEB] flex items-center justify-center text-[#FDBD38] mb-5 shadow-sm border border-[#FDBD38]/20">
-              <ShoppingBag className="w-10 h-10 text-[#FDBD38]" strokeWidth={1.8} />
+            {/* Corgi Sticker */}
+            <div className="w-28 h-28 relative mb-4 flex items-center justify-center">
+              <img 
+                src="/stickers/corgi_coffee1.png" 
+                alt="Corgi Coffee Sticker" 
+                className="w-full h-full object-contain drop-shadow-md"
+              />
             </div>
 
-            {/* Title & Description */}
-            <h3 className="text-[22px] font-extrabold text-gray-900 tracking-tight leading-tight">
-              No orders yet 🐾
+            {/* Title & Paws in Brand Yellow */}
+            <h3 className="text-[24px] font-extrabold text-[#FDBD38] tracking-tight leading-tight flex items-center justify-center gap-2">
+              <span>No orders yet</span>
+              <div className="flex items-center gap-1 text-[#FDBD38]">
+                <PawPrint className="w-5.5 h-5.5 text-[#FDBD38] fill-[#FDBD38]" />
+                <PawPrint className="w-4 h-4 text-[#FDBD38] fill-[#FDBD38] opacity-80 -mt-1" />
+              </div>
             </h3>
+
             <p className="text-[14px] text-gray-500 max-w-[300px] mt-2 mb-8 leading-relaxed font-normal">
               You haven’t placed any orders yet. Explore our menu or merch catalog!
             </p>

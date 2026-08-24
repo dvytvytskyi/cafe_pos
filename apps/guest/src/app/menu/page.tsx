@@ -836,7 +836,7 @@ export default function MenuPage() {
                               {isFeaturedMenuItem(item) && (
                                 <div className="absolute top-4 left-4 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm z-10">
                                   <Sparkle className="w-3 h-3 fill-current" />
-                                  <span>New recipe</span>
+                                  <span>{getFeaturedBadgeLabel(item) ?? 'Featured'}</span>
                                 </div>
                               )}
                             </div>
@@ -980,6 +980,35 @@ export default function MenuPage() {
                   </div>
                 )}
               </div>
+
+              {selectedItem?.recommendedItems && selectedItem.recommendedItems.length > 0 && (
+                <div className="flex flex-col gap-3 mt-4 border-t border-gray-100 pt-5">
+                  <h3 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider">
+                    You might also like
+                  </h3>
+                  <div className="flex gap-3 overflow-x-auto scrollbar-none pb-1">
+                    {selectedItem.recommendedItems.map((rec) => (
+                      <button
+                        key={rec.id}
+                        type="button"
+                        onClick={() => {
+                          const full = menu?.items.find((i) => i.id === rec.id);
+                          if (full) setSelectedItem(full);
+                        }}
+                        className="flex-shrink-0 w-[100px] flex flex-col gap-1.5 text-left"
+                      >
+                        <div className="w-[100px] h-[100px] rounded-xl overflow-hidden bg-gray-100">
+                          <img src={rec.image} alt={rec.name} className="w-full h-full object-cover" />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-900 uppercase line-clamp-2 leading-tight">
+                          {rec.name}
+                        </span>
+                        <span className="text-[10px] font-bold text-gray-600">{rec.basePrice.toFixed(2)}€</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Modifier Groups Section */}
               {selectedItem?.modifierGroups && selectedItem.modifierGroups.length > 0 && (
@@ -1135,7 +1164,7 @@ export default function MenuPage() {
           <div className="flex justify-between items-start w-full mb-1">
             <div className="flex flex-col">
               <h2 className="text-[22px] font-bold text-gray-900 uppercase tracking-tight leading-none">
-                Fancy a sweet ending?
+                {upsellModalTitle}
               </h2>
             </div>
             
@@ -1147,7 +1176,41 @@ export default function MenuPage() {
             </button>
           </div>
 
+          {selectedItem?.recommendedItems?.length ? (
+            <div className="flex overflow-x-auto gap-4 pb-2 px-6 -mx-6 scrollbar-none scroll-smooth">
+              {upsellForSelectedItem.map((item) => {
+                const count = getCartItemCount(item.id);
+                return (
+                  <div key={item.id} className="flex-shrink-0 w-[135px] bg-white rounded-xl overflow-hidden flex flex-col border border-gray-100">
+                    <div className="w-full aspect-square relative overflow-hidden bg-gray-100 flex-shrink-0">
+                      <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+                    </div>
+                    <div className="bg-white p-2 flex flex-col justify-between flex-grow gap-1.5">
+                      <span className="text-[10px] font-bold text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
+                        {item.name}
+                      </span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-[10px] font-bold text-gray-900">{item.price.toFixed(2)}€</span>
+                        <button
+                          onClick={() => handleAddUpsellItem(item)}
+                          className="w-5 h-5 bg-corgi text-white hover:bg-[#e5a420] rounded-md flex items-center justify-center transition-all duration-150 active:scale-90 cursor-pointer"
+                        >
+                          {count > 0 ? (
+                            <span className="text-[9px] font-bold">{count}</span>
+                          ) : (
+                            <Plus size={10} strokeWidth={3} className="text-[#1c1917]" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <>
           {/* Sweets Horizontal Scroll */}
+          {upsellSweets.length > 0 && (
           <div className="flex overflow-x-auto gap-4 pb-2 px-6 -mx-6 scrollbar-none scroll-smooth">
             {upsellSweets.map((item) => {
               const count = getCartItemCount(item.id);
@@ -1178,8 +1241,11 @@ export default function MenuPage() {
               );
             })}
           </div>
+          )}
 
           {/* Drinks Header */}
+          {upsellDrinks.length > 0 && (
+          <>
           <div className="flex flex-col mt-2">
             <h2 className="text-[22px] font-bold text-gray-900 uppercase tracking-tight leading-none">
               Add a drink.
@@ -1217,6 +1283,10 @@ export default function MenuPage() {
               );
             })}
           </div>
+          </>
+          )}
+          </>
+          )}
 
           {/* Continue button */}
           <div className="w-full pt-2">
