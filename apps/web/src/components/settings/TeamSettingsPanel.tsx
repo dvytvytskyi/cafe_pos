@@ -430,7 +430,7 @@ export default function TeamSettingsPanel() {
           <button
             type="button"
             onClick={() => setIsInviteView(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-[13px] font-bold rounded-full hover:bg-gray-800"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#EE635E] hover:bg-[#d94f4a] text-white text-[13px] font-bold rounded-full transition-all cursor-pointer"
           >
             <Plus size={16} />
             Invite Member
@@ -452,7 +452,7 @@ export default function TeamSettingsPanel() {
               onClick={() => setTeamTab(tab.id)}
               className={`px-4 py-2 rounded-full text-[13px] font-bold whitespace-nowrap transition-all ${
                 teamTab === tab.id
-                  ? 'bg-black text-white'
+                  ? 'bg-[#EE635E] text-white'
                   : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-100'
               }`}
             >

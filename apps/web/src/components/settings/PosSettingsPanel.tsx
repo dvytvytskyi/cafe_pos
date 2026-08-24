@@ -143,7 +143,7 @@ export default function PosSettingsPanel() {
             type="button"
             data-testid="pos-settings-auto-print"
             onClick={() => updateField('autoPrintReceipts', !settings.autoPrintReceipts)}
-            className={`w-11 h-6 rounded-full p-1 transition-colors relative ${settings.autoPrintReceipts ? 'bg-corgi' : 'bg-gray-200'}`}
+            className={`w-11 h-6 rounded-full p-1 transition-colors relative ${settings.autoPrintReceipts ? 'bg-[#EE635E]' : 'bg-gray-200'}`}
           >
             <div
               className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${settings.autoPrintReceipts ? 'translate-x-5' : 'translate-x-0'}`}
@@ -180,7 +180,7 @@ export default function PosSettingsPanel() {
           data-testid="pos-settings-save-btn"
           onClick={handleSave}
           className={`px-6 py-3 text-white text-[14px] font-bold rounded-full flex items-center gap-2 ${
-            isSaved ? 'bg-green-500' : 'bg-black hover:bg-gray-800'
+            isSaved ? 'bg-green-500' : 'bg-[#EE635E] hover:bg-[#d94f4a]'
           }`}
         >
           {isSaved ? (

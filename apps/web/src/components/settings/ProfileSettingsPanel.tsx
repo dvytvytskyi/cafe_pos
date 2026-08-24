@@ -339,7 +339,7 @@ export default function ProfileSettingsPanel() {
             data-testid="profile-save-btn"
             onClick={handleSave}
             className={`px-6 py-3 text-white text-[14px] font-bold rounded-full transition-all flex items-center justify-center gap-2 ${
-              isSaved ? 'bg-green-500 w-32' : 'bg-black hover:bg-gray-800 w-[140px]'
+              isSaved ? 'bg-green-500 w-32' : 'bg-[#EE635E] hover:bg-[#d94f4a] w-[140px]'
             } cursor-pointer`}
           >
             {isSaved ? (

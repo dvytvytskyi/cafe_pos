@@ -136,7 +136,7 @@ export default function TaxesPanel() {
           data-testid="taxes-save-btn"
           onClick={handleSave}
           disabled={!hasChanges}
-          className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-5 py-2.5 bg-[#EE635E] hover:bg-[#d94f4a] text-white rounded-xl text-sm font-bold shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Save Tax Rates
         </button>

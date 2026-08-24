@@ -183,7 +183,7 @@ export default function PrintersPanel() {
               setFormOpen(true);
             }}
             data-testid="printers-add-btn"
-            className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 bg-[#EE635E] hover:bg-[#d94f4a] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus size={14} /> Add Printer
           </button>

@@ -283,7 +283,7 @@ export default function TeamMemberEditView({
                   type="button"
                   disabled={saving}
                   onClick={onSave}
-                  className="px-6 py-2.5 bg-black text-white text-[14px] font-bold rounded-xl hover:bg-gray-800 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  className="px-6 py-2.5 bg-[#EE635E] hover:bg-[#d94f4a] text-white text-[14px] font-bold rounded-xl shadow-sm transition-all cursor-pointer disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Changes'}
                 </button>

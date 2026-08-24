@@ -107,7 +107,7 @@ export default function TeamInviteView({
                 className={`px-5 py-2 text-[13px] font-bold rounded-xl transition-colors duration-500 ease-in-out shadow-sm hover:shadow-md cursor-pointer flex items-center gap-2 disabled:opacity-50 ${
                   canSend
                     ? 'bg-[#FFB800] text-black hover:bg-[#E5A600]'
-                    : 'bg-black text-white hover:bg-gray-800'
+                    : 'bg-[#EE635E] hover:bg-[#d94f4a] text-white'
                 }`}
               >
                 <Mail size={16} />
