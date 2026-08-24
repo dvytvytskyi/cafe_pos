@@ -60,10 +60,13 @@ export default function HomePage() {
         if (typeof window !== 'undefined') {
           localStorage.setItem('corgi_logged_out', 'false');
           localStorage.setItem('corgi_guest_session_token', 'session_guest_token_email');
+          sessionStorage.setItem('corgi_just_registered', 'true');
+          const nameToSave = authFullName.trim() || authEmail.split('@')[0] || 'Friend';
+          localStorage.setItem('corgi_profile_name', nameToSave);
         }
         await refreshAuth();
         setShowLoginModal(false);
-        router.push('/menu');
+        router.push('/menu?welcome=true');
       } catch (err: any) {
         alert(err.message || 'Login failed');
       } finally {
@@ -93,10 +96,13 @@ export default function HomePage() {
         if (typeof window !== 'undefined') {
           localStorage.setItem('corgi_logged_out', 'false');
           localStorage.setItem('corgi_guest_session_token', 'session_guest_token_email');
+          sessionStorage.setItem('corgi_just_registered', 'true');
+          const nameToSave = authFullName.trim() || authEmail.split('@')[0] || 'Friend';
+          localStorage.setItem('corgi_profile_name', nameToSave);
         }
         await refreshAuth();
         setShowLoginModal(false);
-        router.push('/menu');
+        router.push('/menu?welcome=true');
       } catch (err: any) {
         alert(err.message || 'Registration failed');
       } finally {

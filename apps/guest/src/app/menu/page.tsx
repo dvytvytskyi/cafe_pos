@@ -249,7 +249,9 @@ export default function MenuPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      if (sessionStorage.getItem('corgi_just_registered') === 'true') {
+      const isJustRegistered = sessionStorage.getItem('corgi_just_registered') === 'true';
+      const hasWelcomeParam = window.location.search.includes('welcome=true');
+      if (isJustRegistered || hasWelcomeParam) {
         setShowWelcomeModal(true);
         sessionStorage.removeItem('corgi_just_registered');
       }

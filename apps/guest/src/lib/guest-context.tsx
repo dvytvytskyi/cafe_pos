@@ -114,16 +114,35 @@ export function GuestProvider({
       if (typeof window !== 'undefined') {
         const loggedOut = localStorage.getItem('corgi_logged_out');
         const token = localStorage.getItem('corgi_guest_session_token') || localStorage.getItem('guest_token');
+        const savedName = localStorage.getItem('corgi_profile_name');
         if (loggedOut === 'true' || !token) {
           setIsLoggedIn(false);
           setProfileName(undefined);
           return;
         }
+        if (token && savedName) {
+          setIsLoggedIn(true);
+          setProfileName(savedName);
+        }
       }
       const profile = await getProfile();
       setIsLoggedIn(true);
-      setProfileName(profile.name);
+      if (profile.name) {
+        setProfileName(profile.name);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('corgi_profile_name', profile.name);
+        }
+      }
     } catch {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('corgi_guest_session_token') || localStorage.getItem('guest_token');
+        const savedName = localStorage.getItem('corgi_profile_name');
+        if (token) {
+          setIsLoggedIn(true);
+          setProfileName(savedName || 'Friend');
+          return;
+        }
+      }
       setIsLoggedIn(false);
       setProfileName(undefined);
     }
