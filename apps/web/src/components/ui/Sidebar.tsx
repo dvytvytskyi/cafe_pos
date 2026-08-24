@@ -178,7 +178,7 @@ export default function Sidebar() {
                   className={`p-3 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center ${
                     isActive 
                       ? 'bg-[#EE635E] text-white shadow-md' 
-                      : 'text-gray-400 hover:text-black hover:bg-gray-100'
+                      : 'text-gray-400 hover:text-[#EE635E] hover:bg-[#EE635E]/10'
                   }`}
                 >
                   <Icon size={20} />
@@ -188,7 +188,7 @@ export default function Sidebar() {
                   className={`p-3 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center ${
                     isActive 
                       ? 'bg-[#EE635E] text-white shadow-md' 
-                      : 'text-gray-400 hover:text-black hover:bg-gray-100'
+                      : 'text-gray-400 hover:text-[#EE635E] hover:bg-[#EE635E]/10'
                   }`}
                 >
                   <Icon size={20} />
@@ -215,7 +215,7 @@ export default function Sidebar() {
                   href={item.href}
                   suppressHydrationWarning
                   className={`p-3 rounded-full text-gray-400 transition-colors cursor-pointer flex items-center justify-center ${
-                    isActive ? 'bg-[#EE635E] text-white shadow-md' : (isLogout ? 'hover:text-corgi hover:bg-red-50' : 'hover:text-black hover:bg-gray-100')
+                    isActive ? 'bg-[#EE635E] text-white shadow-md' : (isLogout ? 'hover:text-corgi hover:bg-red-50' : 'hover:text-[#EE635E] hover:bg-[#EE635E]/10')
                   }`}
                 >
                   <Icon size={20} />
@@ -223,7 +223,7 @@ export default function Sidebar() {
               ) : (
                 <button
                   className={`p-3 rounded-full text-gray-400 transition-colors cursor-pointer flex items-center justify-center ${
-                    isActive ? 'bg-black text-white shadow-md' : (isLogout ? 'hover:text-corgi hover:bg-red-50' : 'hover:text-black hover:bg-gray-100')
+                    isActive ? 'bg-[#EE635E] text-white shadow-md' : (isLogout ? 'hover:text-corgi hover:bg-red-50' : 'hover:text-[#EE635E] hover:bg-[#EE635E]/10')
                   }`}
                 >
                   <Icon size={20} />
