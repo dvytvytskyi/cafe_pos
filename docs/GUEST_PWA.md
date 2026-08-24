@@ -200,7 +200,7 @@ npm run test:guest:api      # HTTP smoke (потрібен running server + DB)
 3. Компоненти: `MenuCard`, `ItemModal` (modifiers), `CartSheet`, `OtpLogin`, `LoyaltyCard`
 4. Підключити `GuestProvider` + search params `locationId`, `table`
 5. Стилі з `globals.css` + brand tokens (corgi green / beige — як у BottomNav)
-6. Production: deploy `apps/guest` окремо, `GUEST_APP_ORIGINS` = prod guest URL
+6. Production: `./deploy.sh` з кореня репо (Guest + API на Hetzner, `GUEST_APP_ORIGINS` = `https://app.corgicafe.es`)
 
 ---
 

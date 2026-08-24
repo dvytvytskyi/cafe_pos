@@ -1069,88 +1069,78 @@ export default function MenuPage() {
                        <h3 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider mb-4">
                          {group.name}
                        </h3>
-                       <div className="flex flex-wrap gap-5">
-                          {group.options.map((option) => {
-                            const selectedMod = selectedModifiers.find((m) => m.optionId === option.id);
-                            const isSelected = !!selectedMod;
-                            const modQty = selectedMod?.quantity || 1;
+                       <div className="flex flex-col gap-2.5 w-full">
+                         {group.options.map((option) => {
+                           const selectedMod = selectedModifiers.find((m) => m.optionId === option.id);
+                           const isSelected = !!selectedMod;
+                           const modQty = selectedMod?.quantity || 1;
 
-                            return (
-                              <div
-                                key={option.id}
-                                className="relative flex flex-col items-center gap-2.5 transition-all text-center select-none cursor-pointer"
-                              >
-                                {/* Round Image at Top with Checkmark Badge */}
-                                <div 
-                                  onClick={() => toggleModifier(group, option)}
-                                  className="relative cursor-pointer group"
-                                >
-                                  <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white shadow-sm border border-gray-100 flex-shrink-0 flex items-center justify-center">
-                                    <img
-                                      src={menuItemImage({ image: '' })}
-                                      alt={option.name}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  {/* Top-right Checkmark Circle Badge */}
-                                  {isSelected && (
-                                    <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#FDBD38] text-white flex items-center justify-center shadow-md z-10">
-                                      <Check className="w-3.5 h-3.5" strokeWidth={3.5} />
-                                    </span>
-                                  )}
-                                </div>
+                           return (
+                             <div
+                               key={option.id}
+                               onClick={() => toggleModifier(group, option)}
+                               className={`w-full px-4 py-3 rounded-[16px] border transition-all cursor-pointer flex items-center justify-between select-none ${
+                                 isSelected 
+                                   ? 'bg-[#FFFBEB] border-[#FDBD38] text-gray-900 shadow-xs' 
+                                   : 'bg-white border-gray-200/80 text-gray-700 hover:bg-gray-50/60'
+                               }`}
+                             >
+                               {/* Left Side: Checkmark & Name */}
+                               <div className="flex items-center gap-3">
+                                 <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${
+                                   isSelected 
+                                     ? 'bg-[#FDBD38] border-[#FDBD38] text-white' 
+                                     : 'border-gray-300 bg-white'
+                                 }`}>
+                                   {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                                 </div>
+                                 <span className="text-[13px] font-bold text-gray-900">
+                                   {option.name}
+                                 </span>
+                               </div>
 
-                                {/* Title and Price */}
-                                <div className="flex flex-col gap-0.5 justify-center">
-                                  <span className="text-[12px] font-bold text-gray-900 leading-tight max-w-[95px]">
-                                    {option.name}
-                                  </span>
-                                  <span className="text-[11px] font-bold text-[#FDBD38] mt-0.5">
-                                    {isVariantPricingGroup(group)
-                                      ? `${(option.price * modQty).toFixed(2)}€`
-                                      : `+ ${(option.price * modQty).toFixed(2)}€`}
-                                  </span>
-                                </div>
+                               {/* Right Side: Price & Stepper if selected */}
+                               <div className="flex items-center gap-3" onClick={(e) => isSelected && e.stopPropagation()}>
+                                 <span className="text-[13px] font-bold text-[#FDBD38]">
+                                   {isVariantPricingGroup(group)
+                                     ? `${(option.price * modQty).toFixed(2)}€`
+                                     : `+ ${(option.price * modQty).toFixed(2)}€`}
+                                 </span>
 
-                                {/* Bottom Quantity Stepper (only if selected) - Standalone circular buttons matching Shop */}
-                                {isSelected && (
-                                  <div 
-                                    className="w-full mt-1.5 z-20 flex justify-center"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="flex items-center justify-center gap-3">
-                                      <button 
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          decrementModifierQty(group.id, option.id);
-                                        }}
-                                        className="w-8 h-8 rounded-full bg-white border border-gray-100/80 shadow-md flex items-center justify-center text-gray-700 active:scale-95 transition-transform cursor-pointer"
-                                      >
-                                        <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                      </button>
-                                      <span className="text-[13px] font-bold text-gray-900 min-w-[12px] text-center">
-                                        {modQty}
-                                      </span>
-                                      <button 
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          incrementModifierQty(group, option);
-                                        }}
-                                        className="w-8 h-8 rounded-full bg-white border border-gray-100/80 shadow-md flex items-center justify-center text-gray-700 active:scale-95 transition-transform cursor-pointer"
-                                      >
-                                        <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
+                                 {isSelected && (
+                                   <div className="flex items-center gap-2 bg-white border border-gray-200/80 rounded-full px-2 py-1 shadow-xs">
+                                     <button 
+                                       type="button"
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         decrementModifierQty(group.id, option.id);
+                                       }}
+                                       className="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 active:scale-95 transition-transform cursor-pointer"
+                                     >
+                                       <Minus className="w-3 h-3" strokeWidth={2.5} />
+                                     </button>
+                                     <span className="text-[12px] font-bold text-gray-900 min-w-[12px] text-center">
+                                       {modQty}
+                                     </span>
+                                     <button 
+                                       type="button"
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         incrementModifierQty(group, option);
+                                       }}
+                                       className="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 active:scale-95 transition-transform cursor-pointer"
+                                     >
+                                       <Plus className="w-3 h-3" strokeWidth={2.5} />
+                                     </button>
+                                   </div>
+                                 )}
+                               </div>
+                             </div>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   ))}
                 </div>
               )}
             </div>
