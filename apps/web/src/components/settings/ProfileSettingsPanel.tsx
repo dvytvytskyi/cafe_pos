@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { User, Check, ChevronDown, X, Eye, EyeOff } from 'lucide-react';
+import { User, Check, ChevronDown, X, Eye, EyeOff, LogOut } from 'lucide-react';
 import {
   getProfileAsync,
   updateProfileAsync,
@@ -189,12 +189,12 @@ export default function ProfileSettingsPanel() {
 
         <div className="flex items-center gap-6 mb-10 pb-8 border-b border-gray-100">
           <div className="relative group cursor-pointer" onClick={handleUploadClick}>
-            <div className="w-20 h-20 rounded-full bg-orange-100 border-4 border-white shadow-sm flex items-center justify-center overflow-hidden">
-              {avatarUrl || profile?.avatarUrl ? (
-                <img src={avatarUrl ?? profile?.avatarUrl ?? ''} alt="User Avatar" className="w-full h-full object-cover group-hover:opacity-30 transition-opacity" />
-              ) : (
-                <User size={32} className="text-gray-400 group-hover:opacity-0 transition-opacity" />
-              )}
+            <div className="w-20 h-20 rounded-full bg-gray-100 border-4 border-white shadow-sm flex items-center justify-center overflow-hidden">
+              <img 
+                src={avatarUrl ?? profile?.avatarUrl ?? "https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=EE635E"} 
+                alt="User Avatar" 
+                className="w-full h-full object-cover group-hover:opacity-30 transition-opacity" 
+              />
             </div>
             <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <span className="text-white text-[11px] font-bold tracking-wider">CHANGE</span>
@@ -349,6 +349,30 @@ export default function ProfileSettingsPanel() {
             ) : (
               'Save Changes'
             )}
+          </button>
+        </div>
+
+        {/* Log out Action Section */}
+        <div className="mt-12 pt-8 border-t border-gray-100 flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-bold text-gray-900">Sign Out</span>
+            <span className="text-xs text-gray-500">Log out of your current session on this device</span>
+          </div>
+          <button
+            type="button"
+            data-testid="profile-logout-btn"
+            onClick={async () => {
+              try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+              } catch (e) {
+                console.error(e);
+              }
+              window.location.href = '/login';
+            }}
+            className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 active:scale-95"
+          >
+            <LogOut size={16} />
+            <span>Log out</span>
           </button>
         </div>
       </div>
