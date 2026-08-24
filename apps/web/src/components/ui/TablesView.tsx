@@ -19,6 +19,7 @@ import {
   saveRoomsAsync,
   seedDefaultLayoutAsync,
   updateTableStatusAsync,
+  updateTablePatchAsync,
 } from '@/lib/tables';
 import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 import { getPrimaryStaffLocationId } from '@/lib/staff-location';
@@ -386,7 +387,10 @@ export default function TablesView({
   };
 
   const updateTable = (id: string, updates: Partial<Table>) => {
-    const isStatusOnly = Object.keys(updates).length === 1 && updates.status !== undefined;
+    const isStatusOnly =
+      Object.keys(updates).length === 1 && updates.status !== undefined;
+    const isStaffOnly =
+      Object.keys(updates).length === 1 && updates.assignedStaffId !== undefined;
 
     const updatedTables = tables.map(t => {
       if (t.id !== id) return t;
@@ -406,6 +410,11 @@ export default function TablesView({
       updateTableStatusAsync(id, updates.status).catch(err => {
         console.error('Failed to update table status in DB:', err);
         setLayoutError('Failed to save table status');
+      });
+    } else if (isStaffOnly) {
+      updateTablePatchAsync(id, { assignedStaffId: updates.assignedStaffId }).catch((err) => {
+        console.error('Failed to update table waiter in DB:', err);
+        setLayoutError('Failed to save table waiter');
       });
     }
   };
@@ -1600,6 +1609,7 @@ export default function TablesView({
               initialOrder={activeOrder}
               guests={crmGuests}
               locationId={staffLocationId}
+              tableAssignedStaffId={table.assignedStaffId}
               onClose={() => setActiveOrderTableId(null)}
               onAction={async (action, items, discountPercent, customerId, keepOpen, meta?: PosOrderConfirmMeta) => {
                 let newStatus = table.status;
@@ -1679,6 +1689,10 @@ export default function TablesView({
                         takenByStaffId: staffId,
                         assignedStaffId: staffId,
                       });
+                    }
+
+                    if (staffId) {
+                      updateTable(table.id, { assignedStaffId: staffId });
                     }
 
                     if (action === 'send_to_kitchen' || action === 'takeaway') {

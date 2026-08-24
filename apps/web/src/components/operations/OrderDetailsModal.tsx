@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, MapPin, ShoppingBag, Bike, Store, Printer, CreditCard, Trash2, SplitSquareHorizontal, Banknote, CheckCircle2, ChevronLeft, Tag, Percent, Coins, Heart, Mail, Send, Download, AlertCircle, Users, Sparkles, Gift, UserPlus, MessageSquare, Receipt, ChefHat, AlertTriangle, Search, Minus, Plus, Check, RotateCcw } from 'lucide-react';
-import { Order, OrderSource, OrderItem, completePaymentAsync, PayPayload, getOrderLoyaltyGuestIds, withAddedLoyaltyGuest, withRemovedLoyaltyGuest, detachOrderFromTableAsync, updateOrderItemAsync } from '@/lib/orders';
+import { Order, OrderSource, OrderItem, completePaymentAsync, PayPayload, getOrderLoyaltyGuestIds, withAddedLoyaltyGuest, withRemovedLoyaltyGuest, detachOrderFromTableAsync, updateOrderItemAsync, updateOrderAsync } from '@/lib/orders';
 import { getEmployeesAsync, type Employee } from '@/lib/staff';
 import PosPaymentStaffSheet from '@/components/pos/PosPaymentStaffSheet';
 import { getStatusAfterPreparing } from '@/lib/orders-board';
 import { getDiscountPresetsAsync, DiscountPreset } from '@/lib/discounts';
 import { Guest, getGuestsAsync, getTierCashbackRate, getLoyaltyConfigAsync, DEFAULT_LOYALTY_CONFIG, formatLoyaltyPoints, type LoyaltyConfig } from '@/lib/crm';
-import { updateTableStatusAsync, type Table } from '@/lib/tables';
+import { updateTableStatusAsync, updateTablePatchAsync, type Table } from '@/lib/tables';
 import { logAuditEventAsync } from '@/lib/audit';
 import { getCurrentShiftAsync } from '@/lib/shifts';
 import { findCardByCodeAsync } from '@/lib/giftcards';
@@ -421,6 +421,22 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
   const staffName = (id?: string | null) =>
     staffList.find((s) => s.id === id)?.name ?? (id ? id.slice(0, 8) : '—');
 
+  const handleAssignTableWaiter = async (staffId: string) => {
+    if (!order) return;
+    try {
+      const updated = await updateOrderAsync(order.id, {
+        ...order,
+        assignedStaffId: staffId,
+      });
+      parentOnUpdateOrder(updated);
+      if (order.tableId) {
+        await updateTablePatchAsync(order.tableId, { assignedStaffId: staffId });
+      }
+    } catch (e) {
+      console.error('Failed to assign table waiter:', e);
+    }
+  };
+
   const handleCompletePayment = async (
     payments: PayPayload['payments'],
     options?: { paidItemIndexes?: number[]; onSuccess?: () => void; closedByStaffId?: string }
@@ -638,7 +654,23 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-xs space-y-1.5 mb-4">
           <div className="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Staff</div>
           <div className="flex justify-between"><span className="text-gray-500">Order taken by</span><span className="font-semibold text-gray-900">{staffName(order.takenByStaffId)}</span></div>
-          <div className="flex justify-between"><span className="text-gray-500">Table waiter</span><span className="font-semibold text-gray-900">{staffName(order.assignedStaffId)}</span></div>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-gray-500 shrink-0">Table waiter</span>
+            {!order.paid && order.tableId ? (
+              <select
+                value={order.assignedStaffId ?? ''}
+                onChange={(e) => void handleAssignTableWaiter(e.target.value)}
+                className="text-xs font-semibold border border-gray-200 rounded-lg px-2 py-1 bg-white max-w-[55%]"
+              >
+                <option value="">Unassigned</option>
+                {staffList.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            ) : (
+              <span className="font-semibold text-gray-900">{staffName(order.assignedStaffId)}</span>
+            )}
+          </div>
           <div className="flex justify-between"><span className="text-gray-500">Payment closed by</span><span className="font-semibold text-gray-900">{staffName(order.closedByStaffId)}</span></div>
           {order.guestCount ? (
             <div className="flex justify-between"><span className="text-gray-500">Guests</span><span className="font-semibold text-gray-900">{order.guestCount}</span></div>
@@ -660,6 +692,9 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                     {!item.paid && <span className="text-gray-400 font-bold w-4">{item.quantity}x</span>}
                     <span className="font-bold text-gray-700">
                       {item.name}
+                      {item.soldByStaffId && (
+                        <span className="text-[10px] text-gray-400 ml-1">· {staffName(item.soldByStaffId)}</span>
+                      )}
                       {item.served && <span className="text-xs text-blue-600 ml-1 px-1.5 py-0.5 bg-blue-50 rounded-md">Served</span>}
                       {item.paid && <span className="text-xs text-green-600 ml-1 px-1.5 py-0.5 bg-green-100 rounded-md">Paid</span>}
                     </span>

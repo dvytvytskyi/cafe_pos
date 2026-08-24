@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Clock, Check, AlertCircle, MapPin, Store, Settings, X, ChevronDown, Minimize2, Maximize2, CheckSquare, CreditCard, Plus } from 'lucide-react';
 import BoardSettingsModal, { Stage } from './BoardSettingsModal';
 import OrderDetailsModal from './OrderDetailsModal';
-import { Order, OrderSource, getOrdersAsync, updateOrderAsync, updateOrderStatusAsync, createOrderAsync, completePaymentAsync } from '@/lib/orders';
+import type { PosOrderConfirmMeta } from '@/components/pos/PosOrderConfirmSheet';
+import { Order, OrderSource, getOrdersAsync, updateOrderAsync, updateOrderStatusAsync, createOrderAsync, addOrderItemsAsync, printOrderAsync } from '@/lib/orders';
+import { calculateOrderTotals } from '@/lib/order-totals';
 import { getGuestsAsync } from '@/lib/crm';
 import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 import { getLocationsCachedAsync, prefetchLocations, type LocationSummary } from '@/lib/locations';
@@ -610,18 +612,21 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
           currentStatus="available"
           locationId={locationId === 'all' ? DEFAULT_LOCATION_ID : locationId}
           onClose={() => setIsCreateOrderOpen(false)}
-          onAction={async (action, items, discountPercent, customerId) => {
+          onAction={async (action, items, discountPercent, customerId, keepOpen, meta?: PosOrderConfirmMeta) => {
             if (action !== 'send_to_kitchen' && action !== 'takeaway' && action !== 'checkout') return;
 
-            const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-            const discountAmount = subtotal * discountPercent;
-            const finalTotal = parseFloat(Math.max(0, subtotal - discountAmount).toFixed(2));
-            const formattedItems = items.map(i => ({
+            const staffId = meta?.takenByStaffId;
+            const guestCount = meta?.guestCount;
+            const formattedItems = items.map((i) => ({
               name: i.name,
               price: i.price,
               quantity: i.quantity,
-              comments: i.comments
+              comments: i.comments,
+              soldByStaffId: staffId,
             }));
+            const { discountAmount, total: finalTotal } = calculateOrderTotals(formattedItems, {
+              discountPercent: discountPercent,
+            });
 
             const finalCustomerId = customerId || undefined;
             const guests = await getGuestsAsync();
@@ -630,44 +635,54 @@ export default function OrdersBoard({ extraHeaderActions }: OrdersBoardProps = {
               : 'Walk-in (POS)';
 
             const source: OrderSource = action === 'send_to_kitchen' ? 'dine_in' : 'takeaway';
+            const resolvedLocationId = locationId === 'all' ? DEFAULT_LOCATION_ID : locationId;
 
             try {
               const newOrder = await createOrderAsync({
                 source,
                 customerName: guestName,
                 customerId: finalCustomerId,
-                locationId: locationId === 'all' ? DEFAULT_LOCATION_ID : locationId,
+                locationId: resolvedLocationId,
                 items: formattedItems,
                 total: finalTotal,
-                discount: discountPercent > 0 ? {
-                  name: 'Manual Discount',
-                  value: discountPercent,
-                  amountDeducted: discountAmount
-                } : undefined,
+                discount:
+                  discountPercent > 0
+                    ? {
+                        name: 'Manual Discount',
+                        value: discountPercent * 100,
+                        amountDeducted: discountAmount,
+                      }
+                    : undefined,
                 status: 'preparing',
                 paid: false,
                 orderedBy: 'waiter',
+                guestCount,
+                takenByStaffId: staffId,
+                assignedStaffId: staffId,
               });
 
-              if (action === 'checkout') {
-                await completePaymentAsync(newOrder.id, {
-                  payments: [{ method: 'card', amount: finalTotal }],
-                  total: finalTotal,
-                  customerId: finalCustomerId,
-                  markCompleted: false,
-                });
+              if (action === 'send_to_kitchen' || action === 'takeaway') {
+                try {
+                  await printOrderAsync(newOrder.id, 'kitchen', true);
+                  await printOrderAsync(newOrder.id, 'bar', true);
+                } catch (printErr) {
+                  console.warn('Kitchen/bar print failed:', printErr);
+                }
               }
 
               await fetchOrders();
 
-              if (action !== 'checkout') {
+              if (action === 'checkout') {
+                setSelectedOrder(newOrder);
+                setModalInitialView('checkout');
+              } else {
                 setSelectedOrder(newOrder);
                 setModalInitialView('default');
               }
             } catch (err) {
               console.error('Failed to create order from POS:', err);
             }
-            setIsCreateOrderOpen(false);
+            if (!keepOpen) setIsCreateOrderOpen(false);
           }}
         />
       )}

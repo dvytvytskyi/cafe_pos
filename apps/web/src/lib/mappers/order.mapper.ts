@@ -161,6 +161,7 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
       sentToKitchen: item.sentToKitchen,
       sentToBar: item.sentToBar,
       served: item.served,
+      soldByStaffId: item.soldByStaffId,
     })),
     total: api.total,
     refundedAmount: api.refundedAmount ?? 0,

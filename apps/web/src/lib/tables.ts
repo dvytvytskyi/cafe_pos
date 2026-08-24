@@ -29,7 +29,8 @@ export interface Table {
   id: string; x: number; y: number; width: number; height: number; 
   type: 'rect' | 'circle' | 'custom'; name: string; seats?: number; 
   points?: Point[]; qrCode?: string; rotation?: number; 
-  status?: 'available' | 'occupied' | 'billed' | 'dirty'; 
+  status?: 'available' | 'occupied' | 'billed' | 'dirty';
+  assignedStaffId?: string | null;
 }
 export interface Obstacle { id: string; x?: number; y?: number; width?: number; height?: number; name: string; rotation?: number; points?: Point[] }
 export interface Room {
@@ -130,6 +131,33 @@ export async function updateTableStatusAsync(
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.message || body.error || `Failed to update table [${tableId}] status`);
+  }
+  return res.json();
+}
+
+export async function updateTablePatchAsync(
+  tableId: string,
+  patch: { status?: NonNullable<Table['status']>; assignedStaffId?: string | null },
+  locationId: string = DEFAULT_LOCATION_ID
+): Promise<Table> {
+  if (isPosOfflineMode()) {
+    ensureOfflineSync(locationId);
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      if (patch.status) {
+        return offlineUpdateTableStatus(locationId, tableId, patch.status);
+      }
+      throw new Error('Offline: only status updates supported');
+    }
+  }
+
+  const res = await fetch(`/api/tables/${tableId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || body.error || `Failed to update table [${tableId}]`);
   }
   return res.json();
 }

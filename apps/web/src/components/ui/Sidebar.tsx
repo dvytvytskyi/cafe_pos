@@ -27,7 +27,8 @@ import {
   History,
   DollarSign,
   ShoppingBag,
-  Briefcase
+  Briefcase,
+  Timer
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -41,7 +42,9 @@ export default function Sidebar() {
   const activeItem = pathname.startsWith('/orders') || pathname.startsWith('/pos')
     ? 'orders' 
     : pathname.startsWith('/reports') 
-    ? 'reports' 
+    ? 'reports'
+    : pathname.startsWith('/analytics/kitchen-bar')
+    ? 'kitchen-analytics'
     : pathname.startsWith('/inventory') 
     ? 'inventory' 
     : pathname.startsWith('/operations') 
@@ -79,6 +82,7 @@ export default function Sidebar() {
     { id: 'shift', icon: DollarSign, label: 'Cash Register', href: '/shift' },
     { id: 'history', icon: History, label: 'Order History', href: '/history' },
     { id: 'reports', icon: BarChart3, label: 'Reports', href: '/reports' },
+    { id: 'kitchen-analytics', icon: Timer, label: 'Kitchen & Bar', href: '/analytics/kitchen-bar' },
     { id: 'menu', icon: Coffee, label: 'Menu', href: '/menu' },
     { id: 'inventory', icon: Package, label: 'Inventory', href: '/inventory' },
     { id: 'operations', icon: ClipboardList, label: 'Operations', href: '/operations' },

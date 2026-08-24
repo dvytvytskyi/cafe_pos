@@ -8,7 +8,8 @@ export interface Table {
   id: string; x: number; y: number; width: number; height: number; 
   type: 'rect' | 'circle' | 'custom'; name: string; seats?: number; 
   points?: Point[]; qrCode?: string; rotation?: number; 
-  status?: 'available' | 'occupied' | 'billed' | 'dirty'; 
+  status?: 'available' | 'occupied' | 'billed' | 'dirty';
+  assignedStaffId?: string | null;
 }
 export interface Room {
   id: string;
@@ -31,11 +32,18 @@ type RoomLayoutMeta = {
 };
 
 export class TableRepository {
-  async updateTableStatus(tableId: string, status: string) {
-    const dbTable = await prisma.table.update({
-      where: { id: tableId },
-      data: { status },
-    });
+  private mapTable(dbTable: {
+    id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    shape: string;
+    number: string;
+    seats: number | null;
+    status: string;
+    assignedStaffId?: string | null;
+  }): Table {
     return {
       id: dbTable.id,
       x: dbTable.x,
@@ -46,7 +54,26 @@ export class TableRepository {
       name: dbTable.number,
       seats: dbTable.seats || 4,
       status: dbTable.status as Table['status'],
-    } satisfies Table;
+      assignedStaffId: dbTable.assignedStaffId ?? null,
+    };
+  }
+
+  async updateTable(
+    tableId: string,
+    data: { status?: string; assignedStaffId?: string | null }
+  ) {
+    const updateData: Record<string, unknown> = {};
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.assignedStaffId !== undefined) updateData.assignedStaffId = data.assignedStaffId;
+    const dbTable = await prisma.table.update({
+      where: { id: tableId },
+      data: updateData,
+    });
+    return this.mapTable(dbTable);
+  }
+
+  async updateTableStatus(tableId: string, status: string) {
+    return this.updateTable(tableId, { status });
   }
 
   async saveRoomLayouts(locationId: string, rooms: Room[]) {
@@ -208,6 +235,7 @@ export class TableRepository {
         name: dbT.number,
         seats: dbT.seats || 4,
         status: dbT.status as 'available' | 'occupied' | 'billed' | 'dirty',
+        assignedStaffId: dbT.assignedStaffId ?? null,
       });
     }
 

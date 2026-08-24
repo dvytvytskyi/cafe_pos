@@ -50,6 +50,7 @@ interface OrderTerminalModalProps {
   initialOrder?: Order | null;
   guests?: Guest[];
   locationId?: string;
+  tableAssignedStaffId?: string | null;
 }
 
 export default function OrderTerminalModal({
@@ -61,6 +62,7 @@ export default function OrderTerminalModal({
   initialOrder,
   guests: guestsProp,
   locationId = DEFAULT_LOCATION_ID,
+  tableAssignedStaffId,
 }: OrderTerminalModalProps) {
   const [menu, setMenu] = useState<PosMenuCategory[]>([]);
   const [menuLoading, setMenuLoading] = useState(true);
@@ -151,6 +153,10 @@ export default function OrderTerminalModal({
   const [isReady, setIsReady] = useState(initialOrder ? initialOrder.status === 'ready' : false);
   const [pendingAction, setPendingAction] = useState<OrderAction | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const hasNewItems = orderItems.some((i) => i.isNew);
+  const staffOnlyConfirm =
+    Boolean(initialOrder) && hasNewItems && Boolean(initialOrder?.guestCount);
 
   const requestOrderAction = (action: OrderAction) => {
     if (orderItems.length === 0 && action !== 'clean' && action !== 'print_check') return;
@@ -1062,7 +1068,14 @@ export default function OrderTerminalModal({
           pendingAction === 'checkout' ? 'Open checkout' : 'Confirm order'
         }
         initialGuestCount={initialOrder?.guestCount ?? 2}
-        initialStaffId={initialOrder?.takenByStaffId}
+        initialStaffId={
+          initialOrder?.assignedStaffId ??
+          initialOrder?.takenByStaffId ??
+          tableAssignedStaffId ??
+          undefined
+        }
+        staffOnly={staffOnlyConfirm}
+        requireGuestCount={!initialOrder || !initialOrder.guestCount}
         onCancel={() => {
           setConfirmOpen(false);
           setPendingAction(null);

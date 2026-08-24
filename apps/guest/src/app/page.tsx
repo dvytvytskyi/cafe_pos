@@ -43,6 +43,68 @@ export default function HomePage() {
     if (local.length <= 6) return `+34 ${local.slice(0, 3)} ${local.slice(3)}`;
     return `+34 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`;
   };
+
+  const handleAuthSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (authMode === 'login') {
+      if (!authEmail.trim()) {
+        alert('Please enter your email address');
+        return;
+      }
+      if (!authPassword.trim()) {
+        alert('Please enter your password');
+        return;
+      }
+      setAuthLoading(true);
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('corgi_logged_out', 'false');
+          localStorage.setItem('corgi_guest_session_token', 'session_guest_token_email');
+        }
+        await refreshAuth();
+        setShowLoginModal(false);
+        router.push('/menu');
+      } catch (err: any) {
+        alert(err.message || 'Login failed');
+      } finally {
+        setAuthLoading(false);
+      }
+    } else if (authMode === 'register_step1') {
+      if (!authEmail.trim() || !authEmail.includes('@')) {
+        alert('Please enter a valid email address');
+        return;
+      }
+      setAuthMode('register_step2');
+    } else if (authMode === 'register_step2') {
+      if (!authFullName.trim()) {
+        alert('Please enter your full name');
+        return;
+      }
+      if (!authPassword || authPassword.length < 4) {
+        alert('Password must be at least 4 characters');
+        return;
+      }
+      if (authPassword !== authConfirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+      setAuthLoading(true);
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('corgi_logged_out', 'false');
+          localStorage.setItem('corgi_guest_session_token', 'session_guest_token_email');
+        }
+        await refreshAuth();
+        setShowLoginModal(false);
+        router.push('/menu');
+      } catch (err: any) {
+        alert(err.message || 'Registration failed');
+      } finally {
+        setAuthLoading(false);
+      }
+    }
+  };
+
   const [showLocations, setShowLocations] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -824,15 +886,16 @@ export default function HomePage() {
               <X className="w-6 h-6" strokeWidth={1.8} />
             </button>
           </div>
-          <div className="flex flex-col gap-4 w-full">
+          <form onSubmit={handleAuthSubmit} className="flex flex-col gap-4 w-full">
             {authMode === 'login' && (
               <>
                 <div className="relative">
                   <input 
                     type="email" 
-                    placeholder="Email"
+                    placeholder="Email address"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
+                    required
                     className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                 </div>
@@ -842,6 +905,7 @@ export default function HomePage() {
                     placeholder="Password"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
+                    required
                     className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                   <button 
@@ -850,14 +914,9 @@ export default function HomePage() {
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
                   >
                     {showPassword ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                      </svg>
+                      <EyeOff className="w-5 h-5" />
                     ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
+                      <Eye className="w-5 h-5" />
                     )}
                   </button>
                 </div>
@@ -868,9 +927,10 @@ export default function HomePage() {
               <div className="relative">
                 <input 
                   type="email" 
-                  placeholder="Email"
+                  placeholder="Enter your email address"
                   value={authEmail}
                   onChange={(e) => setAuthEmail(e.target.value)}
+                  required
                   className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                 />
               </div>
@@ -884,15 +944,17 @@ export default function HomePage() {
                     placeholder="Full name"
                     value={authFullName}
                     onChange={(e) => setAuthFullName(e.target.value)}
+                    required
                     className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 px-5 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                 </div>
                 <div className="relative">
                   <input 
                     type={showPassword ? "text" : "password"} 
-                    placeholder="Password"
+                    placeholder="Create password"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
+                    required
                     className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                   <button 
@@ -901,14 +963,9 @@ export default function HomePage() {
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
                   >
                     {showPassword ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                      </svg>
+                      <EyeOff className="w-5 h-5" />
                     ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
+                      <Eye className="w-5 h-5" />
                     )}
                   </button>
                 </div>
@@ -918,6 +975,7 @@ export default function HomePage() {
                     placeholder="Confirm password"
                     value={authConfirmPassword}
                     onChange={(e) => setAuthConfirmPassword(e.target.value)}
+                    required
                     className="w-full bg-[#F4F4F5] hover:bg-[#E4E4E7] focus:bg-white border border-gray-200/60 focus:border-[#FDBD38] rounded-2xl py-4 pl-5 pr-12 text-base text-black font-medium transition-all outline-none placeholder-gray-400 focus:ring-4 focus:ring-[#FDBD38]/10"
                   />
                   <button 
@@ -926,14 +984,9 @@ export default function HomePage() {
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
                   >
                     {showConfirmPassword ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                      </svg>
+                      <EyeOff className="w-5 h-5" />
                     ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
+                      <Eye className="w-5 h-5" />
                     )}
                   </button>
                 </div>
@@ -944,21 +997,61 @@ export default function HomePage() {
                 )}
               </>
             )}
-          </div>
 
-          <p className="text-sm text-gray-500 text-center px-2">
-            Sign in with your phone number on the loyalty page.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setShowLoginModal(false);
-              router.push('/loyalty');
-            }}
-            className="w-full py-4 rounded-full font-bold text-center text-base bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer"
-          >
-            Continue to sign in
-          </button>
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full py-4 rounded-full font-bold text-center text-base bg-[#FDBD38] hover:bg-[#e5a420] text-white active:scale-[0.99] transition-all cursor-pointer shadow-none mt-2 flex items-center justify-center gap-2"
+            >
+              {authLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span>
+                  {authMode === 'login' && 'Sign In & Open Menu'}
+                  {authMode === 'register_step1' && 'Next Step'}
+                  {authMode === 'register_step2' && 'Create Account & Open Menu'}
+                </span>
+              )}
+            </button>
+          </form>
+
+          {/* Toggle link at bottom */}
+          <div className="flex flex-col gap-2 items-center text-center pt-1 border-t border-gray-100">
+            {authMode === 'login' ? (
+              <p className="text-xs text-gray-500 font-medium">
+                Don't have an account yet?{' '}
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('register_step1')}
+                  className="font-bold text-[#FDBD38] hover:underline cursor-pointer"
+                >
+                  Create account
+                </button>
+              </p>
+            ) : (
+              <p className="text-xs text-gray-500 font-medium">
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('login')}
+                  className="font-bold text-[#FDBD38] hover:underline cursor-pointer"
+                >
+                  Sign in
+                </button>
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowLoginModal(false);
+                router.push('/loyalty');
+              }}
+              className="text-[11px] text-gray-400 hover:text-gray-600 font-medium underline mt-1 cursor-pointer"
+            >
+              Sign in with phone number on Loyalty Page
+            </button>
+          </div>
         </div>
       </div>
       {/* Bottom Sheet New Address Modal */}

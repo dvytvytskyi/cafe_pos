@@ -9,9 +9,12 @@ export async function PATCH(
   const { id } = await params;
   try {
     const body = await req.json();
-    const { status } = body;
+    const { status, assignedStaffId } = body as {
+      status?: string;
+      assignedStaffId?: string | null;
+    };
 
-    if (!status || !TABLE_STATUSES.includes(status)) {
+    if (status !== undefined && !TABLE_STATUSES.includes(status)) {
       return NextResponse.json(
         {
           error: 'INVALID_STATUS',
@@ -21,14 +24,35 @@ export async function PATCH(
       );
     }
 
-    const updated = await tableRepository.updateTableStatus(id, status);
+    if (status === undefined && assignedStaffId === undefined) {
+      return NextResponse.json(
+        { error: 'INVALID_BODY', message: 'Provide status or assignedStaffId' },
+        { status: 400 }
+      );
+    }
+
+    const updated = await tableRepository.updateTable(id, {
+      status,
+      assignedStaffId,
+    });
     return NextResponse.json(updated, { status: 200 });
   } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2025') {
-      return NextResponse.json({ error: 'TABLE_NOT_FOUND', message: `Table [${id}] not found` }, { status: 404 });
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as { code: string }).code === 'P2025'
+    ) {
+      return NextResponse.json(
+        { error: 'TABLE_NOT_FOUND', message: `Table [${id}] not found` },
+        { status: 404 }
+      );
     }
-    console.error(`Error updating table [${id}] status:`, error);
+    console.error(`Error updating table [${id}]:`, error);
     const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: 'Internal Server Error', details: message }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error', details: message },
+      { status: 500 }
+    );
   }
 }
