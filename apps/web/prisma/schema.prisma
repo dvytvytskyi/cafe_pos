@@ -148,6 +148,9 @@ model MenuItem {
   guavaSourceId  String?               // Original Guava menuItem.id (for re-import)
   recommendedItemIds String[]        @default([]) // Guest upsell / Guava recommended[]
   taxSlug          String?           // food | alcohol | exempt — IVA bucket from Guava
+  channelPrices    Json?             // Per-channel overrides: glovo, ubereats, web, dine_in
+  visibilitySchedule Json?           // Guava schedules[] — time slots when item is visible
+  bundleDefinition Json?             // Guava bundles[] — combo components when present
   priceHistory   Json?                 // Історія цін
   translations   MenuItemTranslation[]
   modifierGroups ModifierGroup[]       @relation("MenuItemModifierGroups")

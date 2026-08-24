@@ -20,6 +20,7 @@ import {
   Landmark,
   LayoutGrid,
   Coffee,
+  Building2,
   Package,
   Bike,
   BarChart3,
@@ -38,15 +39,15 @@ export default function Sidebar() {
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
-  // Map paths to active item IDs
-  const activeItem = pathname.startsWith('/orders') || pathname.startsWith('/pos')
-    ? 'orders' 
-    : pathname.startsWith('/reports') 
-    ? 'reports'
-    : pathname.startsWith('/analytics/kitchen-bar')
-    ? 'kitchen-analytics'
+  
+  const activeItem = pathname.startsWith('/analytics') 
+    ? 'kitchen-analytics' 
     : pathname.startsWith('/inventory') 
     ? 'inventory' 
+    : pathname.startsWith('/orders') 
+    ? 'orders' 
+    : pathname.startsWith('/reports') 
+    ? 'reports' 
     : pathname.startsWith('/operations') 
     ? 'operations' 
     : pathname.startsWith('/crm') 
@@ -64,15 +65,15 @@ export default function Sidebar() {
     : 'dashboard';
   
   const [activeLocale, setActiveLocale] = React.useState('all');
-  const [lastSelectedLocale, setLastSelectedLocale] = React.useState('gothic');
+  const [lastSelectedLocale, setLastSelectedLocale] = React.useState('gotico');
   const [isHoveringLocales, setIsHoveringLocales] = React.useState(false);
 
   const locales = [
-    { id: 'gothic', name: 'Gothic', icon: Castle },
+    { id: 'gotico', name: 'Gótico', icon: Castle },
     { id: 'sagrada', name: 'Sagrada', icon: Church },
-    { id: 'arc', name: 'Arc de Triumph', icon: Landmark },
-    { id: 'eixample', name: 'Eixample', icon: LayoutGrid },
-    { id: 'gracia', name: 'Gracia', icon: Coffee },
+    { id: 'muntaner', name: 'Muntaner', icon: Building2 },
+    { id: 'gracia', name: 'Gràcia', icon: Coffee },
+    { id: 'arc', name: 'ARC', icon: Landmark },
   ];
 
   const navItems = [

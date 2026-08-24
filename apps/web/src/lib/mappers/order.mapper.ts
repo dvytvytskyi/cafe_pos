@@ -12,6 +12,7 @@ export interface UiOrderItem {
   comments?: string;
   refundedQuantity?: number;
   menuItemId?: string;
+  taxSlug?: string;
   modifierSnapshot?: unknown;
   guestIndex?: number;
   sentToKitchen?: boolean;
@@ -156,6 +157,7 @@ export function mapApiOrderToUi(api: ApiOrder): UiOrder {
       paid: item.paid,
       refundedQuantity: item.refundedQuantity ?? 0,
       menuItemId: item.menuItemId,
+      taxSlug: item.taxSlug,
       modifierSnapshot: item.modifierSnapshot,
       guestIndex: item.guestIndex,
       sentToKitchen: item.sentToKitchen,

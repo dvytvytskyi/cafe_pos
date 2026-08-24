@@ -18,12 +18,13 @@ function ratesToForm(rates: TaxRate[]): RateForm {
   return {
     food: String(map.food),
     alcohol: String(map.alcohol),
+    exempt: String(map.exempt),
   };
 }
 
 export default function TaxesPanel() {
   const [rates, setRates] = useState<TaxRate[]>([]);
-  const [form, setForm] = useState<RateForm>({ food: '10', alcohol: '21' });
+  const [form, setForm] = useState<RateForm>({ food: '10', alcohol: '21', exempt: '0' });
   const [loading, setLoading] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -58,6 +59,7 @@ export default function TaxesPanel() {
       const patches: Array<{ slug: TaxSlug; ratePercent: number }> = [
         { slug: 'food', ratePercent: Number.parseFloat(form.food) },
         { slug: 'alcohol', ratePercent: Number.parseFloat(form.alcohol) },
+        { slug: 'exempt', ratePercent: Number.parseFloat(form.exempt) },
       ];
       const saved = await saveTaxRatesAsync(patches);
       setRates(saved);
@@ -80,7 +82,7 @@ export default function TaxesPanel() {
 
   return (
     <div data-testid="taxes-panel" className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-gray-500 uppercase">IVA / VAT rate Food (%)</label>
           <input
@@ -104,6 +106,19 @@ export default function TaxesPanel() {
             data-testid="tax-rate-alcohol"
             value={form.alcohol}
             onChange={(e) => updateField('alcohol', e.target.value)}
+            className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-bold text-gray-500 uppercase">IVA / VAT Exempt (%)</label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={0.01}
+            data-testid="tax-rate-exempt"
+            value={form.exempt}
+            onChange={(e) => updateField('exempt', e.target.value)}
             className="w-full bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 outline-none focus:bg-white focus:border-gray-200 transition-all"
           />
         </div>
@@ -133,7 +148,7 @@ export default function TaxesPanel() {
       </div>
 
       <p className="text-[11px] text-gray-400 font-medium">
-        Current DB rates: food {taxRatesToMap(rates).food}%, alcohol {taxRatesToMap(rates).alcohol}%
+        Current DB rates: food {taxRatesToMap(rates).food}%, alcohol {taxRatesToMap(rates).alcohol}%, exempt {taxRatesToMap(rates).exempt}%
       </p>
     </div>
   );

@@ -70,6 +70,24 @@ export interface CompletePaymentPayload {
   closedByStaffId?: string;
 }
 
+async function resolveOrderItemsTaxSlug<T extends { menuItemId?: string | null; taxSlug?: string | null }>(
+  items: T[]
+): Promise<T[]> {
+  const ids = [...new Set(items.map((i) => i.menuItemId).filter(Boolean))] as string[];
+  if (ids.length === 0) return items;
+
+  const menuRows = await prisma.menuItem.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, taxSlug: true },
+  });
+  const byMenuId = new Map(menuRows.map((r) => [r.id, r.taxSlug]));
+
+  return items.map((item) => ({
+    ...item,
+    taxSlug: item.taxSlug ?? (item.menuItemId ? byMenuId.get(item.menuItemId) : null) ?? null,
+  }));
+}
+
 // Helper to map Prisma Order (with items) to Domain Order
 export function mapToDomainOrder(dbOrder: any): Order {
   if (!dbOrder) return null as any;
@@ -102,6 +120,7 @@ export function mapToDomainOrder(dbOrder: any): Order {
       sentToKitchen: item.sentToKitchen ?? false,
       sentToBar: item.sentToBar ?? false,
       served: item.served ?? false,
+      taxSlug: item.taxSlug || undefined,
     })),
     subtotal: dbOrder.total,
     tax: dbOrder.total * 0.1,
@@ -357,6 +376,7 @@ export class OrderRepository {
       const paid =
         data.paymentStatus === 'paid' || data.paid || deliveryPrepaid || false;
       const amountPaid = paid ? (data.total || 0) : 0;
+      const itemsWithTax = await resolveOrderItemsTaxSlug(data.items || []);
 
       const dbOrder = await prisma.order.create({
         data: {
@@ -384,7 +404,7 @@ export class OrderRepository {
           amountPaid,
           loyaltyGuestIds: (data as any).loyaltyGuestIds ?? [],
           items: {
-            create: (data.items || []).map((item: any) => ({
+            create: itemsWithTax.map((item: any) => ({
               name: item.name,
               price: item.price,
               quantity: item.quantity,
@@ -393,6 +413,7 @@ export class OrderRepository {
               itemType: item.itemType || 'food',
               menuItemId: item.menuItemId || null,
               merchSkuId: item.merchSkuId || null,
+              taxSlug: item.taxSlug || null,
               modifierSnapshot: item.modifierSnapshot ?? null,
               soldByStaffId: item.soldByStaffId || null,
               guestIndex: item.guestIndex ?? null,
@@ -447,14 +468,16 @@ export class OrderRepository {
       // Replace line items only when a non-empty list is sent (never wipe via [])
       if (Array.isArray(data.items) && data.items.length > 0) {
         await prisma.orderItem.deleteMany({ where: { orderId: id } });
+        const itemsWithTax = await resolveOrderItemsTaxSlug(data.items);
         updateData.items = {
-          create: data.items.map((item: any) => ({
+          create: itemsWithTax.map((item: any) => ({
             name: item.name,
             price: item.price,
             quantity: item.quantity,
             paid: item.paid || false,
             comments: item.comments || null,
             menuItemId: item.menuItemId || null,
+            taxSlug: item.taxSlug || null,
             modifierSnapshot: item.modifierSnapshot ?? null,
             soldByStaffId: item.soldByStaffId || null,
             guestIndex: item.guestIndex ?? null,

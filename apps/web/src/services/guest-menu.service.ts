@@ -7,8 +7,12 @@ import {
   getMenuListingPrice,
   resolveVariantOptionPrice,
   resolveVariantPricingGroup,
+  resolveChannelPrice,
+  isVisibleAtSchedule,
   GUEST_RECOMMENDED_CATEGORY_ID,
   type GuestMenuUpsellItem,
+  type MenuChannelPrices,
+  type VisibilityScheduleRule,
 } from '@corgi/contracts';
 
 export { GUEST_RECOMMENDED_CATEGORY_ID };
@@ -45,9 +49,22 @@ function pickTranslation(
 function itemVisibleAtLocation(item: DbItem, locationId: string): boolean {
   if (item.isArchived) return false;
   if (item.isVisible === false) return false;
+  const schedule = (item as DbItem & { visibilitySchedule?: VisibilityScheduleRule[] | null })
+    .visibilitySchedule;
+  if (!isVisibleAtSchedule(schedule)) return false;
   const locs = item.locationIds ?? [];
   if (locs.length === 0) return true;
   return locs.includes(locationId);
+}
+
+function resolveGuestBasePrice(
+  item: DbItem,
+  modifierGroups: ReturnType<typeof mapModifierGroups>,
+  itemName: string
+): number {
+  const channelPrices = (item as DbItem & { channelPrices?: MenuChannelPrices | null }).channelPrices;
+  const webPrice = resolveChannelPrice(item.price, channelPrices, 'web');
+  return getMenuListingPrice(webPrice, modifierGroups, itemName);
 }
 
 function mapModifierGroups(
@@ -126,7 +143,7 @@ export class GuestMenuService {
             name: t.name,
             description: t.description,
             image: dbItem.imageUrl || DEFAULT_EMENU_IMAGE,
-            basePrice: getMenuListingPrice(item.price, modifierGroups, t.name),
+            basePrice: resolveGuestBasePrice(item as DbItem, modifierGroups, t.name),
             allergens: normalizeAllergenList(item.allergens),
             tags: dbItem.tags ?? [],
             modifierGroups,

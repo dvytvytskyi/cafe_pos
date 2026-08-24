@@ -15,10 +15,11 @@ export async function POST(req: Request) {
     const rows = await taxRepository.getCached(locationId);
     const rates = calcMapFromRows(rows);
     const breakdown = calculateReceiptTaxes(
-      items.map((item: { name?: string; price?: number; quantity?: number }) => ({
+      items.map((item: { name?: string; price?: number; quantity?: number; taxSlug?: string }) => ({
         name: String(item.name ?? ''),
         price: Number(item.price ?? 0),
         quantity: Number(item.quantity ?? 1),
+        taxSlug: item.taxSlug,
       })),
       rates
     );

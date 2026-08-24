@@ -1,4 +1,7 @@
 export * from './menu-pricing';
+export * from './menu-channels';
+export * from './menu-visibility';
+export * from './menu-bundles';
 
 export type GuestLocale = 'en' | 'es' | 'ca' | 'uk';
 

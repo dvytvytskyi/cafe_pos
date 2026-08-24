@@ -60,17 +60,26 @@ function run() {
         { name: 'Latte', price: 10, quantity: 1 },
         { name: 'Red Wine', price: 12, quantity: 1 },
       ],
-      { food: 10, alcohol: 21 }
+      { food: 10, alcohol: 21, exempt: 0 }
     );
     assert.strictEqual(at21.totalGross, 22);
 
     const at22 = calculateReceiptTaxes(
       [{ name: 'Craft Beer', price: 12.2, quantity: 1 }],
-      { food: 10, alcohol: 22 }
+      { food: 10, alcohol: 22, exempt: 0 }
     );
     assert.ok(at22.alcoholTax > 0);
     assert.strictEqual(at22.totalGross, 12.2);
     assert.ok(at22.alcoholTax > at21.alcoholTax || at22.alcoholTax >= 2.19);
+  });
+
+  check('T27.6 menu taxSlug overrides name heuristic', () => {
+    const merch = calculateReceiptTaxes(
+      [{ name: 'T-Shirt', price: 20, quantity: 1, taxSlug: 'alcohol' }],
+      { food: 10, alcohol: 21, exempt: 0 }
+    );
+    assert.ok(merch.alcoholTax > 0);
+    assert.strictEqual(merch.foodTax, 0);
   });
 
   if (failed) process.exit(1);

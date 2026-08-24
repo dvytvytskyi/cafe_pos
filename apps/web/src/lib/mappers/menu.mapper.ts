@@ -22,6 +22,7 @@ export interface PosMenuItem {
   sizes?: string[];
   allergens?: string[];
   categoryId?: string;
+  taxSlug?: string;
   modifierGroups?: PosModifierGroup[];
 }
 
@@ -64,6 +65,7 @@ interface DbMenuCategory {
     price: number;
     allergens?: string[];
     modifierGroups?: DbModifierGroup[];
+    taxSlug?: string | null;
   }>;
   modifierGroups?: DbModifierGroup[];
 }
@@ -153,6 +155,7 @@ export function mapCategoriesToPosMenu(categories: DbMenuCategory[] | null | und
       allergens: mapItemAllergens(item.allergens),
       sizes: [],
       categoryId: cat.id,
+      taxSlug: item.taxSlug ?? undefined,
       modifierGroups: mapModifierGroups(item.modifierGroups),
     })),
   }));

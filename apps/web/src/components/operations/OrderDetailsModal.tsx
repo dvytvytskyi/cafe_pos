@@ -109,12 +109,13 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     barItems: string[];
     kitchenItems: string[];
   } | null>(null);
-  const [taxRates, setTaxRates] = useState({ food: 10, alcohol: 21 });
+  const [taxRates, setTaxRates] = useState({ food: 10, alcohol: 21, exempt: 0 });
   const [posSettings, setPosSettings] = useState<PosSettings>(DEFAULT_POS_SETTINGS);
 
   useEffect(() => {
     let cancelled = false;
-    getTaxRatesAsync()
+    const locationId = order?.locationId ?? 'default';
+    getTaxRatesAsync(locationId)
       .then((rates) => {
         if (!cancelled) setTaxRates(taxRatesToMap(rates));
       })
@@ -129,7 +130,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
       cancelled = true;
       window.removeEventListener(TAX_RATES_UPDATED_EVENT, onRatesUpdated);
     };
-  }, []);
+  }, [order?.locationId]);
 
   const handleKitchenPrint = async () => {
     if (!order) return;
@@ -2390,6 +2391,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         name: item.name,
         price: item.price,
         quantity: item.quantity,
+        taxSlug: item.taxSlug,
       })),
       taxRates
     );
