@@ -4,6 +4,21 @@ import { auditRepository } from '@/repositories/audit.repository';
 import { MenuValidationError } from '@/lib/menu-validation';
 import { GUEST_SUPPORTED_LOCALES } from '@/lib/guest-constants';
 
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const item = await menuRepository.getMenuItem(id);
+    if (!item) {
+      return NextResponse.json({ error: 'Menu item not found' }, { status: 404 });
+    }
+    return NextResponse.json(item, { status: 200 });
+  } catch (error: unknown) {
+    console.error(`Error fetching menu item:`, error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Internal Server Error', details: message }, { status: 500 });
+  }
+}
+
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;

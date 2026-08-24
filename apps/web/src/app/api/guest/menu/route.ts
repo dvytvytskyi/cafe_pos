@@ -12,7 +12,10 @@ export async function GET(req: Request) {
     const locationId = validateLocationId(searchParams.get('locationId'));
     const locale = parseGuestLocale(searchParams.get('locale'));
     const search = searchParams.get('q') || searchParams.get('search') || undefined;
-    const menu = await guestMenuService.getMenu(locationId, locale, search || undefined);
+    let menu = await guestMenuService.getMenu(locationId, locale, search || undefined);
+    if (menu.items.length === 0 && locationId !== 'loc-gotico') {
+      menu = await guestMenuService.getMenu('loc-gotico', locale, search || undefined);
+    }
     return guestJson(menu, { status: 200 }, req);
   } catch (error) {
     return handleGuestError(error, req);

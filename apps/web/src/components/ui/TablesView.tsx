@@ -4,8 +4,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MousePointer2, Square, Plus, Map, Move, Trash2, Maximize2, SplitSquareHorizontal, ZoomIn, ZoomOut, Focus, Hexagon, QrCode, Download, RefreshCw, Layers, Copy, Play, Settings2, Check, ChevronRight } from 'lucide-react';
 import OrderTerminalModal from '@/components/pos/OrderTerminalModal';
+import type { PosOrderConfirmMeta } from '@/components/pos/PosOrderConfirmSheet';
 import OrderDetailsModal from '@/components/operations/OrderDetailsModal';
-import { getOrdersAsync, createOrderAsync, updateOrderAsync, updateOrderStatusAsync, completePaymentAsync, Order } from '@/lib/orders';
+import { getOrdersAsync, createOrderAsync, updateOrderAsync, updateOrderStatusAsync, completePaymentAsync, printOrderAsync, addOrderItemsAsync, Order } from '@/lib/orders';
 import { getGuestsAsync, Guest } from '@/lib/crm';
 import {
   DEFAULT_ROOMS,
@@ -1600,20 +1601,30 @@ export default function TablesView({
               guests={crmGuests}
               locationId={staffLocationId}
               onClose={() => setActiveOrderTableId(null)}
-              onAction={async (action, items, discountPercent, customerId, keepOpen) => {
+              onAction={async (action, items, discountPercent, customerId, keepOpen, meta?: PosOrderConfirmMeta) => {
                 let newStatus = table.status;
                 if (action === 'send_to_kitchen' || action === 'takeaway' || action === 'checkout') newStatus = 'occupied';
                 else if (action === 'print_check') newStatus = 'billed';
                 else if (action === 'clean') newStatus = 'available';
 
                 if (action !== 'clean' && action !== 'print_check') {
-                  const formattedItems = items.map((i) => ({
+                  const staffId = meta?.takenByStaffId;
+                  const guestCount = meta?.guestCount;
+                  const newCartItems = items.filter((i) => i.isNew === true);
+                  const formattedNewItems = newCartItems.map((i) => ({
+                    name: i.name,
+                    price: i.price,
+                    quantity: i.quantity,
+                    comments: i.comments,
+                    soldByStaffId: staffId,
+                  }));
+                  const formattedAllItems = items.map((i) => ({
                     name: i.name,
                     price: i.price,
                     quantity: i.quantity,
                     comments: i.comments,
                   }));
-                  const { discountAmount, total: finalTotal } = calculateOrderTotals(formattedItems, {
+                  const { discountAmount, total: finalTotal } = calculateOrderTotals(formattedAllItems, {
                     discountPercent: discountPercent,
                   });
 
@@ -1636,8 +1647,10 @@ export default function TablesView({
                   try {
                     let orderToOpen: Order;
                     if (activeOrder) {
+                      if (formattedNewItems.length > 0) {
+                        await addOrderItemsAsync(activeOrder.id, formattedNewItems);
+                      }
                       orderToOpen = await updateOrderAsync(activeOrder.id, {
-                        items: formattedItems,
                         total: finalTotal,
                         customerId: finalCustomerId,
                         customerName: guestName,
@@ -1645,6 +1658,9 @@ export default function TablesView({
                         discount,
                         status: 'preparing',
                         source,
+                        guestCount,
+                        takenByStaffId: activeOrder.takenByStaffId ?? staffId,
+                        assignedStaffId: staffId,
                       });
                     } else {
                       orderToOpen = await createOrderAsync({
@@ -1652,23 +1668,31 @@ export default function TablesView({
                         status: 'preparing',
                         tableId: table.id,
                         locationId: staffLocationId,
-                        items: formattedItems,
+                        items: formattedAllItems.map((i) => ({ ...i, soldByStaffId: staffId })),
                         total: finalTotal,
                         customerId: finalCustomerId,
                         customerName: guestName,
                         paid: false,
                         orderedBy: 'waiter',
                         discount,
+                        guestCount,
+                        takenByStaffId: staffId,
+                        assignedStaffId: staffId,
                       });
                     }
 
+                    if (action === 'send_to_kitchen' || action === 'takeaway') {
+                      try {
+                        await printOrderAsync(orderToOpen.id, 'kitchen', true);
+                        await printOrderAsync(orderToOpen.id, 'bar', true);
+                      } catch (printErr) {
+                        console.warn('Kitchen/bar print failed:', printErr);
+                      }
+                    }
+
                     if (action === 'checkout') {
-                      await completePaymentAsync(orderToOpen.id, {
-                        payments: [{ method: 'card', amount: finalTotal }],
-                        total: finalTotal,
-                        customerId: finalCustomerId,
-                        markCompleted: false,
-                      });
+                      setSelectedOrderForSidebar(orderToOpen);
+                      setActiveOrderTableId(null);
                     }
 
                     await fetchActiveOrders();
@@ -1678,11 +1702,17 @@ export default function TablesView({
                     return;
                   }
                 } else if (action === 'print_check') {
-                  // print_check — table status only for now
+                  if (activeOrder) {
+                    try {
+                      await printOrderAsync(activeOrder.id, 'receipt', false);
+                    } catch (e) {
+                      console.warn('Receipt print failed', e);
+                    }
+                  }
                 }
 
                 updateTable(activeOrderTableId, { status: newStatus });
-                if (!keepOpen) {
+                if (!keepOpen && action !== 'checkout') {
                   setActiveOrderTableId(null);
                 }
               }}

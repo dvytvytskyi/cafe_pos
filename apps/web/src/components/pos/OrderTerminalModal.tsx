@@ -4,7 +4,7 @@ import { Order, getOrdersAsync } from '@/lib/orders';
 import { Guest, getGuestsAsync, getGuestsPageAsync, saveGuestAsync, getGuestByQrAsync, isCustomerQrCode, CrmApiError, formatLoyaltyPoints } from '@/lib/crm';
 import { buildQuickGuestContact } from '@/lib/crm-validation';
 import { getMenuCategoriesAsync } from '@/lib/menu';
-import { mapCategoriesToPosMenu, PosMenuCategory, PosMenuItem, PosModifierGroup } from '@/lib/mappers/menu.mapper';
+import { mapCategoriesToPosMenu, PosMenuCategory, PosMenuItem, PosModifierGroup, resolvePosItemModifierGroups } from '@/lib/mappers/menu.mapper';
 import { DEFAULT_LOCATION_ID } from '@/lib/constants';
 import {
   formatPosAmount,
@@ -13,8 +13,10 @@ import {
   type PosSettings,
 } from '@/lib/pos-settings';
 import { calculateOrderTotals, DEFAULT_FOOD_TAX_RATE } from '@/lib/order-totals';
+import { calculateModifierExtra, isVariantPricingGroup } from '@corgi/contracts';
 import { allergenIcon } from '@/lib/allergens';
 import type { TableDisplayStatus } from '@/lib/table-display-status';
+import PosOrderConfirmSheet, { type PosOrderConfirmMeta } from './PosOrderConfirmSheet';
 
 export interface OrderItem {
   id: string;
@@ -22,18 +24,27 @@ export interface OrderItem {
   price: number;
   quantity: number;
   comments?: string;
+  isNew?: boolean;
 }
+
+type OrderAction =
+  | 'send_to_kitchen'
+  | 'takeaway'
+  | 'checkout'
+  | 'print_check'
+  | 'clean';
 
 interface OrderTerminalModalProps {
   tableId: string;
   tableName: string;
   onClose: () => void;
   onAction: (
-    action: 'send_to_kitchen' | 'takeaway' | 'checkout' | 'print_check' | 'clean',
+    action: OrderAction,
     items: OrderItem[],
     discountPercent: number,
     customerId?: string,
-    keepOpen?: boolean
+    keepOpen?: boolean,
+    meta?: PosOrderConfirmMeta
   ) => void;
   currentStatus: TableDisplayStatus;
   initialOrder?: Order | null;
@@ -138,6 +149,31 @@ export default function OrderTerminalModal({
     return false;
   });
   const [isReady, setIsReady] = useState(initialOrder ? initialOrder.status === 'ready' : false);
+  const [pendingAction, setPendingAction] = useState<OrderAction | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const requestOrderAction = (action: OrderAction) => {
+    if (orderItems.length === 0 && action !== 'clean' && action !== 'print_check') return;
+    if (action === 'clean' || action === 'print_check') {
+      onAction(action, orderItems, discount, selectedCustomer?.id, false);
+      return;
+    }
+    setPendingAction(action);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmOrder = (meta: PosOrderConfirmMeta) => {
+    if (!pendingAction) return;
+    onAction(pendingAction, orderItems, discount, selectedCustomer?.id, true, meta);
+    setConfirmOpen(false);
+    if (pendingAction === 'send_to_kitchen' || pendingAction === 'takeaway') {
+      setIsSentToKitchen(true);
+    }
+    if (pendingAction === 'checkout') {
+      setIsSentToKitchen(true);
+    }
+    setPendingAction(null);
+  };
 
   useEffect(() => {
     if (!initialOrder) {
@@ -156,6 +192,7 @@ export default function OrderTerminalModal({
         price: item.price,
         quantity: item.quantity,
         comments: item.comments,
+        isNew: false,
       }))
     );
     setDiscount(initialOrder.discount ? initialOrder.discount.value / 100 : 0);
@@ -297,9 +334,9 @@ export default function OrderTerminalModal({
     }
   };
 
-  const getCategoryModifierGroups = (categoryId: string): PosModifierGroup[] => {
-    const cat = menuList.find((c) => c.id === categoryId);
-    return cat?.modifierGroups?.filter((g) => g.options.length > 0) ?? [];
+  const getItemModifierGroups = (item: PosMenuItem): PosModifierGroup[] => {
+    const cat = menuList.find((c) => c.id === (item.categoryId || activeCategory));
+    return resolvePosItemModifierGroups(item, cat);
   };
 
   const addItem = (item: PosMenuItem, size?: string, modifierExtra = 0, modifierLabel = '') => {
@@ -313,7 +350,7 @@ export default function OrderTerminalModal({
       if (existing) {
         return prev.map(i => i.name === itemName && i.price === price ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { id: `m-${Date.now()}-${item.id}`, name: itemName, price, quantity: 1 }];
+      return [...prev, { id: `m-${Date.now()}-${item.id}`, name: itemName, price, quantity: 1, isNew: true }];
     });
   };
 
@@ -322,11 +359,16 @@ export default function OrderTerminalModal({
       addItem(item, size);
       return;
     }
-    const categoryId = item.categoryId || activeCategory;
-    const groups = getCategoryModifierGroups(categoryId);
+    const groups = getItemModifierGroups(item);
     if (groups.length > 0) {
       setModifierPickerItem(item);
-      setSelectedModifiers({});
+      const defaults: Record<string, string> = {};
+      for (const group of groups) {
+        if (isVariantPricingGroup(group) && group.options[0]) {
+          defaults[group.id] = group.options[0].id;
+        }
+      }
+      setSelectedModifiers(defaults);
       return;
     }
     addItem(item);
@@ -334,19 +376,21 @@ export default function OrderTerminalModal({
 
   const confirmAddWithModifiers = () => {
     if (!modifierPickerItem) return;
-    const categoryId = modifierPickerItem.categoryId || activeCategory;
-    const groups = getCategoryModifierGroups(categoryId);
-    let extra = 0;
+    const groups = getItemModifierGroups(modifierPickerItem);
+    const selections: Array<{ groupId: string; optionId: string; price: number }> = [];
     const names: string[] = [];
     for (const group of groups) {
       const optionId = selectedModifiers[group.id];
-      if (!optionId) continue;
-      const option = group.options.find((o) => o.id === optionId);
-      if (option) {
-        extra += option.price;
-        names.push(option.name);
+      if (!optionId) {
+        if (isVariantPricingGroup(group)) return;
+        continue;
       }
+      const option = group.options.find((o) => o.id === optionId);
+      if (!option) continue;
+      selections.push({ groupId: group.id, optionId: option.id, price: option.price });
+      names.push(option.name);
     }
+    const extra = calculateModifierExtra(modifierPickerItem.price, groups, selections);
     addItem(modifierPickerItem, undefined, extra, names.join(', '));
     setModifierPickerItem(null);
     setSelectedModifiers({});
@@ -899,12 +943,7 @@ export default function OrderTerminalModal({
 
             <div className="flex gap-2">
                 <button 
-                  onClick={() => {
-                    if (!isReady && !isSentToKitchen) {
-                      onAction('send_to_kitchen', orderItems, discount, selectedCustomer?.id, true);
-                      setIsSentToKitchen(true);
-                    }
-                  }}
+                  onClick={() => requestOrderAction('send_to_kitchen')}
                   disabled={orderItems.length === 0 || isSentToKitchen || isReady}
                   className={`flex-1 py-3.5 rounded-2xl font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] ${
                     isReady
@@ -918,13 +957,8 @@ export default function OrderTerminalModal({
                   {isReady ? 'Ready' : isSentToKitchen ? 'Preparing' : 'Kitchen'}
                 </button>
 
-                <button
-                  onClick={() => {
-                    if (!isReady && !isSentToKitchen) {
-                      onAction('takeaway', orderItems, discount, selectedCustomer?.id, true);
-                      setIsSentToKitchen(true);
-                    }
-                  }}
+                <button 
+                  onClick={() => requestOrderAction('takeaway')}
                   disabled={orderItems.length === 0 || isSentToKitchen || isReady}
                   className="flex-1 py-3.5 rounded-2xl font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] bg-white border-2 border-gray-200 hover:border-gray-900 text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
@@ -933,10 +967,7 @@ export default function OrderTerminalModal({
                 </button>
 
                 <button 
-                  onClick={() => {
-                    onAction('checkout', orderItems, discount, selectedCustomer?.id, true);
-                    setIsSentToKitchen(true);
-                  }}
+                  onClick={() => requestOrderAction('checkout')}
                   disabled={orderItems.length === 0 || isSentToKitchen || isReady || !!initialOrder?.paid}
                   className="flex-1 py-3.5 bg-corgi hover:brightness-105 text-white rounded-2xl font-bold transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[72px] text-xs sm:text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
@@ -956,13 +987,21 @@ export default function OrderTerminalModal({
         >
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5">
             <h3 className="text-lg font-bold text-gray-900">{modifierPickerItem.name}</h3>
-            <p className="text-sm text-gray-500 font-medium">Choose modifiers (optional)</p>
-            {getCategoryModifierGroups(modifierPickerItem.categoryId || activeCategory).map((group) => (
+            <p className="text-sm text-gray-500 font-medium">Choose size and modifiers</p>
+            {getItemModifierGroups(modifierPickerItem).map((group) => (
               <div key={group.id} className="space-y-2">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{group.name}</span>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  {group.name}
+                  {isVariantPricingGroup(group) ? ' *' : ''}
+                </span>
                 <div className="flex flex-wrap gap-2">
                   {group.options.map((option) => {
                     const selected = selectedModifiers[group.id] === option.id;
+                    const priceLabel = isVariantPricingGroup(group)
+                      ? `(${money(option.price)})`
+                      : option.price > 0
+                        ? `(+${money(option.price)})`
+                        : '';
                     return (
                       <button
                         key={option.id}
@@ -982,7 +1021,7 @@ export default function OrderTerminalModal({
                             : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                         }`}
                       >
-                        {option.name} {option.price > 0 ? `(+${money(option.price)})` : ''}
+                        {option.name} {priceLabel}
                       </button>
                     );
                   })}
@@ -1009,6 +1048,27 @@ export default function OrderTerminalModal({
           </div>
         </div>
       )}
+
+      <PosOrderConfirmSheet
+        isOpen={confirmOpen}
+        title={
+          pendingAction === 'checkout'
+            ? 'Confirm checkout'
+            : pendingAction === 'takeaway'
+              ? 'Confirm takeaway'
+              : 'Send to kitchen'
+        }
+        confirmLabel={
+          pendingAction === 'checkout' ? 'Open checkout' : 'Confirm order'
+        }
+        initialGuestCount={initialOrder?.guestCount ?? 2}
+        initialStaffId={initialOrder?.takenByStaffId}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setPendingAction(null);
+        }}
+        onConfirm={handleConfirmOrder}
+      />
     </div>
   );
 }

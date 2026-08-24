@@ -23,95 +23,7 @@ export class CategoryHasActiveItemsError extends Error {
 }
 
 export class MenuRepository {
-  private emenuSeedPromise: Promise<void> | null = null;
-
-  async ensureEmenuSeedMenu(): Promise<void> {
-    if (!this.emenuSeedPromise) {
-      this.emenuSeedPromise = this.runEmenuSeed();
-    }
-    return this.emenuSeedPromise;
-  }
-
-  private async runEmenuSeed(): Promise<void> {
-    let pastries = await prisma.menuCategory.findFirst({
-      where: { name: 'Pastries', isArchived: false },
-      include: { modifierGroups: true }
-    });
-    if (!pastries) {
-      const maxOrder = await prisma.menuCategory.aggregate({ _max: { sortOrder: true } });
-      pastries = await prisma.menuCategory.create({
-        data: { name: 'Pastries', sortOrder: (maxOrder._max.sortOrder ?? -1) + 1 },
-        include: { modifierGroups: true }
-      });
-    }
-
-    const almond = await prisma.menuItem.findFirst({
-      where: { name: 'Almond Croissant' },
-    });
-    if (!almond) {
-      await prisma.menuItem.create({
-        data: {
-          name: 'Almond Croissant',
-          description: 'A flaky, buttery double-baked French pastry filled with rich sweet almond frangipane cream and topped with toasted sliced almonds.',
-          price: 4.0,
-          categoryId: pastries.id,
-          allergens: ['Gluten', 'Milk', 'Nuts'],
-        },
-      });
-      await prisma.modifierGroup.create({
-        data: {
-          name: 'Choose fillings',
-          minQty: 0,
-          maxQty: 1,
-          categories: {
-            connect: { id: pastries.id }
-          },
-          options: {
-            create: [
-              { name: 'Extra chocolate filling', price: 0.50, sortOrder: 1 },
-              { name: 'Vanilla cream filling', price: 0.50, sortOrder: 2 }
-            ]
-          }
-        }
-      });
-      await invalidateMenuCache();
-      return;
-    }
-
-    // Always update description and ensure modifier groups exist!
-    await prisma.menuItem.update({
-      where: { id: almond.id },
-      data: {
-        description: 'A flaky, buttery double-baked French pastry filled with rich sweet almond frangipane cream and topped with toasted sliced almonds.',
-        allergens: ['Gluten', 'Dairy', 'Nuts']
-      }
-    });
-
-    if (!pastries.modifierGroups || pastries.modifierGroups.length === 0) {
-      await prisma.modifierGroup.create({
-        data: {
-          name: 'Choose fillings',
-          minQty: 0,
-          maxQty: 1,
-          categories: {
-            connect: { id: pastries.id }
-          },
-          options: {
-            create: [
-              { name: 'Extra chocolate filling', price: 0.50, sortOrder: 1 },
-              { name: 'Vanilla cream filling', price: 0.50, sortOrder: 2 }
-            ]
-          }
-        }
-      });
-    }
-
-    await invalidateMenuCache();
-  }
-
   async getCategories(includeArchived: boolean = false) {
-    await this.ensureEmenuSeedMenu();
-
     const cacheKey = menuCategoriesCacheKey(includeArchived);
     const cached = await cache.get<Awaited<ReturnType<typeof this.fetchCategories>>>(cacheKey);
     if (cached) return cached;
@@ -127,8 +39,20 @@ export class MenuRepository {
       include: {
         items: {
           where: includeArchived ? undefined : { isArchived: false },
-          orderBy: { name: 'asc' },
-          include: { translations: true },
+          orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+          include: {
+            translations: true,
+            modifierGroups: {
+              where: includeArchived ? undefined : { isArchived: false },
+              include: {
+                options: {
+                  where: includeArchived ? undefined : { isArchived: false },
+                  orderBy: { sortOrder: 'asc' },
+                },
+              },
+              orderBy: { sortOrder: 'asc' },
+            },
+          },
         },
         modifierGroups: {
           where: includeArchived ? undefined : { isArchived: false },
@@ -287,6 +211,25 @@ export class MenuRepository {
     });
     await invalidateMenuCache();
     return updated;
+  }
+
+  async getMenuItem(id: string) {
+    return prisma.menuItem.findUnique({
+      where: { id },
+      include: {
+        translations: true,
+        modifierGroups: {
+          where: { isArchived: false },
+          include: {
+            options: {
+              where: { isArchived: false },
+              orderBy: { sortOrder: 'asc' },
+            },
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
   }
 
   async archiveMenuItem(id: string) {

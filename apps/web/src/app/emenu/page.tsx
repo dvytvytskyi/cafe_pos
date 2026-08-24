@@ -34,24 +34,6 @@ import {
   isCoffeeCategory,
 } from '@/lib/emenu';
 
-const fallbackDishes: EMenuDish[] = [
-  { id: 'd1', categoryId: '1', categoryName: 'Coffee', name: 'Espresso', description: 'Single shot of rich espresso', image: DEFAULT_EMENU_IMAGE, basePrice: 2.5, allergens: [] },
-  { id: 'd2', categoryId: '1', categoryName: 'Coffee', name: 'Macchiato', description: 'Espresso with a dash of frothy milk', image: DEFAULT_EMENU_IMAGE, basePrice: 2.8, allergens: ['Dairy'] },
-  { id: 'd5', categoryId: '1', categoryName: 'Coffee', name: 'Flat White', description: 'Espresso with microfoam', image: DEFAULT_EMENU_IMAGE, basePrice: 3.5, allergens: ['Dairy'] },
-  { id: 'd7', categoryId: '1', categoryName: 'Coffee', name: 'Latte', description: 'Espresso with steamed milk and foam', image: DEFAULT_EMENU_IMAGE, basePrice: 4.0, allergens: ['Dairy'] },
-  { id: 'd9', categoryId: '2', categoryName: 'Pastries', name: 'Croissant', description: 'Buttery, flaky pastry', image: DEFAULT_EMENU_IMAGE, basePrice: 3.0, allergens: ['Gluten', 'Dairy'] },
-  { id: 'd11', categoryId: '2', categoryName: 'Pastries', name: 'Almond Croissant', description: 'Filled with almond paste', image: DEFAULT_EMENU_IMAGE, basePrice: 4.0, allergens: ['Gluten', 'Dairy', 'Nuts'] },
-  { id: 'd15', categoryId: '3', categoryName: 'Sandwiches', name: 'Ham & Cheese Sandwich', description: 'Ham and gruyere on baguette', image: DEFAULT_EMENU_IMAGE, basePrice: 5.5, allergens: ['Gluten', 'Dairy'] },
-  { id: 'd21', categoryId: '4', categoryName: 'Smoothies', name: 'Berry Blast Smoothie', description: 'Strawberry, blueberry, raspberry blend', image: DEFAULT_EMENU_IMAGE, basePrice: 5.0, allergens: [] },
-];
-
-const fallbackCategories: EMenuCategory[] = [
-  { id: '1', name: 'Coffee' },
-  { id: '2', name: 'Pastries' },
-  { id: '3', name: 'Sandwiches' },
-  { id: '4', name: 'Smoothies' },
-];
-
 const categoryIcons: Record<string, React.ComponentType<{ size?: number }>> = {
   Coffee,
   Pastries: Croissant,
@@ -63,8 +45,6 @@ function getCategoryIcon(name: string) {
   return categoryIcons[name] || Coffee;
 }
 
-const isDevMenu = process.env.NODE_ENV === 'development';
-
 function EMenuContent() {
   const searchParams = useSearchParams();
   const locationId = searchParams.get('location') || DEFAULT_LOCATION_ID;
@@ -72,12 +52,12 @@ function EMenuContent() {
   const tableId = normalizeTableId(rawTable);
   const displayTable = rawTable?.replace(/^[Tt]/, '') || tableId.replace(/^t/i, '');
 
-  const [categories, setCategories] = useState<EMenuCategory[]>(isDevMenu ? fallbackCategories : []);
-  const [allDishes, setAllDishes] = useState<EMenuDish[]>(isDevMenu ? fallbackDishes : []);
+  const [categories, setCategories] = useState<EMenuCategory[]>([]);
+  const [allDishes, setAllDishes] = useState<EMenuDish[]>([]);
   const [menuLoading, setMenuLoading] = useState(true);
   const [menuFromApi, setMenuFromApi] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
-  const [activeCategoryId, setActiveCategoryId] = useState(isDevMenu ? fallbackCategories[0].id : '');
+  const [activeCategoryId, setActiveCategoryId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [excludedAllergens, setExcludedAllergens] = useState<string[]>([]);
   const [showAllergenPanel, setShowAllergenPanel] = useState(false);
@@ -108,7 +88,7 @@ function EMenuContent() {
         if (!cancelled && mapped.dishes.length > 0) {
           setCategories(mapped.categories);
           setAllDishes(mapped.dishes);
-          setActiveCategoryId(mapped.categories[0]?.id || fallbackCategories[0].id);
+          setActiveCategoryId(mapped.categories[0]?.id || '');
           setMenuFromApi(true);
           setMenuError(null);
         } else if (!cancelled) {
@@ -119,16 +99,9 @@ function EMenuContent() {
       } catch (e) {
         console.warn('eMenu: menu API load failed:', e);
         if (!cancelled) {
-          if (isDevMenu) {
-            setCategories(fallbackCategories);
-            setAllDishes(fallbackDishes);
-            setActiveCategoryId(fallbackCategories[0].id);
-            setMenuError('Could not load menu from server — showing dev sample dishes.');
-          } else {
-            setCategories([]);
-            setAllDishes([]);
-            setMenuError('Could not load menu from server. Please try again later.');
-          }
+          setCategories([]);
+          setAllDishes([]);
+          setMenuError('Could not load menu from server. Please try again later.');
         }
       } finally {
         if (!cancelled) setMenuLoading(false);

@@ -22,8 +22,9 @@ export function parseGuestLocale(value: unknown): GuestLocale {
 }
 
 export function validateLocationId(value: unknown): string {
-  if (typeof value !== 'string' || !value.trim()) return 'default';
-  return value.trim();
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (!raw || raw === 'default') return 'loc-gotico';
+  return raw;
 }
 
 export function validateTableParam(value: unknown): string | undefined {

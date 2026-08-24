@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, MapPin, ShoppingBag, Bike, Store, Printer, CreditCard, Trash2, SplitSquareHorizontal, Banknote, CheckCircle2, ChevronLeft, Tag, Percent, Coins, Heart, Mail, Send, Download, AlertCircle, Users, Sparkles, Gift, UserPlus, MessageSquare, Receipt, ChefHat, AlertTriangle, Search, Minus, Plus, Check, RotateCcw } from 'lucide-react';
-import { Order, OrderSource, OrderItem, completePaymentAsync, PayPayload, getOrderLoyaltyGuestIds, withAddedLoyaltyGuest, withRemovedLoyaltyGuest, detachOrderFromTableAsync } from '@/lib/orders';
+import { Order, OrderSource, OrderItem, completePaymentAsync, PayPayload, getOrderLoyaltyGuestIds, withAddedLoyaltyGuest, withRemovedLoyaltyGuest, detachOrderFromTableAsync, updateOrderItemAsync } from '@/lib/orders';
+import { getEmployeesAsync, type Employee } from '@/lib/staff';
+import PosPaymentStaffSheet from '@/components/pos/PosPaymentStaffSheet';
 import { getStatusAfterPreparing } from '@/lib/orders-board';
 import { getDiscountPresetsAsync, DiscountPreset } from '@/lib/discounts';
 import { Guest, getGuestsAsync, getTierCashbackRate, getLoyaltyConfigAsync, DEFAULT_LOYALTY_CONFIG, formatLoyaltyPoints, type LoyaltyConfig } from '@/lib/crm';
@@ -81,6 +83,12 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
   const [showGiftCardInput, setShowGiftCardInput] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [staffList, setStaffList] = useState<Employee[]>([]);
+  const [paymentStaffOpen, setPaymentStaffOpen] = useState(false);
+  const [pendingPaymentPayload, setPendingPaymentPayload] = useState<{
+    payments: PayPayload['payments'];
+    options?: { paidItemIndexes?: number[]; onSuccess?: () => void };
+  } | null>(null);
   const [shiftOpen, setShiftOpen] = useState<boolean | null>(null);
   const [shiftWarning, setShiftWarning] = useState(false);
   const [refundSelections, setRefundSelections] = useState<Record<number, number>>({});
@@ -273,6 +281,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         console.error('Failed to load guests dynamically:', e);
         setAllGuests([]);
       });
+      getEmployeesAsync().then(setStaffList).catch(() => setStaffList([]));
       getPosSettingsAsync().then(setPosSettings).catch(console.error);
       setManualDiscount('');
       setManualTip('');
@@ -409,11 +418,19 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
     }
   };
 
+  const staffName = (id?: string | null) =>
+    staffList.find((s) => s.id === id)?.name ?? (id ? id.slice(0, 8) : '—');
+
   const handleCompletePayment = async (
     payments: PayPayload['payments'],
-    options?: { paidItemIndexes?: number[]; onSuccess?: () => void }
+    options?: { paidItemIndexes?: number[]; onSuccess?: () => void; closedByStaffId?: string }
   ) => {
     if (!order || paymentProcessing) return;
+    if (!options?.closedByStaffId) {
+      setPendingPaymentPayload({ payments, options });
+      setPaymentStaffOpen(true);
+      return;
+    }
     setPaymentProcessing(true);
     setPaymentError(null);
     setGiftCardError(null);
@@ -425,6 +442,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         tip: order.tip ? { type: order.tip.type, value: order.tip.value } : undefined,
         total: order.total,
         paidItemIndexes: options?.paidItemIndexes,
+        closedByStaffId: options.closedByStaffId,
       });
       if (updated.warnings?.includes('NO_OPEN_SHIFT')) {
         setShiftWarning(true);
@@ -615,6 +633,19 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         )}
       </AnimatePresence>
 
+      {/* Staff accountability */}
+      {order && (
+        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-xs space-y-1.5 mb-4">
+          <div className="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Staff</div>
+          <div className="flex justify-between"><span className="text-gray-500">Order taken by</span><span className="font-semibold text-gray-900">{staffName(order.takenByStaffId)}</span></div>
+          <div className="flex justify-between"><span className="text-gray-500">Table waiter</span><span className="font-semibold text-gray-900">{staffName(order.assignedStaffId)}</span></div>
+          <div className="flex justify-between"><span className="text-gray-500">Payment closed by</span><span className="font-semibold text-gray-900">{staffName(order.closedByStaffId)}</span></div>
+          {order.guestCount ? (
+            <div className="flex justify-between"><span className="text-gray-500">Guests</span><span className="font-semibold text-gray-900">{order.guestCount}</span></div>
+          ) : null}
+        </div>
+      )}
+
       {/* Order Items */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100">
         <h3 className="text-gray-900 font-bold mb-3">Order Summary</h3>
@@ -627,9 +658,36 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
                 <div className="flex justify-between items-center w-full">
                   <div className="flex gap-3 items-center">
                     {!item.paid && <span className="text-gray-400 font-bold w-4">{item.quantity}x</span>}
-                    <span className="font-bold text-gray-700">{item.name} {item.paid && <span className="text-xs text-green-600 ml-1 px-1.5 py-0.5 bg-green-100 rounded-md">Paid</span>}</span>
+                    <span className="font-bold text-gray-700">
+                      {item.name}
+                      {item.served && <span className="text-xs text-blue-600 ml-1 px-1.5 py-0.5 bg-blue-50 rounded-md">Served</span>}
+                      {item.paid && <span className="text-xs text-green-600 ml-1 px-1.5 py-0.5 bg-green-100 rounded-md">Paid</span>}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    {!order.paid && item.id && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await updateOrderItemAsync(order.id, item.id!, { served: !item.served });
+                            const newItems = order.items.map((it, i) =>
+                              i === idx ? { ...it, served: !item.served } : it
+                            );
+                            onUpdateOrder({ ...order, items: newItems });
+                          } catch (e) {
+                            console.error(e);
+                          }
+                        }}
+                        className={`text-[10px] font-bold px-2 py-1 rounded-lg border ${
+                          item.served
+                            ? 'bg-blue-50 border-blue-200 text-blue-700'
+                            : 'bg-white border-gray-200 text-gray-500 hover:border-blue-300'
+                        }`}
+                      >
+                        {item.served ? 'Unserve' : 'Served'}
+                      </button>
+                    )}
                     <span className="font-bold text-gray-900">€{(item.price * item.quantity).toFixed(2)}</span>
                     {(!order.paid || order.status === 'incoming' || order.status === 'preparing') && !item.paid && (
                       <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-0.5 shrink-0 border border-gray-200/50">
@@ -2480,6 +2538,7 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <>
@@ -2666,5 +2725,24 @@ export default function OrderDetailsModal({ order, isOpen, initialView = 'defaul
         </>
       )}
     </AnimatePresence>
+
+    <PosPaymentStaffSheet
+      isOpen={paymentStaffOpen}
+      onCancel={() => {
+        setPaymentStaffOpen(false);
+        setPendingPaymentPayload(null);
+      }}
+      onConfirm={(closedByStaffId) => {
+        setPaymentStaffOpen(false);
+        if (pendingPaymentPayload) {
+          void handleCompletePayment(pendingPaymentPayload.payments, {
+            ...pendingPaymentPayload.options,
+            closedByStaffId,
+          });
+          setPendingPaymentPayload(null);
+        }
+      }}
+    />
+    </>
   );
 }

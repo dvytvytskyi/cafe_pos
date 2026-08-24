@@ -17,6 +17,7 @@ export interface UiOrderItem {
   sentToKitchen?: boolean;
   sentToBar?: boolean;
   served?: boolean;
+  soldByStaffId?: string;
 }
 
 export interface UiOrder {
@@ -222,12 +223,19 @@ export function mapUiOrderToApi(
     tableId: ui.tableId,
   };
 
+  if (ui.guestCount !== undefined) payload.guestCount = ui.guestCount;
+  if (ui.takenByStaffId) payload.takenByStaffId = ui.takenByStaffId;
+  if (ui.assignedStaffId) payload.assignedStaffId = ui.assignedStaffId;
+  if (ui.servedByStaffId) payload.servedByStaffId = ui.servedByStaffId;
+  if (ui.closedByStaffId) payload.closedByStaffId = ui.closedByStaffId;
+
   if (ui.items && ui.items.length > 0) {
     payload.items = ui.items.map((item) => ({
       name: item.name,
       price: item.price,
       quantity: item.quantity,
       comments: item.comments,
+      soldByStaffId: item.soldByStaffId,
     }));
   }
 

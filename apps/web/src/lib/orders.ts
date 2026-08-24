@@ -30,11 +30,15 @@ function ensureOfflineSync(locationId: string): void {
 export type OrderSource = 'glovo' | 'ubereats' | 'dine_in' | 'takeaway';
 
 export interface OrderItem {
+  id?: string;
   name: string;
   price: number;
   quantity: number;
   paid?: boolean;
-  comments?: string; // Phase 2: Kitchen comments
+  served?: boolean;
+  comments?: string;
+  soldByStaffId?: string;
+  isNew?: boolean;
 }
 
 export interface Order {

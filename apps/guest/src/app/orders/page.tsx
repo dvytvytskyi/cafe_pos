@@ -24,45 +24,7 @@ import {
   PackageCheck,
 } from 'lucide-react';
 
-// Fallback sample orders for rich demonstration when backend API returns empty
-const SAMPLE_ORDERS: GuestOrderSummary[] = [
-  {
-    id: 'ord-sample-1',
-    orderNumber: '1042',
-    status: 'ready',
-    source: 'emenu',
-    paid: true,
-    total: 14.50,
-    items: [
-      { name: 'Flat White (Oat Milk)', quantity: 2, price: 4.20 },
-      { name: 'Butter Croissant', quantity: 1, price: 3.10 },
-      { name: 'Pistachio Cookie', quantity: 1, price: 3.00 },
-    ],
-  } as any,
-  {
-    id: 'ord-sample-2',
-    orderNumber: '1038',
-    status: 'completed',
-    source: 'merch',
-    paid: true,
-    total: 35.00,
-    items: [
-      { name: 'Corgi Signature Hoodie (Size L)', quantity: 1, price: 35.00 },
-    ],
-  } as any,
-  {
-    id: 'ord-sample-3',
-    orderNumber: '1019',
-    status: 'completed',
-    source: 'emenu',
-    paid: true,
-    total: 9.80,
-    items: [
-      { name: 'Iced Spanish Latte', quantity: 1, price: 4.80 },
-      { name: 'Avocado Toast w/ Poached Egg', quantity: 1, price: 5.00 },
-    ],
-  } as any,
-];
+// Fallback sample orders removed — show only real API data.
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -77,16 +39,11 @@ export default function OrdersPage() {
     if (isLoggedIn) {
       getOrders()
         .then((res) => {
-          if (res.orders && res.orders.length > 0) {
-            setOrders(res.orders);
-          } else {
-            // Use sample orders if backend array is empty
-            setOrders(SAMPLE_ORDERS);
-          }
+          setOrders(res.orders ?? []);
         })
         .catch((err) => {
-          console.warn('Backend orders endpoint offline, displaying sample orders:', err);
-          setOrders(SAMPLE_ORDERS);
+          console.warn('Failed to load orders:', err);
+          setOrders([]);
         })
         .finally(() => setLoading(false));
     } else {

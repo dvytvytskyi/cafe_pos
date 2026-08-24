@@ -6,6 +6,14 @@ export interface MenuItem {
   categoryId: string;
   allergens: string[];
   isArchived: boolean;
+  imageUrl?: string | null;
+  modifierGroups?: Array<{
+    id: string;
+    name: string;
+    minQty?: number;
+    maxQty?: number;
+    options?: Array<{ id: string; name: string; price: number }>;
+  }>;
   priceHistory?: { price: number; date: string }[];
 }
 
@@ -19,6 +27,18 @@ export interface MenuCategory {
 
 const menuCache = new Map<string, { data: MenuCategory[]; ts: number }>();
 const MENU_CLIENT_CACHE_MS = 60_000;
+
+export function clearMenuClientCache(): void {
+  menuCache.clear();
+}
+
+export async function getMenuItemAsync(id: string): Promise<MenuItem> {
+  const res = await fetch(`/api/menu/items/${id}`, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch menu item [${id}]`);
+  }
+  return res.json() as Promise<MenuItem>;
+}
 
 export async function getMenuCategoriesAsync(includeArchived: boolean = false): Promise<MenuCategory[]> {
   const cacheKey = includeArchived ? 'archived' : 'active';

@@ -9,6 +9,7 @@ import { RevenueTable } from '@/components/reports/RevenueTable';
 import { StaffPerformanceTables } from '@/components/reports/StaffPerformanceTables';
 import { DishPerformanceTables } from '@/components/reports/DishPerformanceTables';
 import { FinancialSummaries } from '@/components/reports/FinancialSummaries';
+import { WaiterSalesPanel } from '@/components/reports/WaiterSalesPanel';
 import { Download, Check, ChevronDown, Loader2 } from 'lucide-react';
 import {
   buildRevenueTableRows,
@@ -366,6 +367,11 @@ export default function ReportsPage() {
 
           <div className="w-full">
             <StaffPerformanceTables staffByLocation={report?.staffByLocation ?? []} />
+          </div>
+
+          <div className="w-full bg-white rounded-2xl border border-gray-100 p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Waiter sales (7 days)</h2>
+            <WaiterSalesPanel />
           </div>
 
           <div className="w-full">

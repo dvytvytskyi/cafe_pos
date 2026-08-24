@@ -22,6 +22,7 @@ export interface PosMenuItem {
   sizes?: string[];
   allergens?: string[];
   categoryId?: string;
+  modifierGroups?: PosModifierGroup[];
 }
 
 export interface PosMenuCategory {
@@ -45,6 +46,14 @@ export interface EmenuMappedMenu {
   }>;
 }
 
+interface DbModifierGroup {
+  id: string;
+  name: string;
+  minQty: number;
+  maxQty: number;
+  options?: Array<{ id: string; name: string; price: number }>;
+}
+
 interface DbMenuCategory {
   id: string;
   name: string;
@@ -54,14 +63,9 @@ interface DbMenuCategory {
     description?: string | null;
     price: number;
     allergens?: string[];
+    modifierGroups?: DbModifierGroup[];
   }>;
-  modifierGroups?: Array<{
-    id: string;
-    name: string;
-    minQty: number;
-    maxQty: number;
-    options?: Array<{ id: string; name: string; price: number }>;
-  }>;
+  modifierGroups?: DbModifierGroup[];
 }
 
 const DEFAULT_EMENU_IMAGE =
@@ -69,6 +73,32 @@ const DEFAULT_EMENU_IMAGE =
 
 function mapItemAllergens(allergens?: string[]): string[] {
   return normalizeAllergenList(allergens);
+}
+
+function mapModifierGroups(groups?: DbModifierGroup[]): PosModifierGroup[] {
+  return (groups ?? [])
+    .map((g) => ({
+      id: g.id,
+      name: g.name,
+      minQty: g.minQty,
+      maxQty: g.maxQty,
+      options: (g.options ?? []).map((o) => ({
+        id: o.id,
+        name: o.name,
+        price: o.price,
+      })),
+    }))
+    .filter((g) => g.options.length > 0);
+}
+
+/** Prefer per-item modifier groups; fall back to category-level (legacy). */
+export function resolvePosItemModifierGroups(
+  item: Pick<PosMenuItem, 'modifierGroups' | 'categoryId'>,
+  category?: Pick<PosMenuCategory, 'modifierGroups'>
+): PosModifierGroup[] {
+  const itemGroups = item.modifierGroups?.filter((g) => g.options.length > 0) ?? [];
+  if (itemGroups.length > 0) return itemGroups;
+  return category?.modifierGroups?.filter((g) => g.options.length > 0) ?? [];
 }
 
 export function mapCategoriesToEmenuMenu(
@@ -115,17 +145,7 @@ export function mapCategoriesToPosMenu(categories: DbMenuCategory[] | null | und
   return categories.map((cat) => ({
     id: cat.id,
     name: cat.name,
-    modifierGroups: (cat.modifierGroups ?? []).map((g) => ({
-      id: g.id,
-      name: g.name,
-      minQty: g.minQty,
-      maxQty: g.maxQty,
-      options: (g.options ?? []).map((o) => ({
-        id: o.id,
-        name: o.name,
-        price: o.price,
-      })),
-    })),
+    modifierGroups: mapModifierGroups(cat.modifierGroups),
     items: (cat.items || []).map((item) => ({
       id: item.id,
       name: item.name,
@@ -133,6 +153,7 @@ export function mapCategoriesToPosMenu(categories: DbMenuCategory[] | null | und
       allergens: mapItemAllergens(item.allergens),
       sizes: [],
       categoryId: cat.id,
+      modifierGroups: mapModifierGroups(item.modifierGroups),
     })),
   }));
 }

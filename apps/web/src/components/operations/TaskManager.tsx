@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Clock, CheckSquare, Paperclip, Plus, MoreVertical, Search, ChevronLeft, ChevronRight, Calendar, Users, MapPin, Filter, ChevronDown, ArrowLeft, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DatePicker from '../ui/DatePicker';
-import NewTaskModal, { MOCK_USERS } from './NewTaskModal';
+import NewTaskModal from './NewTaskModal';
 import BoardSettingsModal, { Stage } from './BoardSettingsModal';
 import {
   Task,
@@ -142,9 +142,7 @@ export default function TaskManager({
   }, [isClientMounted]);
 
   const resolveAssigneeName = (id: string) => {
-    return employees.find((e) => e.id === id)?.name
-      || MOCK_USERS.find((u) => u.id === id)?.name
-      || 'Unknown';
+    return employees.find((e) => e.id === id)?.name || 'Unknown';
   };
 
   const openNewTaskModal = (status = 'todo') => {
@@ -359,9 +357,9 @@ export default function TaskManager({
                     </button>
                     {uniqueAssignees.map(a => {
                       const name = resolveAssigneeName(a);
-                      const mock = MOCK_USERS.find(u => u.id === a);
-                      const initials = mock?.initials || name.slice(0, 2).toUpperCase();
-                      const bg = mock?.bg || 'bg-corgi';
+                      const employee = employees.find((e) => e.id === a);
+                      const initials = employee?.avatarInitials || name.slice(0, 2).toUpperCase();
+                      const bg = 'bg-corgi';
                       return (
                         <button 
                           key={a}
@@ -675,9 +673,9 @@ export default function TaskManager({
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center -space-x-2">
             {task.assignees?.map((userId, i) => {
-              const u = MOCK_USERS.find(user => user.id === userId);
-              const initials = u?.initials || resolveAssigneeName(userId).slice(0, 2).toUpperCase();
-              const bg = u?.bg || 'bg-corgi';
+              const employee = employees.find((e) => e.id === userId);
+              const initials = employee?.avatarInitials || resolveAssigneeName(userId).slice(0, 2).toUpperCase();
+              const bg = 'bg-corgi';
               return (
                 <div key={i} className={`w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 border-2 border-white ${bg}`}>
                   {initials}

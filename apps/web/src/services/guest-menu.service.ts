@@ -1,10 +1,12 @@
 import { menuRepository } from '../repositories/menu.repository';
 import { DEFAULT_EMENU_IMAGE, type GuestLocale } from '../lib/guest-constants';
 import { normalizeAllergenList } from '../lib/allergens';
+import { filterDishesBySearch } from '@/lib/menu-validation';
+import { getMenuListingPrice, resolveVariantOptionPrice, resolveVariantPricingGroup } from '@corgi/contracts';
 
 type DbCategory = Awaited<ReturnType<typeof menuRepository.getCategories>>[number];
 type DbItem = NonNullable<DbCategory['items']>[number];
-type DbModifierGroup = NonNullable<DbCategory['modifierGroups']>[number];
+type DbModifierGroup = NonNullable<DbItem['modifierGroups']>[number];
 
 function pickTranslation(
   item: DbItem & { translations?: Array<{ locale: string; name: string; description: string | null }> },
@@ -25,45 +27,68 @@ function itemVisibleAtLocation(item: DbItem, locationId: string): boolean {
   return locs.includes(locationId);
 }
 
-import { filterDishesBySearch } from '@/lib/menu-validation';
+function mapModifierGroups(
+  groups: DbModifierGroup[] | undefined,
+  itemName: string,
+  fallbackPrice: number
+) {
+  const mapped = (groups ?? []).map((g) => ({
+    id: g.id,
+    name: g.name,
+    minQty: g.minQty,
+    maxQty: g.maxQty,
+    options: (g.options ?? []).map((o) => ({
+      id: o.id,
+      name: o.name,
+      price: o.price,
+    })),
+  }));
+
+  const variantGroup = resolveVariantPricingGroup(mapped, itemName);
+  if (!variantGroup) return mapped;
+
+  const rawPrices = variantGroup.options.map((o) => o.price);
+  return mapped.map((g) => {
+    if (g.id !== variantGroup.id) return g;
+    return {
+      ...g,
+      options: g.options.map((o) => ({
+        ...o,
+        price: resolveVariantOptionPrice(o.price, fallbackPrice, rawPrices),
+      })),
+    };
+  });
+}
 
 export class GuestMenuService {
   async getMenu(locationId: string, locale: GuestLocale, searchQuery?: string) {
     const categories = await menuRepository.getCategories(false);
 
-    const mappedCategories = categories.map((cat) => ({ id: cat.id, name: cat.name }));
+    const mappedCategories = categories
+      .filter((cat) => (cat.items ?? []).some((item) => itemVisibleAtLocation(item as DbItem, locationId)))
+      .map((cat) => ({ id: cat.id, name: cat.name }));
 
-    const items = categories.flatMap((cat) => {
-      const modifierGroups = (cat.modifierGroups ?? []).map((g: DbModifierGroup) => ({
-        id: g.id,
-        name: g.name,
-        minQty: g.minQty,
-        maxQty: g.maxQty,
-        options: (g.options ?? []).map((o) => ({
-          id: o.id,
-          name: o.name,
-          price: o.price,
-        })),
-      }));
-
-      return (cat.items ?? [])
+    const items = categories.flatMap((cat) =>
+      (cat.items ?? [])
         .filter((item) => itemVisibleAtLocation(item as DbItem, locationId))
         .map((item) => {
           const t = pickTranslation(item as DbItem & { translations?: any[] }, locale);
+          const dbItem = item as DbItem;
+          const modifierGroups = mapModifierGroups(dbItem.modifierGroups, t.name, item.price);
           return {
             id: item.id,
             categoryId: cat.id,
             categoryName: cat.name,
             name: t.name,
             description: t.description,
-            image: (item as DbItem).imageUrl || DEFAULT_EMENU_IMAGE,
-            basePrice: item.price,
+            image: dbItem.imageUrl || DEFAULT_EMENU_IMAGE,
+            basePrice: getMenuListingPrice(item.price, modifierGroups, t.name),
             allergens: normalizeAllergenList(item.allergens),
-            tags: (item as DbItem).tags ?? [],
+            tags: dbItem.tags ?? [],
             modifierGroups,
           };
-        });
-    });
+        })
+    );
 
     const filteredItems = searchQuery?.trim()
       ? filterDishesBySearch(items, searchQuery.trim())

@@ -113,6 +113,7 @@ model ModifierGroup {
   sortOrder   Int              @default(0)
   options     ModifierOption[]
   categories  MenuCategory[]   @relation("CategoryModifierGroups")
+  menuItems   MenuItem[]       @relation("MenuItemModifierGroups")
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 }
@@ -130,22 +131,28 @@ model ModifierOption {
 }
 
 model MenuItem {
-  id           String                @id @default(uuid())
-  name         String
-  description  String?
-  price        Float
-  categoryId   String
-  category     MenuCategory          @relation(fields: [categoryId], references: [id])
-  allergens    String[]              // Масив алергенів: ["nuts", "dairy"]
-  tags         String[]              @default([])
-  imageUrl     String?
-  isVisible    Boolean               @default(true)
-  locationIds  String[]              @default([])
-  isArchived   Boolean               @default(false)
-  priceHistory Json?                 // Історія цін
-  translations MenuItemTranslation[]
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
+  id             String                @id @default(uuid())
+  name           String
+  description    String?
+  price          Float
+  categoryId     String
+  category       MenuCategory          @relation(fields: [categoryId], references: [id])
+  allergens      String[]              // Масив алергенів: ["nuts", "dairy"]
+  tags           String[]              @default([])
+  imageUrl       String?
+  isVisible      Boolean               @default(true)
+  locationIds    String[]              @default([])
+  isArchived     Boolean               @default(false)
+  sortOrder      Int                   @default(0)
+  guavaSourceId  String?               // Original Guava menuItem.id (for re-import)
+  priceHistory   Json?                 // Історія цін
+  translations   MenuItemTranslation[]
+  modifierGroups ModifierGroup[]       @relation("MenuItemModifierGroups")
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([categoryId, sortOrder])
+  @@index([guavaSourceId])
 }
 
 model MenuItemTranslation {

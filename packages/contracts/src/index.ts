@@ -1,3 +1,5 @@
+export * from './menu-pricing';
+
 export type GuestLocale = 'en' | 'es' | 'ca' | 'uk';
 
 export interface GuestModifierOption {

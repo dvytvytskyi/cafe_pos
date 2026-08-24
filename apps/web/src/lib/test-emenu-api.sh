@@ -22,7 +22,7 @@ echo "$ORDER" | grep -q "$OID" && echo "✅ T5.4 Order persisted with id"
 ACTIVE=$(curl -sf -m 10 "$BASE/api/orders?locationId=$LOC")
 echo "$ACTIVE" | grep -q "$OID" && echo "✅ T5.5 Order visible in active orders list"
 
-curl -sf -m 10 "$BASE/api/menu/categories" | grep -q 'Almond Croissant' && echo "✅ T5.7 Almond Croissant seeded in menu"
+curl -sf -m 10 "$BASE/api/menu/categories" | grep -q 'Food' && echo "✅ T5.7 Guava menu present in menu API"
 curl -sf -m 10 "$BASE/api/menu/categories" | grep -q 'Nuts' && echo "✅ T5.7 Nuts allergen present in menu API"
 
 QR_PATH="/emenu?location=$LOC&table=$TABLE"

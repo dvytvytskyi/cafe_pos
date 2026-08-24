@@ -5,7 +5,7 @@ import { Plus, Search, ChevronDown, ChevronUp, MoreHorizontal, Edit2, Trash2, Im
 import { Reorder, motion, AnimatePresence } from 'framer-motion';
 import DishModal, { type DishEditData } from './DishModal';
 import ModifiersManagerModal from './ModifiersManagerModal';
-import { getMenuCategoriesAsync, createCategoryAsync, updateCategoryAsync, reorderCategoriesAsync, updateMenuItemAsync, archiveMenuItemAsync, filterDishesBySearch } from '@/lib/menu';
+import { getMenuCategoriesAsync, createCategoryAsync, updateCategoryAsync, reorderCategoriesAsync, updateMenuItemAsync, archiveMenuItemAsync, filterDishesBySearch, clearMenuClientCache } from '@/lib/menu';
 import {
   getModifierGroupsAsync,
   createModifierGroupAsync,
@@ -15,8 +15,17 @@ import {
 } from '@/lib/modifiers';
 import { ALLERGEN_ICONS, EU_ALLERGENS, globalAllergenCatalog } from '@/lib/allergens';
 import { formatPriceDisplay } from '@/lib/format-price';
+import { getMenuListingPrice, getMenuListingPriceRange, resolveVariantPricingGroup } from '@corgi/contracts';
 
 type Category = { id: string; name: string; count: number; icon: React.ElementType; sortOrder?: number };
+type DishModifierGroup = {
+  id: string;
+  name: string;
+  minQty: number;
+  maxQty: number;
+  options: Array<{ id: string; name: string; price: number }>;
+};
+
 type Dish = {
   id: string;
   categoryId: string;
@@ -24,11 +33,30 @@ type Dish = {
   description: string;
   image: string | null;
   basePrice: number;
+  modifierGroups?: DishModifierGroup[];
   allergens: string[];
-  isActive?: boolean;
-  isRecommended?: boolean;
   isArchived?: boolean;
+  isActive: boolean;
 };
+
+function formatDishPrice(dish: Pick<Dish, 'name' | 'basePrice' | 'modifierGroups'>): string {
+  const range = getMenuListingPriceRange(dish.basePrice, dish.modifierGroups, dish.name);
+  if (range.hasVariants && range.min !== range.max) {
+    return `${formatPriceDisplay(range.min)} – ${formatPriceDisplay(range.max)}`;
+  }
+  return formatPriceDisplay(getMenuListingPrice(dish.basePrice, dish.modifierGroups, dish.name));
+}
+
+function getModifierCounts(groups: DishModifierGroup[], itemName?: string) {
+  const variantGroup = resolveVariantPricingGroup(groups, itemName);
+  const sizeGroups = variantGroup ? [variantGroup] : groups.filter((g) => g.minQty >= 1);
+  const sizeIds = new Set(sizeGroups.map((g) => g.id));
+  const attributeGroups = groups.filter((g) => !sizeIds.has(g.id) && g.minQty === 0);
+  return {
+    sizes: sizeGroups.reduce((sum, g) => sum + g.options.length, 0),
+    attributes: attributeGroups.reduce((sum, g) => sum + g.options.length, 0),
+  };
+}
 
 export default function MenusView() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -62,7 +90,8 @@ export default function MenusView() {
 
   const loadMenu = async () => {
     try {
-      const dbCategories = await getMenuCategoriesAsync(true);
+      clearMenuClientCache();
+      const dbCategories = await getMenuCategoriesAsync(false);
       if (dbCategories && dbCategories.length > 0) {
         const sorted = [...dbCategories].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
         setCategories(sorted.map(c => ({
@@ -79,9 +108,20 @@ export default function MenusView() {
           categoryId: item.categoryId,
           name: item.name,
           description: item.description || '',
-          image: null,
+          image: item.imageUrl ?? null,
           basePrice: item.price,
           allergens: item.allergens ?? [],
+          modifierGroups: (item.modifierGroups ?? []).map((g) => ({
+            id: g.id,
+            name: g.name,
+            minQty: g.minQty ?? 0,
+            maxQty: g.maxQty ?? 1,
+            options: (g.options ?? []).map((o) => ({
+              id: o.id,
+              name: o.name,
+              price: o.price ?? 0,
+            })),
+          })),
           isArchived: item.isArchived,
           isActive: !item.isArchived
         }))));
@@ -221,6 +261,8 @@ export default function MenusView() {
           price: d.basePrice,
           allergens: d.allergens,
           isArchived: d.isArchived,
+          imageUrl: d.image,
+          modifierGroups: d.modifierGroups,
         };
       })()
     : null;
@@ -877,7 +919,7 @@ export default function MenusView() {
                     <div className="p-5 flex flex-col flex-1">
                       <div className="flex justify-between items-start gap-4 mb-2">
                         <h3 className="text-[17px] font-bold text-gray-900 leading-tight group-hover:text-corgi transition-colors">{dish.name}</h3>
-                        <span className="text-[16px] font-bold text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg shrink-0">€{formatPriceDisplay(dish.basePrice)}</span>
+                        <span className="text-[16px] font-bold text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg shrink-0">€{formatDishPrice(dish)}</span>
                       </div>
                       <p className="text-[14px] text-gray-500 font-medium line-clamp-2 leading-relaxed flex-1">{dish.description}</p>
                       {dish.allergens.length > 0 && (
@@ -894,10 +936,10 @@ export default function MenusView() {
                       )}
                       <div className="mt-5 pt-4 border-t border-gray-100 flex gap-2">
                          <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
-                            1 <span className="hidden xl:inline">Size</span><Ruler className="xl:hidden" size={12} />
+                            {getModifierCounts(dish.modifierGroups, dish.name).sizes} <span className="hidden xl:inline">Size</span><Ruler className="xl:hidden" size={12} />
                          </span>
                          <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
-                            0 <span className="hidden xl:inline">Attributes</span><Tags className="xl:hidden" size={12} />
+                            {getModifierCounts(dish.modifierGroups, dish.name).attributes} <span className="hidden xl:inline">Attributes</span><Tags className="xl:hidden" size={12} />
                          </span>
                       </div>
                     </div>
@@ -928,16 +970,16 @@ export default function MenusView() {
                       <p className="text-[13px] text-gray-500 font-medium truncate mt-0.5">{dish.description}</p>
                       <div className="mt-1.5 flex gap-2">
                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-wider whitespace-nowrap">
-                            1 <span className="hidden xl:inline">Size</span><Ruler className="xl:hidden" size={10} />
+                            {getModifierCounts(dish.modifierGroups, dish.name).sizes} <span className="hidden xl:inline">Size</span><Ruler className="xl:hidden" size={10} />
                          </span>
                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 border border-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-wider whitespace-nowrap">
-                            0 <span className="hidden xl:inline">Attributes</span><Tags className="xl:hidden" size={10} />
+                            {getModifierCounts(dish.modifierGroups, dish.name).attributes} <span className="hidden xl:inline">Attributes</span><Tags className="xl:hidden" size={10} />
                          </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-5 shrink-0 pl-2">
-                      <span className="text-[15px] font-bold text-gray-900 bg-gray-50 px-3 py-1.5 rounded-xl">€{formatPriceDisplay(dish.basePrice)}</span>
+                      <span className="text-[15px] font-bold text-gray-900 bg-gray-50 px-3 py-1.5 rounded-xl">€{formatDishPrice(dish)}</span>
                       
                       <div className="w-px h-8 bg-gray-100 mx-1"></div>
 

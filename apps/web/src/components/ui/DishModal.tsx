@@ -5,6 +5,7 @@ import {
   createMenuItemAsync,
   updateMenuItemAsync,
   archiveMenuItemAsync,
+  getMenuItemAsync,
   type MenuItem,
 } from '@/lib/menu';
 import {
@@ -17,6 +18,7 @@ import {
 import { ALLOWED_ALLERGENS } from '@/lib/allergens';
 import { formatPriceDisplay, formatPriceInputBlur, parsePriceInput } from '@/lib/format-price';
 import { onPriceInputChange, onPriceInputBlur, onPriceInputKeyDown } from '@/lib/price-input-handlers';
+import { getVariantPricingGroup, resolveVariantPricingGroup, resolveVariantOptionPrice } from '@corgi/contracts';
 
 export type DishEditData = {
   id: string;
@@ -26,7 +28,92 @@ export type DishEditData = {
   price: number;
   allergens: string[];
   isArchived?: boolean;
+  imageUrl?: string | null;
+  modifierGroups?: Array<{
+    id: string;
+    name: string;
+    minQty: number;
+    maxQty: number;
+    options: Array<{ id: string; name: string; price: number; isArchived?: boolean }>;
+  }>;
 };
+
+type ModifierGroupLike = NonNullable<DishEditData['modifierGroups']>[number];
+
+function mapModifierGroupsForEdit(
+  groups: NonNullable<MenuItem['modifierGroups']>
+): ModifierGroupLike[] {
+  return groups.map((g) => ({
+    id: g.id,
+    name: g.name,
+    minQty: g.minQty ?? 0,
+    maxQty: g.maxQty ?? 1,
+    options: (g.options ?? []).map((o) => ({
+      id: o.id,
+      name: o.name,
+      price: o.price ?? 0,
+    })),
+  }));
+}
+
+function dishEditFromMenuItem(item: MenuItem, fallback?: DishEditData | null): DishEditData {
+  return {
+    id: item.id,
+    categoryId: item.categoryId,
+    name: item.name,
+    description: item.description ?? fallback?.description,
+    price: item.price,
+    allergens: item.allergens ?? fallback?.allergens ?? [],
+    isArchived: item.isArchived,
+    imageUrl: item.imageUrl ?? fallback?.imageUrl ?? null,
+    modifierGroups: mapModifierGroupsForEdit(item.modifierGroups ?? []),
+  };
+}
+
+function derivePricingFromGroups(
+  basePrice: number,
+  groups: ModifierGroupLike[] = [],
+  itemName?: string
+) {
+  const sizeGroup = resolveVariantPricingGroup(groups, itemName);
+  if (!sizeGroup) {
+    const price = formatPriceDisplay(basePrice);
+    return {
+      pricingType: 'single' as const,
+      singlePrice: price,
+      variants: [{ id: '1', name: 'Standard', price, isActive: true }],
+      hasVariantGroup: false,
+    };
+  }
+  const rawPrices = sizeGroup.options.map((o) => o.price);
+  return {
+    pricingType: 'variants' as const,
+    singlePrice: '',
+    variants: sizeGroup.options.map((o) => ({
+      id: o.id,
+      name: o.name,
+      price: formatPriceDisplay(resolveVariantOptionPrice(o.price, basePrice, rawPrices)),
+      isActive: o.isArchived !== true,
+    })),
+    hasVariantGroup: true,
+  };
+}
+
+function deriveModifiersFromGroups(groups: ModifierGroupLike[] = []) {
+  const variantGroup = getVariantPricingGroup(groups);
+  const variantIds = new Set(variantGroup ? [variantGroup.id] : []);
+  return groups
+    .filter((g) => g.minQty === 0 && !variantIds.has(g.id))
+    .flatMap((g) =>
+      g.options.map((o) => ({
+        id: o.id,
+        name: o.name,
+        price: formatPriceDisplay(o.price),
+        maxQty: String(g.maxQty ?? 1),
+        isActive: o.isArchived !== true,
+      }))
+    );
+}
 
 type DishModalProps = {
   isOpen: boolean;
@@ -92,6 +179,8 @@ export default function DishModal({
   const [pricingType, setPricingType] = useState<'single' | 'variants'>('single');
   const [singlePrice, setSinglePrice] = useState('');
   const [variants, setVariants] = useState([{ id: '1', name: 'Standard', price: '', isActive: true }]);
+  const [hasVariantGroup, setHasVariantGroup] = useState(false);
+  const [isLoadingDish, setIsLoadingDish] = useState(false);
 
   // Modifiers State
   const [modifiers, setModifiers] = useState([{ id: '1', name: 'Extra Shot', price: '1,50', maxQty: '1', isActive: true }]);
@@ -178,9 +267,55 @@ export default function DishModal({
   // Category Link Preview State
   const [activePreviewCategoryName, setActivePreviewCategoryName] = useState<string | null>(null);
 
+  const applyDishToForm = (editDish: DishEditData) => {
+    const groups = editDish.modifierGroups ?? [];
+    const nextName = { en: editDish.name, ru: '', es: '' };
+    const nextDesc = { en: editDish.description || '', ru: '', es: '' };
+    const pricing = derivePricingFromGroups(editDish.price, groups, editDish.name);
+    const nextModifiers = deriveModifiersFromGroups(groups);
+    const nextAllergens = editDish.allergens ?? [];
+    const nextActive = !editDish.isArchived;
+    const nextPhoto = editDish.imageUrl ?? null;
+
+    setName(nextName);
+    setDescription(nextDesc);
+    setNotes('');
+    setSinglePrice(pricing.singlePrice);
+    setPricingType(pricing.pricingType);
+    setVariants(pricing.variants);
+    setHasVariantGroup(pricing.hasVariantGroup);
+    setModifiers(nextModifiers.length > 0 ? nextModifiers : [{ id: '1', name: '', price: '', maxQty: '1', isActive: true }]);
+    setAllergens(nextAllergens);
+    setIsDishActive(nextActive);
+    setIsRecommended(false);
+    setTags([]);
+    setPhotoPreview(nextPhoto);
+    setActiveSection('general');
+    setActiveLang('en');
+    setSelectedLocations(availableLocations.map((l) => l.id));
+
+    setInitialStateHash(
+      JSON.stringify({
+        name: nextName,
+        description: nextDesc,
+        notes: '',
+        pricingType: pricing.pricingType,
+        singlePrice: pricing.singlePrice,
+        variants: pricing.variants,
+        modifiers: nextModifiers,
+        allergens: nextAllergens,
+        photoPreview: nextPhoto,
+        isDishActive: nextActive,
+        selectedLocations: availableLocations.map((l) => l.id),
+        tags: [],
+      })
+    );
+  };
+
   useEffect(() => {
     if (!isOpen) {
       setInitialStateHash(null);
+      setIsLoadingDish(false);
       return;
     }
 
@@ -191,46 +326,25 @@ export default function DishModal({
     setSaveConfirm(false);
 
     if (mode === 'edit' && dish) {
-      const nextName = { en: dish.name, ru: '', es: '' };
-      const nextDesc = { en: dish.description || '', ru: '', es: '' };
-      const nextPrice = formatPriceDisplay(dish.price);
-      const nextVariants = [{ id: '1', name: 'Standard', price: nextPrice, isActive: true }];
-      const nextAllergens = dish.allergens ?? [];
-      const nextActive = !dish.isArchived;
+      let cancelled = false;
+      setIsLoadingDish(true);
+      void (async () => {
+        try {
+          const fresh = await getMenuItemAsync(dish.id);
+          if (cancelled) return;
+          applyDishToForm(dishEditFromMenuItem(fresh, dish));
+        } catch {
+          if (!cancelled) applyDishToForm(dish);
+        } finally {
+          if (!cancelled) setIsLoadingDish(false);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
 
-      setName(nextName);
-      setDescription(nextDesc);
-      setNotes('');
-      setSinglePrice(nextPrice);
-      setPricingType('single');
-      setVariants(nextVariants);
-      setAllergens(nextAllergens);
-      setIsDishActive(nextActive);
-      setIsRecommended(false);
-      setTags([]);
-      setPhotoPreview(null);
-      setActiveSection('general');
-      setActiveLang('en');
-      setSelectedLocations(availableLocations.map((l) => l.id));
-
-      setInitialStateHash(
-        JSON.stringify({
-          name: nextName,
-          description: nextDesc,
-          notes: '',
-          pricingType: 'single',
-          singlePrice: nextPrice,
-          variants: nextVariants,
-          modifiers,
-          allergens: nextAllergens,
-          photoPreview: null,
-          isDishActive: nextActive,
-          selectedLocations: availableLocations.map((l) => l.id),
-          tags: [],
-        })
-      );
-    } else {
-      const nextName = { en: '', ru: '', es: '' };
+    const nextName = { en: '', ru: '', es: '' };
       const nextDesc = { en: '', ru: '', es: '' };
       const nextPrice = '';
       const nextVariants = [{ id: '1', name: 'Standard', price: '', isActive: true }];
@@ -242,6 +356,7 @@ export default function DishModal({
       setSinglePrice(nextPrice);
       setPricingType('single');
       setVariants(nextVariants);
+      setHasVariantGroup(false);
       setAllergens(nextAllergens);
       setIsDishActive(true);
       setIsRecommended(false);
@@ -267,7 +382,6 @@ export default function DishModal({
           tags: [],
         })
       );
-    }
   }, [isOpen, mode, dish?.id]);
 
   const hasUnsavedChanges = initialStateHash !== null && initialStateHash !== JSON.stringify({ name, description, notes, pricingType, singlePrice, variants, modifiers, allergens, photoPreview, isDishActive, selectedLocations, tags });
@@ -710,30 +824,41 @@ export default function DishModal({
               {/* Price Section */}
               {activeSection === 'price' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                  {isLoadingDish ? (
+                    <div className="flex items-center justify-center py-16 text-gray-400 font-semibold text-sm">
+                      Loading pricing…
+                    </div>
+                  ) : (
+                  <>
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-[16px] font-bold text-gray-900">Pricing & Variants</h3>
-                      <p className="text-[13px] text-gray-500 font-medium">Set a fixed price or offer different sizes/options.</p>
+                      <p className="text-[13px] text-gray-500 font-medium">
+                        {hasVariantGroup
+                          ? 'This dish uses size variants with fixed prices (no separate base price).'
+                          : 'Set a fixed price or offer different sizes/options.'}
+                      </p>
                     </div>
                     
-                    {/* Segmented Control */}
-                    <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100">
-                      <button 
-                        onClick={() => setPricingType('single')}
-                        className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${pricingType === 'single' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'}`}
-                      >
-                        Single Price
-                      </button>
-                      <button 
-                        onClick={() => setPricingType('variants')}
-                        className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${pricingType === 'variants' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'}`}
-                      >
-                        Variants (Sizes)
-                      </button>
-                    </div>
+                    {!hasVariantGroup && (
+                      <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100">
+                        <button 
+                          onClick={() => setPricingType('single')}
+                          className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${pricingType === 'single' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'}`}
+                        >
+                          Single Price
+                        </button>
+                        <button 
+                          onClick={() => setPricingType('variants')}
+                          className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer ${pricingType === 'variants' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'}`}
+                        >
+                          Variants (Sizes)
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  {pricingType === 'single' ? (
+                  {pricingType === 'single' && !hasVariantGroup ? (
                     <div className="p-6 bg-gray-50/50 border border-gray-100 rounded-2xl">
                       <div className="flex items-center mb-2">
                         <label className="block text-[13px] font-bold text-gray-900">Base Price (€)</label>
@@ -812,6 +937,8 @@ export default function DishModal({
                         Add Another Variant
                       </button>
                     </Reorder.Group>
+                  )}
+                  </>
                   )}
                 </div>
               )}

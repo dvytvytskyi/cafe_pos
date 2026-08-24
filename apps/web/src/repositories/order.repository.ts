@@ -710,11 +710,23 @@ export class OrderRepository {
         ? (coerceStatusForSource(existing.source, status) as OrderStatus)
         : status;
 
-      const dbOrder = await prisma.order.update({
-        where: { id },
-        data: { status: nextStatus },
-        include: { items: true, transactions: true },
+      const dbOrder = await prisma.$transaction(async (tx) => {
+        const updated = await tx.order.update({
+          where: { id },
+          data: { status: nextStatus },
+          include: { items: true, transactions: true },
+        });
+
+        if (nextStatus === 'ready') {
+          await tx.orderItem.updateMany({
+            where: { orderId: id, readyAt: null },
+            data: { readyAt: new Date() },
+          });
+        }
+
+        return updated;
       });
+
       return mapToDomainOrder(dbOrder);
     } catch (error) {
       console.error(`Error updating order status [${id}] in DB:`, error);

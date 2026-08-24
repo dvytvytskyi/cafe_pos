@@ -3,9 +3,20 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { GuestBootstrapResponse, GuestLocale, GuestMenuItem } from '@corgi/contracts';
 import { getBootstrap, getProfile, type CartLine } from './api-client';
+import { DEFAULT_GUEST_LOCATION_ID, GUEST_LOCATION_STORAGE_KEY } from './constants';
+import { GUEST_STORE_LOCATIONS } from './locations';
+
+function normalizeGuestLocationId(id: string | undefined | null): string {
+  const raw = (id ?? '').trim();
+  if (!raw || raw === 'default') return DEFAULT_GUEST_LOCATION_ID;
+  if (GUEST_STORE_LOCATIONS.some((l) => l.id === raw)) return raw;
+  return DEFAULT_GUEST_LOCATION_ID;
+}
 
 interface GuestContextValue {
   bootstrap: GuestBootstrapResponse | null;
+  locationId: string;
+  setLocationId: (id: string) => void;
   locale: GuestLocale;
   setLocale: (l: GuestLocale) => void;
   loading: boolean;
@@ -54,34 +65,28 @@ function loadCart(key: string): CartLine[] {
 
 export function GuestProvider({
   children,
-  initialLocation = 'default',
+  initialLocation = DEFAULT_GUEST_LOCATION_ID,
   initialTable,
 }: {
   children: React.ReactNode;
   initialLocation?: string;
   initialTable?: string;
 }) {
+  const [locationId, setLocationIdState] = useState(() => normalizeGuestLocationId(initialLocation));
   const [bootstrap, setBootstrap] = useState<GuestBootstrapResponse | null>(null);
   const [locale, setLocaleState] = useState<GuestLocale>('en');
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     if (typeof window !== 'undefined') {
       const loggedOut = localStorage.getItem('corgi_logged_out');
-      const mockUser = localStorage.getItem('corgi_mock_user');
       const token = localStorage.getItem('corgi_guest_session_token') || localStorage.getItem('guest_token');
       if (loggedOut === 'true') return false;
-      if (mockUser || token) return true;
+      return Boolean(token);
     }
     return false;
   });
 
-  const [profileName, setProfileName] = useState<string | undefined>(() => {
-    if (typeof window !== 'undefined') {
-      const mockUser = localStorage.getItem('corgi_mock_user');
-      if (mockUser) return mockUser;
-    }
-    return undefined;
-  });
+  const [profileName, setProfileName] = useState<string | undefined>();
   const [foodCart, setFoodCart] = useState<CartLine[]>([]);
   const [merchCart, setMerchCart] = useState<CartLine[]>([]);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -97,7 +102,6 @@ export function GuestProvider({
   const logout = useCallback(async () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('corgi_logged_out', 'true');
-      localStorage.removeItem('corgi_mock_user');
       localStorage.removeItem('corgi_guest_session_token');
       localStorage.removeItem('guest_token');
     }
@@ -109,15 +113,10 @@ export function GuestProvider({
     try {
       if (typeof window !== 'undefined') {
         const loggedOut = localStorage.getItem('corgi_logged_out');
-        if (loggedOut === 'true') {
+        const token = localStorage.getItem('corgi_guest_session_token') || localStorage.getItem('guest_token');
+        if (loggedOut === 'true' || !token) {
           setIsLoggedIn(false);
           setProfileName(undefined);
-          return;
-        }
-        let mockUser = localStorage.getItem('corgi_mock_user');
-        if (mockUser) {
-          setIsLoggedIn(true);
-          setProfileName(mockUser);
           return;
         }
       }
@@ -130,6 +129,18 @@ export function GuestProvider({
     }
   }, []);
 
+  const setLocationId = useCallback((id: string) => {
+    const next = normalizeGuestLocationId(id);
+    setLocationIdState(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(GUEST_LOCATION_STORAGE_KEY, next);
+    }
+  }, []);
+
+  useEffect(() => {
+    setLocationIdState(normalizeGuestLocationId(initialLocation));
+  }, [initialLocation]);
+
   useEffect(() => {
     const savedLocale = localStorage.getItem('corgi_guest_locale') as GuestLocale | null;
     if (savedLocale) setLocaleState(savedLocale);
@@ -140,7 +151,7 @@ export function GuestProvider({
 
     (async () => {
       try {
-        const data = await getBootstrap(initialLocation, initialTable, savedLocale || 'en');
+        const data = await getBootstrap(locationId, initialTable, savedLocale || 'en');
         setBootstrap(data);
         if (!savedLocale) setLocaleState(data.locale);
       } finally {
@@ -150,17 +161,13 @@ export function GuestProvider({
 
     refreshAuth();
 
-    // if ('serviceWorker' in navigator) {
-    //   navigator.serviceWorker.register('/sw.js').catch(() => {});
-    // }
-
     const onInstall = (e: Event) => {
       e.preventDefault();
       setDeferredInstall(e as BeforeInstallPromptEvent);
     };
     window.addEventListener('beforeinstallprompt', onInstall);
     return () => window.removeEventListener('beforeinstallprompt', onInstall);
-  }, [initialLocation, initialTable, refreshAuth]);
+  }, [locationId, initialTable, refreshAuth]);
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(foodCart));
@@ -182,7 +189,7 @@ export function GuestProvider({
   }, []);
 
   const addMerchToCart = useCallback((line: Omit<CartLine, 'key'>) => {
-    const key = line.merchSkuId || line.name;
+    const key = `${line.merchSkuId}-${JSON.stringify(line.modifiers)}`;
     setMerchCart((prev) => {
       const existing = prev.find((p) => p.key === key);
       if (existing) {
@@ -208,9 +215,19 @@ export function GuestProvider({
     );
   }, []);
 
+  const clearFoodCart = useCallback(() => setFoodCart([]), []);
+  const clearMerchCart = useCallback(() => setMerchCart([]), []);
+
+  const dismissWelcome = useCallback(() => {
+    localStorage.setItem(WELCOME_KEY, 'true');
+    setShowWelcome(false);
+  }, []);
+
   const value = useMemo(
     () => ({
       bootstrap,
+      locationId,
+      setLocationId,
       locale,
       setLocale,
       loading,
@@ -224,13 +241,10 @@ export function GuestProvider({
       addMerchToCart,
       updateFoodQty,
       updateMerchQty,
-      clearFoodCart: () => setFoodCart([]),
-      clearMerchCart: () => setMerchCart([]),
+      clearFoodCart,
+      clearMerchCart,
       showWelcome,
-      dismissWelcome: () => {
-        localStorage.setItem(WELCOME_KEY, '1');
-        setShowWelcome(false);
-      },
+      dismissWelcome,
       deferredInstall,
       setDeferredInstall,
       orderMode,
@@ -240,6 +254,8 @@ export function GuestProvider({
     }),
     [
       bootstrap,
+      locationId,
+      setLocationId,
       locale,
       setLocale,
       loading,
@@ -253,7 +269,10 @@ export function GuestProvider({
       addMerchToCart,
       updateFoodQty,
       updateMerchQty,
+      clearFoodCart,
+      clearMerchCart,
       showWelcome,
+      dismissWelcome,
       deferredInstall,
       orderMode,
       showCartBarInsteadOfNav,

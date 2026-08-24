@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useGuest } from '@/lib/guest-context';
 import { getMerchCatalog, createMerchOrder } from '@/lib/api-client';
+import { GUEST_STORE_LOCATIONS, getGuestStoreLocation } from '@/lib/locations';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -33,288 +34,22 @@ import {
   ClipboardList
 } from 'lucide-react';
 
-const MOCK_MERCH_ITEMS = [
-  // 1. Hoodies Category (Bandanas)
-  {
-    id: "merch-1",
-    sku: "BANDANA-GREEN",
-    name: "Midnight Bloom Bandana",
-    description: "Premium cotton doggie bandana with direct embroidered mascot logo.",
-    price: 15.00,
-    category: "Hoodie",
-    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    options: [
-      { name: "Size", choices: ["S", "M"] }
-    ]
-  },
-  {
-    id: "merch-2",
-    sku: "BANDANA-CLASSIC",
-    name: "Classic Corgi Bandana",
-    description: "Our signature original design bandana made with durable, lightweight canvas.",
-    price: 18.00,
-    category: "Hoodie",
-    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    options: [
-      { name: "Size", choices: ["S", "M", "L"] }
-    ]
-  },
-  {
-    id: "merch-3",
-    sku: "BANDANA-FOREST",
-    name: "Forest Green Doggie Scarf",
-    description: "Warm forest green cotton blend scarf designed for cozy walks.",
-    price: 14.50,
-    category: "Hoodie",
-    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    options: [
-      { name: "Size", choices: ["S", "M"] }
-    ]
-  },
-  {
-    id: "merch-4",
-    sku: "BANDANA-FLORAL",
-    name: "Retro Floral Bandana",
-    description: "Vintage-inspired floral pattern dog accessory with custom leather brand tag.",
-    price: 16.00,
-    category: "Hoodie",
-    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    options: [
-      { name: "Size", choices: ["S", "M", "L"] }
-    ]
-  },
-
-  // 2. Sneakers Category (Tumblers)
-  {
-    id: "merch-5",
-    sku: "TUMBLER-PINK",
-    name: "Crimson Wave Tumbler",
-    description: "Double-wall insulated travel tumbler to keep your drinks hot or cold.",
-    price: 28.00,
-    category: "Sneaker",
-    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    options: [
-      { name: "Volume", choices: ["350ml", "450ml"] }
-    ]
-  },
-  {
-    id: "merch-6",
-    sku: "TUMBLER-BLUSH",
-    name: "Blush Insulated Mug",
-    description: "Premium stainless steel travel mug with leak-proof lid and soft pastel grip.",
-    price: 24.00,
-    category: "Sneaker",
-    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    options: [
-      { name: "Volume", choices: ["350ml"] }
-    ]
-  },
-  {
-    id: "merch-7",
-    sku: "TUMBLER-THERMO",
-    name: "Mascot Thermo Bottle",
-    description: "Heavy duty thermos flask featuring direct print sleeping corgi illustration.",
-    price: 32.00,
-    category: "Sneaker",
-    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    options: [
-      { name: "Volume", choices: ["500ml", "750ml"] }
-    ]
-  },
-  {
-    id: "merch-8",
-    sku: "TUMBLER-SHAKER",
-    name: "Signature Pink Shaker",
-    description: "Pastel pink shaker bottle with dynamic filter grid for matcha and protein mixes.",
-    price: 26.00,
-    category: "Sneaker",
-    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    options: [
-      { name: "Volume", choices: ["450ml"] }
-    ]
-  },
-
-  // 3. Caps Category (Apparel)
-  {
-    id: "merch-9",
-    sku: "TEE-PINK",
-    name: "Signature Pink Tee",
-    description: "Classic lightweight organic cotton tee featuring our cute mascot logo on the chest.",
-    price: 24.90,
-    category: "Face Cap",
-    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    options: [
-      { name: "Size", choices: ["S", "M", "L"] }
-    ]
-  },
-  {
-    id: "merch-10",
-    sku: "HOODIE-PINK-COZY",
-    name: "Cozy Pink Mascot Hoodie",
-    description: "Ultra-soft heavy fleece hoodie with embroidered Corgi emblem on front.",
-    price: 49.90,
-    category: "Face Cap",
-    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    options: [
-      { name: "Size", choices: ["S", "M", "L", "XL"] }
-    ]
-  },
-  {
-    id: "merch-11",
-    sku: "LONGSLEEVE-PINK",
-    name: "Retro Pink Longsleeve",
-    description: "Relaxed fit lightweight long sleeve shirt with printed sleeve graphics.",
-    price: 34.90,
-    category: "Face Cap",
-    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    options: [
-      { name: "Size", choices: ["S", "M", "L"] }
-    ]
-  },
-  {
-    id: "merch-12",
-    sku: "CREWNECK-PINK",
-    name: "Summer Cotton Crewneck",
-    description: "Comfortable fleece crewneck sweatshirt, perfect for summer nights.",
-    price: 39.90,
-    category: "Face Cap",
-    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    options: [
-      { name: "Size", choices: ["S", "M", "L", "XL"] }
-    ]
-  }
-];
-
-const categories = [
-  { 
-    id: "Hoodie", 
-    label: "Hoodies", 
-    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    slides: [
-      {
-        storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-        tagline: "Midnight Bloom green bandana. Premium cotton fabric."
-      },
-      {
-        storyImage: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop",
-        tagline: "Ultra soft oversized streetwear hoodies in classic beige."
-      },
-      {
-        storyImage: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=600&auto=format&fit=crop",
-        tagline: "Midnight Bloom Drop: Pastel aesthetics for active days."
-      }
-    ]
-  },
-  { 
-    id: "Sneaker", 
-    label: "Sneakers", 
-    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    slides: [
-      {
-        storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-        tagline: "Crimson Wave insulated tumbler. Keeps your coffee hot."
-      },
-      {
-        storyImage: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=600&auto=format&fit=crop",
-        tagline: "Retro chunky sneakers. Premium cushion for everyday steps."
-      }
-    ]
-  },
-  { 
-    id: "Face Cap", 
-    label: "Caps", 
-    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    slides: [
-      {
-        storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-        tagline: "Signature Pink Tee. Cozy fit with custom details."
-      },
-      {
-        storyImage: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=600&auto=format&fit=crop",
-        tagline: "Minimalist cotton baseball caps. Vintage washed colors."
-      }
-    ]
-  },
-  { 
-    id: "Sneaker", 
-    label: "Matcha Set", 
-    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    slides: [
-      {
-        storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-        tagline: "New Matcha Insulated Sets. Limited edition release."
-      },
-      {
-        storyImage: "https://images.unsplash.com/photo-1536256263959-770b48d82b0a?q=80&w=600&auto=format&fit=crop",
-        tagline: "Organic ceremonial grade matcha whisks & bowls."
-      }
-    ]
-  },
-  { 
-    id: "Hoodie", 
-    label: "Doggie Style", 
-    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    slides: [
-      {
-        storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-        tagline: "Cozy accessories for your pets. Made with love."
-      },
-      {
-        storyImage: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?q=80&w=600&auto=format&fit=crop",
-        tagline: "Doggie sweaters to keep your best friend stylishly warm."
-      }
-    ]
-  },
-  { 
-    id: "Face Cap", 
-    label: "Streetwear", 
-    image: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-    slides: [
-      {
-        storyImage: "https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp",
-        tagline: "Limited drop summer streetwear. Soft pastel fabrics."
-      },
-      {
-        storyImage: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=600&auto=format&fit=crop",
-        tagline: "Oversized graphic tees & streetwear essentials."
-      }
-    ]
-  },
-  { 
-    id: "Sneaker", 
-    label: "Drinkware", 
-    image: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-    slides: [
-      {
-        storyImage: "https://optim.tildacdn.com/stor6265-3164-4538-a234-373835663732/-/format/webp/40046535.jpg.webp",
-        tagline: "Pastel drinkware & accessories. Keep hydrated in style."
-      },
-      {
-        storyImage: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=600&auto=format&fit=crop",
-        tagline: "Thermal water bottles & tumblers with matte finishes."
-      }
-    ]
-  },
-  { 
-    id: "Hoodie", 
-    label: "New Drops", 
-    image: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-    slides: [
-      {
-        storyImage: "https://optim.tildacdn.com/stor3562-3232-4362-b736-316565383739/-/format/webp/99960808.jpg.webp",
-        tagline: "Weekly fresh merchandise drop. Be first to grab yours!"
-      },
-      {
-        storyImage: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=600&auto=format&fit=crop",
-        tagline: "Don't miss out on our limited collectibles drops."
-      }
-    ]
-  }
-];
+type ShopMerchItem = {
+  id: string;
+  sku: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  options: { name: string; choices: string[] }[];
+};
 
 export default function ShopPage() {
   const { 
     bootstrap, 
+    locationId,
+    setLocationId,
     orderMode, 
     setOrderMode,
     merchCart, 
@@ -325,52 +60,76 @@ export default function ShopPage() {
     setShowCartBarInsteadOfNav
   } = useGuest();
 
+  const activeStore = getGuestStoreLocation(locationId);
+  const activeStoreIndex = Math.max(
+    0,
+    GUEST_STORE_LOCATIONS.findIndex((store) => store.id === activeStore.id)
+  );
+  const storeDisplayName = bootstrap?.locationName || activeStore.name;
+
   const router = useRouter();
-  
+
+  const [merchItems, setMerchItems] = useState<ShopMerchItem[]>([]);
+  const [loadingMerch, setLoadingMerch] = useState(true);
+  const [showCartDrawer, setShowCartDrawer] = useState(false);
+  const [showOrderModeModal, setShowOrderModeModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
+  const [isStoreChanging, setIsStoreChanging] = useState(false);
+
+  useEffect(() => {
+    if (!locationId) return;
+    setLoadingMerch(true);
+    getMerchCatalog(locationId)
+      .then((res) => {
+        setMerchItems(
+          res.items.map((item) => ({
+            id: item.id,
+            sku: item.sku,
+            name: item.name,
+            description: item.description,
+            price: item.price,
+            category: 'merch',
+            image: item.image,
+            options: [],
+          }))
+        );
+      })
+      .catch((err) => {
+        console.error('Failed to load merch catalog:', err);
+        setMerchItems([]);
+      })
+      .finally(() => setLoadingMerch(false));
+  }, [locationId]);
+
+  const cycleStore = (direction: 1 | -1) => {
+    if (GUEST_STORE_LOCATIONS.length <= 1) return;
+    setIsStoreChanging(true);
+    setTimeout(() => {
+      const nextIndex =
+        (activeStoreIndex + direction + GUEST_STORE_LOCATIONS.length) % GUEST_STORE_LOCATIONS.length;
+      setLocationId(GUEST_STORE_LOCATIONS[nextIndex].id);
+      setIsStoreChanging(false);
+    }, 150);
+  };
+
   // Local Catalog / Filter states
-  const [activeCategoryTab, setActiveCategoryTab] = useState<string>("Hoodie");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<{ [key: string]: string }>({});
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lastSelectedItem, setLastSelectedItem] = useState<any | null>(null);
-  const [selectedAddons, setSelectedAddons] = useState<Record<string, number>>({});
   const imageScrollRef = useRef<HTMLDivElement>(null);
 
-  const ADDONS = [
-    {
-      id: 'addon-giftbox',
-      name: 'Premium Gift Box',
-      price: 4.00,
-      image: 'https://optim.tildacdn.com/stor3766-3735-4962-a663-303362346637/-/format/webp/12011235.jpg.webp'
-    },
-    {
-      id: 'addon-stickers',
-      name: 'Mascot Stickers Pack',
-      price: 3.00,
-      image: 'https://optim.tildacdn.com/stor3932-6134-4537-a137-373464316263/-/format/webp/84660139.jpg.webp'
-    }
-  ];
 
   const getDetailsTotalPrice = () => {
     if (!lastSelectedItem) return 0;
-    const baseTotal = lastSelectedItem.price * quantity;
-    const addonsTotal = ADDONS.reduce((acc, addon) => {
-      const q = selectedAddons[addon.id] || 0;
-      return acc + (addon.price * q);
-    }, 0);
-    return baseTotal + addonsTotal;
+    return lastSelectedItem.price * quantity;
   };
 
   const getItemImages = (item: any): string[] => {
-    if (!item) return [];
-    const base = item.image || '';
-    return [
-      base,
-      'https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp',
-      'https://optim.tildacdn.com/stor3739-3364-4261-b461-303831643236/-/format/webp/25245024.jpg.webp',
-      'https://optim.tildacdn.com/stor6539-6437-4337-b332-333736623135/-/format/webp/99869443.jpg.webp'
-    ];
+    if (!item?.image) return [];
+    return [item.image];
   };
 
   const handleImageScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -392,144 +151,6 @@ export default function ShopPage() {
     }
   };
 
-  // Instagram Lookbook Story states
-  const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
-  const [activeSlideIndex, setActiveSlideIndex] = useState<number>(0);
-  const [prevStoryIndex, setPrevStoryIndex] = useState<number | null>(null);
-  const [animType, setAnimType] = useState<'next' | 'prev' | null>(null);
-  const [isStoryAnimating, setIsStoryAnimating] = useState(false);
-  const [storyProgress, setStoryProgress] = useState(0);
-  const [viewedStories, setViewedStories] = useState<string[]>([]);
-
-  const markStoryAsViewed = (catId: string) => {
-    if (!viewedStories.includes(catId)) {
-      setViewedStories(prev => [...prev, catId]);
-    }
-  };
-
-  // Modals visibility
-  const [showOrderModeModal, setShowOrderModeModal] = useState(false);
-  const [showCartDrawer, setShowCartDrawer] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
-
-  // Store switcher states (matching Menu Page logic)
-  const [selectedStore, setSelectedStore] = useState<'pedralbes' | 'eixample'>('pedralbes');
-  const [isStoreChanging, setIsStoreChanging] = useState(false);
-
-  useEffect(() => {
-    if (selectedItem) {
-      document.body.classList.add('item-detail-open');
-      setLastSelectedItem(selectedItem);
-      setQuantity(1);
-      setActiveImageIndex(0);
-      setSelectedAddons({});
-      if (imageScrollRef.current) {
-        imageScrollRef.current.scrollTop = 0;
-      }
-      // Initialize selected options with the first choices
-      const initialOptions: { [key: string]: string } = {};
-      (selectedItem.options || []).forEach((opt: any) => {
-        initialOptions[opt.name] = opt.choices[0];
-      });
-      setSelectedOptions(initialOptions);
-    } else {
-      document.body.classList.remove('item-detail-open');
-    }
-    return () => {
-      document.body.classList.remove('item-detail-open');
-    };
-  }, [selectedItem]);
-
-  const handleNextStory = () => {
-    if (activeStoryIndex === null || isStoryAnimating) return;
-    if (activeStoryIndex < categories.length - 1) {
-      setPrevStoryIndex(activeStoryIndex);
-      setAnimType('next');
-      setIsStoryAnimating(true);
-      setActiveStoryIndex(activeStoryIndex + 1);
-      setActiveSlideIndex(0);
-      markStoryAsViewed(categories[activeStoryIndex + 1].id);
-      setActiveCategoryTab(categories[activeStoryIndex + 1].id);
-      setStoryProgress(0);
-      setTimeout(() => {
-        setIsStoryAnimating(false);
-        setAnimType(null);
-      }, 400);
-    } else {
-      setActiveStoryIndex(null);
-      setStoryProgress(0);
-    }
-  };
-
-  const handlePrevStory = () => {
-    if (activeStoryIndex === null || isStoryAnimating) return;
-    if (activeStoryIndex > 0) {
-      setPrevStoryIndex(activeStoryIndex);
-      setAnimType('prev');
-      setIsStoryAnimating(true);
-      setActiveStoryIndex(activeStoryIndex - 1);
-      setActiveSlideIndex(categories[activeStoryIndex - 1].slides.length - 1);
-      markStoryAsViewed(categories[activeStoryIndex - 1].id);
-      setActiveCategoryTab(categories[activeStoryIndex - 1].id);
-      setStoryProgress(0);
-      setTimeout(() => {
-        setIsStoryAnimating(false);
-        setAnimType(null);
-      }, 400);
-    } else {
-      setActiveStoryIndex(null);
-      setStoryProgress(0);
-    }
-  };
-
-  const handleNextSlide = () => {
-    if (activeStoryIndex === null || isStoryAnimating) return;
-    const currentCategory = categories[activeStoryIndex];
-    if (activeSlideIndex < currentCategory.slides.length - 1) {
-      setActiveSlideIndex(prev => prev + 1);
-      setStoryProgress(0);
-    } else {
-      handleNextStory();
-    }
-  };
-
-  const handlePrevSlide = () => {
-    if (activeStoryIndex === null || isStoryAnimating) return;
-    if (activeSlideIndex > 0) {
-      setActiveSlideIndex(prev => prev - 1);
-      setStoryProgress(0);
-    } else {
-      handlePrevStory();
-    }
-  };
-
-  // Instagram Story automatic progress bar timer
-  useEffect(() => {
-    if (activeStoryIndex === null || isStoryAnimating) {
-      setStoryProgress(0);
-      return;
-    }
-    setStoryProgress(0);
-    const interval = setInterval(() => {
-      setStoryProgress((prev) => {
-        if (prev >= 100) {
-          const currentCategory = categories[activeStoryIndex];
-          if (activeSlideIndex < currentCategory.slides.length - 1) {
-            setActiveSlideIndex((curr) => curr + 1);
-            return 0;
-          } else {
-            handleNextStory();
-            return 0;
-          }
-        }
-        return prev + 1; // Increments to 100 over 4 seconds (100 * 40ms)
-      });
-    }, 40);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [activeStoryIndex, activeSlideIndex, isStoryAnimating]);
 
   const handleOptionSelect = (optionName: string, choice: string) => {
     setSelectedOptions(prev => ({
@@ -552,27 +173,14 @@ export default function ShopPage() {
       quantity: quantity,
     });
 
-    ADDONS.forEach(addon => {
-      const q = selectedAddons[addon.id] || 0;
-      if (q > 0) {
-        addMerchToCart({
-          merchSkuId: addon.id,
-          itemType: 'merch',
-          name: addon.name,
-          unitPrice: addon.price,
-          quantity: q,
-        });
-      }
-    });
-
     setSelectedItem(null);
   };
 
   const handleCheckout = async () => {
-    if (!bootstrap?.locationId || merchCart.length === 0) return;
+    if (!locationId || merchCart.length === 0) return;
     try {
       const order = await createMerchOrder({
-        locationId: bootstrap.locationId,
+        locationId,
         items: merchCart,
       });
       setCreatedOrderNumber(`MERCH-${order.orderNumber}`);
@@ -600,9 +208,7 @@ export default function ShopPage() {
     }
   };
 
-  const filteredItems = MOCK_MERCH_ITEMS.filter(item => {
-    return item.category === activeCategoryTab;
-  });
+  const filteredItems = merchItems;
 
   const cartTotal = merchCart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
 
@@ -628,7 +234,7 @@ export default function ShopPage() {
               <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
               <div className="flex items-center gap-1.5 text-xs text-gray-900 min-w-0">
                 <span className="font-bold tracking-tight truncate max-w-[110px]">
-                  {selectedStore === 'pedralbes' ? 'Pedralbes Centre' : 'Eixample Cafe'}
+                  {storeDisplayName}
                 </span>
                 <span className="text-gray-300 font-light flex-shrink-0">|</span>
                 <span className="font-semibold text-gray-500 flex items-center gap-1 min-w-0">
@@ -658,102 +264,13 @@ export default function ShopPage() {
       {/* Main Container */}
       <div className="w-full max-w-[480px] flex-1 bg-white px-5 py-6 flex flex-col gap-6">
         
-        {/* Horizontal Promo Banner Card (Pink background with smooth bottom white wave, white font, and white button) */}
-        <div className="w-full rounded-[16px] overflow-hidden relative min-h-[140px] shadow-sm flex items-center justify-between p-6">
-          {/* Background layer: Pink base with organic white wave at the bottom */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-[#EE635E]" />
-            <svg 
-              className="absolute bottom-0 left-0 w-full h-[55px] text-white fill-current translate-y-[1px]" 
-              viewBox="0 0 1440 320" 
-              preserveAspectRatio="none"
-            >
-              <path d="M0,96 C288,192 576,96 864,160 C1152,224 1344,160 1440,128 L1440,320 L0,320 Z" />
-            </svg>
-          </div>
+        <h2 className="text-xl font-bold text-gray-900">Merch</h2>
 
-          <div className="flex flex-col items-start gap-2.5 z-10 text-left max-w-[60%]">
-            <h2 className="text-[17px] font-bold text-white leading-tight">
-              Buy 1 hoodie,<br />get 45% off caps
-            </h2>
-            <button 
-              onClick={() => {
-                setActiveCategoryTab("Face Cap");
-                const idx = categories.findIndex(c => c.id === "Face Cap");
-                if (idx !== -1) {
-                  setActiveStoryIndex(idx);
-                  setActiveSlideIndex(0);
-                  setPrevStoryIndex(null);
-                  setAnimType(null);
-                  setIsStoryAnimating(false);
-                  setStoryProgress(0);
-                }
-              }}
-              className="bg-white hover:bg-gray-50 text-[#EE635E] px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer border-none z-10"
-            >
-              <span>Shop now</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          {/* Pink shirt image positioned absolute on the right */}
-          <img 
-            src="https://optim.tildacdn.com/stor6236-3330-4237-b566-366465633238/-/format/webp/93517017.jpg.webp" 
-            alt="Promo product" 
-            className="absolute right-[-10px] bottom-[-20px] w-[145px] h-[145px] object-cover rotate-[-8deg] rounded-[12px] border border-white/10 shadow-md z-10"
-          />
-        </div>
-
-        {/* Horizontal Instagram-like Stories Categories list (Edge-to-edge scrollable, clipped by the screen boundary) */}
-        <div className="flex flex-row flex-nowrap gap-4 overflow-x-auto scrollbar-none -mx-5 px-5 py-2">
-          {categories.map((cat) => {
-            const isViewed = viewedStories.includes(cat.id);
-            const active = activeCategoryTab === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setActiveCategoryTab(cat.id);
-                  const idx = categories.findIndex(c => c.label === cat.label);
-                  if (idx !== -1) {
-                    setActiveStoryIndex(idx);
-                    setActiveSlideIndex(0);
-                    markStoryAsViewed(cat.id);
-                    setPrevStoryIndex(null);
-                    setAnimType(null);
-                    setIsStoryAnimating(false);
-                    setStoryProgress(0);
-                  }
-                }}
-                className="flex flex-col items-center flex-shrink-0 active:scale-95 transition-all outline-none border-none bg-transparent cursor-pointer"
-              >
-                {/* Circular Story Ring and Avatar */}
-                <div className={`p-[2.5px] rounded-full transition-all duration-300 ${
-                  active 
-                    ? 'scale-102 ring-2 ring-white' 
-                    : ''
-                } ${
-                  isViewed ? 'bg-gray-200' : 'bg-[#EE635E]'
-                }`}>
-                  <div className="bg-white p-[2px] rounded-full">
-                    <img 
-                      src={cat.image} 
-                      alt={cat.label} 
-                      className="w-14 h-14 rounded-full object-cover" 
-                    />
-                  </div>
-                </div>
-                {/* Story Label Text */}
-                <span className={`text-[11.5px] mt-1.5 transition-all ${
-                  active 
-                    ? 'font-bold text-gray-900' 
-                    : 'font-medium text-gray-500'
-                }`}>
-                  {cat.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {loadingMerch ? (
+          <p className="text-gray-500 text-sm">Loading merch…</p>
+        ) : filteredItems.length === 0 ? (
+          <p className="text-gray-500 text-sm">No merch items available.</p>
+        ) : null}
 
         {/* Catalog Items Product Grid */}
         <div className="grid grid-cols-2 gap-4 pb-24">
@@ -764,12 +281,12 @@ export default function ShopPage() {
               className="bg-white border border-gray-100 rounded-[16px] overflow-hidden flex flex-col hover:opacity-98 transition-all cursor-pointer group active:scale-[0.98] relative"
             >
               {/* Product Image Wrapper */}
-              <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative">
+              <div className="w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative flex-shrink-0">
                 {item.image ? (
                   <img 
                     src={item.image} 
                     alt={item.name} 
-                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                   />
                 ) : (
                   <ShoppingBag className="w-12 h-12 text-gray-300" strokeWidth={1} />
@@ -879,11 +396,11 @@ export default function ShopPage() {
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {images.map((imgUrl, index) => (
-                    <div key={index} className="w-full h-full flex-shrink-0 snap-start snap-always relative">
+                    <div key={index} className="w-full h-full flex-shrink-0 snap-start snap-always relative overflow-hidden">
                       <img 
                         src={imgUrl} 
                         alt={`${lastSelectedItem.name} ${index + 1}`} 
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
                     </div>
                   ))}
@@ -897,7 +414,7 @@ export default function ShopPage() {
                       <button
                         key={index}
                         onClick={() => scrollToImage(index)}
-                        className={`w-[45px] h-[55px] rounded-lg overflow-hidden shadow-md transition-all border-[1.5px] cursor-pointer flex items-center justify-center p-0 ${
+                        className={`w-[45px] h-[55px] rounded-lg overflow-hidden shadow-md transition-all border-[1.5px] cursor-pointer flex items-center justify-center p-0 relative ${
                           active 
                             ? 'border-[#EE635E] bg-transparent scale-105' 
                             : 'border-white bg-transparent'
@@ -906,7 +423,7 @@ export default function ShopPage() {
                         <img 
                           src={imgUrl} 
                           alt="Thumbnail" 
-                          className="w-full h-full object-cover"
+                          className="absolute inset-0 w-full h-full object-cover"
                         />
                       </button>
                     );
@@ -964,95 +481,6 @@ export default function ShopPage() {
                   </div>
                 </div>
               ))}
-
-              {/* Add-ons Section */}
-              <div className="flex flex-col gap-3 mt-1.5 pt-1.5 border-t border-gray-100">
-                <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider pl-1">
-                  Add-ons
-                </span>
-                <div className="flex gap-4 overflow-x-auto scrollbar-none py-2 -mx-1 px-1">
-                  {ADDONS.map((addon) => {
-                    const q = selectedAddons[addon.id] || 0;
-                    const isSelected = q > 0;
-                    return (
-                      <div 
-                        key={addon.id} 
-                        onClick={() => {
-                          if (!isSelected) {
-                            setSelectedAddons(prev => ({ ...prev, [addon.id]: 1 }));
-                          }
-                        }}
-                        className="relative w-[110px] flex-shrink-0 flex flex-col items-center gap-2.5 transition-all text-center select-none cursor-pointer"
-                      >
-                        {/* Round Image at Top with Checkmark Badge */}
-                        <div className="relative">
-                          <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white shadow-sm border border-gray-100 flex-shrink-0 flex items-center justify-center">
-                            <img 
-                              src={addon.image} 
-                              alt={addon.name} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          {/* Top-right Pink Checkmark Circle Badge */}
-                          {isSelected && (
-                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#EE635E] text-white flex items-center justify-center shadow-md animate-pop z-10">
-                              <Check className="w-3.5 h-3.5" strokeWidth={3.5} />
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Title and Price */}
-                        <div className="flex flex-col gap-0.5 min-h-[36px] justify-center">
-                          <span className="text-[12px] font-bold text-gray-900 leading-tight">
-                            {addon.name}
-                          </span>
-                          <span className="text-[11px] font-bold text-[#EE635E] mt-0.5">
-                            + {addon.price.toFixed(2)}€
-                          </span>
-                        </div>
-
-                        {/* Bottom Quantity Selector (only if selected) */}
-                        {isSelected && (
-                          <div 
-                            className="w-full mt-1.5 z-20 flex justify-center"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="flex items-center justify-center gap-3">
-                              <button 
-                                onClick={() => {
-                                  setSelectedAddons(prev => {
-                                    const next = { ...prev };
-                                    if (next[addon.id] <= 1) {
-                                      delete next[addon.id];
-                                    } else {
-                                      next[addon.id]--;
-                                    }
-                                    return next;
-                                  });
-                                }}
-                                className="w-7 h-7 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-full flex items-center justify-center transition-all text-gray-600 cursor-pointer shadow-sm border border-gray-200/50"
-                              >
-                                <Minus className="w-3.5 h-3.5" strokeWidth={2.8} />
-                              </button>
-                              <span className="text-[13px] font-bold text-gray-900 min-w-[12px] text-center">
-                                {q}
-                              </span>
-                              <button 
-                                onClick={() => {
-                                  setSelectedAddons(prev => ({ ...prev, [addon.id]: (prev[addon.id] || 0) + 1 }));
-                                }}
-                                className="w-7 h-7 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-full flex items-center justify-center transition-all text-gray-600 cursor-pointer shadow-sm border border-gray-200/50"
-                              >
-                                <Plus className="w-3.5 h-3.5" strokeWidth={2.8} />
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
 
               {/* Unified Quantity Selector & Add to Bag CTA Button */}
               <div className="w-full bg-[#EE635E] text-white p-2 rounded-full flex items-center shadow-none mt-4 transition-all hover:opacity-[0.98]">
@@ -1254,14 +682,9 @@ export default function ShopPage() {
               <h3 className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider pl-1 mb-1">Select Store</h3>
               <div className="flex items-center justify-between w-full bg-white py-2 px-1">
                 <button
-                  onClick={() => {
-                    setIsStoreChanging(true);
-                    setTimeout(() => {
-                      setSelectedStore(prev => prev === 'pedralbes' ? 'eixample' : 'pedralbes');
-                      setIsStoreChanging(false);
-                    }, 150);
-                  }}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors"
+                  onClick={() => cycleStore(-1)}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors disabled:opacity-40"
+                  disabled={GUEST_STORE_LOCATIONS.length <= 1}
                 >
                   <ChevronLeft className="w-5 h-5" strokeWidth={2.2} />
                 </button>
@@ -1269,18 +692,13 @@ export default function ShopPage() {
                 <span className={`text-[16px] font-bold text-gray-900 uppercase tracking-tight text-center flex-1 mx-4 transition-all duration-150 transform ${
                   isStoreChanging ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
                 }`}>
-                  {selectedStore === 'pedralbes' ? 'Pedralbes Centre.' : 'Eixample Cafe.'}
+                  {storeDisplayName}
                 </span>
 
                 <button
-                  onClick={() => {
-                    setIsStoreChanging(true);
-                    setTimeout(() => {
-                      setSelectedStore(prev => prev === 'pedralbes' ? 'eixample' : 'pedralbes');
-                      setIsStoreChanging(false);
-                    }, 150);
-                  }}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors"
+                  onClick={() => cycleStore(1)}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors disabled:opacity-40"
+                  disabled={GUEST_STORE_LOCATIONS.length <= 1}
                 >
                   <ChevronRight className="w-5 h-5" strokeWidth={2.2} />
                 </button>
@@ -1318,229 +736,6 @@ export default function ShopPage() {
         </div>
       )}
 
-      {/* 5. Fullscreen Instagram Lookbook Story Modal */}
-      {activeStoryIndex !== null && (
-        <div className="fixed inset-0 bg-black z-55 flex flex-col justify-between">
-          <style>{`
-            .cube-container {
-              perspective: 1200px;
-              transform-style: preserve-3d;
-              position: relative;
-              width: 100%;
-              height: 100%;
-              overflow: hidden;
-              background-color: #000;
-            }
-            .cube-slide-next-out {
-              animation: cubeNextOut 0.4s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            }
-            .cube-slide-next-in {
-              animation: cubeNextIn 0.4s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            }
-            .cube-slide-prev-out {
-              animation: cubePrevOut 0.4s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            }
-            .cube-slide-prev-in {
-              animation: cubePrevIn 0.4s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            }
-            @keyframes cubeNextOut {
-              0% { transform: translateX(0) rotateY(0deg); transform-origin: 100% 50%; opacity: 1; }
-              100% { transform: translateX(-100%) rotateY(-90deg); transform-origin: 100% 50%; opacity: 0; }
-            }
-            @keyframes cubeNextIn {
-              0% { transform: translateX(100%) rotateY(90deg); transform-origin: 0% 50%; opacity: 0; }
-              100% { transform: translateX(0) rotateY(0deg); transform-origin: 0% 50%; opacity: 1; }
-            }
-            @keyframes cubePrevOut {
-              0% { transform: translateX(0) rotateY(0deg); transform-origin: 0% 50%; opacity: 1; }
-              100% { transform: translateX(100%) rotateY(90deg); transform-origin: 0% 50%; opacity: 0; }
-            }
-            @keyframes cubePrevIn {
-              0% { transform: translateX(-100%) rotateY(-90deg); transform-origin: 100% 50%; opacity: 0; }
-              100% { transform: translateX(0) rotateY(0deg); transform-origin: 100% 50%; opacity: 1; }
-            }
-          `}</style>
-
-          <div className="cube-container">
-            {isStoryAnimating && prevStoryIndex !== null ? (
-              <>
-                {/* Outgoing slide */}
-                <div 
-                  className={`absolute inset-0 w-full h-full flex flex-col justify-between p-4 bg-[#09090b] ${
-                    animType === 'next' ? 'cube-slide-next-out' : 'cube-slide-prev-out'
-                  }`}
-                  style={{ backfaceVisibility: 'hidden' }}
-                >
-                  <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b] z-0">
-                    <img 
-                      src={categories[prevStoryIndex].slides[animType === 'next' ? categories[prevStoryIndex].slides.length - 1 : 0].storyImage} 
-                      alt="Story lookbook" 
-                      className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
-                    />
-                  </div>
-                  <div className="w-full flex flex-col gap-3 z-10">
-                    <div className="w-full flex gap-1.5 z-10">
-                      {categories[prevStoryIndex].slides.map((_, slideIdx) => {
-                        const width = animType === 'next' ? '100%' : '0%';
-                        return (
-                          <div key={slideIdx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
-                            <div className="h-full bg-white" style={{ width }} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="flex items-center justify-between text-white px-1">
-                      <div className="flex items-center gap-2.5">
-                        <img 
-                          src={categories[prevStoryIndex].image} 
-                          alt={categories[prevStoryIndex].label} 
-                          className="w-8 h-8 rounded-full object-cover border border-white/20"
-                        />
-                        <div className="flex flex-col text-left">
-                          <span className="text-sm font-bold leading-tight">{categories[prevStoryIndex].label} Lookbook</span>
-                          <span className="text-[10px] text-white/50 font-medium leading-none">Corgi Shop</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
-                    <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%] select-none">
-                      {categories[prevStoryIndex].slides[animType === 'next' ? categories[prevStoryIndex].slides.length - 1 : 0].tagline}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Incoming slide */}
-                <div 
-                  className={`absolute inset-0 w-full h-full flex flex-col justify-between p-4 bg-[#09090b] ${
-                    animType === 'next' ? 'cube-slide-next-in' : 'cube-slide-prev-in'
-                  }`}
-                  style={{ backfaceVisibility: 'hidden' }}
-                >
-                  <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b] z-0">
-                    <img 
-                      src={categories[activeStoryIndex].slides[activeSlideIndex].storyImage} 
-                      alt="Story lookbook" 
-                      className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
-                    />
-                  </div>
-                  <div className="w-full flex flex-col gap-3 z-10">
-                    <div className="w-full flex gap-1.5 z-10">
-                      {categories[activeStoryIndex].slides.map((_, slideIdx) => {
-                        const width = slideIdx < activeSlideIndex ? '100%' : '0%';
-                        return (
-                          <div key={slideIdx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
-                            <div className="h-full bg-white" style={{ width }} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="flex items-center justify-between text-white px-1">
-                      <div className="flex items-center gap-2.5">
-                        <img 
-                          src={categories[activeStoryIndex].image} 
-                          alt={categories[activeStoryIndex].label} 
-                          className="w-8 h-8 rounded-full object-cover border border-white/20"
-                        />
-                        <div className="flex flex-col text-left">
-                          <span className="text-sm font-bold leading-tight">{categories[activeStoryIndex].label} Lookbook</span>
-                          <span className="text-[10px] text-white/50 font-medium leading-none">Corgi Shop</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
-                    <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%] select-none">
-                      {categories[activeStoryIndex].slides[activeSlideIndex].tagline}
-                    </p>
-                  </div>
-                </div>
-              </>
-            ) : (
-              /* Active slide (interactive, responds to clicks) */
-              <div 
-                className="absolute inset-0 w-full h-full flex flex-col justify-between p-4 bg-[#09090b]"
-                style={{ backfaceVisibility: 'hidden' }}
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const clickX = e.clientX - rect.left;
-                  if (clickX < rect.width * 0.3) {
-                    handlePrevSlide();
-                  } else {
-                    handleNextSlide();
-                  }
-                }}
-              >
-                <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#09090b] z-0">
-                  <img 
-                    src={categories[activeStoryIndex].slides[activeSlideIndex].storyImage} 
-                    alt="Story lookbook" 
-                    className="w-full h-full object-cover opacity-90 select-none pointer-events-none"
-                  />
-                </div>
-
-                <div className="w-full flex flex-col gap-3 z-10">
-                  <div className="w-full flex gap-1.5 z-10">
-                    {categories[activeStoryIndex].slides.map((_, slideIdx) => {
-                      let width = '0%';
-                      if (slideIdx < activeSlideIndex) width = '100%';
-                      else if (slideIdx === activeSlideIndex) width = `${storyProgress}%`;
-                      return (
-                        <div key={slideIdx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-white transition-all duration-[40ms] ease-linear" 
-                            style={{ width }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex items-center justify-between text-white px-1">
-                    <div className="flex items-center gap-2.5">
-                      <img 
-                        src={categories[activeStoryIndex].image} 
-                        alt={categories[activeStoryIndex].label} 
-                        className="w-8 h-8 rounded-full object-cover border border-white/20"
-                      />
-                      <div className="flex flex-col text-left">
-                        <span className="text-sm font-bold leading-tight">{categories[activeStoryIndex].label} Lookbook</span>
-                        <span className="text-[10px] text-white/50 font-medium leading-none">Corgi Shop</span>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveStoryIndex(null);
-                      }}
-                      className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border-none cursor-pointer z-20"
-                    >
-                      <X className="w-4 h-4" strokeWidth={2} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="w-full flex flex-col gap-4 items-center z-10 text-center pb-6">
-                  <p className="text-white text-sm font-bold tracking-wide drop-shadow-md max-w-[80%] select-none">
-                    {categories[activeStoryIndex].slides[activeSlideIndex].tagline}
-                  </p>
-                  
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveStoryIndex(null);
-                    }}
-                    className="bg-[#EE635E] hover:opacity-90 text-white px-8 py-3 rounded-full font-bold text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 border-none cursor-pointer z-20"
-                  >
-                    <span>Tap to Shop Now</span>
-                    <ArrowRight className="w-4 h-4" strokeWidth={2.2} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

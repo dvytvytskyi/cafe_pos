@@ -65,6 +65,25 @@ sshpass -p 'nrAhaTHcsC4U' ssh -o StrictHostKeyChecking=no root@89.167.91.113 \
 
 ---
 
+## Guava Menu to Production
+
+After syncing code, run the menu deploy script (starts Docker DB, migrates, imports 175 dishes):
+
+```bash
+export DEPLOY_SSH_PASS='your-password'
+bash apps/web/scripts/deploy-guava-menu-prod.sh
+```
+
+Prod PostgreSQL runs in Docker on port **5436** (`corgi_admin` / `corgi_password`).  
+Guest menu location: `loc-gotico`.
+
+Verify:
+```bash
+curl "https://testenv.corgicafe.es/api/guest/menu?locationId=loc-gotico&locale=en"
+```
+
+---
+
 ## One-Line Deployment Script
 
 You can run this combined command locally to deploy all your changes in one go:

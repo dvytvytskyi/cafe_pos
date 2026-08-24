@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGuest } from '@/lib/guest-context';
 import { getMenu, createOrder, requestOtp, verifyOtp } from '@/lib/api-client';
 import type { GuestMenuResponse, GuestMenuItem } from '@corgi/contracts';
+import { calculateMenuUnitPrice, getMenuListingPriceRange, isVariantPricingGroup } from '@corgi/contracts';
+import { menuItemImage, isFeaturedMenuItem } from '@/lib/menu-image';
+import { GUEST_STORE_LOCATIONS, getGuestStoreLocation } from '@/lib/locations';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -40,259 +43,19 @@ import {
   ClipboardList
 } from 'lucide-react';
 
-const foodImages = [
-  "https://pnp-storage.fra1.digitaloceanspaces.com/restaurant/b21fe648-99e5-422d-a478-0b4c351af252/menuitem/ababffa2-2838-428f-89a1-f541f94e89cb.jpeg",
-  "https://pnp-storage.fra1.digitaloceanspaces.com/restaurant/b21fe648-99e5-422d-a478-0b4c351af252/menuitem/3f401ed6-bc76-4948-96c1-0e80a73e5886.jpeg",
-  "https://pnp-storage.fra1.digitaloceanspaces.com/restaurant/b21fe648-99e5-422d-a478-0b4c351af252/menuitem/81e793b0-d126-42c7-8924-f465cf740f59.png"
-];
-
-const getFoodImage = (name: string, categoryName: string) => {
-  const upperName = name.toUpperCase();
-  if (upperName.includes("SALMON") || upperName.includes("GOAT") || upperName.includes("123")) {
-    return foodImages[0];
+function formatGuestItemPrice(item: GuestMenuItem): string {
+  const range = getMenuListingPriceRange(item.basePrice, item.modifierGroups, item.name);
+  if (range.hasVariants && range.min !== range.max) {
+    return `${range.min.toFixed(2)} – ${range.max.toFixed(2)}€`;
   }
-  if (upperName.includes("STRACCIATELLA") || upperName.includes("SIGNATURE") || upperName.includes("CORGI")) {
-    return foodImages[1];
-  }
-  if (upperName.includes("AVOCADO") || upperName.includes("TOAST") || upperName.includes("BRUNCH")) {
-    return foodImages[2];
-  }
-  return foodImages[name.length % foodImages.length];
-};
-
-const MOCK_MENU: GuestMenuResponse = {
-  locale: "en",
-  categories: [
-    { id: "cat-coffee", name: "Coffee" },
-    { id: "cat-brunch", name: "Brunch" },
-    { id: "cat-pastry", name: "Pastry" },
-    { id: "cat-drinks", name: "Drinks" }
-  ],
-  items: [
-    {
-      id: "item-1",
-      categoryId: "cat-coffee",
-      categoryName: "Coffee",
-      name: "Bacon & Egg Bagel",
-      description: "A freshly toasted artisanal bagel loaded with organic pasture-raised fried egg, thick-cut crispy bacon, melted local cheddar, and our homemade signature herb garlic sauce.",
-      image: "",
-      basePrice: 7.50,
-      allergens: ["gluten", "eggs", "milk", "sesame"],
-      tags: [],
-      modifierGroups: [
-        {
-          id: "mod-bagel-extras",
-          name: "Add Extras",
-          minQty: 0,
-          maxQty: 2,
-          options: [
-            { id: "opt-bagel-egg", name: "Extra Egg", price: 1.00 },
-            { id: "opt-bagel-avocado", name: "Avocado Slices", price: 1.50 }
-          ]
-        }
-      ]
-    },
-    {
-      id: "item-2",
-      categoryId: "cat-coffee",
-      categoryName: "Coffee",
-      name: "Corgi Signature Espresso",
-      description: "Our signature house blend coffee prepared with double shot espresso, organic whole milk, and topped with our secret recipe sweet cream for a rich, velvety finish.",
-      image: "",
-      basePrice: 4.50,
-      allergens: ["milk"],
-      tags: [],
-      modifierGroups: [
-        {
-          id: "mod-milk",
-          name: "Milk options",
-          minQty: 0,
-          maxQty: 1,
-          options: [
-            { id: "opt-oat", name: "Oat Milk", price: 0.50 },
-            { id: "opt-almond", name: "Almond Milk", price: 0.50 },
-            { id: "opt-extra-shot", name: "Extra Espresso Shot", price: 1.00 }
-          ]
-        }
-      ]
-    },
-    {
-      id: "item-3",
-      categoryId: "cat-brunch",
-      categoryName: "Brunch",
-      name: "Avocado Toast",
-      description: "Slices of toasted sourdough loaded with creamy smashed avocado, drizzled with premium cold-pressed extra virgin olive oil, toasted pumpkin seeds, pine nuts, fresh cucumbers, radishes, and a touch of flaky Maldon salt.",
-      image: "",
-      basePrice: 6.75,
-      allergens: ["gluten", "nuts"],
-      tags: [],
-      modifierGroups: [
-        {
-          id: "mod-fancy-bread",
-          name: "Add Extras",
-          minQty: 0,
-          maxQty: 2,
-          options: [
-            { id: "opt-poached-egg", name: "Poached Egg", price: 1.20 },
-            { id: "opt-feta-cheese", name: "Crumbled Feta", price: 1.00 }
-          ]
-        }
-      ]
-    },
-    {
-      id: "item-4",
-      categoryId: "cat-brunch",
-      categoryName: "Brunch",
-      name: "Brunch Plate",
-      description: "A hearty plate featuring two organic eggs cooked to your liking, roasted cherry tomatoes, freshly toasted sourdough bread, fragrant garden herbs, and a crisp side salad dressed with house vinaigrette.",
-      image: "",
-      basePrice: 12.50,
-      allergens: ["gluten", "eggs"],
-      tags: [],
-      modifierGroups: [
-        {
-          id: "mod-extras",
-          name: "Add Extras",
-          minQty: 0,
-          maxQty: 2,
-          options: [
-            { id: "opt-bacon", name: "Bacon", price: 1.50 },
-            { id: "opt-cheese", name: "Cheese", price: 1.00 },
-            { id: "opt-salmon", name: "Smoked Salmon", price: 3.00 }
-          ]
-        }
-      ]
-    },
-    {
-      id: "item-5",
-      categoryId: "cat-pastry",
-      categoryName: "Pastry",
-      name: "Butter Croissant",
-      description: "Flaky, multi-layered French butter pastry crafted with Normandy butter, baked fresh in-house every morning until golden brown and crispy on the outside, soft on the inside.",
-      image: "",
-      basePrice: 2.80,
-      allergens: ["gluten", "milk", "eggs"],
-      tags: [],
-      modifierGroups: [
-        {
-          id: "mod-croissant-spread",
-          name: "Add Jam / Spread",
-          minQty: 0,
-          maxQty: 2,
-          options: [
-            { id: "opt-croissant-jam", name: "Strawberry Jam", price: 0.50 },
-            { id: "opt-croissant-nutella", name: "Nutella", price: 0.80 }
-          ]
-        }
-      ]
-    },
-    {
-      id: "item-6",
-      categoryId: "cat-drinks",
-      categoryName: "Drinks",
-      name: "Matcha Latte",
-      description: "Vibrant, premium organic stone-ground Japanese ceremonial grade matcha whisked to perfection and served with warm, velvety steamed organic oat milk.",
-      image: "",
-      basePrice: 4.80,
-      allergens: ["gluten"],
-      tags: [],
-      modifierGroups: [
-        {
-          id: "mod-matcha-sweetener",
-          name: "Add Sweetener",
-          minQty: 0,
-          maxQty: 1,
-          options: [
-            { id: "opt-honey", name: "Honey", price: 0.30 },
-            { id: "opt-agave", name: "Agave Syrup", price: 0.30 }
-          ]
-        }
-      ]
-    }
-  ]
-};
-
-const UPSELL_SWEETS = [
-  {
-    id: "upsell-sweet-1",
-    name: "Shoyu Pecan Pie",
-    price: 4.95,
-    image: "/shoyu_pecan_pie.jpg"
-  },
-  {
-    id: "upsell-sweet-2",
-    name: "Yellow Carrot Chai Cake",
-    price: 3.45,
-    image: "/carrot_cake.jpg"
-  },
-  {
-    id: "upsell-sweet-3",
-    name: "Banana Bread",
-    price: 3.45,
-    image: "/banana_bread.jpg"
-  },
-  {
-    id: "upsell-sweet-4",
-    name: "Chocolate Cookie",
-    price: 2.50,
-    image: "/shoyu_pecan_pie.jpg"
-  },
-  {
-    id: "upsell-sweet-5",
-    name: "Blueberry Muffin",
-    price: 2.80,
-    image: "/carrot_cake.jpg"
-  },
-  {
-    id: "upsell-sweet-6",
-    name: "Cinnamon Roll",
-    price: 3.90,
-    image: "/banana_bread.jpg"
-  }
-];
-
-const UPSELL_DRINKS = [
-  {
-    id: "upsell-drink-1",
-    name: "Cold Pressed",
-    price: 4.95,
-    image: "/cold_pressed.jpg"
-  },
-  {
-    id: "upsell-drink-2",
-    name: "Beer",
-    price: 3.75,
-    image: "/beer.jpg"
-  },
-  {
-    id: "upsell-drink-3",
-    name: "Fresh Juice",
-    price: 2.75,
-    image: "/fresh_juice.jpg"
-  },
-  {
-    id: "upsell-drink-4",
-    name: "Matcha Latte",
-    price: 4.80,
-    image: "/cold_pressed.jpg"
-  },
-  {
-    id: "upsell-drink-5",
-    name: "Cappuccino",
-    price: 3.50,
-    image: "/beer.jpg"
-  },
-  {
-    id: "upsell-drink-6",
-    name: "Lemon Mint Soda",
-    price: 3.80,
-    image: "/fresh_juice.jpg"
-  }
-];
+  return `${range.min.toFixed(2)}€`;
+}
 
 export default function MenuPage() {
   const { 
     bootstrap, 
+    locationId,
+    setLocationId,
     locale, 
     orderMode, 
     setOrderMode,
@@ -307,14 +70,16 @@ export default function MenuPage() {
     setShowCartBarInsteadOfNav
   } = useGuest();
 
-  const isNewRecipe = (name: string) => {
-    const n = name.toLowerCase();
-    return n.includes('latte') || n.includes('bagel') || n.includes('croissant');
-  };
+  const activeStore = getGuestStoreLocation(locationId);
+  const activeStoreIndex = Math.max(
+    0,
+    GUEST_STORE_LOCATIONS.findIndex((store) => store.id === activeStore.id)
+  );
 
   const router = useRouter();
-  const [menu, setMenu] = useState<GuestMenuResponse | null>(MOCK_MENU);
-  const [loadingMenu, setLoadingMenu] = useState(false);
+  const [menu, setMenu] = useState<GuestMenuResponse | null>(null);
+  const [menuError, setMenuError] = useState<string | null>(null);
+  const [loadingMenu, setLoadingMenu] = useState(true);
   const [selectedItem, setSelectedItem] = useState<GuestMenuItem | null>(null);
   const [itemComments, setItemComments] = useState('');
   const [selectedModifiers, setSelectedModifiers] = useState<any[]>([]);
@@ -324,8 +89,29 @@ export default function MenuPage() {
   useEffect(() => {
     if (selectedItem) {
       setItemComments('');
-      setSelectedModifiers([]);
       setQuantity(1);
+      const defaultModifiers: Array<{
+        groupId: string;
+        groupName: string;
+        optionId: string;
+        optionName: string;
+        price: number;
+        quantity: number;
+      }> = [];
+      for (const group of selectedItem.modifierGroups ?? []) {
+        if (isVariantPricingGroup(group) && group.options[0]) {
+          const option = group.options[0];
+          defaultModifiers.push({
+            groupId: group.id,
+            groupName: group.name,
+            optionId: option.id,
+            optionName: option.name,
+            price: option.price,
+            quantity: 1,
+          });
+        }
+      }
+      setSelectedModifiers(defaultModifiers);
     }
   }, [selectedItem]);
 
@@ -341,7 +127,7 @@ export default function MenuPage() {
   }, [selectedItem, showUpsellModal]);
   
   // Custom states matching designs
-  const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>('cat-coffee');
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>('');
   
   // Filters and sorting states
   const [showFiltersModal, setShowFiltersModal] = useState(false);
@@ -357,7 +143,6 @@ export default function MenuPage() {
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showOrderModeModal, setShowOrderModeModal] = useState(false);
-  const [selectedStore, setSelectedStore] = useState<'pedralbes' | 'eixample'>('pedralbes');
   const [isStoreChanging, setIsStoreChanging] = useState(false);
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const [isAllergiesOpen, setIsAllergiesOpen] = useState(false);
@@ -477,18 +262,59 @@ export default function MenuPage() {
   const isManualClickRef = useRef(false);
 
   useEffect(() => {
-    if (bootstrap?.locationId) {
-      getMenu(bootstrap.locationId, locale)
+    if (!locationId) return;
+    setLoadingMenu(true);
+    setMenuError(null);
+    getMenu(locationId, locale)
         .then((data) => {
           setMenu(data);
           if (data?.categories?.length > 0) {
             setSelectedCategoryTab(data.categories[0].id);
           }
         })
-        .catch(console.error)
+        .catch((err) => {
+          console.error(err);
+          setMenu(null);
+          setMenuError(err instanceof Error ? err.message : 'Failed to load menu');
+        })
         .finally(() => setLoadingMenu(false));
-    }
-  }, [bootstrap, locale]);
+  }, [locationId, locale]);
+
+  const upsellSweets = useMemo(() => {
+    if (!menu?.items?.length) return [];
+    const sweetCategoryIds = new Set(
+      menu.categories
+        .filter((c) => /dessert|pastry|sweet|desert/i.test(c.name))
+        .map((c) => c.id)
+    );
+    return menu.items
+      .filter((item) => sweetCategoryIds.has(item.categoryId))
+      .slice(0, 6)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.basePrice,
+        image: menuItemImage(item),
+      }));
+  }, [menu]);
+
+  const upsellDrinks = useMemo(() => {
+    if (!menu?.items?.length) return [];
+    const drinkCategoryIds = new Set(
+      menu.categories
+        .filter((c) => /drink|coffee|tea|latte|beverage|cocktail|alcohol|smoothie/i.test(c.name))
+        .map((c) => c.id)
+    );
+    return menu.items
+      .filter((item) => drinkCategoryIds.has(item.categoryId))
+      .slice(0, 6)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.basePrice,
+        image: menuItemImage(item),
+      }));
+  }, [menu]);
 
   useEffect(() => {
     const parent = pageContainerRef.current;
@@ -551,26 +377,18 @@ export default function MenuPage() {
     }
   };
 
-  const getModifierImage = (name: string) => {
-    const upper = name.toUpperCase();
-    if (upper.includes("BREAD") || upper.includes("PAN") || upper.includes("TOAST")) {
-      return foodImages[2]; // Avocado Toast image
-    }
-    if (
-      upper.includes("EGG") || 
-      upper.includes("HUEVO") || 
-      upper.includes("CHEESE") || 
-      upper.includes("QUESO") || 
-      upper.includes("BACON") || 
-      upper.includes("TOCINO")
-    ) {
-      return foodImages[0]; // Brunch Plate image
-    }
-    if (upper.includes("MILK") || upper.includes("LECHE") || upper.includes("OAT") || upper.includes("ALMOND")) {
-      return foodImages[1]; // Corgi Signature Drink image
-    }
-    return foodImages[0]; // default fallback
+  const cycleStore = (direction: -1 | 1) => {
+    if (GUEST_STORE_LOCATIONS.length <= 1) return;
+    setIsStoreChanging(true);
+    window.setTimeout(() => {
+      const nextIndex =
+        (activeStoreIndex + direction + GUEST_STORE_LOCATIONS.length) % GUEST_STORE_LOCATIONS.length;
+      setLocationId(GUEST_STORE_LOCATIONS[nextIndex].id);
+      setIsStoreChanging(false);
+    }, 150);
   };
+
+  const storeDisplayName = bootstrap?.locationName || activeStore.name;
 
   const incrementModifierQty = (group: any, option: any) => {
     setSelectedModifiers((prev) => {
@@ -622,33 +440,34 @@ export default function MenuPage() {
       const existing = prev.find((m) => m.optionId === option.id);
       if (existing) {
         return prev.filter((m) => m.optionId !== option.id);
-      } else {
-        return [
-          ...prev,
-          {
-            groupId: group.id,
-            groupName: group.name,
-            optionId: option.id,
-            optionName: option.name,
-            price: option.price,
-            quantity: 1,
-          },
-        ];
       }
+      const withoutGroup = isVariantPricingGroup(group)
+        ? prev.filter((m) => m.groupId !== group.id)
+        : prev;
+      return [
+        ...withoutGroup,
+        {
+          groupId: group.id,
+          groupName: group.name,
+          optionId: option.id,
+          optionName: option.name,
+          price: option.price,
+          quantity: 1,
+        },
+      ];
     });
   };
 
+  const getItemUnitPrice = (item: GuestMenuItem, modifiers: typeof selectedModifiers) =>
+    calculateMenuUnitPrice(item.basePrice, item.modifierGroups, modifiers, item.name);
+
   const handleAddToCart = () => {
     if (!selectedItem) return;
-    const addedPrice = selectedModifiers.reduce(
-      (acc, m) => acc + m.price * (m.quantity || 1),
-      0
-    );
     addFoodToCart({
       menuItemId: selectedItem.id,
       itemType: 'food',
       name: selectedItem.name,
-      unitPrice: selectedItem.basePrice + addedPrice,
+      unitPrice: getItemUnitPrice(selectedItem, selectedModifiers),
       quantity: quantity,
       comments: itemComments || undefined,
       modifiers: selectedModifiers.length > 0 ? selectedModifiers : undefined,
@@ -684,11 +503,11 @@ export default function MenuPage() {
   };
 
   const handleFinalPayment = async (method: 'applepay' | 'card') => {
-    if (!bootstrap?.locationId || foodCart.length === 0) return;
+    if (!locationId || foodCart.length === 0) return;
     try {
       const order = await createOrder({
-        locationId: bootstrap.locationId,
-        tableId: bootstrap.tableId || undefined,
+        locationId: locationId,
+        tableId: bootstrap?.tableId || undefined,
         items: foodCart,
       });
       setCreatedOrderNumber(`ORD-${order.orderNumber}`);
@@ -726,7 +545,9 @@ export default function MenuPage() {
   };
   const tipAmount = getTipAmount();
 
-  const totalPrice = selectedItem ? (selectedItem.basePrice + selectedModifiers.reduce((acc: any, m: any) => acc + (m.price * (m.quantity || 1)), 0)) * quantity : 0;
+  const totalPrice = selectedItem
+    ? getItemUnitPrice(selectedItem, selectedModifiers) * quantity
+    : 0;
 
   if (loadingMenu) {
     return (
@@ -760,7 +581,7 @@ export default function MenuPage() {
               <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse flex-shrink-0" />
               <div className="flex items-center gap-1.5 text-xs text-gray-900 min-w-0">
                 <span className="font-bold tracking-tight truncate max-w-[110px]">
-                  {selectedStore === 'pedralbes' ? 'Pedralbes Centre' : 'Eixample Cafe'}
+                  {storeDisplayName}
                 </span>
                 <span className="text-gray-300 font-light flex-shrink-0">|</span>
                 <span className="font-semibold text-gray-500 flex items-center gap-1 min-w-0">
@@ -845,7 +666,26 @@ export default function MenuPage() {
 
         {/* Menu Items Categories sections block */}
         <div className="flex flex-col gap-8">
-          {filteredItems.length === 0 && menu ? (
+          {menuError ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-white rounded-3xl border border-gray-100 my-4">
+              <span className="text-5xl mb-4">⚠️</span>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Menu unavailable</h3>
+              <p className="text-xs text-gray-400 font-medium max-w-[280px] leading-relaxed mb-6">{menuError}</p>
+              <button
+                onClick={() => {
+                  setLoadingMenu(true);
+                  setMenuError(null);
+                  getMenu(locationId, locale)
+                    .then((data) => setMenu(data))
+                    .catch((err) => setMenuError(err instanceof Error ? err.message : 'Failed to load menu'))
+                    .finally(() => setLoadingMenu(false));
+                }}
+                className="px-6 py-2.5 bg-[#FDBD38] text-black font-bold text-xs rounded-full"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filteredItems.length === 0 && menu ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-white rounded-3xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] animate-fadeIn my-4">
               <span className="text-5xl mb-4">🐕</span>
               <h3 className="text-lg font-bold text-gray-900 mb-1 uppercase tracking-tight">No dishes found</h3>
@@ -897,15 +737,15 @@ export default function MenuPage() {
                           className="w-[220px] flex-shrink-0 flex flex-col gap-3 cursor-pointer hover:opacity-95 transition-opacity"
                         >
                           {/* Food image (First Style) */}
-                          <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 relative">
+                          <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 relative flex-shrink-0">
                             <img 
-                              src={getFoodImage(item.name, category.name)} 
+                              src={menuItemImage(item)} 
                               alt={item.name}
-                              className="w-full h-full object-cover"
+                              className="absolute inset-0 w-full h-full object-cover"
                             />
                             {/* Spark tag if new */}
-                            {isNewRecipe(item.name) && (
-                              <div className="absolute top-3 left-3 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                            {isFeaturedMenuItem(item) && (
+                              <div className="absolute top-3 left-3 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm z-10">
                                 <Sparkle className="w-3 h-3 fill-current" />
                                 <span>New recipe</span>
                               </div>
@@ -924,7 +764,7 @@ export default function MenuPage() {
 
                           {/* Price tag */}
                           <div className="text-[14px] font-bold text-black">
-                            {item.basePrice.toFixed(2)}€
+                            {formatGuestItemPrice(item)}
                           </div>
                         </div>
                       ))}
@@ -941,15 +781,15 @@ export default function MenuPage() {
                             className="w-full bg-white rounded-3xl overflow-hidden border border-gray-100 flex flex-col hover:opacity-98 transition-all cursor-pointer"
                           >
                             {/* Image container on beige bg */}
-                            <div className="w-full aspect-[4/3] bg-[#f2f2ee] relative">
+                            <div className="w-full aspect-[4/3] bg-[#f2f2ee] relative overflow-hidden flex-shrink-0">
                               <img 
-                                src={getFoodImage(item.name, category.name)} 
+                                src={menuItemImage(item)} 
                                 alt={item.name}
-                                className="w-full h-full object-cover"
+                                className="absolute inset-0 w-full h-full object-cover"
                               />
                               {/* Spark tag if new */}
-                              {isNewRecipe(item.name) && (
-                                <div className="absolute top-4 left-4 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                              {isFeaturedMenuItem(item) && (
+                                <div className="absolute top-4 left-4 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm z-10">
                                   <Sparkle className="w-3 h-3 fill-current" />
                                   <span>New recipe</span>
                                 </div>
@@ -970,7 +810,7 @@ export default function MenuPage() {
                               {/* Price and tag row */}
                               <div className="flex items-center justify-between mt-1 pt-1">
                                 <span className="text-[15px] font-bold text-black">
-                                  {item.basePrice.toFixed(2)}€
+                                  {formatGuestItemPrice(item)}
                                 </span>
                                 <span className="border border-gray-200 rounded-[6px] px-2 py-0.5 text-[9px] font-bold text-gray-400 tracking-wide uppercase">
                                   {dietaryTag}
@@ -1050,11 +890,11 @@ export default function MenuPage() {
           <div className="flex-1 overflow-y-auto scrollbar-none flex flex-col gap-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {/* Top Image Banner Section */}
             {selectedItem && (
-              <div className="w-full h-[260px] relative bg-gray-150 flex-shrink-0">
+              <div className="w-full h-[260px] relative bg-gray-150 flex-shrink-0 overflow-hidden">
                 <img 
-                  src={getFoodImage(selectedItem.name, 'Market Plates')} 
+                  src={menuItemImage(selectedItem)} 
                   alt={selectedItem.name}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
                 {/* Floating Back Button - Pinned to the photo, scrolls with it */}
                 <button 
@@ -1076,7 +916,7 @@ export default function MenuPage() {
                     {selectedItem?.name}
                   </h2>
                   <div className="text-[16px] font-bold text-black mt-1">
-                    {selectedItem?.basePrice.toFixed(2)}€
+                    {selectedItem ? getItemUnitPrice(selectedItem, selectedModifiers).toFixed(2) : '0.00'}€
                   </div>
                 </div>
 
@@ -1117,7 +957,7 @@ export default function MenuPage() {
                                 >
                                   <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white shadow-sm border border-gray-100 flex-shrink-0 flex items-center justify-center">
                                     <img
-                                      src={getModifierImage(option.name)}
+                                      src={menuItemImage({ image: '' })}
                                       alt={option.name}
                                       className="w-full h-full object-cover"
                                     />
@@ -1136,7 +976,9 @@ export default function MenuPage() {
                                     {option.name}
                                   </span>
                                   <span className="text-[11px] font-bold text-[#FDBD38] mt-0.5">
-                                    + {(option.price * modQty).toFixed(2)}€
+                                    {isVariantPricingGroup(group)
+                                      ? `${(option.price * modQty).toFixed(2)}€`
+                                      : `+ ${(option.price * modQty).toFixed(2)}€`}
                                   </span>
                                 </div>
 
@@ -1257,11 +1099,13 @@ export default function MenuPage() {
 
           {/* Sweets Horizontal Scroll */}
           <div className="flex overflow-x-auto gap-4 pb-2 px-6 -mx-6 scrollbar-none scroll-smooth">
-            {UPSELL_SWEETS.map((item) => {
+            {upsellSweets.map((item) => {
               const count = getCartItemCount(item.id);
               return (
                 <div key={item.id} className="flex-shrink-0 w-[135px] bg-white rounded-xl overflow-hidden flex flex-col border border-gray-100">
-                  <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
+                  <div className="w-full aspect-square relative overflow-hidden bg-gray-100 flex-shrink-0">
+                    <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
                   <div className="bg-white p-2 flex flex-col justify-between flex-grow gap-1.5">
                     <span className="text-[10px] font-bold text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
                       {item.name}
@@ -1275,7 +1119,7 @@ export default function MenuPage() {
                         {count > 0 ? (
                           <span className="text-[9px] font-bold">{count}</span>
                         ) : (
-                          <Plus size={10} strokeWidth={3} className="text-white" />
+                          <Plus size={10} strokeWidth={3} className="text-[#1c1917]" />
                         )}
                       </button>
                     </div>
@@ -1294,11 +1138,13 @@ export default function MenuPage() {
 
           {/* Drinks Horizontal Scroll */}
           <div className="flex overflow-x-auto gap-4 pb-2 px-6 -mx-6 scrollbar-none scroll-smooth">
-            {UPSELL_DRINKS.map((item) => {
+            {upsellDrinks.map((item) => {
               const count = getCartItemCount(item.id);
               return (
                 <div key={item.id} className="flex-shrink-0 w-[135px] bg-white rounded-xl overflow-hidden flex flex-col border border-gray-100">
-                  <img src={item.image} alt={item.name} className="w-full aspect-square object-cover" />
+                  <div className="w-full aspect-square relative overflow-hidden bg-gray-100 flex-shrink-0">
+                    <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
                   <div className="bg-white p-2 flex flex-col justify-between flex-grow gap-1.5">
                     <span className="text-[10px] font-bold text-gray-900 tracking-tight leading-tight uppercase line-clamp-2 min-h-[26px]">
                       {item.name}
@@ -1599,125 +1445,19 @@ export default function MenuPage() {
             )}
           </div>
 
-          {/* Social buttons */}
-          {authMode !== 'register_step2' && (
-            <div className="flex flex-col gap-3 w-full">
-              <button 
-                onClick={() => {
-                  if (typeof window !== 'undefined') localStorage.setItem('corgi_mock_user', 'Apple User');
-                  refreshAuth();
-                  setShowLoginModal(false);
-                }}
-                className="w-full bg-[#F5F5F7] hover:bg-[#EBEBEF] rounded-full py-3.5 px-[15px] font-semibold text-[14px] text-gray-900 flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer"
-              >
-                <svg className="w-5 h-5 fill-current text-gray-900" viewBox="0 0 24 24">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.69-1.12 1.83-.98 2.94.1.08.2.12.31.12.87 0 1.94-.56 2.5-1.45z" />
-                </svg>
-                <span>Sign in with Apple</span>
-              </button>
-              <button 
-                onClick={() => {
-                  if (typeof window !== 'undefined') localStorage.setItem('corgi_mock_user', 'Google User');
-                  refreshAuth();
-                  setShowLoginModal(false);
-                }}
-                className="w-full bg-[#F5F5F7] hover:bg-[#EBEBEF] rounded-full py-3.5 px-[15px] font-semibold text-[14px] text-gray-900 flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22c-.17-.63-.26-1.29-.26-1.89z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-                <span>Sign in with Google</span>
-              </button>
-            </div>
-          )}
-
-          {/* Terms checkbox */}
-          {(authMode === 'register_step1' || authMode === 'register_step2') && (
-            <div 
-              className="flex items-center justify-center gap-2.5 px-4 mx-auto cursor-pointer select-none text-center mt-1" 
-              onClick={() => setAgreedToTerms(!agreedToTerms)}
-            >
-              <input 
-                type="checkbox" 
-                checked={agreedToTerms}
-                onChange={() => {}} 
-                className="w-4.5 h-4.5 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer flex-shrink-0"
-              />
-              <span className="text-[12px] text-gray-500 font-medium leading-tight">
-                By registering I confirm{' '}
-                <span 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowPrivacyModal(true);
-                  }}
-                  className="underline cursor-pointer hover:text-black"
-                >
-                  privacy policy
-                </span> and <span className="underline cursor-pointer hover:text-black">terms</span>
-              </span>
-            </div>
-          )}
-
-          {/* Submit action */}
-          {authMode === 'login' && (
-            <button 
-              disabled={!authEmail || !authPassword}
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  const nameFromEmail = authEmail.split('@')[0].toUpperCase();
-                  localStorage.setItem('corgi_mock_user', nameFromEmail);
-                }
-                refreshAuth();
-                setShowLoginModal(false);
-              }}
-              className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
-                (authEmail && authPassword)
-                  ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
-                  : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
-              }`}
-            >
-              Enter
-            </button>
-          )}
-
-          {authMode === 'register_step1' && (
-            <button 
-              disabled={!authEmail || !agreedToTerms}
-              onClick={() => setAuthMode('register_step2')}
-              className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
-                (authEmail && agreedToTerms)
-                  ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
-                  : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
-              }`}
-            >
-              Next
-            </button>
-          )}
-
-          {authMode === 'register_step2' && (
-            <button 
-              disabled={!authFullName || !authPassword || !authConfirmPassword || authPassword !== authConfirmPassword || !agreedToTerms}
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('corgi_mock_user', authFullName.toUpperCase());
-                  localStorage.removeItem('corgi_logged_out');
-                }
-                refreshAuth();
-                setShowLoginModal(false);
-                setShowWelcomeModal(true);
-              }}
-              className={`w-full py-4 rounded-full font-bold text-center text-base transition-all ${
-                (authFullName && authPassword && authConfirmPassword && authPassword === authConfirmPassword && agreedToTerms)
-                  ? 'bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer'
-                  : 'bg-[#F4F4F5] text-gray-300 cursor-not-allowed'
-              }`}
-            >
-              Enter
-            </button>
-          )}
+          <p className="text-sm text-gray-500 text-center px-2">
+            Sign in with your phone number on the loyalty page.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setShowLoginModal(false);
+              router.push('/loyalty');
+            }}
+            className="w-full py-4 rounded-full font-bold text-center text-base bg-black text-white hover:bg-gray-900 active:scale-[0.99] cursor-pointer"
+          >
+            Continue to sign in
+          </button>
         </div>
       </div>
 
@@ -1949,14 +1689,9 @@ export default function MenuPage() {
             <h3 className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider pl-1 mb-1">Select Store</h3>
             <div className="flex items-center justify-between w-full bg-white py-2 px-1">
               <button
-                onClick={() => {
-                  setIsStoreChanging(true);
-                  setTimeout(() => {
-                    setSelectedStore(prev => prev === 'pedralbes' ? 'eixample' : 'pedralbes');
-                    setIsStoreChanging(false);
-                  }, 150);
-                }}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors"
+                onClick={() => cycleStore(-1)}
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors disabled:opacity-40"
+                disabled={GUEST_STORE_LOCATIONS.length <= 1}
               >
                 <ChevronLeft className="w-5 h-5" strokeWidth={2.2} />
               </button>
@@ -1964,18 +1699,13 @@ export default function MenuPage() {
               <span className={`text-[16px] font-bold text-gray-900 uppercase tracking-tight text-center flex-1 mx-4 transition-all duration-150 transform ${
                 isStoreChanging ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
               }`}>
-                {selectedStore === 'pedralbes' ? 'Pedralbes Centre.' : 'Eixample Cafe.'}
+                {storeDisplayName}
               </span>
 
               <button
-                onClick={() => {
-                  setIsStoreChanging(true);
-                  setTimeout(() => {
-                    setSelectedStore(prev => prev === 'pedralbes' ? 'eixample' : 'pedralbes');
-                    setIsStoreChanging(false);
-                  }, 150);
-                }}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors"
+                onClick={() => cycleStore(1)}
+                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 transition-colors disabled:opacity-40"
+                disabled={GUEST_STORE_LOCATIONS.length <= 1}
               >
                 <ChevronRight className="w-5 h-5" strokeWidth={2.2} />
               </button>
@@ -2017,12 +1747,10 @@ export default function MenuPage() {
             {/* Location details row */}
             <div className="border-y border-gray-200/55 py-5 flex flex-col gap-0.5 text-left w-full">
               <span className="text-[15px] font-semibold text-black">
-                {selectedStore === 'pedralbes' ? 'Pedralbes Centre' : 'Eixample Cafe'}
+                {storeDisplayName}
               </span>
               <span className="text-[12px] text-gray-400 font-medium leading-tight">
-                {selectedStore === 'pedralbes' 
-                  ? 'Avinguda Diagonal, 609, 08028, Barcelona' 
-                  : 'Carrer de València, 245, 08007, Barcelona'}
+                {activeStore.address}
               </span>
               <button 
                 onClick={() => setShowOrderModeModal(true)}
@@ -2044,7 +1772,7 @@ export default function MenuPage() {
                       <div className="flex items-start gap-3.5">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
                           <img 
-                            src={getFoodImage(cartItem.name, 'Market Plates')} 
+                            src={cartItem.image || menuItemImage({ image: cartItem.image })} 
                             alt={cartItem.name} 
                             className="w-full h-full object-cover" 
                           />

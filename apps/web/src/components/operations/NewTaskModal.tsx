@@ -24,18 +24,14 @@ interface NewTaskModalProps {
   onTaskUpdated?: (task: any) => void;
 }
 
-export const MOCK_USERS = [
-  { id: '1', initials: 'Dm', name: 'Dmytro', email: 'dvytvytskiy@gmail.com', bg: 'bg-corgi' },
-  { id: '2', initials: 'ak', name: 'akovpey@yahoo...', email: 'akovpey@yahoo...', bg: 'bg-yellow-400', tag: 'Limited access member' },
-  { id: '3', initials: 'av', name: 'andrey.volovik73@...', email: 'andrey.volovik73@...', bg: 'bg-orange-400', tag: 'Limited access member' },
-  { id: '4', initials: 'ez', name: 'ezeerskijpavlo@g...', email: 'ezeerskijpa...', bg: 'bg-gray-800', tag: 'Limited access member' },
-  { id: '5', initials: 'dv', name: 'dmytro.vytvytskyi@...', email: 'dmytro.vyt...', bg: 'bg-amber-500', tag: 'Limited access member' },
-  { id: '6', initials: 'jd', name: 'John Doe', email: 'john.doe@example.com', bg: 'bg-corgi', tag: 'Limited access member' },
-  { id: '7', initials: 'js', name: 'Jane Smith', email: 'jane.smith@example.com', bg: 'bg-orange-500' },
-  { id: '8', initials: 'rw', name: 'Robert Wood', email: 'robert.wood@example.com', bg: 'bg-gray-700' },
-  { id: '9', initials: 'am', name: 'Alice Moore', email: 'alice.moore@example.com', bg: 'bg-yellow-500', tag: 'Limited access member' },
-  { id: '10', initials: 'ck', name: 'Charlie King', email: 'charlie.king@example.com', bg: 'bg-amber-600' },
-];
+type AssigneeOption = {
+  id: string;
+  initials: string;
+  name: string;
+  email: string;
+  bg: string;
+  tag?: string;
+};
 
 export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations, uniqueAssignees, uniqueTags, employees = [], editingTask, onDelete, stages = [], isDraftTask = false, currentUserId = null, onTaskUpdated }: NewTaskModalProps) {
   const [title, setTitle] = useState('');
@@ -66,7 +62,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
     ? formatDateLabel(selectedDate)
     : 'Select Date & Time';
 
-  const [selectedAssignees, setSelectedAssignees] = useState<typeof MOCK_USERS>([]);
+  const [selectedAssignees, setSelectedAssignees] = useState<AssigneeOption[]>([]);
   const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
   const [assigneeSearch, setAssigneeSearch] = useState('');
   const [selectedTags, setSelectedTags] = useState<{ label: string; bg: string; text: string }[]>([]);
@@ -86,7 +82,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
         bg: 'bg-corgi',
       }));
     }
-    return MOCK_USERS;
+    return [];
   }, [employees]);
 
   const toggleUser = (user: { id: string; name: string; email?: string; initials?: string; bg?: string }) => {
@@ -591,7 +587,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                     ) : (
                        selectedAssignees.map(user => (
                           <div key={user.id} className="flex items-center gap-1.5 group cursor-pointer" onClick={() => setIsAssigneeDropdownOpen(!isAssigneeDropdownOpen)}>
-                             <div className={`w-6 h-6 rounded-full ${user.bg || 'bg-corgi'} text-white flex items-center justify-center text-[10px] font-bold`}>{('initials' in user ? user.initials : (user as typeof MOCK_USERS[0]).initials)}</div>
+                             <div className={`w-6 h-6 rounded-full ${user.bg || 'bg-corgi'} text-white flex items-center justify-center text-[10px] font-bold`}>{user.initials}</div>
                              <span className="text-[14px] font-bold text-gray-900">{user.name}</span>
                              <button className="text-gray-400 hover:text-gray-900 transition-colors cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleUser(user); }}>
                                <X size={14} strokeWidth={2.5} />
@@ -625,7 +621,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                               .filter(user => user.name.toLowerCase().includes(assigneeSearch.toLowerCase()) || user.email.toLowerCase().includes(assigneeSearch.toLowerCase()))
                               .map(user => {
                                 const isSelected = selectedAssignees.some(selected => selected.id === user.id);
-                                const initials = 'initials' in user ? user.initials : (user as typeof MOCK_USERS[0]).initials;
+                                const initials = user.initials;
                                 const bg = user.bg || 'bg-corgi';
                                 return (
                                <div key={user.id} onClick={() => toggleUser(user)} className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors">
@@ -640,7 +636,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
                                </div>
                                );
                             })}
-                            {MOCK_USERS.filter(user => user.name.toLowerCase().includes(assigneeSearch.toLowerCase()) || user.email.toLowerCase().includes(assigneeSearch.toLowerCase())).length === 0 && (
+                            {assigneeOptions.filter(user => user.name.toLowerCase().includes(assigneeSearch.toLowerCase()) || user.email.toLowerCase().includes(assigneeSearch.toLowerCase())).length === 0 && (
                                 <div className="px-4 py-3 text-center text-[13px] text-gray-500 font-medium">No people found</div>
                             )}
                         </div>
