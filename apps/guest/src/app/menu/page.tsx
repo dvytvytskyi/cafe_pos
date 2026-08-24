@@ -593,9 +593,59 @@ export default function MenuPage() {
 
   if (loadingMenu) {
     return (
-      <div className="h-screen w-full bg-white flex flex-col items-center justify-center gap-3">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
-        <span className="text-sm font-semibold text-gray-500">Loading Corgi Menu...</span>
+      <div className="h-screen w-full bg-white flex flex-col overflow-hidden font-sans select-none">
+        {/* Header Skeleton */}
+        <div className="bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex flex-col w-full px-4 pt-4 pb-3.5 gap-3 shadow-xs">
+          <div className="flex items-center justify-between gap-3">
+            <div className="w-10 h-10 rounded-full bg-white/40 animate-pulse flex-shrink-0" />
+            <div className="w-44 h-9 rounded-full bg-white/40 animate-pulse" />
+            <div className="w-10 h-10 rounded-full bg-white/40 animate-pulse flex-shrink-0" />
+          </div>
+
+          {/* Search bar skeleton */}
+          <div className="w-full h-11 rounded-full bg-white/40 animate-pulse mt-0.5" />
+
+          {/* Category Tabs Skeleton */}
+          <div className="flex items-center gap-2 overflow-x-hidden pt-1 pb-0.5">
+            <div className="w-24 h-9 rounded-full bg-white/80 animate-pulse flex-shrink-0" />
+            <div className="w-28 h-9 rounded-full bg-white/40 animate-pulse flex-shrink-0" />
+            <div className="w-20 h-9 rounded-full bg-white/40 animate-pulse flex-shrink-0" />
+            <div className="w-24 h-9 rounded-full bg-white/40 animate-pulse flex-shrink-0" />
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="flex-1 overflow-y-auto px-4 pt-5 pb-24 bg-gray-50 flex flex-col gap-4">
+          {/* Section Title Skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="w-36 h-6 rounded-md bg-gray-200 animate-pulse" />
+            <div className="w-16 h-4 rounded-md bg-gray-200 animate-pulse" />
+          </div>
+
+          {/* Item Cards Grid Skeleton (6 cards) */}
+          <div className="grid grid-cols-2 gap-3.5">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white rounded-[22px] p-3 border border-gray-100/80 shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+                <div>
+                  {/* Image Skeleton */}
+                  <div className="w-full aspect-[4/3] rounded-[16px] bg-gray-200/70 animate-pulse relative overflow-hidden" />
+                  
+                  {/* Title & Description Skeleton */}
+                  <div className="mt-3 flex flex-col gap-1.5">
+                    <div className="w-3/4 h-4 rounded bg-gray-200 animate-pulse" />
+                    <div className="w-full h-3 rounded bg-gray-100 animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Price & Add Button Skeleton */}
+                <div className="flex items-center justify-between mt-4 pt-1">
+                  <div className="w-14 h-5 rounded bg-gray-200 animate-pulse" />
+                  <div className="w-8 h-8 rounded-full bg-amber-100/80 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

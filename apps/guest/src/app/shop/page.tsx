@@ -267,13 +267,22 @@ export default function ShopPage() {
         <h2 className="text-xl font-bold text-gray-900">Merch</h2>
 
         {loadingMerch ? (
-          <p className="text-gray-500 text-sm">Loading merch…</p>
+          <div className="grid grid-cols-2 gap-4 pb-24">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white border border-gray-100/90 rounded-[16px] overflow-hidden flex flex-col p-3 gap-2">
+                <div className="w-full aspect-square rounded-[12px] bg-gray-200/70 animate-pulse relative" />
+                <div className="w-3/4 h-4 rounded bg-gray-200 animate-pulse mt-1" />
+                <div className="w-1/2 h-4 rounded bg-gray-100 animate-pulse" />
+              </div>
+            ))}
+          </div>
         ) : filteredItems.length === 0 ? (
           <p className="text-gray-500 text-sm">No merch items available.</p>
         ) : null}
 
         {/* Catalog Items Product Grid */}
-        <div className="grid grid-cols-2 gap-4 pb-24">
+        {!loadingMerch && (
+          <div className="grid grid-cols-2 gap-4 pb-24">
           {filteredItems.map((item) => (
             <div 
               key={item.id} 
@@ -316,6 +325,7 @@ export default function ShopPage() {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Floating Bottom Cart Bar */}
