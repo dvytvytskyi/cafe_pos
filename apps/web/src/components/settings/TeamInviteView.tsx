@@ -129,7 +129,7 @@ export default function TeamInviteView({
                   onClick={() => onTeamTypeChange('general')}
                   className={`px-4 py-2 rounded-xl text-[13px] font-bold border transition-all ${
                     teamType === 'general'
-                      ? 'bg-orange-50 border-corgi text-corgi'
+                      ? 'bg-[#EE635E]/10 border-[#EE635E] text-[#EE635E]'
                       : 'bg-gray-50 border-gray-100 text-gray-600 hover:border-gray-200'
                   }`}
                 >
@@ -140,7 +140,7 @@ export default function TeamInviteView({
                   onClick={() => onTeamTypeChange('location')}
                   className={`px-4 py-2 rounded-xl text-[13px] font-bold border transition-all ${
                     teamType === 'location'
-                      ? 'bg-orange-50 border-corgi text-corgi'
+                      ? 'bg-[#EE635E]/10 border-[#EE635E] text-[#EE635E]'
                       : 'bg-gray-50 border-gray-100 text-gray-600 hover:border-gray-200'
                   }`}
                 >

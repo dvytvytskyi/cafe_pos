@@ -627,7 +627,7 @@ export default function TablesView({
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setMode('select')}
-            className={`p-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors cursor-pointer ${mode === 'select' ? 'bg-corgi/10 text-corgi' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`p-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors cursor-pointer ${mode === 'select' ? 'bg-[#EE635E]/10 text-[#EE635E]' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             <MousePointer2 size={18} /> Select
           </button>
@@ -659,7 +659,7 @@ export default function TablesView({
           </button>
           <button 
             onClick={() => setMode('draw-table')}
-            className={`p-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors cursor-pointer ${mode === 'draw-table' ? 'bg-orange-100 text-orange-600' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`p-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors cursor-pointer ${mode === 'draw-table' ? 'bg-[#EE635E]/10 text-[#EE635E]' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             <Hexagon size={18} /> Custom Table
           </button>
@@ -808,8 +808,8 @@ export default function TablesView({
               }}
               className={`px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold transition-all cursor-pointer whitespace-nowrap shadow-sm border ${
                 isLiveView 
-                  ? 'bg-corgi text-white border-corgi' 
-                  : 'bg-white text-corgi border-corgi/30 hover:bg-corgi/10'
+                  ? 'bg-[#EE635E] text-white border-[#EE635E]' 
+                  : 'bg-white text-[#EE635E] border-[#EE635E]/30 hover:bg-[#EE635E]/10'
               }`}
             >
               <Play size={14} className={isLiveView ? 'fill-white' : ''} /> 

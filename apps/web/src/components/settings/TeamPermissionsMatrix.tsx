@@ -71,9 +71,9 @@ export default function TeamPermissionsMatrix({
         const highlightBgRow = isRoleSetupMode
           ? 'group-hover:bg-purple-50/20'
           : activeRoleId === role.id
-            ? 'bg-orange-50/20'
+            ? 'bg-[#EE635E]/10'
             : '';
-        const activeHighlight = isRoleSetupMode ? 'bg-purple-600' : 'bg-corgi';
+        const activeHighlight = isRoleSetupMode ? 'bg-purple-600' : 'bg-[#EE635E]';
         const checkedBg = isColActive ? activeHighlight : 'bg-gray-300';
 
         return (
@@ -115,9 +115,9 @@ export default function TeamPermissionsMatrix({
             <th className="px-6 py-4 text-[13px] font-bold text-gray-400 w-[22%]">Access Rights</th>
             {roles.map((role) => {
               const isColActive = isRoleSetupMode || activeRoleId === role.id;
-              const highlightBg = isRoleSetupMode ? 'bg-purple-50/50' : 'bg-orange-50/50';
-              const highlightColor = isRoleSetupMode ? 'bg-purple-600 border-purple-600' : 'bg-corgi border-corgi';
-              const highlightText = isRoleSetupMode ? 'text-purple-600' : 'text-corgi';
+              const highlightBg = isRoleSetupMode ? 'bg-purple-50/50' : 'bg-[#EE635E]/10';
+              const highlightColor = isRoleSetupMode ? 'bg-purple-600 border-purple-600' : 'bg-[#EE635E] border-[#EE635E]';
+              const highlightText = isRoleSetupMode ? 'text-purple-600' : 'text-[#EE635E]';
 
               return (
                 <th

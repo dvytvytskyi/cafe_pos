@@ -206,7 +206,7 @@ export default function ReputationView() {
             data-testid="reputation-sync-btn"
             onClick={() => void handleSync()}
             disabled={syncing}
-            className="flex items-center gap-1.5 px-3 h-[38px] rounded-xl border text-[13px] font-bold transition-colors cursor-pointer bg-corgi text-white border-corgi hover:bg-corgi/90 disabled:opacity-60"
+            className="flex items-center gap-1.5 px-3 h-[38px] rounded-xl border text-[13px] font-bold transition-colors cursor-pointer bg-[#EE635E] text-white border-[#EE635E] hover:bg-[#d94f4a] disabled:opacity-60"
           >
             {syncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
             Sync now
