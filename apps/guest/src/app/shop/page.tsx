@@ -375,7 +375,15 @@ const DEFAULT_CORGI_MERCH: ShopMerchItem[] = [
               {/* Product Card Text Details */}
               <div className="p-4 flex flex-col justify-between flex-grow gap-2 text-left">
                 <div className="flex flex-col gap-0.5">
-                  <h3 className="text-[13px] font-bold text-gray-900 line-clamp-2 min-h-[36px] max-h-[36px] overflow-hidden leading-tight block">
+                  <h3 
+                    className="text-[13px] font-bold text-gray-900 leading-snug overflow-hidden h-[34px]"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
                     {item.name}
                   </h3>
                   <p className="text-[11px] text-gray-400 font-semibold leading-snug line-clamp-1">
