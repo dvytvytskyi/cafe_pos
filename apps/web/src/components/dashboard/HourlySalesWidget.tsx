@@ -9,7 +9,7 @@ import type { DashboardReport } from '@/lib/dashboard';
 ChartJS.register();
 
 const COLORS = {
-  black: '#111827',
+  black: '#EE635E',
   darkGray: '#4b5563',
   lightGray: '#9ca3af',
   grid: '#f3f4f6',
