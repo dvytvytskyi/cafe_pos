@@ -237,7 +237,7 @@ export default function LocationsLeaderboard({ compare = false, locations = [] }
                     </div>
 
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm flex flex-col justify-between">
+                      <div className="bg-white rounded-xl p-2.5 border border-gray-100 flex flex-col justify-between">
                         <span className="text-[10px] uppercase font-bold text-gray-500 mb-1">Reviews</span>
                         <div className="flex items-end justify-between">
                           <span className="font-bold text-gray-900 text-sm">{loc.reviewCount}</span>
@@ -250,13 +250,13 @@ export default function LocationsLeaderboard({ compare = false, locations = [] }
                           )}
                         </div>
                       </div>
-                      <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm flex flex-col justify-between">
+                      <div className="bg-white rounded-xl p-2.5 border border-gray-100 flex flex-col justify-between">
                         <span className="text-[10px] uppercase font-bold text-gray-500 mb-1">Orders</span>
                         <div className="flex items-end justify-between">
                           <span className="font-bold text-gray-900 text-sm">{loc.orderCount}</span>
                         </div>
                       </div>
-                      <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm flex flex-col justify-between">
+                      <div className="bg-white rounded-xl p-2.5 border border-gray-100 flex flex-col justify-between">
                         <span className="text-[10px] uppercase font-bold text-gray-500 mb-1">Avg Check</span>
                         <div className="flex items-end justify-between">
                           <span className="font-bold text-gray-900 text-sm">
