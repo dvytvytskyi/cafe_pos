@@ -156,7 +156,7 @@ export default function Header() {
         <div className="bg-white rounded-full h-14 p-1.5 pr-4 shadow-sm flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow">
           <div className="w-11 h-11 bg-gray-100 rounded-full overflow-hidden shrink-0 border border-gray-200">
             <img 
-              src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=FDBD38" 
+              src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=EE635E" 
               alt="User Avatar" 
               className="w-full h-full object-cover" 
             />
