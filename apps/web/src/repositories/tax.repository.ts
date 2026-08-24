@@ -21,6 +21,7 @@ export const TAX_RATES_CACHE_KEY = 'tax_rates:default';
 const DEFAULT_RATES: Array<{ name: string; slug: TaxSlug; ratePercent: number }> = [
   { name: 'Food', slug: 'food', ratePercent: 10 },
   { name: 'Alcohol', slug: 'alcohol', ratePercent: 21 },
+  { name: 'Exempt', slug: 'exempt', ratePercent: 0 },
 ];
 
 function mapRow(row: {
@@ -45,12 +46,13 @@ function mapRow(row: {
 
 export class TaxRepository {
   async ensureDefaults(locationId = 'default'): Promise<void> {
-    const count = await prisma.taxRate.count({ where: { locationId } });
-    if (count > 0) return;
-
-    await prisma.taxRate.createMany({
-      data: DEFAULT_RATES.map((r) => ({ ...r, locationId })),
-    });
+    for (const rate of DEFAULT_RATES) {
+      await prisma.taxRate.upsert({
+        where: { locationId_slug: { locationId, slug: rate.slug } },
+        create: { ...rate, locationId },
+        update: {},
+      });
+    }
   }
 
   async findAll(locationId = 'default'): Promise<TaxRateRecord[]> {

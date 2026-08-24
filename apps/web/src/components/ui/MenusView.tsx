@@ -317,7 +317,7 @@ export default function MenusView() {
   return (
     <div className="flex flex-col xl:flex-row h-full w-full animate-in fade-in slide-in-from-right-4 duration-500">
       {/* Left Sidebar: Categories */}
-      <div className="w-full xl:w-72 shrink-0 flex flex-col border-b xl:border-b-0 xl:border-r border-gray-100 pb-6 mb-6 xl:pb-0 xl:mb-0 xl:pr-6 xl:mr-6 xl:overflow-y-auto">
+      <div className="w-full xl:w-72 shrink-0 flex flex-col border-b xl:border-b-0 xl:border-r border-gray-100 pb-6 mb-6 xl:pb-0 xl:mb-0 xl:pr-6 xl:mr-6 overflow-x-hidden overflow-y-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex items-center justify-between mb-4 xl:mb-8 mt-2">
           <h3 className="text-[12px] font-bold text-gray-400 tracking-widest uppercase">Categories</h3>
           <button 
@@ -328,7 +328,7 @@ export default function MenusView() {
           </button>
         </div>
 
-        <Reorder.Group axis="y" values={categories} onReorder={handleReorderCategories} className="flex flex-row flex-wrap xl:flex-col gap-2 xl:gap-1 list-none p-0">
+        <Reorder.Group axis="y" values={categories} onReorder={handleReorderCategories} className="flex flex-row flex-wrap xl:flex-col gap-2 xl:gap-1 list-none p-0 w-full overflow-x-hidden">
           {categories.map((cat) => (
             <Reorder.Item 
               key={cat.id}

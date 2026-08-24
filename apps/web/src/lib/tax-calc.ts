@@ -1,4 +1,5 @@
 import type { TaxSlug } from './tax-validation.ts';
+import { isValidTaxSlug } from './tax-validation.ts';
 
 export type TaxRatesMap = Record<TaxSlug, number>;
 
@@ -6,6 +7,7 @@ export type OrderLineForTax = {
   name: string;
   price: number;
   quantity: number;
+  taxSlug?: TaxSlug | string | null;
 };
 
 export type ReceiptTaxBreakdown = {
@@ -13,6 +15,7 @@ export type ReceiptTaxBreakdown = {
   foodTax: number;
   alcoholNet: number;
   alcoholTax: number;
+  exemptNet: number;
   totalNet: number;
   totalTax: number;
   totalGross: number;
@@ -55,6 +58,12 @@ export function taxSlugForItemName(name: string): TaxSlug {
   return isAlcoholItemName(name) ? 'alcohol' : 'food';
 }
 
+export function taxSlugForOrderLine(line: Pick<OrderLineForTax, 'name' | 'taxSlug'>): TaxSlug {
+  const raw = line.taxSlug?.trim().toLowerCase();
+  if (raw && isValidTaxSlug(raw)) return raw;
+  return taxSlugForItemName(line.name);
+}
+
 export function calculateReceiptTaxes(
   items: OrderLineForTax[],
   rates: TaxRatesMap
@@ -63,23 +72,26 @@ export function calculateReceiptTaxes(
   let foodTax = 0;
   let alcoholNet = 0;
   let alcoholTax = 0;
+  let exemptNet = 0;
 
   for (const item of items) {
-    const slug = taxSlugForItemName(item.name);
-    const ratePercent = rates[slug];
+    const slug = taxSlugForOrderLine(item);
+    const ratePercent = rates[slug] ?? rates.food;
     const gross = roundMoney(item.price * item.quantity);
     const { net, tax } = splitGrossByVat(gross, ratePercent);
 
     if (slug === 'alcohol') {
       alcoholNet = roundMoney(alcoholNet + net);
       alcoholTax = roundMoney(alcoholTax + tax);
+    } else if (slug === 'exempt') {
+      exemptNet = roundMoney(exemptNet + gross);
     } else {
       foodNet = roundMoney(foodNet + net);
       foodTax = roundMoney(foodTax + tax);
     }
   }
 
-  const totalNet = roundMoney(foodNet + alcoholNet);
+  const totalNet = roundMoney(foodNet + alcoholNet + exemptNet);
   const totalTax = roundMoney(foodTax + alcoholTax);
   const totalGross = roundMoney(totalNet + totalTax);
 
@@ -88,6 +100,7 @@ export function calculateReceiptTaxes(
     foodTax,
     alcoholNet,
     alcoholTax,
+    exemptNet,
     totalNet,
     totalTax,
     totalGross,
@@ -99,5 +112,6 @@ export function taxRatesToMap(
 ): TaxRatesMap {
   const food = rows.find((r) => r.slug === 'food')?.ratePercent ?? 10;
   const alcohol = rows.find((r) => r.slug === 'alcohol')?.ratePercent ?? 21;
-  return { food, alcohol };
+  const exempt = rows.find((r) => r.slug === 'exempt')?.ratePercent ?? 0;
+  return { food, alcohol, exempt };
 }

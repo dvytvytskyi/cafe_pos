@@ -98,6 +98,7 @@ model MenuCategory {
   name           String
   sortOrder      Int             @default(0)
   isArchived     Boolean         @default(false)
+  defaultTaxSlug String?         // Guava category taxPercentage → food | alcohol | exempt
   items          MenuItem[]
   modifierGroups ModifierGroup[] @relation("CategoryModifierGroups")
   createdAt      DateTime        @default(now())
@@ -146,6 +147,7 @@ model MenuItem {
   sortOrder      Int                   @default(0)
   guavaSourceId  String?               // Original Guava menuItem.id (for re-import)
   recommendedItemIds String[]        @default([]) // Guest upsell / Guava recommended[]
+  taxSlug          String?           // food | alcohol | exempt — IVA bucket from Guava
   priceHistory   Json?                 // Історія цін
   translations   MenuItemTranslation[]
   modifierGroups ModifierGroup[]       @relation("MenuItemModifierGroups")
@@ -225,6 +227,7 @@ model OrderItem {
   itemType         String   @default("food") // food | merch
   menuItemId       String?
   merchSkuId       String?
+  taxSlug          String?  // Snapshot IVA bucket at order time
   modifierSnapshot Json?
   paid             Boolean  @default(false)
   comments         String?

@@ -1,4 +1,4 @@
-export const TAX_SLUGS = ['food', 'alcohol'] as const;
+export const TAX_SLUGS = ['food', 'alcohol', 'exempt'] as const;
 export type TaxSlug = (typeof TAX_SLUGS)[number];
 
 export const MIN_TAX_PERCENT = 0;

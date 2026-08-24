@@ -24,7 +24,8 @@ export class TaxApiError extends Error {
 export function taxRatesToMap(rates: TaxRate[]): TaxRatesMap {
   const food = rates.find((r) => r.slug === 'food')?.ratePercent ?? 10;
   const alcohol = rates.find((r) => r.slug === 'alcohol')?.ratePercent ?? 21;
-  return { food, alcohol };
+  const exempt = rates.find((r) => r.slug === 'exempt')?.ratePercent ?? 0;
+  return { food, alcohol, exempt };
 }
 
 export function notifyTaxRatesUpdated(rates: TaxRate[]): void {
