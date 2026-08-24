@@ -359,7 +359,7 @@ export default function TaskManager({
                       const name = resolveAssigneeName(a);
                       const employee = employees.find((e) => e.id === a);
                       const initials = employee?.avatarInitials || name.slice(0, 2).toUpperCase();
-                      const bg = 'bg-corgi';
+                      const bg = 'bg-[#EE635E]';
                       return (
                         <button 
                           key={a}
@@ -621,7 +621,7 @@ export default function TaskManager({
             {task.assignees?.map((userId, i) => {
               const employee = employees.find((e) => e.id === userId);
               const initials = employee?.avatarInitials || resolveAssigneeName(userId).slice(0, 2).toUpperCase();
-              const bg = 'bg-corgi';
+              const bg = 'bg-[#EE635E]';
               return (
                 <div key={i} className={`w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 border-2 border-white ${bg}`}>
                   {initials}

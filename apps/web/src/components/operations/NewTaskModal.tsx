@@ -79,7 +79,7 @@ export default function NewTaskModal({ isOpen, onClose, onSave, uniqueLocations,
         name: e.name,
         email: e.email || '',
         initials: e.avatarInitials || e.name.slice(0, 2).toUpperCase(),
-        bg: 'bg-corgi',
+        bg: 'bg-[#EE635E]',
       }));
     }
     return [];
