@@ -351,7 +351,7 @@ export default function GlobalFilters({
                   }}
                   className={`cursor-pointer py-2 text-[12px] font-bold rounded-lg transition-colors ${
                     selectedMonths.includes(i)
-                      ? 'bg-[#1a2333] text-white shadow-md'
+                      ? 'bg-[#EE635E] text-white shadow-md'
                       : 'text-gray-700 bg-gray-50 hover:bg-gray-200'
                   }`}
                 >
@@ -410,7 +410,7 @@ export default function GlobalFilters({
                     type="button"
                     onClick={applyCustomRange}
                     disabled={!rangeStart || !rangeEnd}
-                    className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-white bg-[#1a2333] hover:bg-gray-800 rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-white bg-[#EE635E] hover:bg-[#d94f4a] rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Apply
                   </button>
@@ -430,7 +430,7 @@ export default function GlobalFilters({
                 : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200'
             }`}
           >
-            <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#FDBD38]' : 'bg-gray-200'}`}>
+            <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-gray-200'}`}>
               <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${compare ? 'translate-x-5' : 'translate-x-1'}`} />
             </div>
             <span className="text-[13px] font-semibold tracking-tight">Compare</span>
@@ -439,7 +439,7 @@ export default function GlobalFilters({
           <div className="flex items-center justify-center gap-2.5 bg-white px-4 h-[40px] rounded-[10px] border border-gray-200 flex-1 xl:flex-none min-w-[120px]">
             <button 
               onClick={() => setCompare(!compare)}
-              className={`cursor-pointer relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#FDBD38]' : 'bg-gray-200'}`}
+              className={`cursor-pointer relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-gray-200'}`}
             >
               <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${compare ? 'translate-x-5' : 'translate-x-1'}`} />
             </button>

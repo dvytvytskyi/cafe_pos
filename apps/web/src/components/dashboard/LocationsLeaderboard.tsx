@@ -144,7 +144,7 @@ export default function LocationsLeaderboard({ compare = false, locations = [] }
       if (selectedLocation === loc.id) {
         el.style.zIndex = '50';
         dotDiv.className =
-          'marker-dot w-4 h-4 rounded-full border-2 border-white shadow-sm bg-[#EE635E] transition-all duration-300';
+          'marker-dot w-4 h-4 rounded-full border-2 border-white shadow-sm bg-[#FDBD38] transition-all duration-300';
         if (nameDiv) {
           nameDiv.style.opacity = '1';
           nameDiv.style.transform = 'translateY(-4px)';
@@ -214,7 +214,7 @@ export default function LocationsLeaderboard({ compare = false, locations = [] }
                 return (
                   <div
                     key={loc.id}
-                    className={`flex flex-col p-4 rounded-2xl transition-colors cursor-pointer border flex-shrink-0 ${selectedLocation === loc.id ? 'border-[#EE635E] bg-[#EE635E]/5' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}
+                    className={`flex flex-col p-4 rounded-2xl transition-colors cursor-pointer border flex-shrink-0 ${selectedLocation === loc.id ? 'border-[#FDBD38] bg-[#FDBD38]/10' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}
                     onMouseEnter={() => {
                       setSelectedLocation(loc.id);
                       setHoverSource('list');
@@ -227,7 +227,7 @@ export default function LocationsLeaderboard({ compare = false, locations = [] }
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`p-2 rounded-xl transition-colors ${selectedLocation === loc.id ? 'bg-[#EE635E] text-white' : 'bg-gray-100 text-gray-500'}`}
+                          className={`p-2 rounded-xl transition-colors ${selectedLocation === loc.id ? 'bg-[#FDBD38] text-white' : 'bg-gray-100 text-gray-500'}`}
                         >
                           <Icon className="w-5 h-5" />
                         </div>

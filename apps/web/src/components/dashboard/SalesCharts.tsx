@@ -26,7 +26,7 @@ const COLORS = {
   white: '#ffffff',
 };
 
-const locationColors = ['#EE635E', '#FDBD38', '#4b5563', '#9ca3af', '#e5e7eb', '#d1d5db'];
+const locationColors = ['#FDBD38', '#EE635E', '#4b5563', '#9ca3af', '#e5e7eb', '#d1d5db'];
 
 const createDiagonalPattern = (color: string, bgColor: string) => {
   if (typeof document === 'undefined') return color;
@@ -74,7 +74,7 @@ function resolveChartData(
     {
       label: 'Gross Volume',
       data: gross,
-      backgroundColor: '#EE635E',
+      backgroundColor: '#FDBD38',
       borderSkipped: false,
       barPercentage: 1.0,
       categoryPercentage: 0.8,
@@ -96,7 +96,7 @@ function resolveChartData(
       {
         label: 'Gross Volume (Previous)',
         data: previousRevenueByDay.map((d) => d.gross),
-        backgroundColor: () => createDiagonalPattern('#EE635E', '#ffdedd'),
+        backgroundColor: () => createDiagonalPattern('#FDBD38', '#fef3c7'),
         borderSkipped: false,
         barPercentage: 1.0,
         categoryPercentage: 0.8,
