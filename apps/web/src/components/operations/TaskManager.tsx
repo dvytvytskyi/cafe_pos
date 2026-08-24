@@ -324,7 +324,7 @@ export default function TaskManager({
             <button 
               onClick={() => setIsAssigneeFilterOpen(!isAssigneeFilterOpen)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[13px] font-bold transition-colors cursor-pointer ${
-                assigneeFilter !== 'All' ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                assigneeFilter !== 'All' ? 'bg-[#EE635E] border-[#EE635E] text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
               }`}
             >
               <Users size={14} />
@@ -389,7 +389,7 @@ export default function TaskManager({
             <button 
               onClick={() => setIsLocationFilterOpen(!isLocationFilterOpen)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[13px] font-bold transition-colors cursor-pointer ${
-                locationFilter !== 'All' ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                locationFilter !== 'All' ? 'bg-[#EE635E] border-[#EE635E] text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
               }`}
             >
               <MapPin size={14} />
@@ -439,7 +439,7 @@ export default function TaskManager({
             <button 
               onClick={() => setIsTagFilterOpen(!isTagFilterOpen)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[13px] font-bold transition-colors cursor-pointer ${
-                tagFilter !== 'All' ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                tagFilter !== 'All' ? 'bg-[#EE635E] border-[#EE635E] text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
               }`}
             >
               <Filter size={14} />
@@ -450,7 +450,15 @@ export default function TaskManager({
                  <ChevronDown size={14} className="text-gray-400" />
               )}
             </button>
-            <AnimatePresence>
+          </div>
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="ml-auto flex items-center gap-2 px-4 py-1.5 bg-[#EE635E] text-white rounded-xl hover:bg-[#d94f4a] transition-colors cursor-pointer shrink-0 text-xs font-bold"
+          >
+            <Plus size={16} />
+            Add Task
+          </button>    <AnimatePresence>
               {isTagFilterOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsTagFilterOpen(false)} />
