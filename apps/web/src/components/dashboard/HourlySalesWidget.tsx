@@ -14,12 +14,12 @@ const COLORS = {
   lightGray: '#9ca3af',
   grid: '#f3f4f6',
   white: '#ffffff',
-  corgi: '#FDBD38',
-  prevStripes: '#d1d5db',
-  prevBg: '#f3f4f6',
+  corgi: '#CB5900',
+  net: '#e5e7eb',
+  previous: '#d1d5db',
 };
 
-const locationColors = ['#EE635E', '#FDBD38', '#4b5563', '#9ca3af', '#e5e7eb', '#d1d5db'];
+const locationColors = ['#EE635E', '#CB5900', '#4b5563', '#9ca3af', '#e5e7eb', '#d1d5db'];
 
 const hours = HOURLY_SLOTS.map((h) => `${String(h).padStart(2, '0')}:00`);
 
