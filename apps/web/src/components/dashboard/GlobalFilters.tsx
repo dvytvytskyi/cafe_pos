@@ -351,7 +351,7 @@ export default function GlobalFilters({
                   }}
                   className={`cursor-pointer py-2 text-[12px] font-bold rounded-lg transition-colors ${
                     selectedMonths.includes(i)
-                      ? 'bg-[#FDBD38] text-white shadow-md'
+                      ? 'bg-[#FDBD38] text-gray-900 shadow-md'
                       : 'text-gray-700 bg-gray-50 hover:bg-gray-200'
                   }`}
                 >
@@ -410,7 +410,7 @@ export default function GlobalFilters({
                     type="button"
                     onClick={applyCustomRange}
                     disabled={!rangeStart || !rangeEnd}
-                    className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-white bg-[#FDBD38] hover:bg-[#e5a420] rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-gray-900 bg-[#FDBD38] hover:bg-[#e5a420] rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Apply
                   </button>
