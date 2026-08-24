@@ -31,7 +31,8 @@ import {
   Menu as MenuIcon,
   Coffee,
   Gift,
-  ClipboardList
+  ClipboardList,
+  PawPrint
 } from 'lucide-react';
 
 type ShopMerchItem = {
@@ -77,27 +78,74 @@ export default function ShopPage() {
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string | null>(null);
   const [isStoreChanging, setIsStoreChanging] = useState(false);
 
+const DEFAULT_CORGI_MERCH: ShopMerchItem[] = [
+  {
+    id: 'merch-1',
+    sku: 'CORGI-MUG-01',
+    name: 'Corgi Signature Ceramic Mug ☕',
+    description: '350ml premium ceramic mug with Corgi logo.',
+    price: 14.90,
+    category: 'Mugs',
+    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
+    options: [],
+  },
+  {
+    id: 'merch-2',
+    sku: 'CORGI-TOTE-01',
+    name: 'Eco-Canvas Corgi Tote Bag 🛍️',
+    description: '100% organic cotton canvas tote bag with Corgi illustration.',
+    price: 18.50,
+    category: 'Bags',
+    image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80',
+    options: [],
+  },
+  {
+    id: 'merch-3',
+    sku: 'CORGI-HOODIE-01',
+    name: 'Cozy Corgi Embroidered Hoodie 🐾',
+    description: 'Heavyweight organic cotton hoodie with minimal Corgi paw embroidery.',
+    price: 49.00,
+    category: 'Apparel',
+    image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80',
+    options: [],
+  },
+  {
+    id: 'merch-4',
+    sku: 'CORGI-BEANS-01',
+    name: 'House Blend Specialty Beans (250g) 🫘',
+    description: 'Single origin Colombia & Ethiopia roast with notes of milk chocolate.',
+    price: 12.50,
+    category: 'Coffee Beans',
+    image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=600&q=80',
+    options: [],
+  },
+];
+
   useEffect(() => {
     if (!locationId) return;
     setLoadingMerch(true);
     getMerchCatalog(locationId)
       .then((res) => {
-        setMerchItems(
-          res.items.map((item) => ({
-            id: item.id,
-            sku: item.sku,
-            name: item.name,
-            description: item.description,
-            price: item.price,
-            category: 'merch',
-            image: item.image,
-            options: [],
-          }))
-        );
+        if (res.items && res.items.length > 0) {
+          setMerchItems(
+            res.items.map((item) => ({
+              id: item.id,
+              sku: item.sku,
+              name: item.name,
+              description: item.description,
+              price: item.price,
+              category: 'merch',
+              image: item.image,
+              options: [],
+            }))
+          );
+        } else {
+          setMerchItems(DEFAULT_CORGI_MERCH);
+        }
       })
       .catch((err) => {
-        console.error('Failed to load merch catalog:', err);
-        setMerchItems([]);
+        console.warn('Using default Corgi merch catalog:', err);
+        setMerchItems(DEFAULT_CORGI_MERCH);
       })
       .finally(() => setLoadingMerch(false));
   }, [locationId]);
@@ -215,12 +263,12 @@ export default function ShopPage() {
   return (
     <div className="h-screen overflow-y-auto bg-white flex flex-col items-center select-none overflow-x-hidden pb-[90px] scroll-smooth">
       {/* Sticky Header Container */}
-      <div className="sticky top-0 z-40 bg-[#EE635E] text-white flex flex-col w-full pb-4">
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#FDBD38] to-[#FDB01A] text-gray-900 flex flex-col w-full pb-3.5 shadow-xs select-none">
         <div className="flex items-center justify-between px-4 pt-4 gap-3">
           {/* Back button returning to Menu */}
           <button 
             onClick={() => router.push('/menu')}
-            className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0"
+            className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 text-gray-900" strokeWidth={2.2} />
           </button>
@@ -249,11 +297,11 @@ export default function ShopPage() {
           {/* Shopping Bag Button */}
           <button 
             onClick={() => setShowCartDrawer(true)}
-            className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0 relative"
+            className="w-10 h-10 bg-white/95 rounded-full flex items-center justify-center shadow-sm shadow-black/5 hover:bg-white transition-all text-gray-900 active:scale-95 flex-shrink-0 relative cursor-pointer"
           >
-            <ShoppingBag className="w-4 h-4 text-gray-900" strokeWidth={2.2} />
+            <ShoppingBag className="w-4.5 h-4.5 text-gray-900" strokeWidth={2.2} />
             {merchCart.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-[#EE635E] text-white text-[9px] font-bold rounded-full border border-white flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-gray-900 text-white text-[9px] font-bold rounded-full border border-white flex items-center justify-center">
                 {merchCart.reduce((sum, item) => sum + item.quantity, 0)}
               </span>
             )}
@@ -277,7 +325,29 @@ export default function ShopPage() {
             ))}
           </div>
         ) : filteredItems.length === 0 ? (
-          <p className="text-gray-500 text-sm">No merch items available.</p>
+          <div className="w-full flex flex-col items-center text-center py-12 px-2 animate-fadeIn">
+            <div className="w-28 h-28 relative mb-4 flex items-center justify-center">
+              <img 
+                src="/stickers/corgi_fiesta_1.png" 
+                alt="Corgi Sticker" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <h3 className="text-[24px] font-bold text-[#FDBD38] tracking-tight leading-tight flex items-center justify-center gap-2">
+              <span>No merch found</span>
+              <PawPrint className="w-5.5 h-5.5 text-[#FDBD38] fill-[#FDBD38]" />
+            </h3>
+            <p className="text-[14px] text-gray-500 max-w-[280px] mt-2 mb-6 leading-relaxed font-normal">
+              No merchandise items available for this store right now. Check out our food & drinks menu!
+            </p>
+            <Link
+              href="/menu"
+              className="bg-[#FDBD38] hover:bg-[#e5a420] text-white font-bold py-3.5 px-6 rounded-full text-[14px] transition-all active:scale-[0.98] shadow-none flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Coffee className="w-4 h-4 text-white" />
+              <span>Browse Menu</span>
+            </Link>
+          </div>
         ) : null}
 
         {/* Catalog Items Product Grid */}
