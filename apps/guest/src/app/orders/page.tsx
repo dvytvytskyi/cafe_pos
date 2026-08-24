@@ -190,7 +190,7 @@ export default function OrdersPage() {
             <img 
               src="/stickers/corgi_fiesta_1.png" 
               alt="Corgi Fiesta Sticker" 
-              className="w-full h-full object-contain drop-shadow-md"
+              className="w-full h-full object-contain"
             />
           </div>
 
@@ -260,7 +260,7 @@ export default function OrdersPage() {
               <img 
                 src="/stickers/corgi_coffee1.png" 
                 alt="Corgi Coffee Sticker" 
-                className="w-full h-full object-contain drop-shadow-md"
+                className="w-full h-full object-contain"
               />
             </div>
 
