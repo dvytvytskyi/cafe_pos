@@ -120,7 +120,7 @@ export default function Header() {
             >
               <Search size={20} />
             </button>
-            <div className="absolute top-full mt-2 px-2.5 py-1.5 bg-gray-800 text-white text-xs font-medium rounded-lg opacity-0 invisible group-hover/btn:opacity-100 group-hover/btn:visible transition-all duration-200 whitespace-nowrap z-50">
+            <div className="absolute top-full mt-2 px-2.5 py-1.5 bg-[#EE635E] text-white text-xs font-medium rounded-lg opacity-0 invisible group-hover/btn:opacity-100 group-hover/btn:visible transition-all duration-200 whitespace-nowrap z-50">
               Search (⌘K)
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function Header() {
               <Bell size={20} />
               <span className="absolute top-2.5 right-3 w-2 h-2 bg-corgi rounded-full border-2 border-white"></span>
               {!isNotificationsOpen && (
-                <div className="absolute top-full mt-2 px-2.5 py-1.5 bg-gray-800 text-white text-xs font-medium rounded-lg opacity-0 invisible group-hover/btn:opacity-100 group-hover/btn:visible transition-all duration-200 whitespace-nowrap z-50">
+                <div className="absolute top-full mt-2 px-2.5 py-1.5 bg-[#EE635E] text-white text-xs font-medium rounded-lg opacity-0 invisible group-hover/btn:opacity-100 group-hover/btn:visible transition-all duration-200 whitespace-nowrap z-50">
                   Notifications
                 </div>
               )}
@@ -145,7 +145,7 @@ export default function Header() {
             <button className="w-11 h-11 rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-all duration-200 cursor-pointer flex items-center justify-center">
               <Info size={20} />
             </button>
-            <div className="absolute top-full mt-2 px-2.5 py-1.5 bg-gray-800 text-white text-xs font-medium rounded-lg opacity-0 invisible group-hover/btn:opacity-100 group-hover/btn:visible transition-all duration-200 whitespace-nowrap z-50">
+            <div className="absolute top-full mt-2 px-2.5 py-1.5 bg-[#EE635E] text-white text-xs font-medium rounded-lg opacity-0 invisible group-hover/btn:opacity-100 group-hover/btn:visible transition-all duration-200 whitespace-nowrap z-50">
               Information
             </div>
           </div>
