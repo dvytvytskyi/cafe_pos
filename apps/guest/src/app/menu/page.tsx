@@ -9,6 +9,7 @@ import { calculateMenuUnitPrice, getMenuListingPriceRange, isVariantPricingGroup
 import { menuItemImage, isFeaturedMenuItem } from '@/lib/menu-image';
 import { GUEST_STORE_LOCATIONS, getGuestStoreLocation } from '@/lib/locations';
 import Link from 'next/link';
+import AllergenBadge, { AllergenSvg, ALLERGEN_CATALOG } from '@/components/AllergenIcon';
 import { 
   ArrowLeft, 
   ChevronDown, 
@@ -927,9 +928,14 @@ export default function MenuPage() {
                 </p>
 
                 {selectedItem?.allergens && selectedItem.allergens.length > 0 && (
-                  <p className="text-[12px] text-gray-400 font-normal">
-                    Allergens: {selectedItem.allergens.map(a => a.charAt(0).toUpperCase() + a.slice(1)).join(' · ')}
-                  </p>
+                  <div className="flex flex-col gap-1.5 mt-1">
+                    <span className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Allergens</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedItem.allergens.map((a, idx) => (
+                        <AllergenBadge key={idx} name={a} />
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -1530,14 +1536,7 @@ export default function MenuPage() {
             <div className="flex flex-col gap-3 px-0">
               <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Exclude Allergens</span>
               <div className="flex flex-wrap gap-2">
-                {[
-                  { id: 'gluten', label: 'Gluten' },
-                  { id: 'lactose', label: 'Dairy / Lactose' },
-                  { id: 'nuts', label: 'Nuts' },
-                  { id: 'eggs', label: 'Eggs' },
-                  { id: 'fish', label: 'Fish / Seafood' },
-                  { id: 'soy', label: 'Soy' }
-                ].map((allergen) => {
+                {ALLERGEN_CATALOG.map((allergen) => {
                   const active = excludedAllergens.includes(allergen.id);
                   return (
                     <button
@@ -1549,13 +1548,14 @@ export default function MenuPage() {
                           setExcludedAllergens([...excludedAllergens, allergen.id]);
                         }
                       }}
-                      className={`px-4 py-2.5 rounded-2xl text-[13px] font-semibold transition-all border ${
+                      className={`px-3.5 py-2 rounded-2xl text-[12px] font-semibold transition-all border flex items-center gap-1.5 cursor-pointer ${
                         active 
                           ? 'bg-[#FDBD38] border-[#FDBD38] text-white shadow-none' 
-                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50/50'
+                          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50/50'
                       }`}
                     >
-                      {active ? '✓ ' : ''}{allergen.label}
+                      <AllergenSvg name={allergen.id} className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-gray-500'}`} />
+                      <span>{allergen.label}</span>
                     </button>
                   );
                 })}
