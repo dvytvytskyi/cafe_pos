@@ -39,7 +39,7 @@ function NavItems() {
           onClick={() => handleItemClick(item)}
           className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap ${
             activeItem === item
-              ? 'bg-[#FDBD38] text-gray-900 shadow-sm'
+              ? 'bg-black text-white'
               : 'text-gray-500 hover:text-black hover:bg-gray-100'
           }`}
         >
