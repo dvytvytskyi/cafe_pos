@@ -266,8 +266,8 @@ export function PaymentGaugeChart({
   const dataArray = Array(totalBlocks).fill(1);
 
   const getBlockColor = (index: number) => {
-    if (index < cardBlocks) return '#EE635E';
-    if (index < cardBlocks + appBlocks) return '#FDBD38';
+    if (index < cardBlocks) return '#FDBD38';
+    if (index < cardBlocks + appBlocks) return '#EE635E';
     return '#d1d5db';
   };
 
@@ -330,11 +330,11 @@ export function PaymentGaugeChart({
       <div className="flex flex-col items-center justify-center gap-3 w-full">
         <div className="flex items-center justify-center gap-6 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#EE635E' }}></div>
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#FDBD38' }}></div>
             <span className="text-sm font-medium text-gray-600">Card ({cardPct}%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#FDBD38' }}></div>
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#EE635E' }}></div>
             <span className="text-sm font-medium text-gray-600">App ({appPct}%)</span>
           </div>
           <div className="flex items-center gap-2">
