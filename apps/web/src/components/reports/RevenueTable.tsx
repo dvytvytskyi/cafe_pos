@@ -215,7 +215,7 @@ export function RevenueTable({ compare = false, rows }: RevenueTableProps) {
                   </td>
                   <td className="px-5 py-3 text-[13px] font-semibold text-gray-600 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[#f59e0b]"></div>
+                      <div className="w-2 h-2 rounded-full bg-[#EE635E]"></div>
                       {row.location}
                     </div>
                   </td>

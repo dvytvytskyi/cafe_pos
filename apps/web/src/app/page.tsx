@@ -142,7 +142,7 @@ export default function Home() {
                           className="w-3 h-3 rounded-sm"
                           style={{
                             backgroundImage:
-                              'repeating-linear-gradient(45deg, #f59e0b, #f59e0b 2px, #fef3c7 2px, #fef3c7 4px)',
+                              'repeating-linear-gradient(45deg, #EE635E, #EE635E 2px, #ffdedd 2px, #ffdedd 4px)',
                           }}
                         ></div>
                         <span className="text-sm font-medium text-gray-500">Gross (Prev)</span>

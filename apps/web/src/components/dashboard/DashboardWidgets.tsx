@@ -135,7 +135,7 @@ export function RecentReviews({ reviews = [] }: RecentReviewsProps) {
   );
 }
 
-const BAR_COLORS = ['bg-[#111827]', 'bg-[#f59e0b]', 'bg-gray-300', 'bg-gray-200', 'bg-gray-100'];
+const BAR_COLORS = ['bg-[#111827]', 'bg-[#EE635E]', 'bg-gray-300', 'bg-gray-200', 'bg-gray-100'];
 
 type CategoryBreakdownProps = {
   dishes?: DishAbcRow[];

@@ -26,7 +26,7 @@ const COLORS = {
   white: '#ffffff',
 };
 
-const locationColors = ['#f59e0b', '#111827', '#4b5563', '#9ca3af', '#e5e7eb', '#d1d5db'];
+const locationColors = ['#EE635E', '#111827', '#4b5563', '#9ca3af', '#e5e7eb', '#d1d5db'];
 
 const createDiagonalPattern = (color: string, bgColor: string) => {
   if (typeof document === 'undefined') return color;
@@ -74,7 +74,7 @@ function resolveChartData(
     {
       label: 'Gross Volume',
       data: gross,
-      backgroundColor: '#f59e0b',
+      backgroundColor: '#EE635E',
       borderSkipped: false,
       barPercentage: 1.0,
       categoryPercentage: 0.8,
@@ -96,7 +96,7 @@ function resolveChartData(
       {
         label: 'Gross Volume (Previous)',
         data: previousRevenueByDay.map((d) => d.gross),
-        backgroundColor: () => createDiagonalPattern('#f59e0b', '#fef3c7'),
+        backgroundColor: () => createDiagonalPattern('#EE635E', '#ffdedd'),
         borderSkipped: false,
         barPercentage: 1.0,
         categoryPercentage: 0.8,
@@ -267,7 +267,7 @@ export function PaymentGaugeChart({
 
   const getBlockColor = (index: number) => {
     if (index < cardBlocks) return '#111827';
-    if (index < cardBlocks + appBlocks) return '#f59e0b';
+    if (index < cardBlocks + appBlocks) return '#EE635E';
     return '#d1d5db';
   };
 
@@ -334,7 +334,7 @@ export function PaymentGaugeChart({
             <span className="text-sm font-medium text-gray-600">Card ({cardPct}%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#f59e0b' }}></div>
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#EE635E' }}></div>
             <span className="text-sm font-medium text-gray-600">App ({appPct}%)</span>
           </div>
           <div className="flex items-center gap-2">

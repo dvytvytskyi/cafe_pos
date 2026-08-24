@@ -1005,12 +1005,12 @@ export default function TablesView({
 
             const getTableColors = () => {
               if (isSelected) {
-                return { fill: '#fef3c7', stroke: '#fdbd38', strokeWidth: 3 };
+                return { fill: '#ffdedd', stroke: '#EE635E', strokeWidth: 3 };
               }
               if (isLiveView && liveStatus !== 'available') {
                 return { fill: liveStyle.fill, stroke: liveStyle.stroke, strokeWidth: 3 };
               }
-              return { fill: '#fffbeb66', stroke: '#fdbd38', strokeWidth: 3 };
+              return { fill: '#ffdedd66', stroke: '#EE635E', strokeWidth: 3 };
             };
 
             const tableColors = getTableColors();

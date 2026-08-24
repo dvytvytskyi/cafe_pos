@@ -67,7 +67,7 @@ export function StaffPerformanceTables({ staffByLocation }: StaffPerformanceTabl
               className="w-full lg:w-[calc(50%-0.75rem)] xl:w-[calc(33.333%-1rem)] min-w-[320px] border border-gray-100 rounded-2xl flex flex-col bg-white overflow-hidden transition-colors hover:border-gray-200"
             >
               <div className="pt-4 px-4 pb-2 flex items-center gap-2 bg-white">
-                <div className="w-2 h-2 rounded-full bg-[#f59e0b]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#EE635E]"></div>
                 <h4 className="text-[14px] font-bold text-gray-900">{loc.name}</h4>
               </div>
 

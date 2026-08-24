@@ -175,7 +175,7 @@ export default function StockTable({
       case 'low':
         return (
           <span className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#EE635E]"></div>
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Low Stock</span>
           </span>
         );
