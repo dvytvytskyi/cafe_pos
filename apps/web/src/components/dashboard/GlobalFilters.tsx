@@ -250,7 +250,7 @@ export default function GlobalFilters({
     <div className={variant === 'reports' ? "flex flex-wrap xl:flex-nowrap items-center justify-between gap-y-4 gap-x-4 z-20 relative flex-1 min-w-0 max-w-full w-full" : "flex flex-wrap xl:flex-nowrap items-center justify-between gap-y-4 gap-x-4 z-20 relative w-full min-w-0 max-w-full"}>
       
       {/* Presets Segmented Control (Row 1 on tablet) */}
-      <div className="flex items-center gap-0.5 h-[40px] bg-gray-50/80 p-1 rounded-[12px] border border-gray-200/60 w-full xl:w-auto overflow-x-auto custom-scrollbar shrink-0">
+      <div className="flex items-center gap-0.5 h-[40px] bg-[#FFF2E2] p-1 rounded-[12px] border border-[#FFEBD2] w-full xl:w-auto overflow-x-auto custom-scrollbar shrink-0">
           {presets.map(preset => (
             <button
               key={preset}
@@ -259,7 +259,7 @@ export default function GlobalFilters({
               className={`cursor-pointer whitespace-nowrap h-full flex flex-1 xl:flex-none items-center justify-center px-3.5 text-[13px] font-semibold rounded-[8px] transition-all duration-200 ${
                 activePreset === preset 
                   ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-[#FFEBD2]'
               }`}
             >
               {preset}
@@ -433,7 +433,7 @@ export default function GlobalFilters({
                   : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200'
               }`}
             >
-              <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-gray-200'}`}>
+              <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-[#FFF2E2] border border-[#FFEBD2]'}`}>
                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${compare ? 'translate-x-5' : 'translate-x-1'}`} />
               </div>
               <span className="text-[13px] font-semibold tracking-tight">Compare</span>
@@ -442,7 +442,7 @@ export default function GlobalFilters({
             <div className="flex items-center justify-center gap-2.5 bg-white px-4 h-[40px] rounded-[10px] border border-gray-200 flex-1 xl:flex-none min-w-[120px]">
               <button 
                 onClick={() => setCompare(!compare)}
-                className={`cursor-pointer relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-gray-200'}`}
+                className={`cursor-pointer relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-[#FFF2E2] border border-[#FFEBD2]'}`}
               >
                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${compare ? 'translate-x-5' : 'translate-x-1'}`} />
               </button>
@@ -506,6 +506,5 @@ export default function GlobalFilters({
         )}
       </div>
 
-    </div>
   );
 }
