@@ -419,44 +419,46 @@ export default function GlobalFilters({
             </AnchoredDropdown>
           </div>
         )}
-        
-        {/* Compare Toggle */}
-        {variant === 'reports' ? (
-          <button 
-            onClick={() => setCompare(!compare)}
-            className={`cursor-pointer flex items-center justify-center h-[40px] gap-2.5 px-4 rounded-[10px] border transition-colors flex-1 sm:flex-none ${
-              compare 
-                ? 'bg-gray-50 border-gray-100 text-gray-900' 
-                : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200'
-            }`}
-          >
-            <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-gray-200'}`}>
-              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${compare ? 'translate-x-5' : 'translate-x-1'}`} />
-            </div>
-            <span className="text-[13px] font-semibold tracking-tight">Compare</span>
-          </button>
-        ) : (
-          <div className="flex items-center justify-center gap-2.5 bg-white px-4 h-[40px] rounded-[10px] border border-gray-200 flex-1 xl:flex-none min-w-[120px]">
+
+        {/* Right Aligned Controls: Compare Toggle & Payment Method Selector */}
+        <div className="flex items-center gap-4 xl:ml-auto w-full sm:w-auto">
+          {/* Compare Toggle */}
+          {variant === 'reports' ? (
             <button 
               onClick={() => setCompare(!compare)}
-              className={`cursor-pointer relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-gray-200'}`}
+              className={`cursor-pointer flex items-center justify-center h-[40px] gap-2.5 px-4 rounded-[10px] border transition-colors flex-1 sm:flex-none ${
+                compare 
+                  ? 'bg-gray-50 border-gray-100 text-gray-900' 
+                  : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200'
+              }`}
             >
-              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${compare ? 'translate-x-5' : 'translate-x-1'}`} />
+              <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-gray-200'}`}>
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${compare ? 'translate-x-5' : 'translate-x-1'}`} />
+              </div>
+              <span className="text-[13px] font-semibold tracking-tight">Compare</span>
             </button>
-            <span className={`text-[13px] font-semibold tracking-tight transition-colors ${compare ? 'text-gray-900' : 'text-gray-500'}`}>Compare</span>
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center justify-center gap-2.5 bg-white px-4 h-[40px] rounded-[10px] border border-gray-200 flex-1 xl:flex-none min-w-[120px]">
+              <button 
+                onClick={() => setCompare(!compare)}
+                className={`cursor-pointer relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${compare ? 'bg-[#EE635E]' : 'bg-gray-200'}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${compare ? 'translate-x-5' : 'translate-x-1'}`} />
+              </button>
+              <span className={`text-[13px] font-semibold tracking-tight transition-colors ${compare ? 'text-gray-900' : 'text-gray-500'}`}>Compare</span>
+            </div>
+          )}
 
-        {/* Payment Method Selector Dropdown */}
-        <div className="relative w-full sm:w-auto sm:min-w-[140px] sm:max-w-[180px]" ref={paymentRef}>
-          <button 
-            type="button"
-            onClick={() => { setPaymentOpen(!paymentOpen); setDateOpen(false); setMonthOpen(false); }}
-            className={variant === 'reports' 
-              ? `cursor-pointer flex items-center justify-between h-[40px] px-4 rounded-[10px] border transition-colors w-full focus:outline-none ${paymentOpen ? 'border-[#EE635E]' : 'border-gray-100 hover:border-gray-200'} bg-white hover:bg-gray-50` 
-              : `cursor-pointer flex items-center justify-between gap-3 bg-white hover:bg-gray-50 px-4 h-[40px] rounded-[10px] border transition-colors w-full focus:outline-none ${paymentOpen ? 'border-[#EE635E] shadow-[0_0_0_1px_rgba(238,99,94,1)]' : 'border-gray-200'}`
-            }
-          >
+          {/* Payment Method Selector Dropdown */}
+          <div className="relative w-full sm:w-auto sm:min-w-[140px] sm:max-w-[180px]" ref={paymentRef}>
+            <button 
+              type="button"
+              onClick={() => { setPaymentOpen(!paymentOpen); setDateOpen(false); setMonthOpen(false); }}
+              className={variant === 'reports' 
+                ? `cursor-pointer flex items-center justify-between h-[40px] px-4 rounded-[10px] border transition-colors w-full focus:outline-none ${paymentOpen ? 'border-[#EE635E]' : 'border-gray-100 hover:border-gray-200'} bg-white hover:bg-gray-50` 
+                : `cursor-pointer flex items-center justify-between gap-3 bg-white hover:bg-gray-50 px-4 h-[40px] rounded-[10px] border transition-colors w-full focus:outline-none ${paymentOpen ? 'border-[#EE635E] shadow-[0_0_0_1px_rgba(238,99,94,1)]' : 'border-gray-200'}`
+              }
+            >
             <div className="flex items-center gap-2">
               {paymentOptions.find(p => p.id === payment)?.icon}
               <span className="text-[13px] font-semibold text-gray-900 tracking-tight whitespace-nowrap">{payment}</span>
@@ -494,6 +496,7 @@ export default function GlobalFilters({
             </div>
           </AnchoredDropdown>
         </div>
+      </div>
         
         {children && (
           <div className="flex items-center gap-3">
