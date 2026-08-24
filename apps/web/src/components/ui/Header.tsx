@@ -169,7 +169,6 @@ export default function Header() {
               {profile?.email ? `${profile.email.slice(0, 16)}${profile.email.length > 16 ? '…' : ''}` : '—'}
             </span>
           </div>
-          <ChevronDown size={18} className="text-gray-400 ml-1 hidden xl:block" />
         </div>
       </div>
 
