@@ -54,7 +54,7 @@ export default function ActiveTablesCard({ data }: ActiveTablesCardProps) {
     <div
       className="rounded-3xl p-6 flex flex-col justify-between shadow-sm relative"
       data-testid="active-tables-card"
-      style={{ backgroundColor: '#CB5900' }}
+      style={{ backgroundColor: '#FC8C86' }}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="text-white/90 text-sm font-medium">Active Tables (Live)</div>
