@@ -209,7 +209,7 @@ function HistoryPageContent() {
               onClick={() => setShowAnalytics(!showAnalytics)}
               className={`w-full sm:w-auto justify-center px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${
                 showAnalytics 
-                  ? 'bg-gray-950 text-white border-gray-950' 
+                  ? 'bg-[#EE635E] text-white border-[#EE635E]' 
                   : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
               }`}
             >

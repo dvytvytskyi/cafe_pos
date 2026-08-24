@@ -245,7 +245,7 @@ export default function ShiftPage() {
                   
                   <button
                     type="submit"
-                    className="w-full py-4 bg-black hover:bg-gray-800 text-white rounded-2xl font-bold text-base transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                    className="w-full py-4 bg-[#EE635E] hover:bg-[#d94f4a] text-white rounded-2xl font-bold text-base transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
                   >
                     <Play size={18} fill="white" /> Open Register Shift
                   </button>
@@ -351,7 +351,7 @@ export default function ShiftPage() {
                           />
                           <button
                             type="submit"
-                            className="px-6 py-3.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-sm font-bold transition-all shrink-0 cursor-pointer active:scale-[0.98]"
+                            className="px-6 py-3.5 bg-[#EE635E] hover:bg-[#d94f4a] text-white rounded-2xl text-sm font-bold transition-all shrink-0 cursor-pointer active:scale-[0.98]"
                           >
                             Apply
                           </button>

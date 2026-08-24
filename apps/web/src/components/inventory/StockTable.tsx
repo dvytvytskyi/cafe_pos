@@ -249,7 +249,7 @@ export default function StockTable({
           {onAdd && (
             <button
               onClick={onAdd}
-              className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl shadow-sm transition-all cursor-pointer hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 shrink-0"
+              className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-2 bg-[#EE635E] text-white text-[13px] font-bold rounded-xl shadow-sm transition-all cursor-pointer hover:bg-[#d94f4a] hover:-translate-y-0.5 active:translate-y-0 shrink-0"
             >
               <Plus size={16} strokeWidth={2.5} />
               Add Item

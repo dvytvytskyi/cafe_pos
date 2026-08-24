@@ -524,7 +524,7 @@ export default function MenusView() {
             <button 
               data-testid="menu-add-dish-btn"
               onClick={openCreateDish}
-              className={`flex items-center gap-1.5 px-4 py-2 bg-black text-white text-[13px] font-bold rounded-xl transition-all cursor-pointer shrink-0 shadow-sm ${(mainView !== 'dishes' && mainView !== 'archived') ? 'opacity-30 pointer-events-none' : 'hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'}`}
+              className={`flex items-center gap-1.5 px-4 py-2 bg-[#EE635E] hover:bg-[#d94f4a] text-white text-[13px] font-bold rounded-xl transition-all cursor-pointer shrink-0 shadow-sm ${(mainView !== 'dishes' && mainView !== 'archived') ? 'opacity-30 pointer-events-none' : 'hover:-translate-y-0.5 active:translate-y-0'}`}
             >
               <Plus size={16} strokeWidth={2.5} />
               Add Dish

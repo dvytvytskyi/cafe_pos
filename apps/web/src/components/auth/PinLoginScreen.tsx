@@ -135,7 +135,7 @@ export default function PinLoginScreen({ onSuccess }: PinLoginScreenProps) {
             data-testid="pin-key-submit"
             disabled={loading || pin.length !== 4}
             onClick={() => handleSubmit()}
-            className="h-14 rounded-2xl bg-black hover:bg-gray-800 text-white font-bold disabled:opacity-50"
+            className="h-14 rounded-2xl bg-[#EE635E] hover:bg-[#d94f4a] text-white font-bold disabled:opacity-50"
           >
             OK
           </button>

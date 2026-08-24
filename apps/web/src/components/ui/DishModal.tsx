@@ -1225,7 +1225,7 @@ export default function DishModal({
             data-testid="dish-save-btn"
             onClick={handleSaveClick}
             disabled={isSaving}
-            className={`py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 w-32 disabled:opacity-60 disabled:cursor-not-allowed ${isSaved ? 'bg-green-500 text-white pointer-events-none' : 'bg-black text-white hover:bg-gray-800 active:scale-95'}`}
+            className={`py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 w-32 disabled:opacity-60 disabled:cursor-not-allowed ${isSaved ? 'bg-green-500 text-white pointer-events-none' : 'bg-[#EE635E] text-white hover:bg-[#d94f4a] active:scale-95'}`}
           >
             {isSaved ? (
               <>
