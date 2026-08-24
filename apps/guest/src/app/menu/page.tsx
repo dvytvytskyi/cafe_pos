@@ -41,7 +41,8 @@ import {
   Menu as MenuIcon,
   Coffee,
   Gift,
-  ClipboardList
+  ClipboardList,
+  PawPrint
 } from 'lucide-react';
 
 function formatGuestItemPrice(item: GuestMenuItem): string {
@@ -838,11 +839,11 @@ export default function MenuPage() {
                               alt={item.name}
                               className="absolute inset-0 w-full h-full object-cover"
                             />
-                            {/* Spark tag if new */}
+                            {/* Featured / Recommended tag */}
                             {isFeaturedMenuItem(item) && (
-                              <div className="absolute top-3 left-3 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm z-10">
-                                <Sparkle className="w-3 h-3 fill-current" />
-                                <span>{getFeaturedBadgeLabel(item) ?? 'Featured'}</span>
+                              <div className="absolute top-3 left-3 bg-[#FDBD38] text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
+                                <PawPrint className="w-3 h-3 text-white fill-white" />
+                                <span>{getFeaturedBadgeLabel(item) ?? 'Recommended'}</span>
                               </div>
                             )}
                           </div>
@@ -882,11 +883,11 @@ export default function MenuPage() {
                                 alt={item.name}
                                 className="absolute inset-0 w-full h-full object-cover"
                               />
-                              {/* Spark tag if new */}
+                              {/* Featured / Recommended tag */}
                               {isFeaturedMenuItem(item) && (
-                                <div className="absolute top-4 left-4 bg-corgi text-gray-950 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm z-10">
-                                  <Sparkle className="w-3 h-3 fill-current" />
-                                  <span>{getFeaturedBadgeLabel(item) ?? 'Featured'}</span>
+                                <div className="absolute top-4 left-4 bg-[#FDBD38] text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
+                                  <PawPrint className="w-3 h-3 text-white fill-white" />
+                                  <span>{getFeaturedBadgeLabel(item) ?? 'Recommended'}</span>
                                 </div>
                               )}
                             </div>
