@@ -90,7 +90,7 @@ export default function GeneralNotificationsPanel() {
                 <div
                   onClick={() => toggleCheck(key)}
                   className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                    settings[key] ? 'bg-corgi' : 'bg-gray-200 group-hover:bg-gray-300'
+                    settings[key] ? 'bg-[#EE635E]' : 'bg-gray-200 group-hover:bg-gray-300'
                   }`}
                 >
                   {settings[key] && <CheckSquare size={14} className="text-white" strokeWidth={3} />}
@@ -119,7 +119,7 @@ export default function GeneralNotificationsPanel() {
               type="button"
               onClick={() => toggleSwitch(key)}
               className={`w-11 h-6 rounded-full p-1 transition-colors cursor-pointer relative flex items-center ${
-                settings[key] ? 'bg-corgi' : 'bg-gray-200'
+                settings[key] ? 'bg-[#EE635E]' : 'bg-gray-200'
               }`}
             >
               <div

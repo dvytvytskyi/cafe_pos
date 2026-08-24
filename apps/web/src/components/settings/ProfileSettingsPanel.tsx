@@ -464,7 +464,7 @@ export default function ProfileSettingsPanel() {
                 data-testid="profile-password-save-btn"
                 onClick={handlePasswordSave}
                 className={`px-6 py-2.5 text-white text-[13px] font-bold rounded-full transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                  passwordSaved ? 'bg-green-500' : 'bg-black hover:bg-gray-800'
+                  passwordSaved ? 'bg-green-500' : 'bg-[#EE635E] hover:bg-[#d94f4a]'
                 }`}
               >
                 {passwordSaved ? (

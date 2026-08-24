@@ -383,7 +383,7 @@ export default function EmployeeModal({
               form="employee-form"
               disabled={saving}
               data-testid="employee-save-btn"
-              className="px-6 py-2.5 bg-black hover:bg-gray-900 text-white font-semibold text-sm rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+              className="px-6 py-2.5 bg-[#EE635E] hover:bg-[#d94f4a] text-white font-semibold text-sm rounded-xl transition-colors cursor-pointer disabled:opacity-50"
             >
               Save Employee
             </button>

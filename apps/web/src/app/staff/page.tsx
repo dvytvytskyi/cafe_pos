@@ -173,7 +173,7 @@ export default function StaffAdminPage() {
               setIsModalOpen(true);
             }}
             data-testid="staff-new-employee-btn"
-            className="order-2 lg:order-3 flex items-center justify-center gap-2 px-4 h-9 bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-colors cursor-pointer shrink-0"
+            className="order-2 lg:order-3 flex items-center justify-center gap-2 px-4 h-9 bg-[#EE635E] hover:bg-[#d94f4a] text-white rounded-xl transition-colors cursor-pointer shrink-0"
           >
             <Plus size={16} />
             <span className="text-[13px] font-bold">New employee</span>
