@@ -26,7 +26,7 @@ const COLORS = {
   white: '#ffffff',
 };
 
-const locationColors = ['#EE635E', '#111827', '#4b5563', '#9ca3af', '#e5e7eb', '#d1d5db'];
+const locationColors = ['#EE635E', '#FDBD38', '#4b5563', '#9ca3af', '#e5e7eb', '#d1d5db'];
 
 const createDiagonalPattern = (color: string, bgColor: string) => {
   if (typeof document === 'undefined') return color;
@@ -267,7 +267,7 @@ export function PaymentGaugeChart({
 
   const getBlockColor = (index: number) => {
     if (index < cardBlocks) return '#EE635E';
-    if (index < cardBlocks + appBlocks) return '#111827';
+    if (index < cardBlocks + appBlocks) return '#FDBD38';
     return '#d1d5db';
   };
 
@@ -334,7 +334,7 @@ export function PaymentGaugeChart({
             <span className="text-sm font-medium text-gray-600">Card ({cardPct}%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-gray-900"></div>
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#FDBD38' }}></div>
             <span className="text-sm font-medium text-gray-600">App ({appPct}%)</span>
           </div>
           <div className="flex items-center gap-2">
