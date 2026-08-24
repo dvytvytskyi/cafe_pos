@@ -375,9 +375,9 @@ const DEFAULT_CORGI_MERCH: ShopMerchItem[] = [
               {/* Product Card Text Details */}
               <div className="p-4 flex flex-col justify-between flex-grow gap-2 text-left">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[13px] font-bold text-gray-900 line-clamp-2 min-h-[36px] leading-tight">
+                  <h3 className="text-[13px] font-bold text-gray-900 line-clamp-2 min-h-[36px] max-h-[36px] overflow-hidden leading-tight block">
                     {item.name}
-                  </span>
+                  </h3>
                   <p className="text-[11px] text-gray-400 font-semibold leading-snug line-clamp-1">
                     {item.description}
                   </p>
@@ -387,7 +387,7 @@ const DEFAULT_CORGI_MERCH: ShopMerchItem[] = [
                   <span className="text-[14px] font-bold text-gray-900">
                     {item.price.toFixed(2)}€
                   </span>
-                  <div className="w-8 h-8 rounded-full bg-[#EE635E] hover:opacity-90 text-white flex items-center justify-center transition-all shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-[#FDBD38] hover:opacity-90 text-white flex items-center justify-center transition-all shadow-sm">
                     <Plus className="w-4 h-4 text-white" strokeWidth={2.2} />
                   </div>
                 </div>
