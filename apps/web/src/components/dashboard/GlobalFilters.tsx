@@ -407,17 +407,18 @@ export default function GlobalFilters({
                     Clear
                   </button>
                   <button
-                  type="button"
-                  onClick={applyCustomRange}
-                  disabled={!rangeStart || !rangeEnd}
-                  className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-white bg-[#EE635E] hover:bg-[#d94f4a] rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Apply
-                </button>
+                    type="button"
+                    onClick={applyCustomRange}
+                    disabled={!rangeStart || !rangeEnd}
+                    className="cursor-pointer px-4 py-1.5 text-[12px] font-bold text-white bg-[#EE635E] hover:bg-[#d94f4a] rounded-[8px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Apply
+                  </button>
+                </div>
               </div>
-            </div>
-          </AnchoredDropdown>
-        </div>
+            </AnchoredDropdown>
+          </div>
+        )}
         
         {/* Compare Toggle */}
         {variant === 'reports' ? (
