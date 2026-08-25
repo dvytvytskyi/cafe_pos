@@ -51,6 +51,8 @@
     "guava:status": "tsx scripts/check-guava-migration-status.ts",
     "data:cleanup-test": "tsx scripts/cleanup-test-data.ts",
     "data:reset-guava": "tsx scripts/reset-to-guava-baseline.ts",
+    "db:sync": "tsx scripts/import-guava-all.ts --seed",
+    "db:pull-prod": "tsx scripts/import-guava-all.ts --seed",
     "transactions:check-local": "tsx scripts/check-transactions-local.ts",
     "test:guava-import": "tsx src/lib/test-unit-guava-customers.ts && tsx src/lib/test-unit-guava-orders.ts && tsx src/lib/test-unit-guava-loyalty.ts && tsx src/lib/test-unit-guava-giftcards.ts && tsx src/lib/test-unit-guava-promotions.ts && tsx src/lib/test-unit-guava-cash-shifts.ts && tsx src/lib/test-unit-guava-fiscal.ts && tsx src/lib/test-unit-fiscal-archive.ts && tsx src/lib/test-unit-guava-merch-inventory.ts && tsx src/lib/test-unit-guava-reviews.ts && tsx src/lib/test-unit-guava-printers.ts && tsx src/lib/test-unit-guava-hr.ts",
     "build": "next build",
