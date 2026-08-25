@@ -96,7 +96,7 @@ function resolveChartData(
       {
         label: 'Gross Volume (Previous)',
         data: previousRevenueByDay.map((d) => d.gross),
-        backgroundColor: () => createDiagonalPattern('#FC8C86', '#fef3c7'),
+        backgroundColor: () => createDiagonalPattern('#FC8C86', '#ffdedd'),
         borderSkipped: false,
         barPercentage: 1.0,
         categoryPercentage: 0.8,

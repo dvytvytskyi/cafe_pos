@@ -50,6 +50,7 @@
     "guava:check-all": "tsx scripts/check-guava-all-local.ts",
     "guava:status": "tsx scripts/check-guava-migration-status.ts",
     "data:cleanup-test": "tsx scripts/cleanup-test-data.ts",
+    "data:audit-origins": "tsx scripts/audit-data-origins.ts --write-md",
     "data:reset-guava": "tsx scripts/reset-to-guava-baseline.ts",
     "db:sync": "tsx scripts/import-guava-all.ts --seed",
     "db:pull-prod": "tsx scripts/import-guava-all.ts --seed",
