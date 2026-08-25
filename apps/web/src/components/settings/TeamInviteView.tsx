@@ -18,7 +18,7 @@ export type TeamInviteViewProps = {
   inviteLocationIds: string[];
   isRoleSetupMode: boolean;
   hasRoleChanges: boolean;
-  userPermissions: Record<string, boolean>;
+  userOverrides?: { add?: string[]; remove?: string[] };
   saving: boolean;
   onBack: () => void;
   onEmailChange: (email: string) => void;
@@ -28,8 +28,8 @@ export type TeamInviteViewProps = {
   onLocationIdsChange: (ids: string[]) => void;
   onToggleRoleSetup: () => void;
   onSendInvitation: () => void;
-  onToggleRolePermission: (roleId: string, row: { resource: string; action: string; label: string }, enabled: boolean) => void;
-  onToggleUserOverride: (label: string, enabled: boolean) => void;
+  onToggleRolePermission: (roleId: string, capabilityKey: string, enabled: boolean) => void;
+  onToggleUserOverride?: (capabilityKey: string, action: 'add' | 'remove' | 'reset') => void;
 };
 
 export default function TeamInviteView({
@@ -43,7 +43,7 @@ export default function TeamInviteView({
   inviteLocationIds,
   isRoleSetupMode,
   hasRoleChanges,
-  userPermissions,
+  userOverrides,
   saving,
   onBack,
   onEmailChange,
@@ -121,66 +121,68 @@ export default function TeamInviteView({
       <div className="flex flex-col gap-8 w-full">
         {!isRoleSetupMode && (
           <>
-            <div className="flex flex-col gap-4 max-w-4xl">
-              <label className="text-[13px] font-bold text-gray-700">Team Type</label>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => onTeamTypeChange('general')}
-                  className={`px-4 py-2 rounded-xl text-[13px] font-bold border transition-all ${
-                    teamType === 'general'
-                      ? 'bg-[#EE635E]/10 border-[#EE635E] text-[#EE635E]'
-                      : 'bg-gray-50 border-gray-100 text-gray-600 hover:border-gray-200'
-                  }`}
-                >
-                  General (All locations)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onTeamTypeChange('location')}
-                  className={`px-4 py-2 rounded-xl text-[13px] font-bold border transition-all ${
-                    teamType === 'location'
-                      ? 'bg-[#EE635E]/10 border-[#EE635E] text-[#EE635E]'
-                      : 'bg-gray-50 border-gray-100 text-gray-600 hover:border-gray-200'
-                  }`}
-                >
-                  Specific location(s)
-                </button>
-              </div>
-            </div>
-
-            {teamType === 'location' && (
-              <div className="flex flex-col gap-2 max-w-4xl">
-                <label className="text-[13px] font-bold text-gray-700">Locations</label>
-                <div className="flex flex-wrap gap-2 p-3 bg-gray-50/80 border border-gray-200 rounded-2xl">
-                  {locations.map((loc) => {
-                    const isSelected = inviteLocationIds.includes(loc.id);
-                    return (
-                      <button
-                        key={loc.id}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            onLocationIdsChange(inviteLocationIds.filter((id) => id !== loc.id));
-                          } else {
-                            onLocationIdsChange([...inviteLocationIds, loc.id]);
-                          }
-                        }}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
-                          isSelected
-                            ? 'bg-[#EE635E] text-white border-[#EE635E] shadow-sm'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
-                        }`}
-                      >
-                        <MapPin size={13} className={isSelected ? 'text-white' : 'text-gray-400'} />
-                        <span>{loc.name}</span>
-                        {isSelected && <Check size={12} strokeWidth={3} />}
-                      </button>
-                    );
-                  })}
+            <div className="flex items-center gap-6 flex-wrap max-w-5xl bg-gray-50/50 p-3.5 rounded-2xl border border-gray-100">
+              <div className="flex items-center gap-3">
+                <label className="text-[13px] font-bold text-gray-700 whitespace-nowrap">Team Type</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onTeamTypeChange('general')}
+                    className={`px-3.5 py-1.5 rounded-xl text-[13px] font-bold border transition-all cursor-pointer ${
+                      teamType === 'general'
+                        ? 'bg-[#EE635E]/10 border-[#EE635E] text-[#EE635E]'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    General (All locations)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onTeamTypeChange('location')}
+                    className={`px-3.5 py-1.5 rounded-xl text-[13px] font-bold border transition-all cursor-pointer ${
+                      teamType === 'location'
+                        ? 'bg-[#EE635E]/10 border-[#EE635E] text-[#EE635E]'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    Specific location(s)
+                  </button>
                 </div>
               </div>
-            )}
+
+              {teamType === 'location' && (
+                <div className="flex items-center gap-3 border-l border-gray-200 pl-6">
+                  <label className="text-[13px] font-bold text-gray-700 whitespace-nowrap">Locations</label>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {locations.map((loc) => {
+                      const isSelected = inviteLocationIds.includes(loc.id);
+                      return (
+                        <button
+                          key={loc.id}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              onLocationIdsChange(inviteLocationIds.filter((id) => id !== loc.id));
+                            } else {
+                              onLocationIdsChange([...inviteLocationIds, loc.id]);
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                            isSelected
+                              ? 'bg-[#EE635E] text-white border-[#EE635E] shadow-xs'
+                              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
+                          }`}
+                        >
+                          <MapPin size={12} className={isSelected ? 'text-white' : 'text-gray-400'} />
+                          <span>{loc.name}</span>
+                          {isSelected && <Check size={12} strokeWidth={3} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="flex items-end gap-6 max-w-4xl flex-wrap">
               <div className="flex flex-col gap-2 flex-1 min-w-[200px] relative">
@@ -259,7 +261,7 @@ export default function TeamInviteView({
             onActiveRoleChange={onRoleChange}
             isRoleSetupMode={isRoleSetupMode}
             onToggleRolePermission={onToggleRolePermission}
-            userOverrides={userPermissions}
+            userOverrides={userOverrides}
             onToggleUserOverride={onToggleUserOverride}
           />
         </div>

@@ -6,6 +6,7 @@ import {
   type SessionPayload,
   type SessionUser,
 } from './auth-constants.ts';
+import { computeEffectiveGrants, type UserPermissionOverrides } from './permissions/can';
 
 function authSecret(): string {
   return process.env.AUTH_SECRET || 'corgi-dev-auth-secret-change-in-prod';
@@ -133,8 +134,16 @@ export function toSessionUser(user: {
   id: string;
   name: string;
   role: { id: string; name: string; permissions: unknown };
+  permissionOverrides?: unknown;
   locations: { id: string; name: string }[];
 }): SessionUser {
+  const roleGrants = Array.isArray(user.role.permissions)
+    ? (user.role.permissions as string[])
+    : Object.keys((user.role.permissions as RolePermissions) ?? {});
+
+  const overrides = (user.permissionOverrides as UserPermissionOverrides) ?? null;
+  const effectiveGrants = computeEffectiveGrants(roleGrants, overrides);
+
   return {
     id: user.id,
     name: user.name,
@@ -143,6 +152,8 @@ export function toSessionUser(user: {
       name: user.role.name,
       permissions: (user.role.permissions as RolePermissions) ?? {},
     },
+    permissionOverrides: overrides,
+    effectiveGrants,
     locations: user.locations.map((loc) => ({ id: loc.id, name: loc.name })),
   };
 }
@@ -151,14 +162,24 @@ export function sessionPayloadFromUser(user: {
   id: string;
   name: string;
   role: { id: string; name: string; permissions: unknown };
+  permissionOverrides?: unknown;
   locations?: { id: string }[];
 }): SessionPayload {
+  const roleGrants = Array.isArray(user.role.permissions)
+    ? (user.role.permissions as string[])
+    : Object.keys((user.role.permissions as RolePermissions) ?? {});
+
+  const overrides = (user.permissionOverrides as UserPermissionOverrides) ?? null;
+  const effectiveGrants = computeEffectiveGrants(roleGrants, overrides);
+
   return {
     sub: user.id,
     name: user.name,
     roleId: user.role.id,
     roleName: user.role.name,
     permissions: (user.role.permissions as RolePermissions) ?? {},
+    permissionOverrides: overrides,
+    effectiveGrants,
     locationIds: (user.locations ?? []).map((loc) => loc.id),
   };
 }

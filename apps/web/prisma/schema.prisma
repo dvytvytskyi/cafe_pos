@@ -49,6 +49,7 @@ model User {
   avatarUrl      String?
   status         String?     @default("active") // "active" | "inactive"
   guavaStaffId   String?     @unique // Guava employee UUID for import mapping
+  permissionOverrides Json?    // Individual user overrides: { add: string[], remove: string[] }
 
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt

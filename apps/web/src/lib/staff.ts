@@ -17,6 +17,7 @@ export interface Employee {
   roleName?: string;
   locationIds?: string[];
   locationNames?: string[];
+  permissionOverrides?: { add?: string[]; remove?: string[] } | null;
   /** Form-only — never returned by GET /api/staff */
   pin?: string;
 }
@@ -48,6 +49,7 @@ function mapApiEmployee(raw: Record<string, unknown>): Employee {
     daysPerWeek: Number(raw.daysPerWeek ?? 5),
     avatarInitials: String(raw.avatarInitials ?? ''),
     status: (raw.status as Employee['status']) || 'active',
+    permissionOverrides: (raw.permissionOverrides as Employee['permissionOverrides']) ?? null,
     roleId: String(raw.roleId ?? role?.id ?? ''),
     roleName: String(role?.name ?? ''),
     locationIds: locations.map((l) => String(l.id ?? '')),
@@ -99,7 +101,7 @@ export async function getRolesAsync(): Promise<{ id: string; name: string; permi
 
 export async function updateRoleAsync(
   id: string,
-  permissions: Record<string, string[]>
+  permissions: string[] | Record<string, string[]>
 ): Promise<{ id: string; name: string; permissions: unknown }> {
   const res = await fetch(`/api/roles/${id}`, {
     method: 'PUT',
@@ -176,6 +178,7 @@ export async function updateEmployeeAsync(id: string, data: {
   daysPerWeek?: number;
   avatarInitials?: string;
   status?: 'active' | 'inactive';
+  permissionOverrides?: { add?: string[]; remove?: string[] } | null;
 }): Promise<Employee> {
   const res = await fetch(`/api/staff/${id}`, {
     method: 'PUT',

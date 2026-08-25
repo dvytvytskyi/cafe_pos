@@ -55,21 +55,29 @@ export class UserRepository {
     ];
 
     for (const seed of seeds) {
-      await prisma.user.upsert({
-        where: { id: seed.id },
-        update: { status: 'active' },
-        create: {
-          id: seed.id,
-          name: seed.name,
-          pinHash: hashPin(seed.pin),
-          roleId: role.id,
-          position: seed.position,
-          section: seed.section,
-          email: seed.email,
-          avatarInitials: seed.avatarInitials,
-          status: 'active',
-        },
-      });
+      const existingByEmail = seed.email ? await prisma.user.findFirst({ where: { email: seed.email } }) : null;
+      if (existingByEmail) {
+        await prisma.user.update({
+          where: { id: existingByEmail.id },
+          data: { status: 'active' },
+        });
+      } else {
+        await prisma.user.upsert({
+          where: { id: seed.id },
+          update: { status: 'active' },
+          create: {
+            id: seed.id,
+            name: seed.name,
+            pinHash: hashPin(seed.pin),
+            roleId: role.id,
+            position: seed.position,
+            section: seed.section,
+            email: seed.email,
+            avatarInitials: seed.avatarInitials,
+            status: 'active',
+          },
+        });
+      }
     }
   }
 
@@ -215,6 +223,7 @@ export class UserRepository {
     if (data.daysPerWeek !== undefined) updateData.daysPerWeek = data.daysPerWeek;
     if (data.avatarInitials !== undefined) updateData.avatarInitials = data.avatarInitials;
     if (data.status !== undefined) updateData.status = data.status;
+    if (data.permissionOverrides !== undefined) updateData.permissionOverrides = data.permissionOverrides;
 
     if (data.locationIds !== undefined) {
       updateData.locations = {

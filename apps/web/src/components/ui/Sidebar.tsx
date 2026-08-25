@@ -11,7 +11,7 @@ import {
   Users,
   Layers,
   Settings,
-  HelpCircle,
+  Info,
   LogOut,
   Globe,
   MapPin,
@@ -32,12 +32,25 @@ import {
   Timer
 } from 'lucide-react';
 
+import { hasCapability } from '@/lib/permissions/can';
+
 export default function Sidebar() {
   const pathname = usePathname();
   const [isMounted, setIsMounted] = React.useState(false);
+  const [effectiveGrants, setEffectiveGrants] = React.useState<string[] | null>(null);
 
   React.useEffect(() => {
     setIsMounted(true);
+    fetch('/api/auth/session')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.user?.effectiveGrants) {
+          setEffectiveGrants(data.user.effectiveGrants);
+        }
+      })
+      .catch(() => {
+        /* fallback */
+      });
   }, []);
   
   const activeItem = pathname.startsWith('/analytics') 
@@ -62,6 +75,8 @@ export default function Sidebar() {
     ? 'shift' 
     : pathname.startsWith('/staff') 
     ? 'staff' 
+    : pathname.startsWith('/info') 
+    ? 'info' 
     : 'dashboard';
   
   const [activeLocale, setActiveLocale] = React.useState('all');
@@ -76,24 +91,34 @@ export default function Sidebar() {
     { id: 'arc', name: 'ARC', icon: Landmark },
   ];
 
-  const navItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', href: '/' },
-    { id: 'orders', icon: ShoppingBag, label: 'Orders', href: '/orders' },
-    { id: 'crm', icon: Users, label: 'CRM & Loyalty', href: '/crm' },
-    { id: 'shift', icon: DollarSign, label: 'Cash Register', href: '/shift' },
-    { id: 'history', icon: History, label: 'Order History', href: '/history' },
-    { id: 'reports', icon: BarChart3, label: 'Reports', href: '/reports' },
-    { id: 'kitchen-analytics', icon: Timer, label: 'Kitchen & Bar', href: '/analytics/kitchen-bar' },
-    { id: 'menu', icon: Coffee, label: 'Menu', href: '/menu' },
-    { id: 'inventory', icon: Package, label: 'Inventory', href: '/inventory' },
-    { id: 'operations', icon: ClipboardList, label: 'Operations', href: '/operations' },
-    { id: 'staff', icon: Briefcase, label: 'Staff & HR', href: '/staff' },
+  const allNavItems = [
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', href: '/', capability: 'orders.view' },
+    { id: 'orders', icon: ShoppingBag, label: 'Orders', href: '/orders', capability: 'orders.view' },
+    { id: 'crm', icon: Users, label: 'CRM & Loyalty', href: '/crm', capability: 'crm.view' },
+    { id: 'shift', icon: DollarSign, label: 'Cash Register', href: '/shift', capability: 'shift.view' },
+    { id: 'history', icon: History, label: 'Order History', href: '/history', capability: 'orders.view' },
+    { id: 'reports', icon: BarChart3, label: 'Reports', href: '/reports', capability: 'reports.view' },
+    { id: 'kitchen-analytics', icon: Timer, label: 'Kitchen & Bar', href: '/analytics/kitchen-bar', capability: 'reports.kitchen_bar' },
+    { id: 'menu', icon: Coffee, label: 'Menu', href: '/menu', capability: 'menu.view' },
+    { id: 'inventory', icon: Package, label: 'Inventory', href: '/inventory', capability: 'inventory.view' },
+    { id: 'operations', icon: ClipboardList, label: 'Operations', href: '/operations', capability: 'operations.checklists' },
+    { id: 'staff', icon: Briefcase, label: 'Staff & HR', href: '/staff', capability: 'staff.view' },
   ];
 
-  const bottomActions = [
-    { id: 'settings', icon: Settings, label: 'Settings', href: '/settings' },
-    { id: 'help', icon: HelpCircle, label: 'Help' },
+  const allBottomActions = [
+    { id: 'info', icon: Info, label: 'Information', href: '/info', capability: 'info.view' },
+    { id: 'settings', icon: Settings, label: 'Settings', href: '/settings', capability: 'settings.view' },
   ];
+
+  const navItems =
+    effectiveGrants && effectiveGrants.length > 0
+      ? allNavItems.filter((item) => hasCapability(effectiveGrants, item.capability))
+      : allNavItems;
+
+  const bottomActions =
+    effectiveGrants && effectiveGrants.length > 0
+      ? allBottomActions.filter((item) => hasCapability(effectiveGrants, item.capability))
+      : allBottomActions;
 
   return (
     <div className="hidden md:flex flex-col items-center h-full w-auto shrink-0 bg-transparent gap-6">

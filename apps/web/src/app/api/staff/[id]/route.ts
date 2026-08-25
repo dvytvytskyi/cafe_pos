@@ -20,6 +20,7 @@ function formatUser(user: NonNullable<UserWithRelations>) {
       name: user.role.name,
       permissions: user.role.permissions,
     },
+    permissionOverrides: user.permissionOverrides ?? { add: [], remove: [] },
     locations: user.locations.map((loc) => ({ id: loc.id, name: loc.name })),
     position: user.position || '',
     section: user.section || 'Floor',
@@ -63,6 +64,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       daysPerWeek,
       avatarInitials,
       status,
+      permissionOverrides,
     } = body;
 
     const updatedUser = await userRepository.update(id, {
@@ -82,6 +84,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       daysPerWeek,
       avatarInitials,
       status,
+      permissionOverrides,
     });
 
     return NextResponse.json(formatUser(updatedUser), { status: 200 });
@@ -96,6 +99,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     console.error('Error updating staff member:', error);
     return NextResponse.json({ error: 'Internal Server Error', details: message }, { status: 500 });
   }
+}
+
+export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  return PUT(req, ctx);
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {

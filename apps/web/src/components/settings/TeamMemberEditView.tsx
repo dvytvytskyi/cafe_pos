@@ -34,7 +34,7 @@ export type TeamMemberEditViewProps = {
     pin: string;
     status: 'active' | 'inactive';
   };
-  userPermissions: Record<string, boolean>;
+  userOverrides?: { add?: string[]; remove?: string[] };
   saving: boolean;
   readOnly?: boolean;
   onBack: () => void;
@@ -43,7 +43,7 @@ export type TeamMemberEditViewProps = {
   onSave: () => void;
   onDeactivate: () => void;
   onResetPassword: () => void;
-  onToggleUserOverride: (label: string, enabled: boolean) => void;
+  onToggleUserOverride: (capabilityKey: string, action: 'add' | 'remove' | 'reset') => void;
 };
 
 function avatarColor(_name: string): string {
@@ -65,7 +65,7 @@ export default function TeamMemberEditView({
   locations,
   memberViewTab,
   editForm,
-  userPermissions,
+  userOverrides,
   saving,
   readOnly = false,
   onBack,
@@ -187,46 +187,83 @@ export default function TeamMemberEditView({
                 />
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-[13px] font-bold text-gray-700">Team Type</label>
-                <select
-                  disabled={readOnly}
-                  value={editForm.teamType}
-                  onChange={(e) =>
-                    onFormChange({
-                      teamType: e.target.value as 'general' | 'location',
-                      locationIds: e.target.value === 'general' ? [] : editForm.locationIds,
-                    })
-                  }
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-4 pr-10 py-3 text-[14px] font-medium appearance-none disabled:opacity-60"
-                >
-                  <option value="general">General (All locations)</option>
-                  <option value="location">Specific location(s)</option>
-                </select>
-              </div>
-
-              {editForm.teamType === 'location' && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-[13px] font-bold text-gray-700">Primary Location(s)</label>
-                  <select
-                    multiple
-                    disabled={readOnly}
-                    value={editForm.locationIds}
-                    onChange={(e) =>
-                      onFormChange({
-                        locationIds: Array.from(e.target.selectedOptions, (o) => o.value),
-                      })
-                    }
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm min-h-[88px] disabled:opacity-60"
-                  >
-                    {locations.map((loc) => (
-                      <option key={loc.id} value={loc.id}>
-                        {loc.name}
-                      </option>
-                    ))}
-                  </select>
+              <div className="md:col-span-2 flex items-center gap-6 flex-wrap bg-gray-50/50 p-3.5 rounded-2xl border border-gray-100">
+                <div className="flex items-center gap-3">
+                  <label className="text-[13px] font-bold text-gray-700 whitespace-nowrap">Team Type</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={readOnly}
+                      onClick={() =>
+                        onFormChange({
+                          teamType: 'general',
+                          locationIds: [],
+                        })
+                      }
+                      className={`px-3.5 py-1.5 rounded-xl text-[13px] font-bold border transition-all cursor-pointer disabled:opacity-50 ${
+                        editForm.teamType === 'general'
+                          ? 'bg-[#EE635E]/10 border-[#EE635E] text-[#EE635E]'
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      General (All locations)
+                    </button>
+                    <button
+                      type="button"
+                      disabled={readOnly}
+                      onClick={() =>
+                        onFormChange({
+                          teamType: 'location',
+                        })
+                      }
+                      className={`px-3.5 py-1.5 rounded-xl text-[13px] font-bold border transition-all cursor-pointer disabled:opacity-50 ${
+                        editForm.teamType === 'location'
+                          ? 'bg-[#EE635E]/10 border-[#EE635E] text-[#EE635E]'
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      Specific location(s)
+                    </button>
+                  </div>
                 </div>
-              )}
+
+                {editForm.teamType === 'location' && (
+                  <div className="flex items-center gap-3 border-l border-gray-200 pl-6">
+                    <label className="text-[13px] font-bold text-gray-700 whitespace-nowrap">Locations</label>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {locations.map((loc) => {
+                        const isSelected = editForm.locationIds.includes(loc.id);
+                        return (
+                          <button
+                            key={loc.id}
+                            type="button"
+                            disabled={readOnly}
+                            onClick={() => {
+                              if (isSelected) {
+                                onFormChange({
+                                  locationIds: editForm.locationIds.filter((id) => id !== loc.id),
+                                });
+                              } else {
+                                onFormChange({
+                                  locationIds: [...editForm.locationIds, loc.id],
+                                });
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border disabled:opacity-50 ${
+                              isSelected
+                                ? 'bg-[#EE635E] text-white border-[#EE635E] shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
+                            }`}
+                          >
+                            <span>{loc.name}</span>
+                            {isSelected && <Check size={12} strokeWidth={3} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-gray-700">Assigned Role</label>
@@ -296,7 +333,7 @@ export default function TeamMemberEditView({
             <TeamPermissionsMatrix
               roles={roles}
               activeRoleId={editForm.roleId}
-              userOverrides={userPermissions}
+              userOverrides={userOverrides}
               onToggleUserOverride={readOnly ? undefined : onToggleUserOverride}
             />
           </div>

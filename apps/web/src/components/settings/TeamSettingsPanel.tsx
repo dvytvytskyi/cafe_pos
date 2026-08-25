@@ -26,11 +26,10 @@ import {
 import type { LocationSummary } from '@/lib/locations';
 import { CORGI_STORE_LOCATIONS } from '@/lib/corgi-locations';
 import { filterStaffByTeamTab, isGeneralTeamMember } from '@/lib/location-scope';
-import type { RolePermissions } from '@/lib/auth-constants';
+import { canRoleHoldCapability } from '@/lib/permissions/presets';
 import TeamInviteView, { type TeamType } from './TeamInviteView';
 import TeamMemberEditView from './TeamMemberEditView';
 import type { TeamRole } from './TeamPermissionsMatrix';
-import type { PermissionRow } from './TeamPermissionsMatrix';
 
 function generatePin(): string {
   return String(Math.floor(1000 + Math.random() * 9000));
@@ -47,23 +46,6 @@ function initials(name: string): string {
 
 function avatarColor(_name: string): string {
   return 'bg-[#EE635E]/10 text-[#EE635E] border border-[#EE635E]/20';
-}
-
-function togglePermInRole(
-  perms: RolePermissions,
-  row: PermissionRow,
-  enabled: boolean
-): RolePermissions {
-  const next = { ...perms };
-  const current = [...(next[row.resource] ?? [])];
-  if (enabled && !current.includes(row.action)) {
-    current.push(row.action);
-  } else if (!enabled) {
-    const idx = current.indexOf(row.action);
-    if (idx >= 0) current.splice(idx, 1);
-  }
-  next[row.resource] = current;
-  return next;
 }
 
 export default function TeamSettingsPanel() {
@@ -95,10 +77,10 @@ export default function TeamSettingsPanel() {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccessPin, setInviteSuccessPin] = useState<string | null>(null);
   const [savingInvite, setSavingInvite] = useState(false);
-  const [userPermissions, setUserPermissions] = useState<Record<string, boolean>>({});
+  const [userOverrides, setUserOverrides] = useState<{ add: string[]; remove: string[] }>({ add: [], remove: [] });
   const [isRoleSetupMode, setIsRoleSetupMode] = useState(false);
   const [hasRoleChanges, setHasRoleChanges] = useState(false);
-  const [roleDrafts, setRoleDrafts] = useState<Record<string, RolePermissions>>({});
+  const [roleDrafts, setRoleDrafts] = useState<Record<string, string[]>>({});
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [memberViewTab, setMemberViewTab] = useState<'general' | 'permissions' | 'activity'>('general');
@@ -189,7 +171,30 @@ export default function TeamSettingsPanel() {
       pin: '',
       status: emp.status,
     });
-    setUserPermissions({});
+    setUserOverrides({
+      add: emp.permissionOverrides?.add ?? [],
+      remove: emp.permissionOverrides?.remove ?? [],
+    });
+  };
+
+  const handleToggleUserOverride = (capabilityKey: string, action: 'add' | 'remove' | 'reset') => {
+    setUserOverrides((prev) => {
+      const add = new Set(prev.add);
+      const remove = new Set(prev.remove);
+
+      if (action === 'add') {
+        add.add(capabilityKey);
+        remove.delete(capabilityKey);
+      } else if (action === 'remove') {
+        remove.add(capabilityKey);
+        add.delete(capabilityKey);
+      } else {
+        add.delete(capabilityKey);
+        remove.delete(capabilityKey);
+      }
+
+      return { add: Array.from(add), remove: Array.from(remove) };
+    });
   };
 
   const handleInviteEmailChange = (email: string) => {
@@ -201,14 +206,24 @@ export default function TeamSettingsPanel() {
     }
   };
 
-  const handleToggleRolePermission = (roleId: string, row: PermissionRow, enabled: boolean) => {
+  const handleToggleRolePermission = (roleId: string, capabilityKey: string, enabled: boolean) => {
     const role = roles.find((r) => r.id === roleId);
     if (!role) return;
-    const base = roleDrafts[roleId] ?? role.permissions ?? {};
-    const next = togglePermInRole(base, row, enabled);
-    setRoleDrafts((prev) => ({ ...prev, [roleId]: next }));
+    if (enabled && !canRoleHoldCapability(role.name, capabilityKey)) {
+      setError(`Only Super Admin can grant: ${capabilityKey}`);
+      return;
+    }
+    const currentGrants = Array.isArray(role.permissions)
+      ? (role.permissions as string[])
+      : Object.keys((role.permissions as Record<string, unknown>) ?? {});
+
+    const nextGrants = enabled
+      ? Array.from(new Set([...currentGrants, capabilityKey]))
+      : currentGrants.filter((k) => k !== capabilityKey);
+
+    setRoleDrafts((prev) => ({ ...prev, [roleId]: nextGrants }));
     setRoles((prev) =>
-      prev.map((r) => (r.id === roleId ? { ...r, permissions: next } : r))
+      prev.map((r) => (r.id === roleId ? { ...r, permissions: nextGrants } : r))
     );
     setHasRoleChanges(true);
   };
@@ -217,7 +232,7 @@ export default function TeamSettingsPanel() {
     if (isRoleSetupMode && hasRoleChanges) {
       try {
         for (const [roleId, perms] of Object.entries(roleDrafts)) {
-          await updateRoleAsync(roleId, perms as Record<string, string[]>);
+          await updateRoleAsync(roleId, perms);
         }
         setRoleDrafts({});
         setHasRoleChanges(false);
@@ -260,7 +275,7 @@ export default function TeamSettingsPanel() {
       });
       setInviteSuccessPin(pin);
       setInviteEmail('');
-      setUserPermissions({});
+      setUserOverrides({ add: [], remove: [] });
       await load();
     } catch (err) {
       setInviteError(err instanceof StaffApiError ? err.message : 'Failed to create team member');
@@ -280,6 +295,7 @@ export default function TeamSettingsPanel() {
         roleId: editForm.roleId,
         locationIds: editForm.teamType === 'general' ? [] : editForm.locationIds,
         status: editForm.status,
+        permissionOverrides: userOverrides,
       };
       if (editForm.pin.length === 4) payload.pin = editForm.pin;
       await updateEmployeeAsync(editingId, payload);
@@ -361,7 +377,7 @@ export default function TeamSettingsPanel() {
         inviteLocationIds={inviteLocationIds}
         isRoleSetupMode={isRoleSetupMode}
         hasRoleChanges={hasRoleChanges}
-        userPermissions={userPermissions}
+        userOverrides={userOverrides}
         saving={savingInvite}
         onBack={() => {
           setIsInviteView(false);
@@ -376,9 +392,7 @@ export default function TeamSettingsPanel() {
         onToggleRoleSetup={handleToggleRoleSetup}
         onSendInvitation={handleSendInvitation}
         onToggleRolePermission={handleToggleRolePermission}
-        onToggleUserOverride={(label, enabled) =>
-          setUserPermissions((prev) => ({ ...prev, [label]: enabled }))
-        }
+        onToggleUserOverride={handleToggleUserOverride}
       />
     );
   }
@@ -393,7 +407,7 @@ export default function TeamSettingsPanel() {
         locations={storeLocations}
         memberViewTab={memberViewTab}
         editForm={editForm}
-        userPermissions={userPermissions}
+        userOverrides={userOverrides}
         saving={savingEdit}
         readOnly={isGeneralTabReadOnly && isGeneralTeamMember(member.locationIds)}
         onBack={() => {
@@ -408,9 +422,7 @@ export default function TeamSettingsPanel() {
           setResetMemberId(member.id);
           setResetResult(null);
         }}
-        onToggleUserOverride={(label, enabled) =>
-          setUserPermissions((prev) => ({ ...prev, [label]: enabled }))
-        }
+        onToggleUserOverride={handleToggleUserOverride}
       />
     );
   }
