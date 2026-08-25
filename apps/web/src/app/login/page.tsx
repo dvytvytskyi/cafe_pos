@@ -133,8 +133,9 @@ export default function LoginPage() {
     async function loadData() {
       try {
         const locs = await getLocationsCachedAsync();
-        if (locs && locs.length > 0) {
-          const merged = locs.map((l) => {
+        const storeLocs = locs.filter(l => !l.name.toLowerCase().includes('wh') && !l.name.toLowerCase().includes('warehouse'));
+        if (storeLocs && storeLocs.length > 0) {
+          const merged = storeLocs.map((l) => {
             const match = DEFAULT_LOCATIONS.find((dl) => dl.name.toLowerCase() === l.name.toLowerCase() || dl.id === l.id);
             return {
               ...l,
